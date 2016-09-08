@@ -14,7 +14,7 @@ from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
 from pyrap.exceptions import WidgetDisposedError, LayoutError, ResourceError
 from pyrap.constants import RWT, inf
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
-    CompositeTheme, ShellTheme, EditTheme
+    CompositeTheme, ShellTheme, EditTheme, ComboTheme
 from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout
 import md5
 
@@ -349,7 +349,59 @@ class Shell(Widget):
         layout.compute()
         layout.write()
 #         layout.apply()
-        
+
+
+class Combo(Widget):
+    _rwt_class_name_ = 'rwt.widgets.Combo'
+    _defstyle_ = BitField(Widget._defstyle_)
+
+    @constructor('Combo')
+    def __init__(self, parent, items='', editable=True, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = ComboTheme(self, session.runtime.mngr.theme)
+        self._items = items
+        self.on_select = OnSelect(self)
+        self._editable = editable
+        self._selidx = None
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        options.items = self._items
+        options.style = ["DROP_DOWN"]
+        options.children = None
+        options.tabIndex = 8
+        options.editable = self._editable
+        session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+
+
+    def compute_size(self):
+        w, h = session.runtime.textsize_estimate(self.theme.font, 'X')
+        padding = self.theme.padding
+        if padding:
+            w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
+            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        t, r, b, l = self.theme.borders
+        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        w += ifnone(self.theme.btnwidth, 0)
+        return w, h
+
+
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.iteritems():
+            if key == 'selectionIndex':
+                self._selidx = value
+
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_selection_event(op))
+        return True
+
 
 class Label(Widget):
     

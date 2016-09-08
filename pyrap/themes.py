@@ -845,9 +845,47 @@ class WidgetTheme(object):
         if RWT.BORDER in self._widget.style:
             styles.add('[BORDER')
         return styles
-        
-    
-    
+
+
+class ComboTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Combo', 'Combo-Button', 'Combo-List', 'Combo-Field')
+        self.separator = None
+
+
+    @property
+    def btnwidth(self):
+        return self._theme.get_property('width', 'Combo-Button', self.styles(), self.states())
+
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'Combo', self.styles(), self.states())
+
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Combo', self.styles(), self.states())
+
+
+    @property
+    def borders(self):
+        return [
+            self._theme.get_property('border-%s' % b, 'Combo', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'Combo', self.styles(), self.states())
+
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+
+
 class LabelTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Label')

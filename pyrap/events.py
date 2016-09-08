@@ -87,7 +87,7 @@ class OnSelect(RWTEvent):
         RWTEvent.__init__(self, 'Selection', widget)
     
     def _create_subscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Selection': True})
+        return RWTListenOperation(self.target.id, {'Selection': True, 'DefaultSelection': True})
     
     def _create_unsubscribe_msg(self):
         return RWTListenOperation(self.target.id, {'Selection': False})
