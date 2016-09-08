@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>%s</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" >
+    <!-- IE9 render in standard mode, all older versions in quirksmode -->
+    <meta http-equiv="X-UA-Compatible" content="IE=5,9,10,11;" >
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <!-- Default presentation for supported markup elements -->
+    <style type="text/css">
+      big {
+        font-size: 1.2em;
+      }
+      small, sup, sub {
+        font-size: 0.8em;
+      }
+      q:before, q:after {
+        content: "";
+      }
+      b, strong {
+        font-weight: 700;
+      }
+      i, em, var, cite, dfn {
+        font-style: italic;
+      }
+      ins {
+        text-decoration: underline;
+      }
+      del {
+        text-decoration: line-through;
+      }
+      code, samp, kbd {
+        font-family: "Courier New", Courier, "Nimbus Mono L", monospace;
+      }
+      abbr {
+        border-bottom: 1px dotted;
+      }
+      .rwt-cell-selectable {
+        cursor: pointer;
+      }
+      /* does (currently) not work in IE7/8: */
+      .rwt-cell-selectable:hover {
+        text-decoration: underline;
+      }
+    </style>
+    <!-- IE 10 specific styles -->
+    <style type="text/css">
+      input::-ms-clear, input::-ms-reveal {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+  	 <!-- style="background: url( 'rwt-resources/themes/images/3c7d3330.png' );"> -->
+    <noscript>
+      <p style="z-index:100000;background-color:white">
+        Your browser or browser-setup is not supported. <br />Please use one of: IE 9+, Firefox 23+, Safari 6+, Google Chrome 29+ or Opera 15+.<br />Ensure that Javascript is enabled and XMLHttpRequests are allowed.
+      </p>
+    </noscript>
+
+    <!-- BODY_HTML -->
+
+    <!-- /BODY_HTML -->
+
+    <script type="text/javascript" src="rwt-resources/rap-client.js" charset="UTF-8"></script>
+
+
+    <script type="text/javascript">
+      if( rwt.runtime.System.getInstance().isSupported() ) {
+      	rwt.remote.Connection.getInstance();
+        rwt.remote.MessageProcessor.processMessage( {"head":{"url":"pyrap"},"operations":[["call","rwt.theme.ThemeStore","loadFallbackTheme",{"url":"rwt-resources/rap-rwt.theme.Fallback.json"}],["call","rwt.theme.ThemeStore","loadActiveTheme",{"url":"rwt-resources/rap-rwt.theme.Default.json"}]]});
+        console.log('sending');
+        rwt.remote.Connection.getInstance().getMessageWriter().appendCall("pyrap", "initialize", {"entrypoint": "%s", "args": %s});
+        rwt.remote.Connection.getInstance().sendImmediate();
+        console.log('sent');
+        // ,["create","w1","rwt.widgets.Display",{}]
+      } else {
+        var msg='<p style="z-index:100000;background-color:white">' + "Your browser or browser-setup is not supported. <br />Please use one of: IE 9+, Firefox 23+, Safari 6+, Google Chrome 29+ or Opera 15+.<br />Ensure that Javascript is enabled and XMLHttpRequests are allowed." + '</p>';
+        document.write( msg );
+      }
+    </script>
+  </body>
+</html>
