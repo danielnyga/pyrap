@@ -3,6 +3,8 @@ Created on Oct 18, 2015
 
 @author: nyga
 '''
+import random
+import string
 from colorsys import hsv_to_rgb, rgb_to_hsv
 from PIL import Image as PILImage
 import os
@@ -551,6 +553,8 @@ class Pixels(Dim):
             Dim.__init__(self, v.value)
         else:
             Dim.__init__(self, v)
+
+
             
     
     def __div__(self, d):
@@ -566,6 +570,10 @@ class Pixels(Dim):
     
     def __str__(self):
         return '%dpx' % self._value
+
+
+    def num(self):
+        return self._num
     
 #     @property
 #     def json(self):
@@ -614,7 +622,7 @@ def pc(v):
 class Color(object):
     
     names = {'red': '#FF0000', 'green': '#00FF00', 'blue': '#0000FF',
-             'gray': '#CCC', 'grey': '#CCC', 'white': '#FFF'}
+             'gray': '#CCC', 'grey': '#CCC', 'white': '#FFF', 'yellow': '#FFFF00', 'transp': '#FFFFFF00'}
     
     def __init__(self, html=None, rgb=None, hsv=None, fct=None, alpha=None):
         if sum([1 for e in (html, rgb, hsv) if e is not None]) != 1:
@@ -804,6 +812,38 @@ class Image(object):
     
     def __str__(self):
         return '<Image[%dx%d] "%s">' % (self.width, self.height, self.filename)
+
+    def resize(self, width=None, height=None):
+        w = self.width
+        h = self.height
+        ratio = float(h)/float(w)
+        if width is not None and height is not None:
+            if isinstance(width, Pixels): w = width.value
+            if isinstance(width, Percent): w = width.of(w).value
+            if isinstance(height, Pixels): h = height.value
+            if isinstance(height, Percent): h = height.of(h).value
+        elif width is not None:
+            if isinstance(width, Pixels):
+                w = width.value
+            elif isinstance(width, Percent):
+                w = width.of(w).value
+            h = w * ratio
+        elif height is not None:
+            if isinstance(height, Pixels):
+                h = height.value
+            elif isinstance(height, Percent):
+                h = height.of(h).value
+            w = h / ratio
+
+        self._img = PILImage.open(self._filepath)
+        tmpimg = self._img.resize((int(round(w)), int(round(h))), PILImage.LANCZOS)
+        tmpfname = os.path.join('/tmp', ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(5)) + '.png')
+        tmpimg.save(tmpfname)
+        with open(tmpfname) as f: self._content = f.read()
+        os.remove(tmpfname)
+        self._img = tmpimg
+
+        return self
 
         
         
