@@ -447,12 +447,13 @@ class ColumnLayout(GridLayout):
                  maxheight=None, valign=None, halign=None, cell_maxwidth=None, 
                  cell_minheight=None, cell_maxheight=None, cell_minwidth=None,
                  equalwidths=None, padding_top=None, padding_bottom=None,
-                 padding_left=None, padding_right=None):
+                 padding_left=None, padding_right=None, hspace=None):
         GridLayout.__init__(self, rows=1, flexrows={0: 1}, flexcols=flexcols, maxwidth=maxwidth,
                         minwidth=minwidth, minheight=minheight, maxheight=maxheight,
                         valign=valign, halign=halign, cell_minwidth=cell_minwidth, 
                         cell_maxwidth=cell_maxwidth, cell_minheight=cell_minheight, 
                         cell_maxheight=cell_maxheight, equalwidths=equalwidths,
                         padding_top=padding_top, padding_bottom=padding_bottom,
-                        padding_left=padding_left, padding_right=padding_right)
+                        padding_left=padding_left, padding_right=padding_right,
+                        hspace=hspace)
     
