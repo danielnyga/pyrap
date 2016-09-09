@@ -25,6 +25,13 @@ class Test():
         return str(session._data)
 
 
+class PyRAPServer(web.application):
+
+    def run(self, port=8080, *middleware):
+        func = self.wsgifunc(*middleware)
+        return web.httpserver.runsimple(func, ('0.0.0.0', port))
+
+
 class ApplicationRegistry(object):
     '''
     Store for all PyRAP application managers.
@@ -50,7 +57,7 @@ class ApplicationRegistry(object):
         return self.apps.get(key)
     
 
-_server = web.application(routes, globals())
+_server = PyRAPServer(routes, globals())
 session = Session(_server)
 _registry = ApplicationRegistry()
 
@@ -93,8 +100,8 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
                       })
     _registry.register(config)
 
-def run():
-    _server.run()
+def run(port=8080):
+    _server.run(port=port)
 
 
 class RequestDispatcher(object):
