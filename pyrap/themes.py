@@ -218,7 +218,7 @@ class Theme(object):
         fct = Theme.Function(None, [])
         curarg = []
         for i in f.seq:
-            if i.type == 'FUNCTION': 
+            if i.type == 'FUNCTION':
                 fct.name = i.value[:-1] # function name
             elif i.type in ('CHAR'):
                 if (i.value == u',' or i.value == u')') and curarg:
@@ -226,8 +226,11 @@ class Theme(object):
                     curarg = []
             elif i.type.endswith('Value'):
                 curarg.append(none_or_value(i.value))
-            elif i.type == 'PERCENTAGE':
-                curarg.append(pc(i.value.value))
+            elif i.type == 'DIMENSION':
+                if '%' in i.value.dimension:
+                    curarg.append(pc(i.value.value))
+                else:
+                    curarg.append(i.value.value)
             elif i.type == 'Function':
                 fct.args.append(self._convert_fct(i.value))
         return fct
@@ -830,6 +833,7 @@ class WidgetTheme(object):
         self._margin = None
         self._border = None
         self._bg = None
+        self._color = None
         
     def states(self):
         states = set()
@@ -910,9 +914,20 @@ class LabelTheme(WidgetTheme):
     
     @bg.setter
     def bg(self, color):
-        self._bg = color 
-        
-        
+        self._bg = color
+
+    @property
+    def color(self):
+        if self._color: return self._color
+        return self._theme.get_property('color', 'Label', self.styles(), self.states())
+
+    @color.setter
+    def color(self, color):
+        out('setting color', color)
+        self._color = color
+        out(self._color)
+
+
 class ButtonTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Button', 'Button-ArrowIcon', 'Button-FocusIndicator')

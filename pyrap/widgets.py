@@ -55,6 +55,8 @@ class Widget(object):
         self.children = []
         self.layout = Layout()
         self._update_layout_from_dict(options)
+        self._font = None
+        self._css = None
         if self not in parent.children:
             parent.children.append(self)
         if self not in parent.children:
@@ -203,6 +205,38 @@ class Widget(object):
         self.theme.bg = parse_value(color, Color)
         session.runtime << RWTSetOperation(self.id, {'background': [int(round(v * 255)) for v in [self.theme.bg.red, self.theme.bg.green, self.theme.bg.blue, self.theme.bg.alpha]]})
 
+    @property
+    def color(self):
+        return self.theme.color
+
+
+    @color.setter
+    @checkwidget
+    def color(self, color):
+        self.theme.color = parse_value(color, Color)
+        session.runtime << RWTSetOperation(self.id, {'foreground': [int(round(v * 255)) for v in [self.theme.color.red, self.theme.color.green, self.theme.color.blue, self.theme.color.alpha]]})
+
+
+    @property
+    def font(self):
+        if self._font is not None: return self._font
+        else: return self.theme.font
+
+    @font.setter
+    @checkwidget
+    def font(self, font):
+        self._font = font
+        session.runtime << RWTSetOperation(self.id, {'font': [font.family, font.size.value, font.bf, font.it]})
+
+    @property
+    def css(self):
+        return ifnone(self._css, 'csscclass')
+
+    @css.setter
+    @checkwidget
+    def css(self, css):
+        self._css = css
+        session.runtime << RWTSetOperation(self.id, {'customVariant': 'variant_%s' % css, 'active': True, 'visibility': True, 'mode': 'maximized'})
 
 
 class Display(Widget):
