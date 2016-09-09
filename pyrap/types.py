@@ -8,10 +8,10 @@ import string
 from colorsys import hsv_to_rgb, rgb_to_hsv
 from PIL import Image as PILImage
 import os
-from _pyio import StringIO
+from _pyio import StringIO, BytesIO
 from web.utils import storify, Storage
 import threading
-from pyrap.utils import BiMap, out, BitMask
+from pyrap.utils import BiMap, out, BitMask, stop
 from pyrap.constants import FONT
 
 
@@ -554,9 +554,6 @@ class Pixels(Dim):
         else:
             Dim.__init__(self, v)
 
-
-            
-    
     def __div__(self, d):
         s = parse_value(d)
         return px(int(round(self.value / (s.value if type(d) == Pixels else d))))
@@ -567,6 +564,8 @@ class Pixels(Dim):
     def __sub__(self, o):
         return px(int(round(Dim.__sub__(self, o).value)))
 
+    def __mul__(self, o):
+        return px(int(round(Dim.__mul__(self, o).value)))
     
     def __str__(self):
         return '%dpx' % self._value
@@ -797,52 +796,75 @@ class Image(object):
         
     @property
     def width(self):
-        return self._img.size[0]
+        return px(self._img.size[0])
+    
+    @width.setter
+    def width(self, w):
+        self.resize(width=w)
     
     @property
     def height(self):
-        return self._img.size[1]
+        return px(self._img.size[1])
+    
+    @height.setter
+    def height(self, h):
+        self.resize(height=h)
     
     @property
     def size(self):
-        return self._img.size
+        return self.width, self.height
 
+    @size.setter
+    def size(self, s):
+        w, h = s
+        self.resize(width=w, height=h)
+    
     def __repr__(self):
-        return '<Image[%dx%d] "%s" at 0x%x>' % (self.width, self.height, self.filename, hash(self))
+        return '<Image[%sx%s] "%s" at 0x%x>' % (self.width, self.height, self.filename, hash(self))
     
     def __str__(self):
-        return '<Image[%dx%d] "%s">' % (self.width, self.height, self.filename)
+        return '<Image[%sx%s] "%s">' % (self.width, self.height, self.filename)
 
     def resize(self, width=None, height=None):
+        '''
+        Scales this image according to the given parameters.
+        
+        If both ``width`` and ``height`` are given, the image is scaled accordingly.
+        If only one of them is specified, them the other one is computed proportionally.
+        
+        Both ``width`` and ``height`` can be either ``int``, :class:`pyrap.Pixels`,
+        or :class:`pyrap.Percent` values. If ``int``, they will be treated as pixel values
+        
+        :return:     this image instance.
+        '''
         w = self.width
         h = self.height
-        ratio = float(h)/float(w)
-        if width is not None and height is not None:
-            if isinstance(width, Pixels): w = width.value
-            if isinstance(width, Percent): w = width.of(w).value
-            if isinstance(height, Pixels): h = height.value
-            if isinstance(height, Percent): h = height.of(h).value
-        elif width is not None:
-            if isinstance(width, Pixels):
-                w = width.value
-            elif isinstance(width, Percent):
-                w = width.of(w).value
+        ratio = float(h.value) / float(w.value)
+        # if either of them is int, convert to pixels by default
+        if type(width) is int:
+            width = px(width)
+        if type(height) is int:
+            height = px(height)
+        # if either of them is string, parse the value
+        if isinstance(width, basestring):
+            width = parse_value(width)
+        if isinstance(height, basestring):
+            height = parse_value(height)
+        w, h = width, height
+        if isinstance(width, Percent):
+            w = width.of(w)
+        if isinstance(height, Percent):
+            h = height.of(h)
+        if height is None:
             h = w * ratio
-        elif height is not None:
-            if isinstance(height, Pixels):
-                h = height.value
-            elif isinstance(height, Percent):
-                h = height.of(h).value
+        elif width is None:
             w = h / ratio
-
         self._img = PILImage.open(self._filepath)
-        tmpimg = self._img.resize((int(round(w)), int(round(h))), PILImage.LANCZOS)
-        tmpfname = os.path.join('/tmp', ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(5)) + '.png')
-        tmpimg.save(tmpfname)
-        with open(tmpfname) as f: self._content = f.read()
-        os.remove(tmpfname)
-        self._img = tmpimg
-
+        self._img = self._img.resize((w.value, h.value), PILImage.LANCZOS)
+        stream = BytesIO()
+        self._img.save(stream, format=self.fileext)
+        self._content = str(stream.getvalue())
+        stream.close()
         return self
 
         

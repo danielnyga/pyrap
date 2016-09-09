@@ -461,7 +461,7 @@ class Label(Widget):
     def _get_rwt_img(self, img):
         if img is not None:
             res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
-            img = [res.location, img.width, img.height]
+            img = [res.location, img.width.value, img.height.value]
         else: img = None
         return img
         
@@ -626,8 +626,8 @@ class Checkbox(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        w += self.theme.icon.width
-        h += (self.theme.icon.height - textheight) if (self.theme.icon.height > textheight) else 0
+        w += self.theme.icon.width.value
+        h += (self.theme.icon.height.value - textheight) if (self.theme.icon.height.value > textheight) else 0
         w += self.theme.spacing
         return w, h
 
@@ -694,8 +694,8 @@ class Option(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        w += self.theme.icon.width
-        h += (self.theme.icon.height - textheight) if (self.theme.icon.height > textheight) else 0
+        w += self.theme.icon.width.value
+        h += (self.theme.icon.height.value - textheight) if (self.theme.icon.height.value > textheight) else 0
         w += self.theme.spacing
         return w, h
     
