@@ -95,6 +95,23 @@ class OnSelect(RWTEvent):
     def _notify(self, listener, data): listener(data)
 
 
+class OnNavigate(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'Navigation', widget)
+
+
+    def _create_subscribe_msg(self):
+        return RWTListenOperation(self.target.id, {'Navigation': True})
+
+
+    def _create_unsubscribe_msg(self):
+        return RWTListenOperation(self.target.id, {'Navigation': False})
+
+
+    def _notify(self, listener, data): listener(data)
+
+
+
 class OnClose(RWTEvent):
     def __init__(self, widget):
         RWTEvent.__init__(self, 'Close', widget)
