@@ -180,7 +180,7 @@ def jsonify(o):
     elif isinstance(o, (int, float, bool, basestring, type(None))):
         return o
     else:
-        raise TypeError('object of type "%s" is not jsonifiable.' % type(o))
+        raise TypeError('object of type "%s" is not jsonifiable: %s' % (type(o), repr(o)))
     
         
 class BiMap():

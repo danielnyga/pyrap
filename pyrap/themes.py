@@ -741,7 +741,7 @@ class Theme(object):
         
         @staticmethod
         def _image2json(img):
-            return [img.width, img.height]
+            return [img.width.value, img.height.value]
         
         @staticmethod
         def _gradient2json(grad):
