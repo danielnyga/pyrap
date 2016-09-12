@@ -15,7 +15,7 @@
   color: #4a4a4a;
   background-color: #fff;
   background-image: none;
-  font: 14px "Open Sans", Arial, Helvetica, sans-serif;
+  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
 *:disabled {
@@ -81,8 +81,8 @@ Display {
 
   rwt-fontlist: 14px 'Segoe UI', Corbel, Calibri, Tahoma, 'Lucida Sans Unicode';
 
-  background-image: none;//url( resource/widget/rap/display/browser_bg.png );
-  font: 12px Arial, Helvetica, sans-serif;
+  background-image: url( resource/widget/rap/display/browser_bg.png );
+  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
 }
 
 SystemMessage-DisplayOverlay {
@@ -123,14 +123,14 @@ Composite[BORDER] {
 /* Button default theme */
 
 Button {
-  font: 12px "Open Sans", Arial, Helvetica, sans-serif;
+  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-image: none;
   background-repeat: repeat;
   background-position: left top;
   border: none;
-  border-radius: 0px;
-  /*padding: 6px 15px;*/
-  /*spacing: 2px;*/
+  border-radius: 2px;
+  padding: 6px 15px;
+  spacing: 2px;
   cursor: default;
   animation: none;
   color: #4a4a4a;
@@ -149,18 +149,16 @@ Button[TOGGLE][BORDER],
 Button[PUSH][FLAT],
 Button[TOGGLE][FLAT] {
   border: 1px solid #bdbdbd;
-  border-radius: 10px 0px 10px 0px;
+  border-radius: 2px;
   padding: 6px 15px;
-  background-color: #3376CC;
-  color: #fff;
-  /*background-image: gradient(
+  background-image: gradient(
     linear, left top, left bottom,
     from( #f9f9f9 ),
     to( #e4e4e4 )
-  );*/
+  );
   animation: none;
   cursor: pointer;
-  text-shadow: none; /* 0 1px 0 #ffffff;*/
+  text-shadow: 0 1px 0 #ffffff;
 }
 
 Button[ARROW],
@@ -203,12 +201,11 @@ Button[TOGGLE]:selected:disabled {
 Button[ARROW]:hover,
 Button[PUSH]:hover,
 Button[TOGGLE]:hover {
-	box-shadow: 0 0 10px #3376CC;
-  /*background-image: gradient(
+  background-image: gradient(
     linear, left top, left bottom,
     from( #eaeaea ),
     to( #d5d5d5 )
-  );*/
+  );
 }
 
 Button[ARROW]:pressed,
@@ -239,8 +236,8 @@ Button[TOGGLE]:selected:hover {
 
 Button[CHECK],
 Button[RADIO] {
-  padding: 5px 5px 5px 5px;
-  spacing: 1px;
+  padding: 3px 3px 3px 0;
+  spacing: 7px;
 }
 
 Button[CHECK][BORDER],
@@ -327,12 +324,11 @@ Button-FocusIndicator[CHECK], Button-FocusIndicator[RADIO] {
 
 Combo,
 Combo[BORDER] {
-  font: 12px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   color: #4a4a4a;
   background-color: #ffffff;
   border: 1px solid #aaaaaa;
   border-radius: 0 2px 2px 0;
-  padding: 5px;
   background-image: none;
   text-shadow: none;
   box-shadow: inset 0 0 3px #bdbdbd;
@@ -478,7 +474,7 @@ CTabFolder {
 }
 
 CTabItem {
-  /*font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;*/
+  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   color: #4a4a4a;
   background-color: transparent;
   background-image: none;
@@ -538,7 +534,7 @@ Group-Label {
 /* Label default theme */
 
 Label {
-  font: 12px "Open Sans", Arial, Helvetica, sans-serif;
+  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   color: #4a4a4a;
   background-color: #ffffff;
   background-image: none;
@@ -550,13 +546,11 @@ Label {
   cursor: default;
   opacity: 1;
   text-shadow: none;
-  /*padding: 50px 50px 50px 50px;*/
-  /*margin: 10px 10px 10px 20px;*/
 }
 
 Label[BORDER] {
   border: 1px solid #bdbdbd;
-  border-radius: 10px 0px 10px 0px;
+  border-radius: 2px;
 }
 
 Label-SeparatorLine {
@@ -805,21 +799,17 @@ Shell {
   border: none;
   border-radius: 2px;
   background-color: #ffffff;
-  /*background-image: none;*/
-  padding: 10px 10px 10px 10px;
+  background-image: none;
+  padding: 0;
   opacity: 1;
   box-shadow: none;
 }
 
 Shell[TITLE], Shell[BORDER] {
   background-color: #ffffff;
-  border: none;
-  /*border-left: 1px solid #DDDDDD;
-  border-top: 1px solid #DDDDDD;
-  border-right: 1px solid #6e6e6e;
-  border-bottom: 1px solid #6e6e6e;*/
-  border-radius: 10px 10px 10px 10px;
-  box-shadow: 0 0 50px #777777;
+  border: 1px solid #6e6e6e;
+  border-radius: 2px;
+  box-shadow: 0 0 4px #ababab;
 }
 
 Shell[BORDER]:inactive, Shell[TITLE]:inactive {
@@ -843,17 +833,17 @@ Shell-DisplayOverlay {
 /* Shell titlebar */
 
 Shell-Titlebar {
-  font: 13px bold "Open Sans", Arial, Helvetica, sans-serif;
-  background-color: #ffffff;
-  background-gradient-color: #00ff00;
-  color: #3376CC;
-  /*background-image: gradient(
+  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  background-color: #0080c0;
+  background-gradient-color: #0080c0;
+  color: #ffffff;
+  background-image: gradient(
     linear, left top, left bottom,
-    from( #568FD8 ), to( #134687)
-  );*/
-  padding: 10px 10px 10px 10px;
+    from( #416693 ), to( #5882b5 )
+  );
+  padding: 0 10px 0 10px;
   margin: 0px;
-  height: 40px;
+  height: 38px;
   border: none;
   border-radius: 0;
   text-shadow: none;
@@ -1282,10 +1272,10 @@ Table-Checkbox:checked:grayed:hover {
 /* Text default theme */
 
 Text {
-  font: 12px "Open Sans", Arial, Helvetica, sans-serif;
+  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   border: none;
   border-radius: 0;
-  padding: 2px 5px 2px 5px;
+  padding: 5px 10px 5px 10px;
   color: #4a4a4a;
   background-repeat: repeat;
   background-position: left top;

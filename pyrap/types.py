@@ -394,17 +394,14 @@ class StringVar(Var):
 class BoundedDim(object):
     
     def __init__(self, _min, _max, value=None):
-        self._min = Var()
-        self._max = Var()
-        self._value = Var()
-        self.min = _min
-        self.max = _max
-        self.value = value
+        self._min = Var(_min)
+        self._max = Var(_max)
+        self._value = Var(value)
         self.clean()
         
     def __call__(self):
         return self.value
-    
+        
     @property
     def min(self):
         return self._min()
@@ -414,23 +411,24 @@ class BoundedDim(object):
         if m is not None and self.min is not None:
             m = max(m, self.min)
         self._min.set(m)
-        if m >= self.max:
-            self.value = m
+        if m == self.max:
+            self._value.set(m)
         
     @property
     def max(self):
-        return self._max()
+        return self._max()  
     
     @max.setter
     def max(self, m):
         if m is not None and self.max is not None:
             m = min(m, self.max)
         self._max.set(m)
-        if m <= self.min:
-            self._value.set(self.min)
+        if m == self.min:
+            self._value.set(m)
         
     @property
     def value(self):
+        if self.min == self.max: return self.min
         return self._value()
         
     @value.setter
@@ -570,6 +568,8 @@ class Pixels(Dim):
     def __str__(self):
         return '%dpx' % self._value
 
+    def __call__(self):
+        return self.value
 
     def num(self):
         return self._num
@@ -599,9 +599,14 @@ class Percent(Dim):
             Dim.__init__(self, v)
             
     def of(self, v):
-        v = parse_value(v)
-        if type(v) is Pixels:
-            return type(v)(int(round((v.value if isinstance(v, Dim) else v) * self._value / 100.)))
+        if type(v) is float:
+            return self.value * v / 100.
+        if type(v) is int:
+            return int(round(self.value * v / 100.))
+        if isinstance(v, basestring):
+            v = parse_value(v)
+        if isinstance(v, Pixels):
+            return Pixels(int(round((v.value * self._value / 100.))))
         return type(v)((v.value if isinstance(v, Dim) else v) * self._value / 100.)
             
     def __str__(self):
@@ -830,9 +835,9 @@ class Image(object):
         Scales this image according to the given parameters.
         
         If both ``width`` and ``height`` are given, the image is scaled accordingly.
-        If only one of them is specified, them the other one is computed proportionally.
+        If only one of them is specified, the other one is computed proportionally.
         
-        Both ``width`` and ``height`` can be either ``int``, :class:`pyrap.Pixels`,
+        Both ``width`` and ``height`` can be either ``str``, ``int``, :class:`pyrap.Pixels`,
         or :class:`pyrap.Percent` values. If ``int``, they will be treated as pixel values
         
         :return:     this image instance.
@@ -850,14 +855,17 @@ class Image(object):
             width = parse_value(width)
         if isinstance(height, basestring):
             height = parse_value(height)
-        w, h = width, height
         if isinstance(width, Percent):
             w = width.of(w)
+        else: w = width
         if isinstance(height, Percent):
             h = height.of(h)
+        else:
+            h = height
         if height is None:
             h = w * ratio
         elif width is None:
+            out(h, height)
             w = h / ratio
         self._img = PILImage.open(self._filepath)
         self._img = self._img.resize((w.value, h.value), PILImage.LANCZOS)

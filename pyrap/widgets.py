@@ -17,6 +17,8 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme
 from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout
 import md5
+import time
+from pyrap import pyraplog
 
 
 
@@ -37,6 +39,8 @@ def constructor(cls):
                 if hasattr(self.parent, 'id') and not isinstance(self, Shell):
                     session.runtime << RWTSetOperation(self.parent.id, {'children': [c.id for c in self.parent.children]})
             self._disposed = False
+            if hasattr(self, 'create_content'):
+                self.create_content()
         return wrapper
     return outer
  
@@ -100,6 +104,18 @@ class Widget(object):
             self.layout.cell_minheight = d['cell_minheight']
         if 'cell_maxheight' in d:
             self.layout.cell_maxheight = d['cell_maxheight']
+        if 'padding' in d:
+            self.layout.padding_left, self.layout.padding_right, \
+            self.layout.padding_bottom, self.layout.padding_top = [d['padding']] * 4
+        if 'padding_left' in d:
+            self.layout.padding_left = d['padding_left']
+        if 'padding_right' in d:
+            self.layout.padding_left = d['padding_right']
+        if 'padding_bottom' in d:
+            self.layout.padding_left = d['padding_bottom']
+        if 'padding_top' in d:
+            self.layout.padding_left = d['padding_top']
+        
         
     def _handle_notify(self, op):
         if op.event == 'Resize': self.on_resize.notify()
@@ -279,6 +295,8 @@ class Shell(Widget):
                                    'titlebar':  RWT.TITLE,
                                    'modal':     RWT.MODAL}
     _defstyle_ = Widget._defstyle_ | RWT.VISIBLE | RWT.ACTIVE
+
+    _logger = pyraplog.getlogger(__name__, level=pyraplog.DEBUG)
     
     @constructor('Shell')
     def __init__(self, parent, **options):
@@ -287,8 +305,15 @@ class Shell(Widget):
         self._title = options.get('title')
         self.on_close = OnClose(self)
         self.on_move = OnMove(self)
-#         self.content = Composite(self)
-#         self.content.layout = CellLayout(halign='fill', valign='fill')
+    
+       
+        
+    def create_content(self):
+        self.content = Composite(self)
+        self.content.layout = CellLayout(halign='fill', valign='fill')
+#         self.content.bg = Color('red')
+        self.on_resize += self.dolayout
+        
         
     def _handle_notify(self, op):
         if op.event not in ('Close', 'Move'): return Widget._handle_notify(self, op)
@@ -353,7 +378,12 @@ class Shell(Widget):
     @maximized.setter
     @checkwidget
     def maximized(self, m):
-        self.style |= RWT.MAXIMIZED
+        self.style.setbit(RWT.MAXIMIZED, m)
+        session.runtime << RWTSetOperation(self.id, {'mode': 'maximized'})
+        if m: 
+            self._maximize()
+#             session.runtime.display.on_resize += self.dolayout
+            
         
     @property
     def parent_shell(self):
@@ -365,24 +395,56 @@ class Shell(Widget):
 
     @property
     def client_rect(self):
-        area = (0, 0) + self.bounds
-        top, right, bottom, left = self.theme.borders
+        area = [0, 0] + list(self.bounds[2:])
         padding = self.theme.padding
+        if padding:
+            area[0] += padding.left
+            area[2] -= padding.left + padding.right
+            area[1] += padding.top
+            area[3] -= padding.top + padding.bottom
         if self.title: 
             area[3] -= self.theme.title_height
             area[1] += self.theme.title_height
+        top, right, bottom, left = self.theme.borders
         area[0] += ifnone(left, 0, lambda b: b.width)
-        area[2] -= ifnone(left, 0, lambda b: b.width) - ifnone(right, 0, lambda b: b.width)
+        area[2] -= ifnone(left, 0, lambda b: b.width) + ifnone(right, 0, lambda b: b.width)
         area[1] += ifnone(top, 0, lambda b: b.width)
-        area[3] -= ifnone(top, 0, lambda b: b.width) - ifnone(bottom, 0, lambda b: b.width)
+        area[3] -= ifnone(top, 0, lambda b: b.width) + ifnone(bottom, 0, lambda b: b.width)
         return area
-            
+    
+    @checkwidget
+    def close(self):
+        self.on_close.notify()
+    
+    def _maximize(self):
+        self.bounds = session.runtime.display.bounds
+        
 
     def dolayout(self):
-        layout = LayoutAdapter.create(self, None)
+        started = time.time()
+        if self.maximized:
+            self._maximize()
+        x, y, w, h = self.client_rect
+        self.content.layout.cell_minwidth = w
+        self.content.layout.cell_maxwidth = w
+        self.content.layout.cell_minheight = h
+        self.content.layout.cell_maxheight = h
+        self.content.layout.maxheight = h
+        self.content.layout.minheight = h
+        self.content.layout.maxwidth = w
+        self.content.layout.minwidth = w
+        self.content.bounds = x, y, w, h
+        layout = LayoutAdapter.create(self.content, None)
+        layout.data.cellhpos.set(x)
+        layout.data.cellvpos.set(y)
         layout.compute()
-        layout.write()
-#         layout.apply()
+        end = time.time()
+        self._logger.debug('layout computations took %s sec' % (end - started))
+#         layout.write()
+
+
+    def onresize_shell(self):
+        self.dolayout()
 
 
 class Combo(Widget):
@@ -401,7 +463,7 @@ class Combo(Widget):
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.items = self._items
-        options.style = ["DROP_DOWN"]
+        options.style.append("DROP_DOWN")
         options.children = None
         options.tabIndex = 8
         options.editable = self._editable
@@ -410,10 +472,10 @@ class Combo(Widget):
 
     def compute_size(self):
         w, h = session.runtime.textsize_estimate(self.theme.font, 'X')
-        padding = self.theme.padding
-        if padding:
-            w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
-            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        for padding in (self.theme.padding, self.theme.itempadding):
+            if padding:
+                w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
+                h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
@@ -621,11 +683,13 @@ class Checkbox(Widget):
     def compute_size(self):
         w, h = session.runtime.textsize_estimate(self.theme.font, self._text)
         textheight = px(h) 
-        if self.theme.padding:
-            w += self.theme.padding.left + self.theme.padding.right
-        t, r, b, l = self.theme.borders
-        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        for padding in (self.theme.padding, self.theme.fipadding):
+            if padding:
+                w += self.theme.padding.left + self.theme.padding.right
+                h += self.theme.padding.top + self.theme.padding.bottom
+        for t, r, b, l in(self.theme.borders, self.theme.fiborders): 
+            w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+            h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         w += self.theme.icon.width.value
         h += (self.theme.icon.height.value - textheight) if (self.theme.icon.height.value > textheight) else 0
         w += self.theme.spacing
@@ -689,11 +753,13 @@ class Option(Widget):
     def compute_size(self):
         w, h = session.runtime.textsize_estimate(self.theme.font, self._text)
         textheight = px(h) 
-        if self.theme.padding:
-            w += self.theme.padding.left + self.theme.padding.right
-        t, r, b, l = self.theme.borders
-        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        for padding in (self.theme.padding, self.theme.fipadding):
+            if padding:
+                w += self.theme.padding.left + self.theme.padding.right
+                h += self.theme.padding.top + self.theme.padding.bottom
+        for t, r, b, l in(self.theme.borders, self.theme.fiborders): 
+            w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+            h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         w += self.theme.icon.width.value
         h += (self.theme.icon.height.value - textheight) if (self.theme.icon.height.value > textheight) else 0
         w += self.theme.spacing

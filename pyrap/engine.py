@@ -227,7 +227,7 @@ class WindowManager(object):
             wnd = wnd.id
         return wnd in self.registry
     
-    
+
 class SessionRuntime(object):
     '''
     This class represents an instance of an application attached to an HTTP 
@@ -375,14 +375,10 @@ class SessionRuntime(object):
     
     def create_shell(self):
         self.shell = Shell(self.display, maximized=True)
-        self.shell.layout = CellLayout()
-        self.shell.layout.valign = 'fill'
-        self.shell.layout.halign = 'fill'
-        self.shell.on_resize += self.onresize_shell
-        self.shell.bounds = self.display.bounds
         self.shell.bg = Color('green')
+        self.shell.maximized = True
         self.mngr.config.entrypoints[self.entrypoint](self.app, self.shell, **self.args)
-        self.onresize_shell()
+        self.shell.onresize_shell()
         self._initialized = True
         
     
@@ -393,12 +389,7 @@ class SessionRuntime(object):
         self << RWTCallOperation('rwt.theme.ThemeStore', 'loadDefaultTheme', {'url': 'rwt-resources/rap-rwt.theme.Default.json'})
         
         
-    def onresize_shell(self):
-        self.shell.layout.cell_minwidth = self.shell.bounds[2]
-        self.shell.layout.cell_maxwidth = self.shell.bounds[2]
-        self.shell.layout.cell_minheight = self.shell.bounds[3]
-        self.shell.layout.cell_maxheight = self.shell.bounds[3]
-        self.shell.dolayout()
+    
 
 
 

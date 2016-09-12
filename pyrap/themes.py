@@ -22,7 +22,7 @@ from copy import copy, deepcopy
 import re
 from pyrap.constants import BORDER, GRADIENT, ANIMATION, FONT, SHADOW, CURSOR,\
     RWT
-from pyrap.utils import out
+from pyrap.utils import out, stop
 import math
 
 TYPE = 'type-selector'
@@ -853,7 +853,7 @@ class WidgetTheme(object):
 
 class ComboTheme(WidgetTheme):
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'Combo', 'Combo-Button', 'Combo-List', 'Combo-Field')
+        WidgetTheme.__init__(self, widget, theme, 'Combo', 'Combo-Button', 'Combo-List', 'Combo-Field', 'Combo-List-Item')
         self.separator = None
 
 
@@ -870,7 +870,7 @@ class ComboTheme(WidgetTheme):
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Combo', self.styles(), self.states())
-
+    
 
     @property
     def borders(self):
@@ -889,7 +889,11 @@ class ComboTheme(WidgetTheme):
         self._bg = color
 
 
-
+    @property
+    def itempadding(self):
+        return self._theme.get_property('padding', 'Combo-Field', self.styles(), self.states())
+    
+    
 class LabelTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Label')
@@ -1004,7 +1008,16 @@ class CheckboxTheme(WidgetTheme):
     
     @bg.setter
     def bg(self, color):
-        self._bg = color 
+        self._bg = color
+        
+    @property
+    def fipadding(self): # the focus indicator
+        return self._theme.get_property('padding', 'Button-FocusIndicator', self.styles(), self.states())
+
+    @property
+    def fiborders(self):
+        return [self._theme.get_property('border-%s' % b, 'Button-FocusIndicator', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
 
 
 class OptionTheme(WidgetTheme):
@@ -1051,7 +1064,16 @@ class OptionTheme(WidgetTheme):
     def bg(self, color):
         self._bg = color 
         
-        
+    @property
+    def fipadding(self): # the focus indicator
+        return self._theme.get_property('padding', 'Button-FocusIndicator', self.styles(), self.states())
+
+    @property
+    def fiborders(self):
+        return [self._theme.get_property('border-%s' % b, 'Button-FocusIndicator', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+
+
 class CompositeTheme(WidgetTheme):
     
     def __init__(self, widget, theme):
