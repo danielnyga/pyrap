@@ -1091,9 +1091,57 @@ class CompositeTheme(WidgetTheme):
     
     @bg.setter
     def bg(self, color):
-        self._bg = color 
-        
-        
+        self._bg = color
+
+
+
+class TabFolderTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'TabFolder')
+        self._bg = None
+
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'TabFolder', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'TabFolder', self.styles(), self.states())
+
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+
+
+class TabItemTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'TabItem')
+        self._bg = None
+
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'TabItem', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'TabItem', self.styles(), self.states())
+
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+
 
 class ShellTheme(WidgetTheme):
     

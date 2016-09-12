@@ -10,11 +10,13 @@ from pyrap.types import Event, px, BitField, BitMask, BoolVar, NumVar, Color,\
 from pyrap.base import session
 from pyrap.utils import RStorage, BiMap, out, ifnone, pparti, stop
 from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
-    _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose
+    _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
+    OnNavigate
 from pyrap.exceptions import WidgetDisposedError, LayoutError, ResourceError
 from pyrap.constants import RWT, inf
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
-    CompositeTheme, ShellTheme, EditTheme, ComboTheme
+    CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
+    TabFolderTheme
 from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout
 import md5
 import time
@@ -72,6 +74,7 @@ class Widget(object):
         self.on_mousedown = OnMouseDown(self)
         self.on_mouseup = OnMouseUp(self)
         self.on_dblclick = OnDblClick(self)
+        self.on_navigate = OnNavigate(self)
         self.on_focus = OnFocus()
         self.on_dispose = OnDispose()
         self.style = BitField(type(self)._defstyle_)
@@ -122,6 +125,7 @@ class Widget(object):
         elif op.event == 'MouseUp': self.on_mouseup.notify(_rwt_mouse_event(op))
         elif op.event == 'MouseDown': self.on_mousedown.notify(_rwt_mouse_event(op))
         elif op.event == 'MouseDoubleClick': self.on_dblclick.notify(_rwt_mouse_event(op))
+        elif op.event == 'Navigation': self.on_navigate.notify(_rwt_mouse_event(op))
         else: return False
         return True 
         
@@ -815,6 +819,149 @@ class Composite(Widget):
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
         session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
         
+    def compute_size(self):
+        return 0, 0
+
+
+
+class TabFolder(Widget):
+
+    _rwt_class_name_ = 'rwt.widgets.TabFolder'
+    _defstyle_ = BitField(Widget._defstyle_)
+
+
+    @constructor('TabFolder')
+    def __init__(self, parent, style='TOP', **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = TabFolderTheme(self, session.runtime.mngr.theme)
+        self._style = style
+
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        options.style.append('NONE')
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+
+
+    @Widget.bounds.setter
+    @checkwidget
+    def bounds(self, bounds):
+        if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
+        self._bounds = map(px, bounds)
+        session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
+        session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
+
+
+    @property
+    def style(self):
+        return self._style
+
+
+    @style.setter
+    @checkwidget
+    def style(self, style):
+        self._style = style
+        session.runtime << RWTSetOperation(self.id, {'style': [self._style]})
+
+    def compute_size(self):
+        return 0, 0
+
+
+class TabItem(Widget):
+
+    _rwt_class_name_ = 'rwt.widgets.TabItem'
+    _defstyle_ = BitField(Widget._defstyle_)
+
+
+    @constructor('TabItem')
+    def __init__(self, parent, idx=None, text=None, img=None, tooltip=None, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = TabItemTheme(self, session.runtime.mngr.theme)
+        self._idx = idx
+        self._text = text + idx
+        self._tooltip = tooltip
+        self._img = img
+
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if self.img:
+            options.image = self._get_rwt_img(self.img)
+        if self.text:
+            options.text = self.text
+        if self.tooltip:
+            options.toolTip = self.tooltip
+        if self.idx:
+            options.index = self.index
+        session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+
+
+    def _get_rwt_img(self, img):
+        if img is not None:
+            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
+            img = [res.location, img.width, img.height]
+        else:
+            img = None
+        return img
+
+
+    @Widget.bounds.setter
+    @checkwidget
+    def bounds(self, bounds):
+        if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
+        self._bounds = map(px, bounds)
+        session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
+        session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
+
+
+    @property
+    def idx(self):
+        return self._idx
+
+
+    @idx.setter
+    @checkwidget
+    def idx(self, idx):
+        self._idx = idx
+        session.runtime << RWTSetOperation(self.id, {'index': self._idx})
+
+
+    @property
+    def text(self):
+        return self._text
+
+
+    @text.setter
+    @checkwidget
+    def text(self, text):
+        self._text = text
+        session.runtime << RWTSetOperation(self.id, {'text': self._text})
+
+
+    @property
+    def tooltip(self):
+        return self._tooltip
+
+
+    @tooltip.setter
+    @checkwidget
+    def tooltip(self, tooltip):
+        self._tooltip = tooltip
+        session.runtime << RWTSetOperation(self.id, {'toolTip': self._tooltip})
+
+
+    @property
+    def img(self):
+        return self._img
+
+
+    @img.setter
+    @checkwidget
+    def img(self, img):
+        self._img = img
+        session.runtime << RWTSetOperation(self.id, {'image': self._get_rwt_img(self.img)})
+
+
     def compute_size(self):
         return 0, 0
     
