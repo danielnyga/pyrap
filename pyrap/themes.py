@@ -856,38 +856,31 @@ class ComboTheme(WidgetTheme):
         WidgetTheme.__init__(self, widget, theme, 'Combo', 'Combo-Button', 'Combo-List', 'Combo-Field', 'Combo-List-Item')
         self.separator = None
 
-
     @property
     def btnwidth(self):
         return self._theme.get_property('width', 'Combo-Button', self.styles(), self.states())
-
 
     @property
     def font(self):
         return self._theme.get_property('font', 'Combo', self.styles(), self.states())
 
-
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Combo', self.styles(), self.states())
-    
 
     @property
     def borders(self):
         return [
             self._theme.get_property('border-%s' % b, 'Combo', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
-
     @property
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'Combo', self.styles(), self.states())
 
-
     @bg.setter
     def bg(self, color):
         self._bg = color
-
 
     @property
     def itempadding(self):
@@ -1083,7 +1076,15 @@ class CompositeTheme(WidgetTheme):
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Composite', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-    
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'Composite', self.styles(), self.states())
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Composite', self.styles(), self.states())
+
     @property
     def bg(self):
         if self._bg: return self._bg
@@ -1094,29 +1095,24 @@ class CompositeTheme(WidgetTheme):
         self._bg = color
 
 
-
 class TabFolderTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'TabFolder')
         self._bg = None
 
-
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'TabFolder', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-
 
     @property
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'TabFolder', self.styles(), self.states())
 
-
     @bg.setter
     def bg(self, color):
         self._bg = color
-
 
 
 class TabItemTheme(WidgetTheme):
@@ -1125,22 +1121,26 @@ class TabItemTheme(WidgetTheme):
         WidgetTheme.__init__(self, widget, theme, 'TabItem')
         self._bg = None
 
-
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'TabItem', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-
 
     @property
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'TabItem', self.styles(), self.states())
 
-
     @bg.setter
     def bg(self, color):
         self._bg = color
 
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'TabItem', self.styles(), self.states())
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'TabItem', self.styles(), self.states())
 
 
 class ShellTheme(WidgetTheme):
@@ -1245,7 +1245,6 @@ class ThemeRule(object):
         return rule
         
 
-
 if __name__ == '__main__':
     pyraplog.level(DEBUG)
     theme = Theme('default').load()
@@ -1253,5 +1252,3 @@ if __name__ == '__main__':
     btn_theme = theme.extract('Label')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
     btn_theme.write()
     out(btn_theme.get_property('border-left', 'Label', ['[BORDER']))
-    
-    

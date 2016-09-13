@@ -867,7 +867,6 @@ class Image(object):
         if height is None:
             h = w * ratio
         elif width is None:
-            out(h, height)
             w = h / ratio
         self._img = PILImage.open(self._filepath)
         self._img = self._img.resize((w.value, h.value), PILImage.LANCZOS)

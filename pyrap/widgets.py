@@ -80,7 +80,7 @@ class Widget(object):
         self.style = BitField(type(self)._defstyle_)
         for k, v in options.iteritems():
             if k in type(self)._styles_: self.style.setbit(type(self)._styles_[k:], v)
-            
+
             
     def __repr__(self):
         return '<%s id=%s%s at 0x%s>' % (self.__class__.__name__, self.id, '' if not hasattr(self, 'text') else (' text="%s"' % self.text), hash(self))
@@ -256,7 +256,7 @@ class Widget(object):
     @checkwidget
     def css(self, css):
         self._css = css
-        session.runtime << RWTSetOperation(self.id, {'customVariant': 'variant_%s' % css, 'active': True, 'visibility': True, 'mode': 'maximized'})
+        session.runtime << RWTSetOperation(self.id, {'customVariant': 'variant_%s' % css})
 
 
 class Display(Widget):
@@ -468,8 +468,6 @@ class Combo(Widget):
         options = Widget._rwt_options(self)
         options.items = self._items
         options.style.append("DROP_DOWN")
-        options.children = None
-        options.tabIndex = 8
         options.editable = self._editable
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
 
@@ -699,6 +697,7 @@ class Checkbox(Widget):
         w += self.theme.spacing
         return w, h
 
+
 class Option(Widget):
     _rwt_class_name_ = 'rwt.widgets.Button'
     _defstyle_ = BitField(Widget._defstyle_)
@@ -773,18 +772,33 @@ class Option(Widget):
 class Edit(Widget):
     
     _rwt_class_name = 'rwt.widgets.Text'
-    _defstyle_ = BitField(Widget._defstyle_ | RWT.BORDER)
-    
+    _styles_ = Widget._styles_ + {'multiline': RWT.MULTI,
+                                  'wrap': RWT.WRAP,
+                                  'alignleft': RWT.LEFT}
+    _defstyle_ = BitField(Widget._defstyle_ | RWT.BORDER | RWT.LEFT)
+
     @constructor('Edit')
-    def __init__(self, parent, **options):
+    def __init__(self, parent, text=None, editable=True, **options):
         Widget.__init__(self, parent, **options)
         self.theme = EditTheme(self, session.runtime.mngr.theme)
-        
-    
+        self._text = text
+        self._editable = editable
+
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
+        if self.text:
+            options.text = self.text
+        options.editable = self._editable
+        if RWT.MULTI in self.style:
+            options.style.append('MULTI')
+        if RWT.WRAP in self.style:
+            options.style.append('WRAP')
+        if RWT.LEFT in self.style:
+            options.style.append('LEFT')
+        out(options)
+
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
-    
+
     def compute_size(self):
         w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX')
         if self.theme.padding:
@@ -793,7 +807,16 @@ class Edit(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        return w, h 
+        return w, h
+
+    @property
+    def text(self):
+        return self._text
+
+    @text.setter
+    @checkwidget
+    def text(self, text):
+        self._text = text
         
     
 class Composite(Widget):
@@ -820,28 +843,34 @@ class Composite(Widget):
         session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
         
     def compute_size(self):
-        return 0, 0
-
+        w = h = 0
+        padding = self.theme.padding
+        if padding:
+            w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
+            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        t, r, b, l = self.theme.borders
+        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        return w, h
 
 
 class TabFolder(Widget):
 
     _rwt_class_name_ = 'rwt.widgets.TabFolder'
-    _defstyle_ = BitField(Widget._defstyle_)
-
+    _defstyle_ = BitField(Widget._defstyle_ | RWT.TOP)
+    _styles_ = Widget._styles_ + {'tabpos': RWT.TOP}
 
     @constructor('TabFolder')
-    def __init__(self, parent, style='TOP', **options):
+    def __init__(self, parent, tabpos='TOP', **options):
         Widget.__init__(self, parent, **options)
         self.theme = TabFolderTheme(self, session.runtime.mngr.theme)
-        self._style = style
-
+        self._tabpos = tabpos
+        self._items = []
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        options.style.append('NONE')
+        options.style.append(self._tabpos)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
-
 
     @Widget.bounds.setter
     @checkwidget
@@ -851,20 +880,24 @@ class TabFolder(Widget):
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
         session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
 
-
     @property
-    def style(self):
-        return self._style
+    def items(self):
+        return self._items
 
+    def add_item(self, idx=0, text=None, img=None, tooltip=None, **options):
+        item = TabItem(self, idx=idx, text=text, img=img, tooltip=tooltip, **options)
+        self.items.insert(idx, item)
+        return item
 
-    @style.setter
-    @checkwidget
-    def style(self, style):
-        self._style = style
-        session.runtime << RWTSetOperation(self.id, {'style': [self._style]})
+    def remove_item(self, idx):
+        self.items.pop(idx).dispose()
 
     def compute_size(self):
-        return 0, 0
+        w = h = 0
+        t, r, b, l = self.theme.borders
+        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        return w, h
 
 
 class TabItem(Widget):
@@ -872,16 +905,19 @@ class TabItem(Widget):
     _rwt_class_name_ = 'rwt.widgets.TabItem'
     _defstyle_ = BitField(Widget._defstyle_)
 
-
     @constructor('TabItem')
-    def __init__(self, parent, idx=None, text=None, img=None, tooltip=None, **options):
+    def __init__(self, parent, idx=0, text=None, img=None, tooltip=None, control=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = TabItemTheme(self, session.runtime.mngr.theme)
         self._idx = idx
-        self._text = text + idx
+        self._text = text
         self._tooltip = tooltip
         self._img = img
-
+        self._control = control
+        out(parent.children)
+        if self in parent.children:
+            parent.children.remove(self)
+        out(parent.children)
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -891,10 +927,15 @@ class TabItem(Widget):
             options.text = self.text
         if self.tooltip:
             options.toolTip = self.tooltip
-        if self.idx:
-            options.index = self.index
+        if self._control:
+            options.control = self._control.id
+        if 'style' in options:
+            del options['style']
+        if 'enabled' in options:
+            del options['enabled']
+        options.id = self.id
+        options.index = self.idx
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
-
 
     def _get_rwt_img(self, img):
         if img is not None:
@@ -904,7 +945,6 @@ class TabItem(Widget):
             img = None
         return img
 
-
     @Widget.bounds.setter
     @checkwidget
     def bounds(self, bounds):
@@ -913,11 +953,9 @@ class TabItem(Widget):
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
         session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
 
-
     @property
     def idx(self):
         return self._idx
-
 
     @idx.setter
     @checkwidget
@@ -925,11 +963,9 @@ class TabItem(Widget):
         self._idx = idx
         session.runtime << RWTSetOperation(self.id, {'index': self._idx})
 
-
     @property
     def text(self):
         return self._text
-
 
     @text.setter
     @checkwidget
@@ -937,11 +973,9 @@ class TabItem(Widget):
         self._text = text
         session.runtime << RWTSetOperation(self.id, {'text': self._text})
 
-
     @property
     def tooltip(self):
         return self._tooltip
-
 
     @tooltip.setter
     @checkwidget
@@ -949,11 +983,9 @@ class TabItem(Widget):
         self._tooltip = tooltip
         session.runtime << RWTSetOperation(self.id, {'toolTip': self._tooltip})
 
-
     @property
     def img(self):
         return self._img
-
 
     @img.setter
     @checkwidget
@@ -961,9 +993,25 @@ class TabItem(Widget):
         self._img = img
         session.runtime << RWTSetOperation(self.id, {'image': self._get_rwt_img(self.img)})
 
+    @property
+    def control(self):
+        return self._control
+
+    @control.setter
+    @checkwidget
+    def control(self, control):
+        self._control = control
+        session.runtime << RWTSetOperation(self.id, {'control': control.id})
 
     def compute_size(self):
-        return 0, 0
+        w = h = 0
+        if self.theme.padding:
+            w += self.theme.padding.left + self.theme.padding.right
+            h += self.theme.padding.top + self.theme.padding.bottom
+        t, r, b, l = self.theme.borders
+        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        return w, h
     
     
 class Group(Widget):
@@ -1021,5 +1069,3 @@ class Group(Widget):
 #  
 # class Cell(Grid): pass
 #     
-        
-    
