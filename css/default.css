@@ -1040,6 +1040,7 @@ TabFolder-ContentContainer {
   border: 1px solid #bdbdbd;
 }
 
+
 TabItem {
   color: #4a4a4a;
   background-color: #ffffff;
@@ -1057,12 +1058,14 @@ TabItem {
   margin: 6px 1px 1px 0px;
   border: 1px solid #bdbdbd;
   border-bottom: none;
+  border-radius: 4px 4px 0px 0px;
 }
 
 TabItem:bottom {
   margin: 1px 1px 6px 0px;
   border: 1px solid #bdbdbd;
   border-top: none;
+  border-radius: 0px 0px 3px 3px;
 }
 
 TabItem:selected {
