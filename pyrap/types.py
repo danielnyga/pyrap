@@ -450,6 +450,8 @@ class BoundedDim(object):
         self._max.clean()
         self._value.clean()
     
+    def __str__(self):
+        return '<Dim[%s < %s < %s]>' % (self.min, self.value, self.max)
         
 
 class Dim(object):
@@ -566,7 +568,7 @@ class Pixels(Dim):
         return px(int(round(Dim.__mul__(self, o).value)))
     
     def __str__(self):
-        return '%dpx' % self._value
+        return '%spx' % self._value
 
     def __call__(self):
         return self.value
