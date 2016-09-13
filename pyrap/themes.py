@@ -1196,7 +1196,27 @@ class EditTheme(WidgetTheme):
     def font(self):
         return self._theme.get_property('font', 'Text', self.styles(), self.states())
         
+
+class GroupTheme(WidgetTheme):
+    
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Group')
+        self._bg = None
         
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Composite', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+    
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'Composite', self.styles(), self.states())
+    
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+
 class ThemeRule(object):
     
     def __init__(self, typ='*', attrs=None, pcs=None):

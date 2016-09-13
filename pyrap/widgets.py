@@ -16,7 +16,7 @@ from pyrap.exceptions import WidgetDisposedError, LayoutError, ResourceError
 from pyrap.constants import RWT, inf
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
-    TabFolderTheme
+    TabFolderTheme, GroupTheme
 from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout
 import md5
 import time
@@ -962,6 +962,49 @@ class TabItem(Widget):
         session.runtime << RWTSetOperation(self.id, {'image': self._get_rwt_img(self.img)})
 
 
+    def compute_size(self):
+        return 0, 0
+    
+    
+class Group(Widget):
+    
+    _rwt_class_name_ = 'rwt.widgets.Group'
+    _defstyle_ = BitField(Widget._defstyle_)
+    
+    @constructor('Group')
+    def __init__(self, parent, text='', **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = GroupTheme(self, session.runtime.mngr.theme)
+        self._text = text
+        
+        
+    def _create_rwt_widget(self):
+        options = Composite._rwt_options(self)
+        options.style.append('NONE')
+        options.text = self.text
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+        
+    
+    @property
+    def text(self):
+        return self._text
+    
+    
+    @text.setter
+    @checkwidget    
+    def text(self, text):
+        self._text = text
+        session.runtime << RWTSetOperation(self.id, {'text': self._text})
+        
+    
+    @Widget.bounds.setter
+    @checkwidget
+    def bounds(self, bounds):
+        if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
+        self._bounds = map(px, bounds)
+        session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
+        session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
+        
     def compute_size(self):
         return 0, 0
     
