@@ -1095,6 +1095,41 @@ class CompositeTheme(WidgetTheme):
         self._bg = color
 
 
+class ScrolledCompositeTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'ScrolledComposite')
+        self._bg = None
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'ScrolledComposite', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'ScrolledComposite', self.styles(), self.states())
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'ScrolledComposite', self.styles(), self.states())
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'ScrolledComposite', self.styles(), self.states())
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+
+class ScrollBarTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'ScrolLBar')
+        self._bg = None
+
+
 class TabFolderTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
