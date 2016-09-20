@@ -627,8 +627,18 @@ def pc(v):
 
 class Color(object):
     
-    names = {'red': '#FF0000', 'green': '#00FF00', 'blue': '#0000FF',
-             'gray': '#CCC', 'grey': '#CCC', 'white': '#FFF', 'yellow': '#FFFF00', 'transp': '#FFFFFF00'}
+    names = {'red': '#5c6bc0', 
+             'green': '#0f9d58', 
+             'blue': '#4285f4',
+             'gray': '#CCC', 
+             'grey': '#CCC', 
+             'white': '#FFF', 
+             'yellow': '#f4b400', 
+             'transp': '#FFFFFF00',
+             'cyan': '#00acc1',
+             'purple': '#ab47bc',
+             'orange': '#ff7043'}
+    
     
     def __init__(self, html=None, rgb=None, hsv=None, fct=None, alpha=None):
         if sum([1 for e in (html, rgb, hsv) if e is not None]) != 1:
