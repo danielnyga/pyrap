@@ -1027,7 +1027,7 @@ class Group(Widget):
         
         
     def _create_rwt_widget(self):
-        options = Composite._rwt_options(self)
+        options = Widget._rwt_options(self)
         options.style.append('NONE')
         options.text = self.text
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
@@ -1051,7 +1051,6 @@ class Group(Widget):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = map(px, bounds)
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
-        session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
         
     def compute_size(self):
         return 0, 0
