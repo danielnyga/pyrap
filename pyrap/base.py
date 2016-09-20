@@ -62,7 +62,7 @@ session = Session(_server)
 _registry = ApplicationRegistry()
 
 
-def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme=None, rcpath='rwt-resources'):
+def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme=None, icon=None, rcpath='rwt-resources'):
     '''
     Register a new PyRAP app.
     
@@ -88,6 +88,9 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
     :param setup:        pointer to a function that is called for initializing
                          the app. Here loading static contents and registering
                          resources can go, for instance.
+
+    :param icon:         image path under which the application's icon can
+                         be found.
     '''
     config = RStorage({'clazz': clazz,
                       'path': path,
@@ -96,7 +99,8 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
                       'theme': theme,
                       'rcpath': rcpath,
                       'setup': setup,
-                      'default': default
+                      'default': default,
+                      'icon': icon,
                       })
     _registry.register(config)
 

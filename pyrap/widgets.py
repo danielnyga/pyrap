@@ -16,7 +16,7 @@ from pyrap.exceptions import WidgetDisposedError, LayoutError, ResourceError
 from pyrap.constants import RWT, inf
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
-    TabFolderTheme, GroupTheme
+    TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme
 from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout
 import md5
 import time
@@ -854,6 +854,75 @@ class Composite(Widget):
         return w, h
 
 
+class ScrolledComposite(Composite):
+
+    _rwt_class_name_ = 'rwt.widgets.ScrolledComposite'
+
+    @constructor('ScrolledComposite')
+    def __init__(self, parent, horizontal=False, vertical=False, border=True, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = ScrolledCompositeTheme(self, session.runtime.mngr.theme)
+        self.horizontal = horizontal
+        self.vertical = vertical
+        self.border = border
+        self._content = None
+        self._bars = []
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if self.border:
+            options.style.append('BORDER')
+        if self.horizontal:
+            options.style.append('H_SCROLL')
+        if self.vertical:
+            options.style.append('V_SCROLL')
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+
+    @property
+    def bars(self):
+        return self._bars
+
+    def add_scrollbar(self, orientation='HORIZONTAL', **options):
+        bar = ScrollBar(self, orientation=orientation, **options)
+        self.bars.append(bar)
+        return bar
+
+    def remove_item(self, orientation='HORIZONTAL'):
+        for bar in self.bars:
+            if bar.orientation == orientation:
+                del self.bars[bar]
+
+    @property
+    def content(self):
+        return self._content
+
+    @content.setter
+    @checkwidget
+    def content(self, content):
+        self._content = content
+        session.runtime << RWTSetOperation(self.id, {'content': content.id})
+
+
+class ScrollBar(Widget):
+
+    _rwt_class_name_ = 'rwt.widgets.ScrollBar'
+    _defstyle_ = BitField(Widget._defstyle_)
+
+    @constructor('ScrollBar')
+    def __init__(self, parent, orientation=None, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = ScrollBarTheme(self, session.runtime.mngr.theme)
+        self.orientation = orientation
+        if self in parent.children:
+            parent.children.remove(self)
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if self.orientation is not None:
+            options.style.append(self.orientation)
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+
+
 class TabFolder(Widget):
 
     _rwt_class_name_ = 'rwt.widgets.TabFolder'
@@ -884,8 +953,8 @@ class TabFolder(Widget):
     def items(self):
         return self._items
 
-    def add_item(self, idx=0, text=None, img=None, tooltip=None, **options):
-        item = TabItem(self, idx=idx, text=text, img=img, tooltip=tooltip, **options)
+    def add_item(self, idx=0, text=None, img=None, tooltip=None, control=None, **options):
+        item = TabItem(self, idx=idx, text=text, img=img, tooltip=tooltip, control=control, **options)
         self.items.insert(idx, item)
         return item
 
@@ -914,10 +983,8 @@ class TabItem(Widget):
         self._tooltip = tooltip
         self._img = img
         self._control = control
-        out(parent.children)
         if self in parent.children:
             parent.children.remove(self)
-        out(parent.children)
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)

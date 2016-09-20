@@ -12,7 +12,7 @@ from pyrap.communication import RWTMessage, RWTCreateOperation, \
     RWTError, rwterror, parse_msg
 from pyrap.widgets import Display, Label, Shell
 import pyrap
-from pyrap.types import BitMask, Color
+from pyrap.types import BitMask, Color, Image
 from web.utils import storify, Storage
 import os
 from pyrap.clientjs import gen_clientjs
@@ -79,7 +79,11 @@ class ApplicationManager(object):
         '''
         self.resources.registerc('rap-client.js', 'application/javascript', gen_clientjs())
         self.resources.registerf('resource/static/image/blank.gif', 'image/gif', os.path.join(locations.rc_loc, 'static', 'image', 'blank.gif'))
-        themepath = ifnone(self.config.theme, os.path.join(locations.css_loc, 'default.css')) 
+        if isinstance(self.config.icon, Image):
+            self.icon = self.resources.registerc('resource/static/favicon.ico', 'image/%s' % self.config.icon.fileext, self.config.icon.content)
+        else:
+            self.icon = self.resources.registerf('resource/static/favicon.ico', 'image/vnd.microsoft.icon', self.config.icon)
+        themepath = ifnone(self.config.theme, os.path.join(locations.css_loc, 'default.css'))
         self.log_.debug('loading theme', themepath)
         self.theme = Theme(themepath).load(themepath)
         self._install_theme('rap-rwt.theme.Default', self.theme)
@@ -153,7 +157,7 @@ class ApplicationManager(object):
                 if entrypoint not in self.config.entrypoints:
                     raise badrequest('No such entrypoint: "%s"' % entrypoint)
                 # send the parameterized the start page to the client
-                return str(self.startup_page % (self.config.name, entrypoint, str(query)))
+                return str(self.startup_page % (self.config.name, self.icon.location, entrypoint, str(query)))
             
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES
@@ -449,7 +453,7 @@ class ResourceManager(object):
 
     def registerf(self, name, content_type, filepath, force=False):
         with open(filepath) as f:
-            self.registerc(name, content_type, f.read(), force=force)
+            return self.registerc(name, content_type, f.read(), force=force)
         
         
     def registerc(self, name, content_type, content, force=False):
