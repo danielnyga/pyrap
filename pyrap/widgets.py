@@ -16,7 +16,8 @@ from pyrap.exceptions import WidgetDisposedError, LayoutError, ResourceError
 from pyrap.constants import RWT, inf
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
-    TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme
+    TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
+    SliderTheme, DropDownTheme
 from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout
 import md5
 import time
@@ -113,11 +114,11 @@ class Widget(object):
         if 'padding_left' in d:
             self.layout.padding_left = d['padding_left']
         if 'padding_right' in d:
-            self.layout.padding_left = d['padding_right']
+            self.layout.padding_right = d['padding_right']
         if 'padding_bottom' in d:
-            self.layout.padding_left = d['padding_bottom']
+            self.layout.padding_bottom = d['padding_bottom']
         if 'padding_top' in d:
-            self.layout.padding_left = d['padding_top']
+            self.layout.padding_top = d['padding_top']
         
         
     def _handle_notify(self, op):
@@ -452,6 +453,7 @@ class Shell(Widget):
 
 
 class Combo(Widget):
+
     _rwt_class_name_ = 'rwt.widgets.Combo'
     _defstyle_ = BitField(Widget._defstyle_)
 
@@ -483,6 +485,97 @@ class Combo(Widget):
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         w += ifnone(self.theme.btnwidth, 0)
         return w, h
+
+
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.iteritems():
+            if key == 'selectionIndex':
+                self._selidx = value
+
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_selection_event(op))
+        return True
+
+
+class DropDown(Widget):
+
+    _rwt_class_name_ = 'rwt.widgets.DropDown'
+    _defstyle_ = BitField(Widget._defstyle_)
+
+
+    @constructor('DropDown')
+    def __init__(self, parent, items='', markupEnabled=True, visible=False, visibleItemCount=5, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = DropDownTheme(self, session.runtime.mngr.theme)
+        self._items = items
+        self._markupEnabled = markupEnabled
+        self.on_select = OnSelect(self)
+        self._visibleitemcount = visibleItemCount
+        self._visible = visible
+        self._selidx = None
+        if self in parent.children:
+            parent.children.remove(self)
+
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        options.items = self._items
+        options.markupEnabled = self._markupEnabled
+        session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+
+
+    def compute_size(self):
+        w, h = 0,0
+        for padding in (self.theme.padding, self.theme.itempadding):
+            if padding:
+                w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
+                h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        t, r, b, l = self.theme.borders
+        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        return w, h
+
+
+    @property
+    def items(self):
+        return self._items
+
+
+    @items.setter
+    @checkwidget
+    def items(self, items):
+        self._items = items
+        session.runtime << RWTSetOperation(self.id, {'items': self.items})
+
+
+    @property
+    def visibleitemcount(self):
+        return self._visibleitemcount
+
+
+    @visibleitemcount.setter
+    @checkwidget
+    def visibleitemcount(self, visibleitemcount):
+        self._visibleitemcount = visibleitemcount
+        session.runtime << RWTSetOperation(self.id, {'visibleItemCount': self.visibleitemcount})
+
+
+    @property
+    def visible(self):
+        return self._visible
+
+
+    @visible.setter
+    @checkwidget
+    def visible(self, visible):
+        self._visible = visible
+        session.runtime << RWTSetOperation(self.id, {'visible': self.visible})
 
 
     def _handle_set(self, op):
@@ -632,6 +725,7 @@ class Checkbox(Widget):
         options = Widget._rwt_options(self)
         options.text = self._text
         options.style.append('CHECK')
+        options.style.append('LEFT')
         options.tabIndex = 1
         if self.checked is not None:
             options.selection = self.checked
@@ -778,16 +872,19 @@ class Edit(Widget):
     _defstyle_ = BitField(Widget._defstyle_ | RWT.BORDER | RWT.LEFT)
 
     @constructor('Edit')
-    def __init__(self, parent, text=None, editable=True, **options):
+    def __init__(self, parent, text=None, editable=True, message=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = EditTheme(self, session.runtime.mngr.theme)
         self._text = text
+        self._message = message
         self._editable = editable
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         if self.text:
             options.text = self.text
+        if self._message:
+            options.message = self._message
         options.editable = self._editable
         if RWT.MULTI in self.style:
             options.style.append('MULTI')
@@ -795,7 +892,6 @@ class Edit(Widget):
             options.style.append('WRAP')
         if RWT.LEFT in self.style:
             options.style.append('LEFT')
-        out(options)
 
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
@@ -1090,8 +1186,61 @@ class TabItem(Widget):
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         return w, h
-    
-    
+
+
+class Slider(Widget):
+    _rwt_class_name_ = 'rwt.widgets.Slider'
+    _styles_ = Widget._styles_ + {'horizontal': RWT.HORIZONTAL,
+                                  'vertical': RWT.VERTICAL}
+    _defstyle_ = BitField(Widget._defstyle_ | RWT.HORIZONTAL)
+
+
+    @constructor('Slider')
+    def __init__(self, parent, minimum=0, maximum=100, selection=100, increment=1, orientation=RWT.HORIZONTAL, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = SliderTheme(self, session.runtime.mngr.theme)
+        self.orientation = orientation
+        self._minimum = minimum
+        self._maximum = maximum
+        self._selection = selection
+        self._increment = increment
+        if self not in parent.children:
+            parent.children.append(self)
+
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if RWT.HORIZONTAL in self.style:
+            options.style.append('HORIZONTAL')
+        if RWT.VERTICAL in self.style:
+            options.style.append('VERTICAL')
+        options.minimum = self._minimum
+        options.maximum = self._maximum
+        options.selection = self._selection
+        options.increment = self._increment
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+
+
+    @property
+    def selection(self):
+        return self._selection
+
+
+    @selection.setter
+    @checkwidget
+    def selection(self, selection):
+        self._selection = selection
+        session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
+
+
+    def compute_size(self):
+        width, height = 0, 0
+        # top, right, bottom, left = self.theme.borders
+        # width += ifnone(left, 0, lambda b: b.width) + ifnone(right, 0, lambda b: b.width)
+        # height += ifnone(top, 0, lambda b: b.width) + ifnone(bottom, 0, lambda b: b.width)
+        return width, height
+
+
 class Group(Widget):
     
     _rwt_class_name_ = 'rwt.widgets.Group'
