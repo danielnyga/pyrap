@@ -79,10 +79,11 @@ class ApplicationManager(object):
         '''
         self.resources.registerc('rap-client.js', 'application/javascript', gen_clientjs())
         self.resources.registerf('resource/static/image/blank.gif', 'image/gif', os.path.join(locations.rc_loc, 'static', 'image', 'blank.gif'))
-        if isinstance(self.config.icon, Image):
-            self.icon = self.resources.registerc('resource/static/favicon.ico', 'image/%s' % self.config.icon.fileext, self.config.icon.content)
-        else:
-            self.icon = self.resources.registerf('resource/static/favicon.ico', 'image/vnd.microsoft.icon', self.config.icon)
+        if self.config.icon:
+            if isinstance(self.config.icon, Image):
+                self.icon = self.resources.registerc('resource/static/favicon.ico', 'image/%s' % self.config.icon.fileext, self.config.icon.content)
+            else:
+                self.icon = self.resources.registerf('resource/static/favicon.ico', 'image/vnd.microsoft.icon', self.config.icon)
         themepath = ifnone(self.config.theme, os.path.join(locations.css_loc, 'default.css'))
         self.log_.debug('loading theme', themepath)
         self.theme = Theme(themepath).load(themepath)
@@ -157,7 +158,7 @@ class ApplicationManager(object):
                 if entrypoint not in self.config.entrypoints:
                     raise badrequest('No such entrypoint: "%s"' % entrypoint)
                 # send the parameterized the start page to the client
-                return str(self.startup_page % (self.config.name, self.icon.location, entrypoint, str(query)))
+                return str(self.startup_page % (self.config.name, self.icon.location if hasattr(self, 'icon') else '', entrypoint, str(query)))
             
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES

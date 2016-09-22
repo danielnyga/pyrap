@@ -61,7 +61,7 @@ class LayoutAdapter(object):
     @staticmethod
     def create(widget, parent):
         layout = widget.layout
-        if type(layout) in (GridLayout, RowLayout, ColumnLayout, CellLayout):
+        if type(layout) in (GridLayout, RowLayout, ColumnLayout, CellLayout) and widget.children:
             if type(layout) is GridLayout:
                 layout = GridLayoutAdapter(widget, parent)
             elif type(layout) is RowLayout:
