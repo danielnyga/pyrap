@@ -12,7 +12,7 @@ APPSTATE = BitMask('UNINITIALIZED', 'INITIALIZED', 'RUNNING')
 RWT = BitMask('NONE', 'VISIBLE', 'ENABLED', 'ACTIVE', 'MAXIMIZED', 'MINIMIZED',
               'BORDER', 'MINIMIZE', 'MAXIMIZE', 'RESTORE', 'CLOSE', 'RESIZE', 
               'TITLE', 'MODAL', 'CENTER', 'LEFT', 'RIGHT', 'TOP', 'BOTTOM', 'FILL',
-              'MULTI', 'WRAP')
+              'MULTI', 'WRAP', 'HORIZONTAL', 'VERTICAL')
 
 class CURSOR:
     DEFAULT      = 1 << 0

@@ -885,8 +885,40 @@ class ComboTheme(WidgetTheme):
     @property
     def itempadding(self):
         return self._theme.get_property('padding', 'Combo-Field', self.styles(), self.states())
-    
-    
+
+
+class DropDownTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'DropDown', 'DropDown-Item')
+        self.separator = None
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'DropDown', self.styles(), self.states())
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'DropDown', self.styles(), self.states())
+
+    @property
+    def borders(self):
+        return [
+            self._theme.get_property('border-%s' % b, 'DropDown', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'DropDown', self.styles(), self.states())
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+    @property
+    def itempadding(self):
+        return self._theme.get_property('padding', 'DropDown-Item', self.styles(), self.states())
+
+
 class LabelTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Label')
@@ -1126,8 +1158,24 @@ class ScrolledCompositeTheme(WidgetTheme):
 class ScrollBarTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'ScrolLBar')
+        WidgetTheme.__init__(self, widget, theme, 'ScrollBar')
         self._bg = None
+
+
+class SliderTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Slider', 'Slider-Thumb', 'Slider-UpButton', 'Slider-DownButton', 'Slider-UpButton-Icon', 'Slider-DownButton-Icon')
+        self._bg = None
+
+    @property
+    def borders(self):
+        return [
+            self._theme.get_property('border-%s' % b, 'Slider', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def icon(self):
+        return self._theme.get_property('background-image', 'Slider-UpButton-Icon', self.styles(), self.states())
 
 
 class TabFolderTheme(WidgetTheme):
