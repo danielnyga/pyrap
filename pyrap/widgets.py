@@ -16,7 +16,7 @@ from pyrap.exceptions import WidgetDisposedError, LayoutError, ResourceError
 from pyrap.constants import RWT, inf
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
-    TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme
+    TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme
 from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout
 import md5
 import time
