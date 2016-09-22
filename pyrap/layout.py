@@ -209,12 +209,12 @@ class GridLayoutAdapter(LayoutAdapter):
         my = self.data
         widget = self.widget
         layout = self.layout
-        out(indent, 'computing layout for', widget.id, 'cell:', self.data.cellheight, self.data.cellwidth, 'widget', self.data.width, self.data.height)
+        out(indent, 'computing layout for', widget.id, repr(widget), 'cell:', self.data.cellheight, self.data.cellwidth, 'widget', self.data.width, self.data.height)
         my.cellwidth.min = my.width.min
         my.cellheight.min = my.height.min
         # we have a fixed width, so distribute the columns over it
         fixcols = [i for i in range(self.colcount())  if i not in layout.flexcols]
-        flexcols = [f for f in layout.flexcols if f < self.colcount()]
+        flexcols = {f: v for f, v in layout.flexcols.iteritems() if f < self.colcount()}
         if my.cellwidth.value is not None and layout.halign == 'fill':
             if layout.equalwidths:
                 if fixcols and flexcols:
@@ -226,15 +226,16 @@ class GridLayoutAdapter(LayoutAdapter):
             if all([c.data.cellwidth.value is not None for i in fixcols for c in self.col(i)]):
                 occ = sum([self.col(i)[0].data.cellwidth.value for i in fixcols if self.col(i)])
                 occ += sum([self.col(i)[0].data.cellwidth.min for i in flexcols if self.col(i)])
-                free = my.cellwidth.value - occ - layout.hspace * (self.colcount() - 1) - layout.padding_left - layout.padding_right
-                flexwidths = pparti(free.value, [layout.flexcols[f] for f in flexcols])
+                free = px(my.cellwidth.value - occ - layout.hspace * (self.colcount() - 1) - layout.padding_left - layout.padding_right)
+                out(flexcols)
+                flexwidths = pparti(free.value, [flexcols[i] for i in sorted(flexcols)])
                 for fci, flexwidth in zip(flexcols, flexwidths):
                     for c in self.col(fci):
                         c.data.cellwidth.value = px(flexwidth + c.data.cellwidth.min)
             
         # we have a fixed height, so distribute the rows over it
         fixrows = [i for i in range(self.rowcount())  if i not in layout.flexrows]
-        flexrows = [f for f in layout.flexrows if f < self.rowcount()]
+        flexrows = {f: v for f, v in layout.flexrows.iteritems() if f < self.rowcount()}
         if my.cellheight.value is not None and layout.valign == 'fill':
             if not flexrows:
                 raise Exception('Layout is underdetermined: I was told to fill %s vertically, but I do not have any flexrows.' % repr(self.widget))
@@ -243,7 +244,7 @@ class GridLayoutAdapter(LayoutAdapter):
                 occ += sum([self.row(i)[0].data.cellheight.min for i in flexrows if self.row(i)])
                 free = px(my.cellheight.value - occ - layout.vspace * (self.rowcount() - 1) - layout.padding_top - layout.padding_bottom)
                 out(free)
-                flexheights = pparti(free.value, [layout.flexrows[r] for r in flexrows])
+                flexheights = pparti(free.value, [flexrows[i] for i in sorted(flexrows)])
                 for fci, flexheight in zip(flexrows, flexheights):
                     for c in self.row(fci):
                         c.data.cellheight.value = px(flexheight + c.data.cellheight.min)
