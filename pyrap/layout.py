@@ -300,8 +300,17 @@ class GridLayoutAdapter(LayoutAdapter):
         if my.height.min == px(0):
             my.height.min = my.cellheight.min
             
-        my.cellwidth.min = max(my.cellwidth.min, wmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_left + layout.padding_right)
-        my.cellheight.min = max(my.cellheight.min, hmaxt + layout.vspace * (self.rowcount() - 1) + layout.padding_top + layout.padding_bottom)
+        if type(widget).__name__ == 'ScrolledComposite': hscroll = 1
+        else: hscroll = 0
+        if type(widget).__name__ == 'ScrolledComposite': vscroll = 1
+        else: vscroll = 0
+        
+        if not hscroll:
+            my.cellwidth.min = max(my.cellwidth.min, wmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_left + layout.padding_right)
+        if not vscroll:
+            my.cellheight.min = max(my.cellheight.min, hmaxt + layout.vspace * (self.rowcount() - 1) + layout.padding_top + layout.padding_bottom)
+#         if hscroll:
+#             my.cellwidth.min = min(my.cellwidth.max, my.cellwidth.min)
         
         # compute the cell positions if we know our width/height 
         # the width/height of all our children

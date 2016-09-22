@@ -857,40 +857,49 @@ class Composite(Widget):
 class ScrolledComposite(Composite):
 
     _rwt_class_name_ = 'rwt.widgets.ScrolledComposite'
+    
+    _styles_ = Composite._styles_ + BiMap({'hscroll': RWT.HSCROLL,
+                                     'vscroll': RWT.VSCROLL})
 
     @constructor('ScrolledComposite')
-    def __init__(self, parent, horizontal=False, vertical=False, border=True, **options):
+    def __init__(self, parent,**options):
         Widget.__init__(self, parent, **options)
         self.theme = ScrolledCompositeTheme(self, session.runtime.mngr.theme)
-        self.horizontal = horizontal
-        self.vertical = vertical
-        self.border = border
         self._content = None
-        self._bars = []
+        self._hbar, self._vbar = None, None
+        
+    def create_content(self):
+        if RWT.HSCROLL in self.style:
+            self._hbar = ScrollBar(self, orientation=RWT.HORIZONTAL)
+            self._hbar.visible = True
+        if RWT.VSCROLL in self.style:
+            self._vbar = ScrollBar(self, orientation=RWT.VERTICAL)
+            self._vbar.visible = True
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        if self.border:
-            options.style.append('BORDER')
-        if self.horizontal:
+        if RWT.HORIZONTAL in self.style:
             options.style.append('H_SCROLL')
-        if self.vertical:
+        if RWT.VERTICAL in self.style:
             options.style.append('V_SCROLL')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+        self.pos = (0, 0)
 
     @property
-    def bars(self):
-        return self._bars
+    def pos(self):
+        raise Exception('You cannot retrieve the current scroll position')
+        
+    @pos.setter
+    def pos(self, p):
+        session.runtime << RWTSetOperation(self.id, {'origin': p})
 
-    def add_scrollbar(self, orientation='HORIZONTAL', **options):
-        bar = ScrollBar(self, orientation=orientation, **options)
-        self.bars.append(bar)
-        return bar
-
-    def remove_item(self, orientation='HORIZONTAL'):
-        for bar in self.bars:
-            if bar.orientation == orientation:
-                del self.bars[bar]
+    @property
+    def hbar(self):
+        return self._hbar
+    
+    @property
+    def vbar(self):
+        return self._vbar
 
     @property
     def content(self):
@@ -918,8 +927,10 @@ class ScrollBar(Widget):
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        if self.orientation is not None:
-            options.style.append(self.orientation)
+        if self.orientation == RWT.HORIZONTAL:
+            options.style.append('HORIZONTAL')
+        elif self.orientation == RWT.VERTICAL:
+            options.style.append('VERTICAL')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
 
