@@ -113,11 +113,11 @@ class Widget(object):
         if 'padding_left' in d:
             self.layout.padding_left = d['padding_left']
         if 'padding_right' in d:
-            self.layout.padding_left = d['padding_right']
+            self.layout.padding_right = d['padding_right']
         if 'padding_bottom' in d:
-            self.layout.padding_left = d['padding_bottom']
+            self.layout.padding_bottom = d['padding_bottom']
         if 'padding_top' in d:
-            self.layout.padding_left = d['padding_top']
+            self.layout.padding_top = d['padding_top']
         
         
     def _handle_notify(self, op):
