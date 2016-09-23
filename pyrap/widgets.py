@@ -955,7 +955,7 @@ class ScrolledComposite(Composite):
     _rwt_class_name_ = 'rwt.widgets.ScrolledComposite'
     
     _styles_ = Composite._styles_ + BiMap({'hscroll': RWT.HSCROLL,
-                                     'vscroll': RWT.VSCROLL})
+                                           'vscroll': RWT.VSCROLL})
 
     @constructor('ScrolledComposite')
     def __init__(self, parent,**options):
@@ -974,9 +974,10 @@ class ScrolledComposite(Composite):
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        if RWT.HORIZONTAL in self.style:
+        out(self.style)
+        if RWT.HSCROLL in self.style:
             options.style.append('H_SCROLL')
-        if RWT.VERTICAL in self.style:
+        if RWT.VSCROLL in self.style:
             options.style.append('V_SCROLL')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
         self.pos = (0, 0)
@@ -1042,6 +1043,9 @@ class TabFolder(Widget):
         self.theme = TabFolderTheme(self, session.runtime.mngr.theme)
         self._tabpos = tabpos
         self._items = []
+        self.on_select = OnSelect(self)
+        self._selected = None
+        self._tooltip = None
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1068,6 +1072,28 @@ class TabFolder(Widget):
     def remove_item(self, idx):
         self.items.pop(idx).dispose()
 
+
+    @property
+    def selected(self):
+        return self._selected
+
+    @selected.setter
+    @checkwidget
+    def selected(self, item):
+        self._selected = item.id
+        session.runtime << RWTSetOperation(self.id, {'selection': self._selected})
+
+    @property
+    def tooltip(self):
+        return self._tooltip
+
+    @tooltip.setter
+    @checkwidget
+    def tooltip(self, tooltip):
+        self._tooltip = tooltip
+        session.runtime << RWTSetOperation(self.id, {'toolTip': self._tooltip})
+
+
     def compute_size(self):
         w = h = 0
         t, r, b, l = self.theme.borders
@@ -1092,6 +1118,7 @@ class TabItem(Widget):
         self._control = control
         if self in parent.children:
             parent.children.remove(self)
+
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
