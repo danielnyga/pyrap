@@ -49,7 +49,7 @@ class ApplicationManager(object):
     
     '''
     def __init__(self, config):
-        self.config = storify(config)
+        self.config = storify(config, requirejs=[])
         self.resources = ResourceManager(config.rcpath)
         self.runtimes = Storage()
         self.startup_page = None
@@ -348,7 +348,7 @@ class SessionRuntime(object):
                 self.log_.info('initializing app...')
                 self.initialize_app(o.args.entrypoint, o.args.args)
                 self.state = APPSTATE.INITIALIZED
-    
+
     @staticmethod
     def create_textsize_measurement_call(font, sample):
         return RWTCallOperation('rwt.client.TextSizeMeasurement', 'measureItems', {'items': [[str(font), sample, font.family, font.size.value, font.bf, font.it, -1, True]]})
@@ -372,9 +372,29 @@ class SessionRuntime(object):
             self << SessionRuntime.create_textsize_measurement_call(font, FontMetrics.SAMPLE)
         self.entrypoint = entrypoint
         self.args = args
+        if self.mngr.config.requirejs:
+            if not isinstance(self.mngr.config.requirejs, list):
+                files = [self.mngr.config.requirejs]
+            else:
+                files = self.mngr.config.requirejs
+            for p in files:
+                if os.path.isfile(p):
+                    self.requirejs(p)
+                elif os.path.isdir(p):
+                    for f in [x for x in os.listdir(p) if x.endswith('.js')]:
+                        self.requirejs(f)
+
         self.create_display()
-    
-    
+
+
+    def requirecss(self, css):
+        pass
+
+
+    def requirejs(self, f):
+        resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'application/javascript', f)
+        self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
+
     def create_display(self):
         self.display = Display(self.windows)
     
@@ -468,7 +488,4 @@ class ResourceManager(object):
                 self.resources[name] = resource_
                 return resource_
             return resource
-        
-        
 
-    

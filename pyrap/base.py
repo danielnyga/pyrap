@@ -62,7 +62,7 @@ session = Session(_server)
 _registry = ApplicationRegistry()
 
 
-def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme=None, icon=None, rcpath='rwt-resources'):
+def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme=None, icon=None, requirejs=None, rcpath='rwt-resources'):
     '''
     Register a new PyRAP app.
     
@@ -101,6 +101,7 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
                       'setup': setup,
                       'default': default,
                       'icon': icon,
+                      'requirejs': requirejs
                       })
     _registry.register(config)
 
