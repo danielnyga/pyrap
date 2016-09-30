@@ -49,7 +49,7 @@ class ApplicationManager(object):
     
     '''
     def __init__(self, config):
-        self.config = storify(config, requirejs=[])
+        self.config = storify(config, requirejs=[], requirecss=[])
         self.resources = ResourceManager(config.rcpath)
         self.runtimes = Storage()
         self.startup_page = None
@@ -384,15 +384,28 @@ class SessionRuntime(object):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
                         self.requirejs(f)
 
+        # if self.mngr.config.requirecss:
+        #     if not isinstance(self.mngr.config.requirecss, list):
+        #         files = [self.mngr.config.requirecss]
+        #     else:
+        #         files = self.mngr.config.requirecss
+        #     for p in files:
+        #         if os.path.isfile(p):
+        #             self.requirecss(p)
+        #         elif os.path.isdir(p):
+        #             for f in [x for x in os.listdir(p) if x.endswith('.css')]:
+        #                 self.requirecss(f)
+
         self.create_display()
 
 
-    def requirecss(self, css):
-        pass
+    # def requirecss(self, css):
+    #     resource = session.runtime.mngr.resources.registerf(os.path.basename(css), 'text/css', css)
+    #     self << RWTCallOperation('rwt.client.ClientFileLoader', 'load', {'files': [resource.location]})
 
 
     def requirejs(self, f):
-        resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'application/javascript', f)
+        resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/javascript', f)
         self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
 
     def create_display(self):
