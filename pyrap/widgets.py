@@ -502,6 +502,20 @@ class Combo(Widget):
             events[op.event].notify(_rwt_selection_event(op))
         return True
 
+    @property
+    def selected(self):
+        return self.items[self._selidx]
+
+    @property
+    def items(self):
+        return self._items
+
+    @items.setter
+    @checkwidget
+    def items(self, items):
+        self._items = items
+        session.runtime << RWTSetOperation(self.id, {'items': self.items})
+
 
 class DropDown(Widget):
 
@@ -577,6 +591,10 @@ class DropDown(Widget):
         self._visible = visible
         session.runtime << RWTSetOperation(self.id, {'visible': self.visible})
 
+
+    @property
+    def selected(self):
+        return self.items[self._selidx]
 
     def _handle_set(self, op):
         Widget._handle_set(self, op)
