@@ -1300,6 +1300,17 @@ class GroupTheme(WidgetTheme):
         self._bg = color
 
 
+class BrowserTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Browser')
+        self._bg = None
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Browser', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+
 class ThemeRule(object):
     
     def __init__(self, typ='*', attrs=None, pcs=None):

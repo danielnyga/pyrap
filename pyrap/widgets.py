@@ -3,6 +3,9 @@ Created on Oct 9, 2015
 
 @author: nyga
 '''
+import os
+
+from pyrap.clientjs import gen_clientjs
 from pyrap.communication import RWTListenOperation, RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
 from pyrap.types import Event, px, BitField, BitMask, BoolVar, NumVar, Color,\
@@ -17,7 +20,7 @@ from pyrap.constants import RWT, inf
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
-    SliderTheme, DropDownTheme
+    SliderTheme, DropDownTheme, BrowserTheme
 from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout
 import md5
 import time
@@ -1326,7 +1329,165 @@ class Group(Widget):
         
     def compute_size(self):
         return 0, 0
-    
+
+
+class Browser(Widget):
+    _rwt_class_name_ = 'rwt.widgets.Browser'
+    _defstyle_ = BitField(Widget._defstyle_)
+
+
+    @constructor('Browser')
+    def __init__(self, parent, url='', **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = BrowserTheme(self, session.runtime.mngr.theme)
+        self._url = url
+        self._FN_TEMPLATE = "(function(){{{}}})();"
+
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        options.style.append('NONE')
+        options.url = self.url
+        out(options)
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+
+
+    @property
+    def url(self):
+        return self._url
+
+
+    @url.setter
+    @checkwidget
+    def url(self, url):
+        self._url = url
+        session.runtime << RWTSetOperation(self.id, {'url': self.url})
+
+
+    def eval(self, fn):
+        session.runtime << RWTCallOperation(self.id, 'evaluate', args={'script': self._FN_TEMPLATE.format(fn)})
+
+
+    def compute_size(self):
+        return 0, 0
+
+
+class Menu(Widget):
+
+    _rwt_class_name = 'rwt.widgets.Menu'
+    _styles_ = Widget._styles_ + {'bar': RWT.BAR, 'dropdown': RWT.DROP_DOWN}
+    _defstyle_ = BitField(Widget._defstyle_ | RWT.BAR)
+
+
+    @constructor('Menu')
+    def __init__(self, parent, index=None, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = EditTheme(self, session.runtime.mngr.theme)
+        self._index = index
+        self._mIndex = 0
+
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if RWT.BAR in self.style:
+            options.style.append('BAR')
+        if RWT.BAR in self.style:
+            options.style.append('DROP_DOWN')
+        options.mnemonicIndex = self._mIndex
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
+
+
+    def compute_size(self):
+        w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX')
+        return w, h
+
+
+    def unhide(self):
+        session.runtime << RWTCallOperation(self.id, 'unhideItems', {'reveal': True})
+
+
+class MenuItem(Widget):
+
+    _rwt_class_name = 'rwt.widgets.MenuItem'
+    _styles_ = Widget._styles_ + {'cascade': RWT.CASCADE,
+                                  'push': RWT.PUSH,
+                                  'separator': RWT.SEPARATOR}
+    _defstyle_ = BitField(Widget._defstyle_ | RWT.PUSH)
+
+
+    @constructor('MenuItem')
+    def __init__(self, parent, text=None, img=None, index=0, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = EditTheme(self, session.runtime.mngr.theme)
+        self._text = text
+        self._img = img
+        self._index = index
+        self._menu = None
+        self._mIndex = None
+
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if RWT.PUSH in self.style:
+            options.style.append('PUSH')
+        if RWT.CASCADE in self.style:
+            options.style.append('CASCADE')
+        if RWT.SEPARATOR in self.style:
+            options.style.append('SEPARATOR')
+        options.index = self._index
+        if self.text:
+            options.text = self.text
+        if self.img:
+            options.image = self._get_rwt_img(self.img)
+        if self._menu:
+            options.menu = self._menu.id
+        if self._mIndex:
+            options.mnemonicIndex = self._mIndex
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
+
+
+    def compute_size(self):
+        w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX')
+        return w, h
+
+
+    def _get_rwt_img(self, img):
+        if img is not None:
+            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
+            img = [res.location, img.width.value, img.height.value]
+        return img
+
+
+    @property
+    def img(self):
+        return self._img
+
+
+    @img.setter
+    @checkwidget
+    def img(self, img):
+        self._img = img
+        session.runtime << RWTSetOperation(self.id, {
+            'image': self._get_rwt_img(self.img)})
+
+    @property
+    def text(self):
+        return self._text
+
+
+    @text.setter
+    @checkwidget
+    def text(self, text):
+        self._text = text
+
+
+    # ["create", "w296", "rwt.widgets.MenuItem",
+    #  {"parent": "w62", "style": ["PUSH"], "index": 0, "text": "Import...",
+    #   "mnemonicIndex": 0,
+    #   "image": ["rwt-resources/generated/d3074efb.gif", 16, 16]}]
+
+
+
 # class Grid(Composite):
 #     @constructor('Grid')
 #     def __init__(self, columns, parent, **options):
