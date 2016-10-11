@@ -139,6 +139,10 @@ class Theme(object):
                         for name in ('border-left', 'border-top', 'border-right', 'border-bottom'):
                             rule.properties[name] = copy(value)
                         continue
+#                     if name == 'margin':
+#                         for name in ('margin-left', 'margin-top', 'margin-right', 'margin-bottom'):
+#                             rule.properties[name] = copy(value)
+#                         continue
                     rule.properties[name] = copy(value)
             
         
@@ -886,6 +890,10 @@ class ComboTheme(WidgetTheme):
     def itempadding(self):
         return self._theme.get_property('padding', 'Combo-Field', self.styles(), self.states())
 
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Composite', self.styles(), self.states())
+    
 
 class DropDownTheme(WidgetTheme):
     def __init__(self, widget, theme):
@@ -917,6 +925,11 @@ class DropDownTheme(WidgetTheme):
     @property
     def itempadding(self):
         return self._theme.get_property('padding', 'DropDown-Item', self.styles(), self.states())
+    
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Composite', self.styles(), self.states())
+    
 
 
 class LabelTheme(WidgetTheme):
@@ -955,6 +968,11 @@ class LabelTheme(WidgetTheme):
         out('setting color', color)
         self._color = color
         out(self._color)
+        
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Label', self.styles(), self.states())
+    
 
 
 class ButtonTheme(WidgetTheme):
@@ -990,6 +1008,11 @@ class ButtonTheme(WidgetTheme):
     @bg.setter
     def bg(self, color):
         self._bg = color 
+    
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Button', self.styles(), self.states())
+    
     
 class CheckboxTheme(WidgetTheme):
     
@@ -1043,8 +1066,11 @@ class CheckboxTheme(WidgetTheme):
     def fiborders(self):
         return [self._theme.get_property('border-%s' % b, 'Button-FocusIndicator', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
-
-
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Button', self.styles(), self.states())
+    
+    
 class OptionTheme(WidgetTheme):
     
     def __init__(self, widget, theme):
@@ -1097,7 +1123,10 @@ class OptionTheme(WidgetTheme):
     def fiborders(self):
         return [self._theme.get_property('border-%s' % b, 'Button-FocusIndicator', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
-
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Button', self.styles(), self.states())
+    
 
 class CompositeTheme(WidgetTheme):
     
@@ -1125,6 +1154,10 @@ class CompositeTheme(WidgetTheme):
     @bg.setter
     def bg(self, color):
         self._bg = color
+        
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Composite', self.styles(), self.states())
 
 
 class ScrolledCompositeTheme(WidgetTheme):
@@ -1153,6 +1186,10 @@ class ScrolledCompositeTheme(WidgetTheme):
     @bg.setter
     def bg(self, color):
         self._bg = color
+        
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'ScrolledComposite', self.styles(), self.states())
 
 
 class ScrollBarTheme(WidgetTheme):
@@ -1160,6 +1197,11 @@ class ScrollBarTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'ScrollBar')
         self._bg = None
+        
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'ScrollBar', self.styles(), self.states())
+    
 
 
 class SliderTheme(WidgetTheme):
@@ -1177,11 +1219,15 @@ class SliderTheme(WidgetTheme):
     def icon(self):
         return self._theme.get_property('background-image', 'Slider-UpButton-Icon', self.styles(), self.states())
 
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Slider', self.styles(), self.states())
+    
 
 class TabFolderTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'TabFolder')
+        WidgetTheme.__init__(self, widget, theme, 'TabFolder', 'TabFolder-ContentContainer')
         self._bg = None
 
     @property
@@ -1196,13 +1242,31 @@ class TabFolderTheme(WidgetTheme):
     @bg.setter
     def bg(self, color):
         self._bg = color
+        
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'TabFolder', self.styles(), self.states())
 
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'TabFolder', self.styles(), self.states())
+    
+    @property
+    def container_borders(self):
+        return [self._theme.get_property('border-%s' % b, 'TabFolder-ContentContainer', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        
 
 class TabItemTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'TabItem')
         self._bg = None
+        
+    def states(self):
+        states = WidgetTheme.states(self)
+        if self._widget.selected:
+            states.add(':selected')
+        return states
 
     @property
     def borders(self):
@@ -1220,17 +1284,27 @@ class TabItemTheme(WidgetTheme):
     @property
     def padding(self):
         return self._theme.get_property('padding', 'TabItem', self.styles(), self.states())
+    
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'TabItem', self.styles(), self.states())
 
     @property
     def font(self):
         return self._theme.get_property('font', 'TabItem', self.styles(), self.states())
-
+    
 
 class ShellTheme(WidgetTheme):
     
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Shell', 'Shell-Titlebar', 'Shell-CloseButton', 'Shell-DisplayOverlay', 'Shell-MinButton', 'Shell-MaxButton', 'Shell-CloseButton')
-        
+    
+    def styles(self):
+        styles = WidgetTheme.styles(self)
+        if RWT.TITLE in self._widget.style:
+            styles.add('[TITLE')
+        return styles
+    
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Shell', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
@@ -1251,6 +1325,10 @@ class ShellTheme(WidgetTheme):
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Shell', self.styles(), self.states())
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Shell', self.styles(), self.states())
     
 
 class EditTheme(WidgetTheme):
@@ -1279,13 +1357,21 @@ class EditTheme(WidgetTheme):
     def font(self):
         return self._theme.get_property('font', 'Text', self.styles(), self.states())
         
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Text', self.styles(), self.states())
+    
 
 class GroupTheme(WidgetTheme):
     
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'Group')
+        WidgetTheme.__init__(self, widget, theme, 'Group', 'Group-Frame', 'Group-Label')
         self._bg = None
-        
+    
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Group', self.styles(), self.states())    
+    
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Composite', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
@@ -1298,6 +1384,35 @@ class GroupTheme(WidgetTheme):
     @bg.setter
     def bg(self, color):
         self._bg = color
+        
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Group', self.styles(), self.states())
+        
+    @property
+    def frame_padding(self):
+        return self._theme.get_property('padding', 'Group-Frame', self.styles(), self.states())
+    
+    @property
+    def label_padding(self):
+        return self._theme.get_property('padding', 'Group-Label', self.styles(), self.states())
+    
+    @property
+    def frame_margin(self):
+        return self._theme.get_property('margin', 'Group-Frame', self.styles(), self.states())
+    
+    @property
+    def label_margin(self):
+        return self._theme.get_property('margin', 'Group-Label', self.styles(), self.states())
+    
+    @property
+    def frame_borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Group-Frame', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+    
+    @property
+    def label_borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Group-Label', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+    
 
 
 class BrowserTheme(WidgetTheme):
@@ -1310,6 +1425,10 @@ class BrowserTheme(WidgetTheme):
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Browser', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Browser', self.styles(), self.states())
+    
 
 class ThemeRule(object):
     

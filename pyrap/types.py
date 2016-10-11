@@ -440,6 +440,7 @@ class BoundedDim(object):
 #             if self.max is not None and self.max < v:
 #                 raise ValueError('Value must not be larger than maximum value.')
         self._value.set(v)
+        return self.value
         
     @property
     def dirty(self):
@@ -471,6 +472,7 @@ class Dim(object):
     @value.setter
     def value(self, v):
         self._value = v
+        return self.value
         
     def __gt__(self, o):
         o = parse_value(o)

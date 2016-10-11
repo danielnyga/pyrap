@@ -49,7 +49,8 @@ class ApplicationManager(object):
     
     '''
     def __init__(self, config):
-        self.config = storify(config, requirejs=[], requirecss=[])
+        self.config = storify(config)#, requirejs=[], requirecss=[])
+        out(self.config)
         self.resources = ResourceManager(config.rcpath)
         self.runtimes = Storage()
         self.startup_page = None

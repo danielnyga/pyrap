@@ -509,11 +509,12 @@ Group {
   color: #4a4a4a;
   background-color: #ffffff;
   border: none;
+  margin: 5px 5px 5px 5px;
 }
 
 Group-Frame {
-  margin: 20px 0 0 0;
-  padding: 15px 8px 8px 8px;
+  margin: 10px 0px 10px 0px;
+  padding: 15px 8px 10px 8px;
   border: 1px solid #bdbdbd;
   border-radius: 2px;
 }
@@ -527,7 +528,7 @@ Group-Label {
   border: 1px solid #bdbdbd;
   border-radius: 10px;
   color: inherit;
-  margin: 10px 10px 10px 20px;
+  margin: 5px 10px 10px 20px;
   text-shadow: none;
 }
 
@@ -1038,6 +1039,8 @@ TabFolder[BORDER] {
 
 TabFolder-ContentContainer {
   border: 1px solid #bdbdbd;
+  margin: 0px 0 0 0;
+  padding: 0px 0 0 0;
 }
 
 
@@ -1051,6 +1054,7 @@ TabItem {
   );
   background-repeat: repeat;
   background-position: left top;
+  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   border-top-color: #5882b5;
   border-bottom-color: #5882b5;
   text-shadow: 0 1px 0 #ffffff;

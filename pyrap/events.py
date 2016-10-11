@@ -137,11 +137,25 @@ class OnMove(RWTEvent):
     
     def _notify(self, listener): listener()    
 
+
+class OnModify(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'Modify', widget)
+    
+    def _create_subscribe_msg(self):
+        return RWTListenOperation(self.target.id, {'Modify': True})
+    
+    def _create_unsubscribe_msg(self):
+        return RWTListenOperation(self.target.id, {'Modify': False})
+    
+    def _notify(self, listener): listener()    
+
 class OnFocus(Event):
     def _notify(self, listener, focus_data): listener(focus_data)
 
 class OnDispose(Event):
     def _notify(self, listener): listener()
+
 
 class EventData(object): pass
 
@@ -151,6 +165,7 @@ class FocusEventData(EventData):
     
     @property
     def lost(self): return not self.gained
+
 
 class SelectionEventData(EventData):
     

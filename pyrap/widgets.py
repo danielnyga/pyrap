@@ -9,12 +9,12 @@ from pyrap.clientjs import gen_clientjs
 from pyrap.communication import RWTListenOperation, RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
 from pyrap.types import Event, px, BitField, BitMask, BoolVar, NumVar, Color,\
-    parse_value, Var, VarCompound, BoundedDim, pc
+    parse_value, Var, VarCompound, BoundedDim, pc, StringVar
 from pyrap.base import session
 from pyrap.utils import RStorage, BiMap, out, ifnone, pparti, stop
 from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
-    OnNavigate
+    OnNavigate, OnModify
 from pyrap.exceptions import WidgetDisposedError, LayoutError, ResourceError
 from pyrap.constants import RWT, inf
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
@@ -261,6 +261,52 @@ class Widget(object):
     def css(self, css):
         self._css = css
         session.runtime << RWTSetOperation(self.id, {'customVariant': 'variant_%s' % css})
+        
+    def compute_size(self):
+        '''
+        Compute the dimensions of space that this widget will occupy when displayed
+        on the screen.
+        
+        This method is supposed to compute the `minimal` space that the widget
+        will consume, i.e. in case that no ``fill`` is not specified for ``valign``
+        and ``halign``.
+        
+        The default implementation by :class:``pyrap.Widget`` takes into account
+        the dimensions resulting from the border, margin and padding specifications
+        in the CSS theme.
+        '''
+        width = height = 0
+        # border
+        t, r, b, l = self.theme.borders
+        width += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        height += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        # padding
+        padding = self.theme.padding
+        if padding:
+            width += ifnone(padding.left, 0) + ifnone(padding.right, 0)
+            height += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        # margin
+        margin = self.theme.margin
+        if margin:
+            width += ifnone(margin.left, 0) + ifnone(margin.right, 0)
+            height += ifnone(margin.top, 0) + ifnone(margin.bottom, 0)
+        return px(width), px(height)
+
+    
+    def compute_fringe(self):
+        '''
+        Computes the fringe of this widget.
+        
+        The fringe is defined for nonterminal widgets, i.e. widgets that 
+        can contain other widgets and denotes the dimensions in x and y 
+        directions that are occupied by the parent widget and cannot be
+        part of the client area.
+        '''
+        return px(0), px(0)
+    
+    
+    def viewport(self):
+        return px(0), px(0)
 
 
 class Display(Widget):
@@ -314,12 +360,9 @@ class Shell(Widget):
         self.on_close = OnClose(self)
         self.on_move = OnMove(self)
     
-       
-        
     def create_content(self):
         self.content = Composite(self)
         self.content.layout = CellLayout(halign='fill', valign='fill')
-#         self.content.bg = Color('red')
         self.on_resize += self.dolayout
         
         
@@ -453,6 +496,11 @@ class Shell(Widget):
 
     def onresize_shell(self):
         self.dolayout()
+        
+    def compute_fringe(self):
+        width, height = self.compute_size()
+        
+        
 
 
 class Combo(Widget):
@@ -478,7 +526,7 @@ class Combo(Widget):
 
 
     def compute_size(self):
-        w, h = session.runtime.textsize_estimate(self.theme.font, 'X')
+        w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX')
         for padding in (self.theme.padding, self.theme.itempadding):
             if padding:
                 w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
@@ -866,7 +914,7 @@ class Option(Widget):
     def _handle_set(self, op):
         for key, value in op.args.iteritems():
             if key == 'selection':
-                self._checked = value
+                self._checked.set(value)
 
     def compute_size(self):
         w, h = session.runtime.textsize_estimate(self.theme.font, self._text)
@@ -899,7 +947,9 @@ class Edit(Widget):
         self._text = text
         self._message = message
         self._editable = editable
-
+        self._selection = None
+        self.on_modify = OnModify(self)
+        
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         if self.text:
@@ -917,14 +967,11 @@ class Edit(Widget):
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
+        width, height = Widget.compute_size(self)
         w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX')
-        if self.theme.padding:
-            w += self.theme.padding.left + self.theme.padding.right
-            h += self.theme.padding.top + self.theme.padding.bottom
-        t, r, b, l = self.theme.borders
-        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        return w, h
+        width += w
+        height += h
+        return width, height
 
     @property
     def text(self):
@@ -934,6 +981,21 @@ class Edit(Widget):
     @checkwidget
     def text(self, text):
         self._text = text
+        session.runtime << RWTSetOperation(self.id, {'text': text})
+        
+    def _handle_notify(self, op):
+        events = {'Modify': self.on_modify}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else: events[op.event].notify()
+        return True 
+
+    def _handle_set(self, op):
+        for key, value in op.args.iteritems():
+            if key == 'selection':
+                self._selection = value
+            if key == 'text':
+                self._text = value
         
     
 class Composite(Widget):
@@ -960,17 +1022,9 @@ class Composite(Widget):
         session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
         
     def compute_size(self):
-        w = h = 0
-        padding = self.theme.padding
-        if padding:
-            w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
-            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
-        t, r, b, l = self.theme.borders
-        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        return w, h
-
-
+        return Widget.compute_size(self)
+    
+    
 class ScrolledComposite(Composite):
 
     _rwt_class_name_ = 'rwt.widgets.ScrolledComposite'
@@ -1052,11 +1106,11 @@ class ScrollBar(Widget):
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
 
-class TabFolder(Widget):
+class TabFolder(Composite):
 
     _rwt_class_name_ = 'rwt.widgets.TabFolder'
-    _defstyle_ = BitField(Widget._defstyle_ | RWT.TOP)
-    _styles_ = Widget._styles_ + {'tabpos': RWT.TOP}
+    _defstyle_ = BitField(Composite._defstyle_ | RWT.TOP)
+    _styles_ = Composite._styles_ + {'tabpos': RWT.TOP}
 
     @constructor('TabFolder')
     def __init__(self, parent, tabpos='TOP', **options):
@@ -1073,7 +1127,7 @@ class TabFolder(Widget):
         options.style.append(self._tabpos)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
-    @Widget.bounds.setter
+    @Composite.bounds.setter
     @checkwidget
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
@@ -1085,14 +1139,8 @@ class TabFolder(Widget):
     def items(self):
         return self._items
 
-    def add_item(self, idx=0, text=None, img=None, tooltip=None, control=None, **options):
-        item = TabItem(self, idx=idx, text=text, img=img, tooltip=tooltip, control=control, **options)
-        self.items.insert(idx, item)
-        return item
-
     def remove_item(self, idx):
         self.items.pop(idx).dispose()
-
 
     @property
     def selected(self):
@@ -1102,6 +1150,9 @@ class TabFolder(Widget):
     @checkwidget
     def selected(self, item):
         self._selected = item.id
+        for i in self.items:
+            i.selected = 0
+        item.selected = 1
         session.runtime << RWTSetOperation(self.id, {'selection': self._selected})
 
     @property
@@ -1116,12 +1167,25 @@ class TabFolder(Widget):
 
 
     def compute_size(self):
-        w = h = 0
-        t, r, b, l = self.theme.borders
-        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        return w, h
+        width, height = Composite.compute_size(self)
+        # content container border
+        t, r, b, l = self.theme.container_borders
+        width += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        height += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        itemsizes = [i.compute_size() for i in self.items]
+        if itemsizes:
+            width += max([s[0] for s in itemsizes])
+            height += max([s[1] for s in itemsizes])
+        return width, height
 
+    
+    def compute_fringe(self):
+        width, height = self.compute_size()
+        itemsizes = [i.compute_size() for i in self.items]
+        if itemsizes:
+            width -= max([s[0] for s in itemsizes])
+        return width, height
+    
 
 class TabItem(Widget):
 
@@ -1139,6 +1203,8 @@ class TabItem(Widget):
         self._control = control
         if self in parent.children:
             parent.children.remove(self)
+        self.parent.items.insert(idx, self)
+        self.selected = False
 
 
     def _create_rwt_widget(self):
@@ -1226,14 +1292,14 @@ class TabItem(Widget):
         session.runtime << RWTSetOperation(self.id, {'control': control.id})
 
     def compute_size(self):
-        w = h = 0
-        if self.theme.padding:
-            w += self.theme.padding.left + self.theme.padding.right
-            h += self.theme.padding.top + self.theme.padding.bottom
-        t, r, b, l = self.theme.borders
-        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        return w, h
+        width, height = Widget.compute_size(self)
+        if self.img is not None:
+            w, h = self.img.size
+        else:
+            w, h = session.runtime.textsize_estimate(self.theme.font, self._text)
+        width += w
+        height += h
+        return width, height
 
 
 class Slider(Widget):
@@ -1283,13 +1349,10 @@ class Slider(Widget):
 
     def compute_size(self):
         width, height = 0, 0
-        # top, right, bottom, left = self.theme.borders
-        # width += ifnone(left, 0, lambda b: b.width) + ifnone(right, 0, lambda b: b.width)
-        # height += ifnone(top, 0, lambda b: b.width) + ifnone(bottom, 0, lambda b: b.width)
         return width, height
 
 
-class Group(Widget):
+class Group(Composite):
     
     _rwt_class_name_ = 'rwt.widgets.Group'
     _defstyle_ = BitField(Widget._defstyle_)
@@ -1306,7 +1369,6 @@ class Group(Widget):
         options.style.append('NONE')
         options.text = self.text
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
-        
     
     @property
     def text(self):
@@ -1319,7 +1381,6 @@ class Group(Widget):
         self._text = text
         session.runtime << RWTSetOperation(self.id, {'text': self._text})
         
-    
     @Widget.bounds.setter
     @checkwidget
     def bounds(self, bounds):
@@ -1328,7 +1389,70 @@ class Group(Widget):
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
         
     def compute_size(self):
-        return 0, 0
+        width, height = Composite.compute_size(self)
+        # frame border
+        t, r, b, l = self.theme.frame_borders
+        width += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        height += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        # frame padding
+        padding = self.theme.frame_padding
+        if padding:
+            width += ifnone(padding.left, 0) + ifnone(padding.right, 0)
+            height += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        # frame margin
+        margin = self.theme.frame_margin
+        if margin:
+            width += ifnone(margin.left, 0) + ifnone(margin.right, 0)
+            height += ifnone(margin.top, 0) + ifnone(margin.bottom, 0)
+        return px(width), px(height)
+        
+    def compute_fringe(self):
+        width, height = self.compute_size()
+        return width, height
+    
+    
+    def viewport(self):
+        x = y = 0
+        # border
+        t, _, _, l = self.theme.borders
+        x += ifnone(l, 0, lambda b: b.width)
+        y += ifnone(t, 0, lambda b: b.width)
+        # padding
+        padding = self.theme.padding
+        if padding:
+            x += ifnone(padding.left, 0)
+            y += ifnone(padding.top, 0)
+        # margin
+        margin = self.theme.margin
+        if margin:
+            x += ifnone(margin.left, 0)
+            y += ifnone(margin.top, 0)
+        # label border
+        t, _, _, l = self.theme.label_borders
+        y += ifnone(t, 0, lambda b: b.width)
+        # label padding
+        padding = self.theme.label_padding
+        if padding:
+            y += ifnone(padding.top, 0)
+        #label margin
+        margin = self.theme.label_margin
+        if margin:
+            y += ifnone(margin.top, 0)
+        # frame border
+        t, r, b, l = self.theme.frame_borders
+        x += ifnone(l, 0, lambda b: b.width)
+        y += ifnone(t, 0, lambda b: b.width)
+        # frame padding
+        padding = self.theme.frame_padding
+        if padding:
+            x += ifnone(padding.left, 0)
+            y += ifnone(padding.top, 0)
+        # frame margin
+        margin = self.theme.frame_margin
+        if margin:
+            x += ifnone(margin.left, 0)
+            y += ifnone(margin.top, 0)
+        return px(x), px(y)
 
 
 class Browser(Widget):
