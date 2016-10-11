@@ -766,14 +766,10 @@ class Button(Widget):
         return True 
     
     def compute_size(self):
-        width, height = session.runtime.textsize_estimate(self.theme.font, self._text)
-        padding = self.theme.padding
-        if padding:
-            width += ifnone(padding.left, 0) + ifnone(padding.right, 0)
-            height += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
-        top, right, bottom, left = self.theme.borders
-        width += ifnone(left, 0, lambda b: b.width) + ifnone(right, 0, lambda b: b.width)
-        height += ifnone(top, 0, lambda b: b.width) + ifnone(bottom, 0, lambda b: b.width)
+        width, height = Widget.compute_size(self)
+        tw, th = session.runtime.textsize_estimate(self.theme.font, self._text)
+        width += tw
+        height += th
         return width, height
     
     
