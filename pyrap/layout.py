@@ -130,8 +130,7 @@ class LayoutAdapter(object):
             x = self.data.cellhpos.value + self.data.cellwidth.value - self.data.width.value - self.layout.padding_right
             width = self.data.width.value
         elif self.layout.halign == 'center':
-            out(self.data.cellhpos.value, self.data.cellwidth.value,self.data.width.value, self.layout.padding_left)
-            x = self.data.cellhpos.value + pc(50).of(self.data.cellwidth.value) - pc(50).of(self.data.width.value) + self.layout.padding_left
+            x = self.data.cellhpos.value + pc(50).of(self.data.cellwidth.value) - pc(50).of(self.data.width.value)
             width = self.data.width.value
         # vertical position
         if self.layout.valign == 'fill':
