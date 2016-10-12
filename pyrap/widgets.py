@@ -254,7 +254,7 @@ class Widget(object):
 
     @property
     def css(self):
-        return ifnone(self._css, 'csscclass')
+        return self._css
 
     @css.setter
     @checkwidget
