@@ -26,6 +26,7 @@ from pyrap.utils import out, stop
 import math
 
 TYPE = 'type-selector'
+CLASS = 'class'
 PSEUDOCLASS = 'pseudo-class'
 ATTRIBUTE = 'attribute-selector'
 UNIVERSAL = 'universal'
@@ -87,22 +88,23 @@ class Theme(object):
         self._build_theme_from_rules(csscontent.cssRules)
         return self
 
-    def get_rule_exact(self, typ, attrs=set(), pcs=set()):
+    def get_rule_exact(self, typ, clazz=set(), attrs=set(), pcs=set()):
         ruleset = self.rules[typ]
         for rule in ruleset:
-            if rule.perfect_match(attrs, pcs): return rule
-        rule = ThemeRule(typ, set(attrs), set(pcs))
+            if rule.perfect_match(clazz, attrs, pcs): return rule
+        rule = ThemeRule(typ, set(clazz), set(attrs), set(pcs))
         ruleset.append(rule)
         return rule
     
-    def _get_property(self, name, typ, attrs=set(), pcs=set()):
+    def _get_property(self, name, typ, clazz=set(), attrs=set(), pcs=set()):
         ruleset = self.rules[typ]
         matches = []
         for rule in ruleset:
-            match = rule.match(attrs, pcs)
-            if match == (-1, -1): continue
+            match = rule.match(clazz, attrs, pcs)
+            if match == (-1, -1, -1): continue
             matches.append((rule, match))
         # sort the matches in ascending order
+        matches = sorted(matches, key=lambda m: m[1][2], reverse=True)
         matches = sorted(matches, key=lambda m: m[1][1], reverse=True)
         matches = sorted(matches, key=lambda m: m[1][0], reverse=True)
         while matches:
@@ -112,13 +114,14 @@ class Theme(object):
                 return r.properties[name]
         return None
     
-    def get_property(self, name, typ, attrs=set(), pcs=set()):
-        for args in ((attrs, pcs), (set(), pcs), (attrs, set()), (set(), set())):
+    def get_property(self, name, typ, clazz=set(), attrs=set(), pcs=set()):
+        for args in ((clazz, attrs, pcs), (clazz, set(), pcs), (clazz, attrs, set()), (clazz, set(), set()),
+                     (set(), attrs, pcs), (set(), set(), pcs), (set(), attrs, set()), (set(), set(), set())):
             prop = self._get_property(name, typ, *args)
             if prop is not None: 
                 return prop
         if typ == '*': return None
-        return self.get_property(name, '*', attrs, pcs)
+        return self.get_property(name, '*', clazz, attrs, pcs)
         
     
     def write(self, stream=sys.stdout):
@@ -132,8 +135,8 @@ class Theme(object):
         for cssrule in cssrules:
             if isinstance(cssrule, CSSComment): continue
             selectors, properties = self._convert_css_rule(cssrule)
-            for typ, attrs, pcs in selectors:
-                rule = self.get_rule_exact(typ, attrs, pcs)
+            for typ, clazz, attrs, pcs in selectors:
+                rule = self.get_rule_exact(typ, clazz, attrs, pcs)
                 for name, value in properties.iteritems():
                     if name == 'border':
                         for name in ('border-left', 'border-top', 'border-right', 'border-bottom'):
@@ -148,31 +151,45 @@ class Theme(object):
         
     def _build_selector_triplets(self, selectors):
         typesel = []
+        clazzsel = []
         attrsel = []
         pseudosel = []
         curattr = []
         curpseudo = []
+        curclazz = []
         for i, s in enumerate(selectors):
             if s[0] == TYPE:
                 typesel.append(s[1])
                 if i > 0:
+                    clazzsel.append(curclazz)
                     attrsel.append(curattr)
                     pseudosel.append(curpseudo)
                     curattr = []
                     curpseudo = []
+                    curclazz = []
+            elif s[0] == CLASS:
+                curclazz.append(s[1])
             elif s[0] == ATTRIBUTE:
                 curattr.append('[' + s[1])
             elif s[0] == PSEUDOCLASS:
                 curpseudo.append(s[1])
+        clazzsel.append(curclazz)
         attrsel.append(curattr)
         pseudosel.append(curpseudo)
+        curclazz = []
         curattr = []
         curpseudo = []
-        return [(t, set(a), set(p)) for t, p, a in zip(typesel, pseudosel, attrsel)]    
+        return [(t, set(c), set(a), set(p)) for t, c, p, a in zip(typesel, clazzsel, pseudosel, attrsel)]    
     
     def _convert_css_rule(self, cssrule):
-        selectors = [(str(item.type), item.value) for selector in cssrule.selectorList for item in selector.seq if item.type in (TYPE, PSEUDOCLASS, ATTRIBUTE, UNIVERSAL)]
+        selectors = [(str(item.type), item.value) for selector in cssrule.selectorList for item in selector.seq if item.type in (TYPE, CLASS, PSEUDOCLASS, ATTRIBUTE, UNIVERSAL)]
         selectors = tuple([(t if t != UNIVERSAL else TYPE, str(i[1]) if t in (TYPE, UNIVERSAL) else str(i)) for (t, i) in selectors])
+#         if cssrule.selectorText == 'Composite.navbar':
+#             for sel in cssrule.selectorList:
+#                 out(sel)
+#                 for item in sel.seq:
+#                     out(item.type, item.value)
+#             stop(selectors)
         triplets = self._build_selector_triplets(selectors)
         properties = self._convert_css_properties(cssrule.style.getProperties(all=True))
         return triplets, properties
@@ -569,6 +586,8 @@ class Theme(object):
         def __str__(self):
             return 'percents: %s, colors: %s, orientation: %s' % (','.join(map(str, self.percents)), ','.join(map(str, self.colors)), self.orientation)
         
+        def __repr__(self):
+            return '<Gradient at 0x%x %s; %s; %s' % (hash(self), self.orientation, ','.join(map(str, self.percents)), ','.join(map(str, self.colors))) 
         
     class Shadow(object):
         def __init__(self, x, y, r, color, style=SHADOW.NONE):
@@ -777,8 +796,8 @@ class Theme(object):
         theme = {}
         for typ, rules in self.rules.iteritems():
             properties = defaultdict(list)
-            for rule in sorted(rules, key=lambda r: len(r.attrs) + len(r.pcs), reverse=True):
-                selectors = sorted(list(rule.pcs)) + sorted(list(rule.attrs))
+            for rule in sorted(rules, key=lambda r: len(r.clazz) + len(r.attrs) + len(r.pcs), reverse=True):
+                selectors = sorted(list(rule.clazz)) + sorted(list(rule.pcs)) + sorted(list(rule.attrs))
                 for name, value in rule.properties.iteritems():
                     values = properties[name]
                     valuetuple = []
@@ -839,6 +858,10 @@ class WidgetTheme(object):
         self._bg = None
         self._color = None
         
+    def custom_variant(self):
+        variants = set(['.%s' % self._widget.css])
+        return variants
+        
     def states(self):
         states = set()
         if self._widget.disabled:
@@ -862,25 +885,25 @@ class ComboTheme(WidgetTheme):
 
     @property
     def btnwidth(self):
-        return self._theme.get_property('width', 'Combo-Button', self.styles(), self.states())
+        return self._theme.get_property('width', 'Combo-Button', self.custom_variant(), self.styles(), self.states())
 
     @property
     def font(self):
-        return self._theme.get_property('font', 'Combo', self.styles(), self.states())
+        return self._theme.get_property('font', 'Combo', self.custom_variant(), self.styles(), self.states())
 
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'Combo', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Combo', self.custom_variant(), self.styles(), self.states())
 
     @property
     def borders(self):
         return [
-            self._theme.get_property('border-%s' % b, 'Combo', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+            self._theme.get_property('border-%s' % b, 'Combo', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'Combo', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'Combo', self.custom_variant(), self.styles(), self.states())
 
     @bg.setter
     def bg(self, color):
@@ -888,11 +911,11 @@ class ComboTheme(WidgetTheme):
 
     @property
     def itempadding(self):
-        return self._theme.get_property('padding', 'Combo-Field', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Combo-Field', self.custom_variant(), self.styles(), self.states())
 
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Composite', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Composite', self.custom_variant(), self.styles(), self.states())
     
 
 class DropDownTheme(WidgetTheme):
@@ -902,21 +925,21 @@ class DropDownTheme(WidgetTheme):
 
     @property
     def font(self):
-        return self._theme.get_property('font', 'DropDown', self.styles(), self.states())
+        return self._theme.get_property('font', 'DropDown', self.custom_variant(), self.styles(), self.states())
 
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'DropDown', self.styles(), self.states())
+        return self._theme.get_property('padding', 'DropDown', self.custom_variant(), self.styles(), self.states())
 
     @property
     def borders(self):
         return [
-            self._theme.get_property('border-%s' % b, 'DropDown', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+            self._theme.get_property('border-%s' % b, 'DropDown', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'DropDown', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'DropDown', self.custom_variant(), self.styles(), self.states())
 
     @bg.setter
     def bg(self, color):
@@ -924,11 +947,11 @@ class DropDownTheme(WidgetTheme):
 
     @property
     def itempadding(self):
-        return self._theme.get_property('padding', 'DropDown-Item', self.styles(), self.states())
+        return self._theme.get_property('padding', 'DropDown-Item', self.custom_variant(), self.styles(), self.states())
     
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Composite', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Composite', self.custom_variant(), self.styles(), self.states())
     
 
 
@@ -939,20 +962,20 @@ class LabelTheme(WidgetTheme):
         
     @property
     def font(self):
-        return self._theme.get_property('font', 'Label', self.styles(), self.states())
+        return self._theme.get_property('font', 'Label', self.custom_variant(), self.styles(), self.states())
     
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'Label', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Label', self.custom_variant(), self.styles(), self.states())
     
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Label', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Label', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'Label', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'Label', self.custom_variant(), self.styles(), self.states())
     
     @bg.setter
     def bg(self, color):
@@ -961,7 +984,7 @@ class LabelTheme(WidgetTheme):
     @property
     def color(self):
         if self._color: return self._color
-        return self._theme.get_property('color', 'Label', self.styles(), self.states())
+        return self._theme.get_property('color', 'Label', self.custom_variant(), self.styles(), self.states())
 
     @color.setter
     def color(self, color):
@@ -971,7 +994,7 @@ class LabelTheme(WidgetTheme):
         
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Label', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Label', self.custom_variant(), self.styles(), self.states())
     
 
 
@@ -990,20 +1013,20 @@ class ButtonTheme(WidgetTheme):
     
     @property
     def font(self):
-        return self._theme.get_property('font', 'Button', self.styles(), self.states())
+        return self._theme.get_property('font', 'Button', self.custom_variant(), self.styles(), self.states())
     
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'Button', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Button', self.custom_variant(), self.styles(), self.states())
     
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Button', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Button', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
     
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'Button', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'Button', self.custom_variant(), self.styles(), self.states())
     
     @bg.setter
     def bg(self, color):
@@ -1011,7 +1034,7 @@ class ButtonTheme(WidgetTheme):
     
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Button', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Button', self.custom_variant(), self.styles(), self.states())
     
     
 class CheckboxTheme(WidgetTheme):
@@ -1031,28 +1054,28 @@ class CheckboxTheme(WidgetTheme):
         
     @property
     def font(self):
-        return self._theme.get_property('font', 'Button', self.styles(), self.states())
+        return self._theme.get_property('font', 'Button', self.custom_variant(), self.styles(), self.states())
     
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'Button', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Button', self.custom_variant(), self.styles(), self.states())
     
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Button', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Button', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
     
     @property
     def spacing(self):
-        return self._theme.get_property('spacing', 'Button', self.styles(), self.states())
+        return self._theme.get_property('spacing', 'Button', self.custom_variant(), self.styles(), self.states())
     
     @property
     def icon(self):
-        return self._theme.get_property('background-image', 'Button-CheckIcon', self.styles(), self.states())
+        return self._theme.get_property('background-image', 'Button-CheckIcon', self.custom_variant(), self.styles(), self.states())
     
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'Label', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'Label', self.custom_variant(), self.styles(), self.states())
     
     @bg.setter
     def bg(self, color):
@@ -1060,15 +1083,15 @@ class CheckboxTheme(WidgetTheme):
         
     @property
     def fipadding(self): # the focus indicator
-        return self._theme.get_property('padding', 'Button-FocusIndicator', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Button-FocusIndicator', self.custom_variant(), self.styles(), self.states())
 
     @property
     def fiborders(self):
-        return [self._theme.get_property('border-%s' % b, 'Button-FocusIndicator', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Button-FocusIndicator', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Button', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Button', self.custom_variant(), self.styles(), self.states())
     
     
 class OptionTheme(WidgetTheme):
@@ -1088,28 +1111,28 @@ class OptionTheme(WidgetTheme):
         
     @property
     def font(self):
-        return self._theme.get_property('font', 'Button', self.styles(), self.states())
+        return self._theme.get_property('font', 'Button', self.custom_variant(), self.styles(), self.states())
     
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'Button', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Button', self.custom_variant(), self.styles(), self.states())
     
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Button', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Button', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
     
     @property
     def spacing(self):
-        return self._theme.get_property('spacing', 'Button', self.styles(), self.states())
+        return self._theme.get_property('spacing', 'Button', self.custom_variant(), self.styles(), self.states())
     
     @property
     def icon(self):
-        return self._theme.get_property('background-image', 'Button-RadioIcon', self.styles(), self.states())
+        return self._theme.get_property('background-image', 'Button-RadioIcon', self.custom_variant(), self.styles(), self.states())
     
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'Button', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'Button', self.custom_variant(), self.styles(), self.states())
     
     @bg.setter
     def bg(self, color):
@@ -1117,15 +1140,15 @@ class OptionTheme(WidgetTheme):
         
     @property
     def fipadding(self): # the focus indicator
-        return self._theme.get_property('padding', 'Button-FocusIndicator', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Button-FocusIndicator', self.custom_variant(), self.styles(), self.states())
 
     @property
     def fiborders(self):
-        return [self._theme.get_property('border-%s' % b, 'Button-FocusIndicator', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Button-FocusIndicator', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Button', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Button', self.custom_variant(), self.styles(), self.states())
     
 
 class CompositeTheme(WidgetTheme):
@@ -1136,20 +1159,20 @@ class CompositeTheme(WidgetTheme):
         
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Composite', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Composite', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def font(self):
-        return self._theme.get_property('font', 'Composite', self.styles(), self.states())
+        return self._theme.get_property('font', 'Composite', self.custom_variant(), self.styles(), self.states())
 
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'Composite', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Composite', self.custom_variant(), self.styles(), self.states())
 
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'Composite', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'Composite', self.custom_variant(), self.styles(), self.states())
     
     @bg.setter
     def bg(self, color):
@@ -1157,7 +1180,7 @@ class CompositeTheme(WidgetTheme):
         
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Composite', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Composite', self.custom_variant(), self.styles(), self.states())
 
 
 class ScrolledCompositeTheme(WidgetTheme):
@@ -1168,20 +1191,20 @@ class ScrolledCompositeTheme(WidgetTheme):
 
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'ScrolledComposite', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'ScrolledComposite', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def font(self):
-        return self._theme.get_property('font', 'ScrolledComposite', self.styles(), self.states())
+        return self._theme.get_property('font', 'ScrolledComposite', self.custom_variant(), self.styles(), self.states())
 
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'ScrolledComposite', self.styles(), self.states())
+        return self._theme.get_property('padding', 'ScrolledComposite', self.custom_variant(), self.styles(), self.states())
 
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'ScrolledComposite', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'ScrolledComposite', self.custom_variant(), self.styles(), self.states())
 
     @bg.setter
     def bg(self, color):
@@ -1189,7 +1212,7 @@ class ScrolledCompositeTheme(WidgetTheme):
         
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'ScrolledComposite', self.styles(), self.states())
+        return self._theme.get_property('margin', 'ScrolledComposite', self.custom_variant(), self.styles(), self.states())
 
 
 class ScrollBarTheme(WidgetTheme):
@@ -1200,7 +1223,7 @@ class ScrollBarTheme(WidgetTheme):
         
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'ScrollBar', self.styles(), self.states())
+        return self._theme.get_property('margin', 'ScrollBar', self.custom_variant(), self.styles(), self.states())
     
 
 
@@ -1213,15 +1236,15 @@ class SliderTheme(WidgetTheme):
     @property
     def borders(self):
         return [
-            self._theme.get_property('border-%s' % b, 'Slider', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+            self._theme.get_property('border-%s' % b, 'Slider', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def icon(self):
-        return self._theme.get_property('background-image', 'Slider-UpButton-Icon', self.styles(), self.states())
+        return self._theme.get_property('background-image', 'Slider-UpButton-Icon', self.custom_variant(), self.styles(), self.states())
 
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Slider', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Slider', self.custom_variant(), self.styles(), self.states())
     
 
 class TabFolderTheme(WidgetTheme):
@@ -1232,12 +1255,12 @@ class TabFolderTheme(WidgetTheme):
 
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'TabFolder', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'TabFolder', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'TabFolder', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'TabFolder', self.custom_variant(), self.styles(), self.states())
 
     @bg.setter
     def bg(self, color):
@@ -1245,15 +1268,15 @@ class TabFolderTheme(WidgetTheme):
         
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'TabFolder', self.styles(), self.states())
+        return self._theme.get_property('padding', 'TabFolder', self.custom_variant(), self.styles(), self.states())
 
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'TabFolder', self.styles(), self.states())
+        return self._theme.get_property('margin', 'TabFolder', self.custom_variant(), self.styles(), self.states())
     
     @property
     def container_borders(self):
-        return [self._theme.get_property('border-%s' % b, 'TabFolder-ContentContainer', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'TabFolder-ContentContainer', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
         
 
 class TabItemTheme(WidgetTheme):
@@ -1270,12 +1293,12 @@ class TabItemTheme(WidgetTheme):
 
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'TabItem', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'TabItem', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'TabItem', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'TabItem', self.custom_variant(), self.styles(), self.states())
 
     @bg.setter
     def bg(self, color):
@@ -1283,15 +1306,15 @@ class TabItemTheme(WidgetTheme):
 
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'TabItem', self.styles(), self.states())
+        return self._theme.get_property('padding', 'TabItem', self.custom_variant(), self.styles(), self.states())
     
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'TabItem', self.styles(), self.states())
+        return self._theme.get_property('margin', 'TabItem', self.custom_variant(), self.styles(), self.states())
 
     @property
     def font(self):
-        return self._theme.get_property('font', 'TabItem', self.styles(), self.states())
+        return self._theme.get_property('font', 'TabItem', self.custom_variant(), self.styles(), self.states())
     
 
 class ShellTheme(WidgetTheme):
@@ -1307,12 +1330,12 @@ class ShellTheme(WidgetTheme):
     
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Shell', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Shell', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
     
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'Shell', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'Shell', self.custom_variant(), self.styles(), self.states())
     
     @bg.setter
     def bg(self, color):
@@ -1320,15 +1343,15 @@ class ShellTheme(WidgetTheme):
         
     @property
     def title_height(self):
-        return self._theme.get_property('height', 'Shell-Titlebar', self.styles(), self.states())
+        return self._theme.get_property('height', 'Shell-Titlebar', self.custom_variant(), self.styles(), self.states())
         
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'Shell', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Shell', self.custom_variant(), self.styles(), self.states())
 
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Shell', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Shell', self.custom_variant(), self.styles(), self.states())
     
 
 class EditTheme(WidgetTheme):
@@ -1338,12 +1361,12 @@ class EditTheme(WidgetTheme):
         
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Text', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Text', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
     
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'Text', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'Text', self.custom_variant(), self.styles(), self.states())
     
     @bg.setter
     def bg(self, color):
@@ -1351,15 +1374,15 @@ class EditTheme(WidgetTheme):
     
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'Text', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Text', self.custom_variant(), self.styles(), self.states())
     
     @property
     def font(self):
-        return self._theme.get_property('font', 'Text', self.styles(), self.states())
+        return self._theme.get_property('font', 'Text', self.custom_variant(), self.styles(), self.states())
         
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Text', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Text', self.custom_variant(), self.styles(), self.states())
     
 
 class GroupTheme(WidgetTheme):
@@ -1370,16 +1393,16 @@ class GroupTheme(WidgetTheme):
     
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'Group', self.styles(), self.states())    
+        return self._theme.get_property('padding', 'Group', self.custom_variant(), self.styles(), self.states())    
     
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Composite', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Composite', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
     
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'Composite', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'Composite', self.custom_variant(), self.styles(), self.states())
     
     @bg.setter
     def bg(self, color):
@@ -1387,31 +1410,31 @@ class GroupTheme(WidgetTheme):
         
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Group', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Group', self.custom_variant(), self.styles(), self.states())
         
     @property
     def frame_padding(self):
-        return self._theme.get_property('padding', 'Group-Frame', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Group-Frame', self.custom_variant(), self.styles(), self.states())
     
     @property
     def label_padding(self):
-        return self._theme.get_property('padding', 'Group-Label', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Group-Label', self.custom_variant(), self.styles(), self.states())
     
     @property
     def frame_margin(self):
-        return self._theme.get_property('margin', 'Group-Frame', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Group-Frame', self.custom_variant(), self.styles(), self.states())
     
     @property
     def label_margin(self):
-        return self._theme.get_property('margin', 'Group-Label', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Group-Label', self.custom_variant(), self.styles(), self.states())
     
     @property
     def frame_borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Group-Frame', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Group-Frame', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
     
     @property
     def label_borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Group-Label', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Group-Label', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
     
 
 
@@ -1423,32 +1446,33 @@ class BrowserTheme(WidgetTheme):
 
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'Browser', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Browser', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Browser', self.styles(), self.states())
+        return self._theme.get_property('margin', 'Browser', self.custom_variant(), self.styles(), self.states())
     
 
 class ThemeRule(object):
     
-    def __init__(self, typ='*', attrs=None, pcs=None):
+    def __init__(self, typ='*', clazz=None, attrs=None, pcs=None):
         self.type = typ
+        self.clazz = clazz
         self.attrs = attrs
         self.pcs = pcs
         self.properties = {}
         
     
-    def perfect_match(self, attrs=set(), pcs=set()):
-        return set(attrs) == self.attrs and set(pcs) == self.pcs
+    def perfect_match(self, clazz=set(), attrs=set(), pcs=set()):
+        return set(clazz) == self.clazz and set(attrs) == self.attrs and set(pcs) == self.pcs
     
-    def match(self, attrs=set(), pcs=set()):
-        if set(attrs).issuperset(self.attrs) and set(pcs).issuperset(self.pcs):
-            return (len(self.attrs), len(self.pcs))
-        else: return (-1, -1)
+    def match(self, clazz=set(), attrs=set(), pcs=set()):
+        if set(clazz).issuperset(self.clazz) and set(attrs).issuperset(self.attrs) and set(pcs).issuperset(self.pcs):
+            return (len(self.clazz), len(self.attrs), len(self.pcs))
+        else: return (-1, -1, -1)
         
     def write(self, stream=sys.stdout):
-        stream.write('<ThemeRule type=%s attributes={%s}, pseudoclasses={%s}>\n' % (self.type, ','.join(self.attrs), ','.join(self.pcs)))
+        stream.write('<ThemeRule type=%s class={%s}, attributes={%s}, pseudoclasses={%s}>\n' % (self.type, ','.join(self.clazz), ','.join(self.attrs), ','.join(self.pcs)))
         for name, value in self.properties.iteritems():
             stream.write('    %s = \t%s\n' % (name, repr(value)))
         
@@ -1460,8 +1484,8 @@ class ThemeRule(object):
 
 if __name__ == '__main__':
     pyraplog.level(DEBUG)
-    theme = Theme('default').load()
-
-    btn_theme = theme.extract('Label')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
+    theme = Theme('default').load('../../pracweb-pyrap/resource/static/css/default.css')
+#     theme.write()
+    btn_theme = theme.extract('Composite')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
     btn_theme.write()
-    out(btn_theme.get_property('border-left', 'Label', ['[BORDER']))
+    out(theme.get_property('background', 'Composite'))
