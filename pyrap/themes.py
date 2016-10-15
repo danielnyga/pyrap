@@ -702,7 +702,7 @@ class Theme(object):
             elif isinstance(value, Font): 
                 valdict = Theme.ValueMap._font2json(value)
                 category = 'fonts'
-            elif isinstance(value, Color): 
+            elif isinstance(value, Color) or isinstance(value, basestring) and value in ('inherit', 'transparent'): 
                 valdict = Theme.ValueMap._color2json(value)
                 category = 'colors'
             elif isinstance(value, Theme.Border): 
@@ -744,7 +744,10 @@ class Theme(object):
         
         @staticmethod    
         def _color2json(color):
-            return ([int(v * 255) for v in color.rgb] + [color.alpha]) if isinstance(color, Color) else str(color)
+            if isinstance(color, Color):
+                return ([int(v * 255) for v in color.rgb] + [color.alpha])
+            elif color in ('inherit', 'transparent'):
+                return 'undefined'
                 
         @staticmethod
         def _boxdim2json(dim4val):
@@ -1453,6 +1456,51 @@ class BrowserTheme(WidgetTheme):
         return self._theme.get_property('margin', 'Browser', self.custom_variant(), self.styles(), self.states())
     
 
+class ListTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'List-Item')
+        
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'List-Item', self.custom_variant(), self.styles(), self.states())
+    
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'List', self.custom_variant(), self.styles(), self.states())
+    
+    @property
+    def item_padding(self):
+        return self._theme.get_property('padding', 'List-Item', self.custom_variant(), self.styles(), self.states())
+    
+    
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'List', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'List', self.custom_variant(), self.styles(), self.states())
+    
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+    @property
+    def color(self):
+        if self._color: return self._color
+        return self._theme.get_property('color', 'List', self.custom_variant(), self.styles(), self.states())
+
+    @color.setter
+    def color(self, color):
+        self._color = color
+        
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'List', self.custom_variant(), self.styles(), self.states())
+    
+    
+
 class ThemeRule(object):
     
     def __init__(self, typ='*', clazz=None, attrs=None, pcs=None):
@@ -1486,6 +1534,6 @@ if __name__ == '__main__':
     pyraplog.level(DEBUG)
     theme = Theme('default').load('../../pracweb-pyrap/resource/static/css/default.css')
 #     theme.write()
-    btn_theme = theme.extract('Composite')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
+    btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
     btn_theme.write()
     out(theme.get_property('background', 'Composite'))
