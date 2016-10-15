@@ -125,7 +125,7 @@ class DictStore(web.session.Store):
     def cleanup(self, timeout):
         now = time.time()
         for session_id, content in self._dict.iteritems():
-            if 'creation_time' not in content or (now - content.creation_time) > timeout:
+            if 'creation_time' not in content or (now - content['creation_time']) > timeout:
                 if 'on_kill' in content:
                     content['on_kill'].notify()
                 if session_id in self:
