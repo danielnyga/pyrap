@@ -21,7 +21,7 @@ from pyrap.base import session
 import json
 from web.session import SessionExpired
 import traceback
-from pyrap.utils import ifnone, out
+from pyrap.utils import ifnone, out, stop
 import urllib
 from pyrap.constants import APPSTATE
 from pyrap.events import FocusEventData
@@ -30,7 +30,8 @@ import md5
 from pyrap.exceptions import ResourceError
 from datetime import datetime
 from pyrap.pyraplog import getlogger
-
+import mimetypes
+mimetypes.init()
 
 class ApplicationManager(object):
     '''
@@ -442,7 +443,8 @@ class Resource(object):
     
     A resource consists of a 
     :param name:            which is basically "filename" under which the resource
-                            is made available
+                            is made available. If the name is ``None``, then
+                            the resource will be available under its md5 hash.
     :param content_type:    which represents the MIME type and encoding of the
                             of the resource
     :param content:         the raw content of the resource itself, such as the 
@@ -457,7 +459,9 @@ class Resource(object):
         self.content_type = content_type
         self.content = content
         self.registry = registry
-        self.md5 = md5.new(content).digest()
+        self.md5 = md5.new(content).hexdigest()
+        if name is None:
+            self.name = self.md5 + mimetypes.guess_extension(content_type)
         self.last_change = datetime.now()
 
     @property
@@ -493,13 +497,13 @@ class ResourceManager(object):
         
     def registerc(self, name, content_type, content, force=False):
         with self.lock:
-            resource = self.resources.get(name)
             resource_ = Resource(self, name, content_type, content)
+            resource = self.resources.get(resource_.name)
             if resource is not None and (resource_.content_type != resource.content_type or \
                 resource_.md5 != resource.md5) and not force:
-                raise ResourceError('A different resource with the name "%s" is already registered.')
+                raise ResourceError('A different resource with the name "%s" is already registered.' % name)
             else:
-                self.resources[name] = resource_
+                self.resources[resource_.name] = resource_
                 return resource_
             return resource
 
