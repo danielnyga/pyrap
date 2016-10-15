@@ -145,7 +145,7 @@ class LayoutAdapter(object):
         elif self.layout.valign == 'center':
             y = self.data.cellvpos() + pc(50).of(self.data.cellheight.value) - pc(50).of(self.data.height.value)
             height = self.data.height.value
-        out(self.widget, ':', x, y, width, height)
+#         out(self.widget, ':', x, y, width, height)
         self.widget.bounds = x, y, width, height
         for c in self.children:
             c._compute_widget()
@@ -204,6 +204,7 @@ class GridLayoutAdapter(LayoutAdapter):
                 changed |= c.changed
             if not changed: break
         
+        
     def _compute_cells(self, level=0):
         my = self.data
         widget = self.widget
@@ -220,7 +221,7 @@ class GridLayoutAdapter(LayoutAdapter):
         #=======================================================================
         fixcols = [i for i in range(self.colcount())  if i not in layout.flexcols]
         flexcols = {f: v for f, v in layout.flexcols.iteritems() if f < self.colcount()}
-        if my.width.value is not None and layout.halign == 'fill':
+        if my.width.value is not None and layout.halign == 'fill':# and not RWT.HSCROLL in widget.style:
             if layout.equalwidths:
                 if fixcols and flexcols:
                     raise LayoutError('Layout is inconsistent: I was told to make columns in %s equal length, but you have manually specified flexcols. Remove them or set all columns be flexible.' % repr(self.widget))
@@ -242,7 +243,7 @@ class GridLayoutAdapter(LayoutAdapter):
         #=======================================================================
         fixrows = [i for i in range(self.rowcount())  if i not in layout.flexrows]
         flexrows = {f: v for f, v in layout.flexrows.iteritems() if f < self.rowcount()}
-        if my.height.value is not None and layout.valign == 'fill':
+        if my.height.value is not None and layout.valign == 'fill':# and not RWT.VSCROLL in widget.style:
             if layout.equalheights:
                 if fixrows and flexrows:
                     raise LayoutError('Layout is inconsistent: I was told to make columns in %s equal height, but you have manually specified flexrows. Remove them or set all rows be flexible.' % repr(self.widget))
@@ -265,12 +266,14 @@ class GridLayoutAdapter(LayoutAdapter):
         wmaxg = px(0)
         for i in range(self.colcount()):
             wmax = px(0)
-            for c in self.col(i): 
+            for c in self.col(i):
+#                 if RWT.HSCROLL in c.widget.style: continue 
                 wmax = max(wmax, c.data.cellwidth.min)
                 wmaxg = max(wmax, wmaxg)
             for c in self.col(i): 
                 c.data.cellwidth.min = wmax 
                 if i not in flexcols or not layout.halign == 'fill':
+#                     if RWT.HSCROLL in c.widget.style: continue 
                     c.data.cellwidth.value = wmax
             wmaxt += wmax
         if layout.equalwidths:
@@ -284,11 +287,13 @@ class GridLayoutAdapter(LayoutAdapter):
         for i in range(self.rowcount()):
             hmax = px(0)
             for c in self.row(i): 
+#                 if RWT.VSCROLL in c.widget.style: continue 
                 hmax = max(hmax, c.data.cellheight.min)
                 hmaxg = max(hmax, hmaxg)
             for c in self.row(i): 
                 c.data.cellheight.min = hmax
                 if i not in flexrows or not layout.valign == 'fill': 
+#                     if RWT.VSCROLL in c.widget.style: continue 
                     c.data.cellheight.value = hmax
             hmaxt += hmax
         if layout.equalheights:
@@ -306,7 +311,8 @@ class GridLayoutAdapter(LayoutAdapter):
                     if i not in flexrows or not layout.valign == 'fill':
                         c.data.cellheight.value = c.data.cellwidth.value = m
         
-        mywidth, myheight = widget.compute_size()
+        mywidth, myheight = widget.compute_fringe()
+        
         children_width = max(my.width.min, wmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_left + layout.padding_right)
         children_height = max(my.height.min, hmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_top + layout.padding_bottom)
         #=======================================================================
@@ -314,16 +320,16 @@ class GridLayoutAdapter(LayoutAdapter):
         # widget in case that halign/valign='fill'
         #=======================================================================
         if layout.halign == 'fill':
-            my.width.value = my.cellwidth.value
-            my.cellwidth.min = mywidth + children_width#my.width.value
+            my.width.value = my.cellwidth.value 
+            my.cellwidth.min = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0)
         else:
-            my.width.value = mywidth + children_width
+            my.width.value = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0)
             my.cellwidth.min = my.width.value
         if layout.valign == 'fill':
             my.height.value = my.cellheight.value
-            my.cellheight.min = myheight + children_height#my.height.value
+            my.cellheight.min = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
         else:
-            my.height.value = myheight + children_height
+            my.height.value = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
             my.cellheight.min = my.height.value
         #=======================================================================
         # compute the cell positions if we know our width/height 
@@ -401,7 +407,8 @@ class StackLayoutAdapter(GridLayoutAdapter):
         wmaxg = px(0)
         for i in range(self.colcount()):
             wmax = px(0)
-            for c in self.col(i): 
+            for c in self.col(i):
+#                 if RWT.HSCROLL in c.widget.style: continue 
                 wmax = max(wmax, c.data.cellwidth.min)
                 wmaxg = max(wmax, wmaxg)
             for c in self.col(i): 
@@ -419,12 +426,13 @@ class StackLayoutAdapter(GridLayoutAdapter):
         hmaxg = px(0)
         for i in range(self.rowcount()):
             hmax = px(0)
-            for c in self.row(i): 
+            for c in self.row(i):
+#                 if RWT.VSCROLL in c.widget.style: continue
                 hmax = max(hmax, c.data.cellheight.min)
                 hmaxg = max(hmax, hmaxg)
             for c in self.row(i): 
                 c.data.cellheight.min = hmax
-                if i not in flexrows or not layout.valign == 'fill': 
+                if i not in flexrows or not layout.valign == 'fill':
                     c.data.cellheight.value = hmax
             hmaxt += hmax
         if layout.equalheights:
@@ -447,7 +455,7 @@ class StackLayoutAdapter(GridLayoutAdapter):
 #             my.width.min = my.cellwidth.min
 #         if my.height.min == px(0):
 #             my.height.min = my.cellheight.min
-        mywidth, myheight = widget.compute_size()
+        mywidth, myheight = widget.compute_fringe()
         children_width = max(my.width.min, wmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_left + layout.padding_right)
         children_height = max(my.height.min, hmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_top + layout.padding_bottom)
         #=======================================================================
@@ -456,13 +464,15 @@ class StackLayoutAdapter(GridLayoutAdapter):
         #=======================================================================
         if layout.halign == 'fill':
             my.width.value = my.cellwidth.value
+            my.cellwidth.min = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0) #my.width.value
         else:
-            my.width.value = mywidth + children_width
+            my.width.value = mywidth + (children_width  if not RWT.HSCROLL in widget.style else 0)
             my.cellwidth.min = my.width.value
         if layout.valign == 'fill':
             my.height.value = my.cellheight.value
+            my.cellheight.min = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
         else:
-            my.height.value = myheight + children_height
+            my.height.value = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
             my.cellheight.min = my.height.value
         
         # compute the cell positions if we know our width/height 
@@ -510,6 +520,7 @@ class TerminalLayoutAdapter(LayoutAdapter):
         my.height.value = max(my.height.min, h)
         my.cellwidth.min = my.width.value + layout.padding_left + layout.padding_right 
         my.cellheight.min = my.height.value + layout.padding_top + layout.padding_bottom
+        
         self._done = True
         
 
