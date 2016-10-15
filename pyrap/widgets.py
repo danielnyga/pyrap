@@ -20,8 +20,9 @@ from pyrap.constants import RWT, inf
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
-    SliderTheme, DropDownTheme, BrowserTheme
-from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout
+    SliderTheme, DropDownTheme, BrowserTheme, ListTheme
+from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout,\
+    StackLayout
 import md5
 import time
 from pyrap import pyraplog
@@ -686,7 +687,7 @@ class Label(Widget):
         
     def _get_rwt_img(self, img):
         if img is not None:
-            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
+            res = session.runtime.mngr.resources.registerc(None, 'image/%s' % img.fileext, img.content)
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         return img
@@ -1033,6 +1034,7 @@ class ScrolledComposite(Composite):
         Widget.__init__(self, parent, **options)
         self.theme = ScrolledCompositeTheme(self, session.runtime.mngr.theme)
         self._content = None
+        self.layout = CellLayout(halign='fill', valign='fill')
         self._hbar, self._vbar = None, None
         
     def create_content(self):
@@ -1042,6 +1044,8 @@ class ScrolledComposite(Composite):
         if RWT.VSCROLL in self.style:
             self._vbar = ScrollBar(self, orientation=RWT.VERTICAL)
             self._vbar.visible = True
+        self.content = Composite(self)
+
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1117,6 +1121,8 @@ class TabFolder(Composite):
         self.on_select = OnSelect(self)
         self._selected = None
         self._tooltip = None
+        self.layout = StackLayout(halign=options.get('halign'), 
+                                  valign=options.get('valign'))
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1131,11 +1137,19 @@ class TabFolder(Composite):
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
         session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
 
+    @checkwidget
+    def addtab(self, title='', img=None, idx=None):
+        item = TabItem(self, idx=ifnone(idx, len(self.items)), text=title)
+        container = Composite(self)
+        container.layout = CellLayout(halign='fill', valign='fill')
+        item.control = container
+        return container
+
     @property
     def items(self):
         return self._items
 
-    def remove_item(self, idx):
+    def rmitem(self, idx):
         self.items.pop(idx).dispose()
 
     @property
@@ -1145,6 +1159,9 @@ class TabFolder(Composite):
     @selected.setter
     @checkwidget
     def selected(self, item):
+        if type(item) is int:
+            item = self.items[item]
+        if not isinstance(item, TabItem): raise TypeError('Expected type %s, got %s.' % (TabItem.__name__, type(item).__name__))
         self._selected = item.id
         for i in self.items:
             i.selected = 0
@@ -1608,16 +1625,87 @@ class MenuItem(Widget):
 
 
 
-# class Grid(Composite):
-#     @constructor('Grid')
-#     def __init__(self, columns, parent, **options):
-#         Composite.__init__(self, parent, **options)
-#         self.layout_settings = GridLayout(columns)
+class List(Widget):
+    _rwt_class_name = 'rwt.widgets.List'
+    _styles_ = Widget._styles_ + {'multi': RWT.MULTI,
+                                  'hscroll': RWT.HSCROLL,
+                                  'vscroll': RWT.VSCROLL}
+    _defstyle_ = Widget._defstyle_ |  RWT.BORDER
+    
+    @constructor('List')
+    def __init__(self, parent, items=None, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = ListTheme(self, session.runtime.mngr.theme)
+        self._items = items
+        self._selidx = []
+            
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if RWT.MULTI in self.style:
+            options.style.append('MULTI')
+        else:
+            options.style.append('SINGLE')
+        options.markupEnabled = False
+        options.items = map(str, self._items)
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
+    
+    @Widget.bounds.setter
+    def bounds(self, b):
+        Widget.bounds.fset(self, b)
+        _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
+        padding = self.theme.item_padding
+        if padding:
+            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0) 
+        session.runtime << RWTSetOperation(self.id, {'itemDimensions': [b[2].value, h.value]})
+    
+    def create_content(self):
+        if RWT.HSCROLL in self.style:
+            self._hbar = ScrollBar(self, orientation=RWT.HORIZONTAL)
+            self._hbar.visible = True
+        if RWT.VSCROLL in self.style:
+            self._vbar = ScrollBar(self, orientation=RWT.VERTICAL)
+            self._vbar.visible = True
+        self.content = Composite(self)
+    
+    @property
+    def items(self):
+        return self.items
+    
+    @items.setter
+    def items(self, items):
+        self._items = items
+        session.runtime << RWTSetOperation(self.id, {'items': map(str, self._items)})
         
- 
-# class Row(Grid): pass
-#  
-# class Col(Grid): pass
-#  
-# class Cell(Grid): pass
-#     
+    @property
+    def selection(self):
+        sel = [self.items[i] for i in self._selidx]
+        if RWT.MULTI in self.style: return sel
+        else: None if not sel else sel[0]
+    
+    @selection.setter
+    def selection(self, sel):
+        if type(sel) not in (list, tuple) and RWT.MULTI in self.style:
+            raise TypeError('Expected list or tuple, got %s' % type(sel))
+        if not RWT.MULTI in self.style: sel = [sel]
+        sel = [self.items.index(s) for s in sel]
+        self.selidx = sel
+        
+    @property
+    def selidx(self):
+        return self._selidx
+    
+    @selidx.setter
+    def selidx(self, sel):
+        if type(sel) not in (list, tuple) and RWT.MULTI in self.style:
+            raise TypeError('Expected list or tuple, got %s' % type(sel))
+        if not RWT.MULTI in self.style: sel = [sel]
+        session.runtime << RWTSetOperation(self.id, {'selection': sel})
+    
+    def compute_size(self):
+        return 100, 100
+    
+    def compute_fringe(self):
+        return 100, 100
+        
+        
