@@ -667,7 +667,9 @@ class DropDown(Widget):
 class Label(Widget):
     
     _rwt_class_name_ = 'rwt.widgets.Label'
-    _defstyle_ = BitField(Widget._defstyle_)
+    _styles_ = Widget._styles_ + {'markup': RWT.MARKUP,
+                                  'wrap': RWT.WRAP}
+    _defstyle_ = BitField(Widget._defstyle_ | RWT.MARKUP)
     
     @constructor('Label')
     def __init__(self, parent, text='', img=None, **options):
@@ -682,6 +684,9 @@ class Label(Widget):
             options.image = self._get_rwt_img(self.img)
         else:
             options.text = self.text
+        if RWT.MARKUP in self.style:
+            options.markupEnabled = True
+            options.customVariant = 'variant_markup'
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
         
         
@@ -938,13 +943,14 @@ class Edit(Widget):
     _defstyle_ = BitField(Widget._defstyle_ | RWT.BORDER | RWT.LEFT)
 
     @constructor('Edit')
-    def __init__(self, parent, text=None, editable=True, message=None, **options):
+    def __init__(self, parent, text=None, editable=True, message=None, search=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = EditTheme(self, session.runtime.mngr.theme)
         self._text = text
         self._message = message
         self._editable = editable
         self._selection = None
+        self._search = search
         self.on_modify = OnModify(self)
         
     def _create_rwt_widget(self):
@@ -953,6 +959,8 @@ class Edit(Widget):
             options.text = self.text
         if self._message:
             options.message = self._message
+        if self._search:
+            options.style.append('SEARCH')
         options.editable = self._editable
         if RWT.MULTI in self.style:
             options.style.append('MULTI')
@@ -993,8 +1001,8 @@ class Edit(Widget):
                 self._selection = value
             if key == 'text':
                 self._text = value
-        
-    
+
+
 class Composite(Widget):
     
     _rwt_class_name_ = 'rwt.widgets.Composite'
@@ -1531,6 +1539,7 @@ class Menu(Widget):
         if RWT.BAR in self.style:
             options.style.append('DROP_DOWN')
         options.mnemonicIndex = self._mIndex
+        options.customVariant = 'variant_navigation'
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
 
@@ -1580,6 +1589,7 @@ class MenuItem(Widget):
             options.menu = self._menu.id
         if self._mIndex:
             options.mnemonicIndex = self._mIndex
+        options.customVariant = 'variant_navigation'
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
 
