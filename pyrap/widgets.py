@@ -1652,6 +1652,7 @@ class List(Widget):
         self.theme = ListTheme(self, session.runtime.mngr.theme)
         self._items = items
         self._selidx = []
+        self.on_select = OnSelect(self)
             
 
     def _create_rwt_widget(self):
