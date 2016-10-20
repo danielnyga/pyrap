@@ -50,8 +50,7 @@ class ApplicationManager(object):
     
     '''
     def __init__(self, config):
-        self.config = storify(config)#, requirejs=[], requirecss=[])
-        out(self.config)
+        self.config = storify(config)
         self.resources = ResourceManager(config.rcpath)
         self.runtimes = Storage()
         self.startup_page = None
@@ -357,6 +356,7 @@ class SessionRuntime(object):
     
     
     def textsize_estimate(self, font, text):
+        out(font, text)
         if type(font) is not str: font = str(font)
         return self.fontmetrics[font].estimate(text)
     
