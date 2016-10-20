@@ -869,6 +869,7 @@ class WidgetTheme(object):
         self._margin = None
         self._border = None
         self._bg = None
+        self._bgimg = None
         self._color = None
         
     def custom_variant(self):
@@ -1220,6 +1221,15 @@ class CompositeTheme(WidgetTheme):
     @bg.setter
     def bg(self, color):
         self._bg = color
+        
+    @property
+    def bgimg(self):
+        if self._bgimg: return self._bgimg
+        return self._theme.get_property('background-image', 'Composite', self.custom_variant(), self.styles(), self.states())
+    
+    @bgimg.setter
+    def bgimg(self, img):
+        self._bgimg = img
         
     @property
     def margin(self):

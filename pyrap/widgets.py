@@ -26,6 +26,7 @@ from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout,\
 import md5
 import time
 from pyrap import pyraplog
+import mimetypes
 
 
 
@@ -231,6 +232,21 @@ class Widget(object):
         session.runtime << RWTSetOperation(self.id, {'background': [int(round(v * 255)) for v in [self.theme.bg.red, self.theme.bg.green, self.theme.bg.blue, self.theme.bg.alpha]]})
 
     @property
+    def bgimg(self):
+        return self.theme.bgimg
+    
+    @bgimg.setter
+    @checkwidget
+    def bgimg(self, img):
+        self.theme.bgimg = img
+        if img is not None:
+            res = session.runtime.mngr.resources.registerc(None, mimetypes.types_map['.%s' % img.fileext], img.content)
+            img = [res.location, img.width.value, img.height.value]
+        else: img = None
+        session.runtime << RWTSetOperation(self.id, {'backgroundImage': img})
+
+
+    @property
     def color(self):
         return self.theme.color
 
@@ -391,7 +407,6 @@ class Shell(Widget):
             options.showClose = True
             options.allowClose = True
         options.resizable = (RWT.RESIZE in self.style)
-        out(self.style.readable(RWT))
         if RWT.MODAL in self.style:
             options.style.append('APPLICATION_MODAL')
         if RWT.MAXIMIZE in self.style:
