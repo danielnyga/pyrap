@@ -1502,10 +1502,7 @@ class ListTheme(WidgetTheme):
         
     @property
     def font(self):
-        out(self.custom_variant(), self.styles(), self.states())
-        f = self._theme.get_property('font', 'List-Item', self.custom_variant(), self.styles(), self.states())
-        out(f)
-        return f
+        return self._theme.get_property('font', 'List-Item', self.custom_variant(), self.styles(), self.states())
     
     @property
     def padding(self):

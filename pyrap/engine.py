@@ -328,7 +328,7 @@ class SessionRuntime(object):
                 ops.append(o)
                     
         for o in ops:
-            self.log_.info('   >>> ' + str(o))
+            self.log_.debug('   >>> ' + str(o))
             if isinstance(o, RWTNotifyOperation):
                 wnd = self.windows[o.target]
                 if wnd is None: continue
@@ -356,7 +356,6 @@ class SessionRuntime(object):
     
     
     def textsize_estimate(self, font, text):
-        out(font, text)
         if type(font) is not str: font = str(font)
         return self.fontmetrics[font].estimate(text)
     

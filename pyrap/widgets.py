@@ -1049,7 +1049,6 @@ class ScrolledComposite(Composite):
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        out(self.style)
         if RWT.HSCROLL in self.style:
             options.style.append('H_SCROLL')
         if RWT.VSCROLL in self.style:
