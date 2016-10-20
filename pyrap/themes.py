@@ -76,6 +76,7 @@ class Theme(object):
         self.rules = defaultdict(list)
         
     def extract(self, *types):
+        if '*' not in types: types = types + ('*',)
         theme = Theme('%s-%s' % (self.name, '/'.join(types)))
         for t in types:
             theme.rules[t] = deepcopy(self.rules[t])
@@ -115,8 +116,11 @@ class Theme(object):
         return None
     
     def get_property(self, name, typ, clazz=set(), attrs=set(), pcs=set()):
+        _done = []
         for args in ((clazz, attrs, pcs), (clazz, set(), pcs), (clazz, attrs, set()), (clazz, set(), set()),
                      (set(), attrs, pcs), (set(), set(), pcs), (set(), attrs, set()), (set(), set(), set())):
+            if args in _done: continue
+            _done.append(args)
             prop = self._get_property(name, typ, *args)
             if prop is not None: 
                 return prop
@@ -693,7 +697,7 @@ class Theme(object):
             self._hash2values = defaultdict(dict) # mapping from hash ids to value dicts
             self._hash2objects = defaultdict(dict) # mapping from hash ids to style objects
             
-        def handle_value(self, value):
+        def handle_value(self, value, add=True):
             category = None
             valdict = None
             if isinstance(value, Theme.Dim4) or isinstance(value, Theme.BorderRadius): 
@@ -730,13 +734,14 @@ class Theme(object):
             key = str(value)
             if key in self._values2hash[category]:
                 return self._values2hash[category][key]
-            else:
+            elif add:
                 hashid = str(uuid.uuid1()).split('-')[0]
                 if isinstance(value, Image): hashid += '.%s' % value.fileext
                 self._values2hash[category][key] = hashid
                 self._hash2values[category][hashid] = valdict
                 self._hash2objects[category][hashid] = value
                 return hashid
+            return None
             
         @staticmethod
         def _border2json(border):
@@ -811,6 +816,11 @@ class Theme(object):
                         if name == 'opacity': value = str(value.float)
                     valuetuple.append(value.value if isinstance(value, Dim) else tostring(value))
                     values.append(valuetuple)
+            #===================================================================
+            # ensure that a font is always among the properties
+            #===================================================================
+            if 'font' not in properties:
+                properties['font'] = [[[], valuereg.handle_value(self.get_property('font', typ), add=False)]]
             theme[typ] = properties
         return {'values': valuereg.values, 'theme': theme}, valuereg 
             
@@ -863,7 +873,7 @@ class WidgetTheme(object):
         
     def custom_variant(self):
         variants = set(['.%s' % self._widget.css])
-        return variants
+        return variants if self._widget.css is not None else set()
         
     def states(self):
         states = set()
@@ -880,6 +890,36 @@ class WidgetTheme(object):
             styles.add('[BORDER')
         return styles
 
+
+class CanvasTheme(WidgetTheme):
+    
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Canvas')
+        self.separator = None
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Canvas', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def borders(self):
+        return [
+            self._theme.get_property('border-%s' % b, 'Canvas', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'Canvas', self.custom_variant(), self.styles(), self.states())
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Canvas', self.custom_variant(), self.styles(), self.states())
+    
+    
 
 class ComboTheme(WidgetTheme):
     def __init__(self, widget, theme):
@@ -918,7 +958,7 @@ class ComboTheme(WidgetTheme):
 
     @property
     def margin(self):
-        return self._theme.get_property('margin', 'Composite', self.custom_variant(), self.styles(), self.states())
+        return self._theme.get_property('margin', 'Combo', self.custom_variant(), self.styles(), self.states())
     
 
 class DropDownTheme(WidgetTheme):
@@ -1458,11 +1498,14 @@ class BrowserTheme(WidgetTheme):
 
 class ListTheme(WidgetTheme):
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'List-Item')
+        WidgetTheme.__init__(self, widget, theme, 'List-Item', 'List')
         
     @property
     def font(self):
-        return self._theme.get_property('font', 'List-Item', self.custom_variant(), self.styles(), self.states())
+        out(self.custom_variant(), self.styles(), self.states())
+        f = self._theme.get_property('font', 'List-Item', self.custom_variant(), self.styles(), self.states())
+        out(f)
+        return f
     
     @property
     def padding(self):
@@ -1532,8 +1575,8 @@ class ThemeRule(object):
 
 if __name__ == '__main__':
     pyraplog.level(DEBUG)
-    theme = Theme('default').load('../../pracweb-pyrap/resource/static/css/default.css')
+    theme = Theme('default').load('../css/default.css')
 #     theme.write()
     btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
     btn_theme.write()
-    out(theme.get_property('background', 'Composite'))
+    out(btn_theme.get_property('font', 'List-Item', set([]), set(['[BORDER']), set([])))
