@@ -27,6 +27,7 @@ import md5
 import time
 from pyrap import pyraplog
 import mimetypes
+import types
 
 
 
@@ -1778,7 +1779,7 @@ class GC(object):
         '''Sets the color and opacity of the stroke.'''
         def __init__(self, color):
             GC.Operation.__init__(self)
-            self.color = color
+            self.color = types.color(color)
         
         def json(self):
             return ['strokeStyle', [int(round(255 * self.color.red)), 
