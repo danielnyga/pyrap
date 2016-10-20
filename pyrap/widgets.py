@@ -20,7 +20,7 @@ from pyrap.constants import RWT, inf
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
-    SliderTheme, DropDownTheme, BrowserTheme, ListTheme
+    SliderTheme, DropDownTheme, BrowserTheme, ListTheme, CanvasTheme
 from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout,\
     StackLayout
 import md5
@@ -1707,5 +1707,146 @@ class List(Widget):
     
     def compute_fringe(self):
         return 100, 100
+    
+
+class GC(object):
+    '''the graphics context'''
+    _rwt_class_name = 'rwt.widgets.GC'
+    
+    class Operation(object):
+        '''Abstract base class for all GC Operations'''
+        def json(self): raise NotImplemented()
+    
+    class save(Operation):
+        '''Saves the current state of the GC'''
+        def json(self): return ['save']
+        
+    class restore(Operation):
+        '''Restores the most recently saved state of the GC'''
+        def json(self): return ['restore']
+        
+    class moveto(Operation):
+        '''Moves the cursor to the given coordinates.'''
+        def __init__(self, x, y):
+            GC.Operation.__init__(self)
+            self.x = x
+            self.y = y
+        
+        def json(self):
+            return ['moveTo', self.x, self.y]
+        
+    class lineto(Operation):
+        '''Draws a line from the current cursor position to the given coordinates.'''
+        def __init__(self, x, y):
+            GC.Operation.__init__(self)
+            self.x = x
+            self.y = y
+            
+        def json(self):
+            return ['lineTo', self.x, self.y]
+    
+    class linewidth(Operation):
+        '''Sets the line width to the given size.'''
+        def __init__(self, w):
+            GC.Operation.__init__(self)
+            self.w = w
+            
+        def json(self):
+            return ['lineWidth', self.w]
+        
+    class stroke(Operation):
+        '''Operation to actually paint?'''
+        def json(self):
+            return ['stroke']
+        
+    class stroke_style(Operation):
+        '''Sets the color and opacity of the stroke.'''
+        def __init__(self, color):
+            GC.Operation.__init__(self)
+            self.color = color
+        
+        def json(self):
+            return ['strokeStyle', [int(round(255 * self.color.red)), 
+                                    int(round(255 * self.color.green)), 
+                                    int(round(255 * self.color.blue)), 
+                                    int(round(255 * self.color.alpha))]]
+        
+    class begin_path(Operation):
+        '''Initializes a new path'''
+        def json(self): return ['beginPath']
+        
+    class fill(Operation):
+        '''Issues a fill operation'''
+        def json(self): return ['fill']
+        
+    class ellipse(Operation):
+        '''Draws an ellipse'''
+        def __init__(self, x, y, rx, ry, rot, start, end, clockwise=True):
+            GC.Operation.__init__(self)
+            self.x = x
+            self.y = y
+            self.rx = rx
+            self.ry = ry
+            self.rot = rot
+            self.start = start
+            self.end = end
+            self.clockwise = clockwise
+            
+        def json(self):
+            return ['ellipse', self.x, self.y, self.rx, self.ry, self.rot, self.start, self.end, not self.clockwise]
+        
+    
+    def __init__(self, _id, parent):
+        self.id = _id
+        self.parent = parent
+        
+    def _create_rwt_widget(self):
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, {'parent': self.parent.id})
+    
+    def init(self, width, height):
+        session.runtime << RWTCallOperation(self.id, 'init', {'width': width, 
+                                                              'height': height,
+                                                              'font': [['Verdana', 'Helvetica', 'sans-serif'], 14, False, False],
+                                                              'fillStyle': [0, 255, 255, 255],
+                                                              'strokeStyle': [74, 74, 74, 255]})
+        
+    def draw(self, operations):
+        '''Sends the drawing operations to the client.
+        Must be a list of :class:`pyrap.GC.Operation` objects.'''
+        session.runtime << RWTCallOperation(self.id, 'draw', {'operations': [o.json() for o in operations]})
+        
+        
+
+class Canvas(Widget):
+    '''HTML5 2D canvas widget'''
+    _rwt_class_name = 'rwt.widgets.Canvas'
+    _styles_ = Widget._styles_ + {}
+    _defstyle_ = Widget._defstyle_
+    
+    @constructor('Canvas')
+    def __init__(self, parent, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = CanvasTheme(self, session.runtime.mngr.theme)
+        self.gc = GC('%s.gc' % self.id, self)
+        self.operations = []
+    
+    
+    def __lshift__(self, op):
+        self.operations.append(op)
+        
+    
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
+        self.gc._create_rwt_widget()
+        
+        
+    @Widget.bounds.setter
+    def bounds(self, b):
+        Widget.bounds.fset(self, b)
+        self.gc.init(b[2].value, b[3].value)
+        self.gc.draw(self.operations)
+        
+        
         
         
