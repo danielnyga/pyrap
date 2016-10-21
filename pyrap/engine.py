@@ -338,7 +338,9 @@ class SessionRuntime(object):
                 if wnd is None: continue
                 wnd._handle_set(o)
             elif isinstance(o, RWTCallOperation):
-                self._handle_call(o)
+                target = self.windows[o.target]
+                if target is None: target = self
+                target._handle_call(o)
         if self.state == APPSTATE.INITIALIZED:
             self.log_.info('creating shell...')
             self.create_shell()
@@ -364,7 +366,6 @@ class SessionRuntime(object):
             if op.method == 'storeMeasurements':
                 for id_, dims in op.args.results.iteritems():
                     self.fontmetrics[id_] = FontMetrics(FontMetrics.SAMPLE, dims)
-                    
     
     def initialize_app(self, entrypoint, args):
         self.put_header('url', 'pyrap')
@@ -385,13 +386,11 @@ class SessionRuntime(object):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
                         self.requirejs(f)
         if self.mngr.config.requirecss:
-            out('requirecss!', self.mngr.config.requirecss)
             if not isinstance(self.mngr.config.requirecss, list):
                 files = [self.mngr.config.requirecss]
             else:
                 files = self.mngr.config.requirecss
             for p in files:
-                out('requirecss!', os.path.isfile(p), os.path.isdir(p))
                 if os.path.isfile(p):
                     self.requirecss(p)
                 elif os.path.isdir(p):
@@ -471,8 +470,6 @@ class Resource(object):
     def location(self):
         return urllib.quote('%s/%s' % (self.registry.resourcepath, self.name))
 
-
-    
 
 class ResourceManager(object):
     '''

@@ -141,6 +141,10 @@ class Widget(object):
         for key, value in op.args.iteritems():
             if key == 'bounds':
                 self._bounds = map(px, value)
+
+
+    def _handle_call(self, op):
+        pass
     
     def _rwt_options(self):
         options = RStorage()
@@ -1775,7 +1779,7 @@ class Table(Widget):
                                            'multi': RWT.MULTI})
 
     @constructor('Table')
-    def __init__(self, parent, markupenabled=False, bgimg=None, indentwidth=0, items=0, itemheight=25, headerheight=30, **options):
+    def __init__(self, parent, markupenabled=False, bgimg=None, indentwidth=0, items=0, itemheight=25, headervisible=True, headerheight=30, **options):
         Widget.__init__(self, parent, **options)
         self.theme = TableTheme(self, session.runtime.mngr.theme)
         self._markupenabled = markupenabled
@@ -1785,8 +1789,9 @@ class Table(Widget):
         self._columncount = 0
         self._itemcount = items
         self._itemheight = itemheight
-        self._headervisible = True
+        self._headervisible = headervisible
         self._headerheight = headerheight
+        self._colsmoveable = False
         self._columns = []
         self._items = []
 
@@ -1843,7 +1848,7 @@ class Table(Widget):
     @checkwidget
     def cols(self, cols):
         self._columns = cols
-        session.runtime << RWTSetOperation(self.id, {'columnOrder': cols})
+        session.runtime << RWTSetOperation(self.id, {'columnOrder': [c.id for c in self._columns]})
 
     @property
     def colcount(self):
@@ -1889,29 +1894,33 @@ class Table(Widget):
         self._headerheight = h
         session.runtime << RWTSetOperation(self.id, {'headerHeight': h})
 
+    @property
+    def colsmoveable(self):
+        return self._colsmoveable
+
+    @colsmoveable.setter
+    @checkwidget
+    def colsmoveable(self, moveable):
+        out('cols moveable:', moveable, '---------------------------------')
+        self._colsmoveable = moveable
+        for c in self.cols:
+            c.moveable(moveable)
+
     def itemmetrics(self):
         metrics = []
-        left = px(0)
-        imgleft = px(0)
-        out(imgleft)
-        textleft = px(0)
+        left = 0
         for i, col in enumerate(self.cols):
-            col = session.runtime.windows[col]
-            width = col.width
-            imgwidth = px(0)
+            col.left = left
+            width = col.w
+            imgwidth = 0
             for item in self.items:
                 imgwidth = max(imgwidth, item.imgwidth(i))
 
-            imgleft = left + col.theme.padding.left
+            imgleft = left + col.theme.padding.left.value
             textleft = imgleft + imgwidth
-            textwidth = max(px(0), width - col.theme.padding.left - imgwidth)
-            out('metrics repr', repr(col.idx), repr(left), repr(width), repr(imgleft), repr(imgwidth), repr(textleft), repr(textwidth))
-            out('metrics', [col.idx, left.value, width.value, imgleft.value, imgwidth.value, textleft.value, textwidth.value], '----------------------')
-            metrics.append([col.idx, left.value, width.value, imgleft.value, imgwidth.value, textleft.value, textwidth.value])
+            textwidth = max(0, width - col.theme.padding.left.value - imgwidth)
+            metrics.append([col.idx, left, width, imgleft, imgwidth, textleft, textwidth])
             left += width
-            out('left', left, col.theme.padding.left)
-
-
         session.runtime << RWTSetOperation(self.id, {'itemMetrics': metrics})
 
     def additem(self, texts, index=None, **options):
@@ -1919,10 +1928,10 @@ class Table(Widget):
         self.itemcount = max(self.itemcount, len(self.items))
         self.itemmetrics()
 
-    def addcol(self, text, index=None, tooltip=None, **options):
-        TableColumn(self, idx=index, text=text, tooltip=tooltip, **options)
+    def addcol(self, text, tooltip=None, **options):
+        TableColumn(self, text=text, tooltip=tooltip, **options)
         self.colcount = max(self.colcount, len(self.cols))
-        session.runtime << RWTSetOperation(self.id, {'columnOrder': self._columns})
+        session.runtime << RWTSetOperation(self.id, {'columnOrder': [c.id for c in self._columns]})
         self.itemmetrics()
 
 
@@ -2015,23 +2024,27 @@ class TableColumn(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('TableColumn')
-    def __init__(self, parent, idx=None, text=None, tooltip=None, width=50, img=None, **options):
+    def __init__(self, parent, text=None, tooltip=None, width=50, img=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = TableColumnTheme(self, session.runtime.mngr.theme)
-        self._idx = idx if idx is not None else parent.colcount
+        self._idx = parent.colcount
         self._text = text
         self._tooltip = tooltip
         self._width = width
         self._img = img
+        self._moveable = parent.colsmoveable
+        self.on_move = OnMove(self)
+        self.on_select = OnSelect(self)
+
         if parent.cols:
-            col = session.runtime.windows[parent.cols[-1]]
-            self._left = px(col.left + col.width)
+            col = parent.cols[-1]
+            self._left = col.left + col.w
         else:
-            self._left = px(0)
+            self._left = 0
 
         if self in parent.children:
             parent.children.remove(self)
-        self.parent.cols.insert(self._idx, self.id)
+        self.parent.cols.insert(self._idx, self)
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -2042,7 +2055,9 @@ class TableColumn(Widget):
         options.text = self._text
         options.index = self.idx
         options.width = self._width
-        options.left = self._left.value
+        options.left = self._left
+        options.moveable = self._moveable
+
         if self._tooltip:
             options.toolTip = self._tooltip
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
@@ -2053,6 +2068,23 @@ class TableColumn(Widget):
             img = [res.location, img.width.value, img.height.value]
         return img
 
+    def _handle_call(self, op):
+        if op.method == 'move': self.mv(op.args)
+
+    def mv(self, args):
+        self.parent.cols.remove(self)
+        for i, c in enumerate(self.parent.cols):
+            if c.left < args.left:
+                if i != len(self.parent.cols)-1: continue
+                else:
+                    self.parent.cols.append(self)
+                    break
+            else:
+                self.parent.cols.insert(i, self)
+                break
+        self.parent.itemmetrics()
+        session.runtime << RWTSetOperation(self.parent.id, {'columnOrder': [c.id for c in self.parent.cols]})
+
     @property
     def idx(self):
         return self._idx
@@ -2061,7 +2093,6 @@ class TableColumn(Widget):
     @checkwidget
     def idx(self, idx):
         self._idx = idx
-        session.runtime << RWTSetOperation(self.id, {'index': self._idx})
 
     @property
     def text(self):
@@ -2084,13 +2115,13 @@ class TableColumn(Widget):
         session.runtime << RWTSetOperation(self.id, {'image': self._get_rwt_img(self.img)})
 
     @property
-    def width(self):
-        return px(self._width)
+    def w(self):
+        return self._width
 
-    @width.setter
+    @w.setter
     @checkwidget
-    def width(self, width):
-        self._width = px(width)
+    def w(self, width):
+        self._width = width
         session.runtime << RWTSetOperation(self.id, {'width': width})
 
     @property
@@ -2100,14 +2131,14 @@ class TableColumn(Widget):
     @left.setter
     @checkwidget
     def left(self, left):
-        self._left = px(left)
+        self._left = left
         session.runtime << RWTSetOperation(self.id, {'left': left})
 
     def imgwidth(self):
         if self.img:
             _, w, _ = self._get_rwt_img(self.img)
         else:
-            w = px(0)
+            w = 0
         return w
 
     def compute_size(self):
@@ -2121,6 +2152,11 @@ class TableColumn(Widget):
         return width, height
 
     def moveable(self, moveable):
+        out('Setting', self, 'moveable:', moveable)
+        if moveable:
+            self.on_select += self.mv
+        else:
+            self.on_select -= self.mv
         session.runtime << RWTSetOperation(self.id, {'moveable': moveable})
 
     def alignment(self, alignment):
