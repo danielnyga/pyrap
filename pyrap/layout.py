@@ -9,6 +9,7 @@ from pyrap.constants import inf, RWT
 from pyrap.exceptions import LayoutError
 import math
 import time
+from pyrap import pyraplog
 
 
 class LayoutData(object):
@@ -49,6 +50,7 @@ class LayoutData(object):
 class LayoutAdapter(object): 
 
     def __init__(self, widget, parent):
+        self.logger = pyraplog.getlogger(type(self).__name__)
         self.widget = widget
         self.layout = widget.layout
         self.data = LayoutData(self.layout)
@@ -94,8 +96,7 @@ class LayoutAdapter(object):
             self.clean()
             self._compute_cells()
             if not self.changed: break
-#         self.write(check=True)
-        out('layout comutation took %s sec' % (time.time() - start))
+        self.logger.info('layout computation took %s sec' % (time.time() - start))
         self._compute_widget()
     
     def _compute(self):
@@ -210,7 +211,7 @@ class GridLayoutAdapter(LayoutAdapter):
         widget = self.widget
         layout = self.layout
         indent = '   ' * level
-        out(indent, 'computing layout for', widget.id, repr(widget), 'cell:', self.data.cellwidth, 
+        self.logger.debug(indent, 'computing layout for', widget.id, repr(widget), 'cell:', self.data.cellwidth, 
             self.data.cellheight, 'widget', self.data.width, self.data.height)
         self._compute_children(level)
         
@@ -357,7 +358,7 @@ class StackLayoutAdapter(GridLayoutAdapter):
         widget = self.widget
         layout = self.layout
         indent = '   ' * level
-        out(indent, 'computing layout for', widget.id, repr(widget), 'cell:', self.data.cellwidth, 
+        self.logger.debug(indent, 'computing layout for', widget.id, repr(widget), 'cell:', self.data.cellwidth, 
             self.data.cellheight, 'widget', self.data.width, self.data.height)
         self._compute_children(level)
         
@@ -664,7 +665,7 @@ class CellLayout(GridLayout):
                         padding_top=padding_top, padding_bottom=padding_bottom,
                         padding_left=padding_left, padding_right=padding_right,
                         padding=padding)
-        out(self.padding_right)
+
 
 class RowLayout(GridLayout): 
     

@@ -600,7 +600,6 @@ Link-Hyperlink:hover:disabled {
 /* List default theme */
 
 List {
-  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-color: #ffffff;
   border: none;
   color: #4a4a4a;
@@ -612,7 +611,6 @@ List[BORDER] {
 
 List-Item {
   padding: 5px 10px 5px 10px;
-  font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-color: #ffffff;
   color: inherit;
   background-image: none;

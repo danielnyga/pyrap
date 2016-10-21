@@ -50,8 +50,7 @@ class ApplicationManager(object):
     
     '''
     def __init__(self, config):
-        self.config = storify(config)#, requirejs=[], requirecss=[])
-        out(self.config)
+        self.config = storify(config)
         self.resources = ResourceManager(config.rcpath)
         self.runtimes = Storage()
         self.startup_page = None
@@ -329,7 +328,7 @@ class SessionRuntime(object):
                 ops.append(o)
                     
         for o in ops:
-            self.log_.info('   >>> ' + str(o))
+            self.log_.debug('   >>> ' + str(o))
             if isinstance(o, RWTNotifyOperation):
                 wnd = self.windows[o.target]
                 if wnd is None: continue

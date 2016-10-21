@@ -626,7 +626,10 @@ def pc(v):
     return Percent(v)
             
         
-
+def color(c):
+    if isinstance(c, Color): return c
+    return Color(c)
+    
 class Color(object):
     
     names = {'red': '#5c6bc0', 
