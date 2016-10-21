@@ -1320,6 +1320,67 @@ class TabItemTheme(WidgetTheme):
         return self._theme.get_property('font', 'TabItem', self.custom_variant(), self.styles(), self.states())
     
 
+class MenuTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Menu')
+        self._bg = None
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Menu', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'Menu', self.custom_variant(), self.styles(), self.states())
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Menu', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Menu', self.custom_variant(), self.styles(), self.states())
+
+
+class MenuItemTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'MenuItem', 'MenuItem-CheckIcon', 'MenuItem-CascadeIcon')
+        self._bg = None
+
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'MenuItem', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'MenuItem', self.custom_variant(), self.styles(), self.states())
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'MenuItem', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'MenuItem', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'MenuItem', self.custom_variant(), self.styles(), self.states())
+
+
 class ShellTheme(WidgetTheme):
     
     def __init__(self, widget, theme):
@@ -1500,6 +1561,124 @@ class ListTheme(WidgetTheme):
         return self._theme.get_property('margin', 'List', self.custom_variant(), self.styles(), self.states())
     
     
+class TableTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Table')
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'Table', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Table', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Table', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'Table', self.custom_variant(), self.styles(), self.states())
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+    @property
+    def color(self):
+        if self._color: return self._color
+        return self._theme.get_property('color', 'Table', self.custom_variant(), self.styles(), self.states())
+
+    @color.setter
+    def color(self, color):
+        self._color = color
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Table', self.custom_variant(), self.styles(), self.states())
+
+
+class TableColumnTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'TableColumn')
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'TableColumn', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'TableColumn', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'TableColumn', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'TableColumn', self.custom_variant(), self.styles(), self.states())
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+    @property
+    def color(self):
+        if self._color: return self._color
+        return self._theme.get_property('color', 'TableColumn', self.custom_variant(), self.styles(), self.states())
+
+    @color.setter
+    def color(self, color):
+        self._color = color
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'TableColumn', self.custom_variant(), self.styles(), self.states())
+
+
+class TableItemTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'TableItem')
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'TableItem', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'TableItem', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'TableItem', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        return self._theme.get_property('background-color', 'TableItem', self.custom_variant(), self.styles(), self.states())
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+    @property
+    def color(self):
+        if self._color: return self._color
+        return self._theme.get_property('color', 'TableItem', self.custom_variant(), self.styles(), self.states())
+
+    @color.setter
+    def color(self, color):
+        self._color = color
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'TableItem', self.custom_variant(), self.styles(), self.states())
+
+
+
 
 class ThemeRule(object):
     
