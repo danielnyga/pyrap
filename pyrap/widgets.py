@@ -1136,8 +1136,12 @@ class TabFolder(Composite):
         self.on_select = OnSelect(self)
         self._selected = None
         self._tooltip = None
-        self.layout = StackLayout(halign=options.get('halign'), 
-                                  valign=options.get('valign'))
+        self.layout = StackLayout(halign=self.layout.halign, 
+                                  valign=self.layout.valign,
+                                  padding_top=self.layout.padding_top,
+                                  padding_right=self.layout.padding_right,
+                                  padding_bottom=self.layout.padding_bottom,
+                                  padding_left=self.layout.padding_left)
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1648,13 +1652,13 @@ class List(Widget):
     _defstyle_ = Widget._defstyle_ |  RWT.BORDER
     
     @constructor('List')
-    def __init__(self, parent, items=None, **options):
+    def __init__(self, parent, items=None, markup=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ListTheme(self, session.runtime.mngr.theme)
         self._items = items
         self._selidx = []
         self.on_select = OnSelect(self)
-            
+        self._markup = markup
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1662,7 +1666,7 @@ class List(Widget):
             options.style.append('MULTI')
         else:
             options.style.append('SINGLE')
-        options.markupEnabled = False
+        options.markupEnabled = self._markup
         options.items = map(str, self._items)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
     
@@ -1672,7 +1676,8 @@ class List(Widget):
         _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
         padding = self.theme.item_padding
         if padding:
-            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0) 
+            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        
         session.runtime << RWTSetOperation(self.id, {'itemDimensions': [b[2].value, h.value]})
     
     def create_content(self):
@@ -1683,6 +1688,15 @@ class List(Widget):
             self._vbar = ScrollBar(self, orientation=RWT.VERTICAL)
             self._vbar.visible = True
         self.content = Composite(self)
+    
+    @property
+    def markup(self):
+        return self._markup
+    
+    @markup.setter
+    def markup(self, m):
+        self._markup = m
+        session.runtime << RWTSetOperation(self.id, {'markupEnabled': self._markup})
     
     @property
     def items(self):
