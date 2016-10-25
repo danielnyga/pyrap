@@ -11,7 +11,7 @@ import os
 from _pyio import StringIO, BytesIO
 from web.utils import storify, Storage
 import threading
-from pyrap.utils import BiMap, out, BitMask, stop
+from pyrap.utils import BiMap, out, BitMask, stop, ifnone
 from pyrap.constants import FONT
 
 
@@ -632,17 +632,22 @@ def color(c):
     
 class Color(object):
     
-    names = {'red': '#5c6bc0', 
+    names = {'red': '#C1351D', 
              'green': '#0f9d58', 
              'blue': '#4285f4',
-             'gray': '#CCC', 
-             'grey': '#CCC', 
+             'gray': '#8a8a8a', 
+             'grey': '#8a8a8a',
+             'light grey': '#c0c0c0',
+             'light gray': '#c0c0c0',
+             'dark grey': '#404040',
+             'dark grey': '#404040', 
              'white': '#FFF', 
              'yellow': '#f4b400', 
              'transp': '#FFFFFF00',
              'cyan': '#00acc1',
              'purple': '#ab47bc',
-             'orange': '#ff7043'}
+             'orange': '#ff7043',
+             'marine': '#1e3f5a'}
     
     
     def __init__(self, html=None, rgb=None, hsv=None, fct=None, alpha=None):
@@ -742,7 +747,7 @@ def parse_value(v, default=None):
     if isinstance(v, basestring):
         if v.endswith('px'): return Pixels(v)
         elif v.endswith('%'): return Percent(v)
-        elif v.startswith('#'): return Color(v)
+        elif v.startswith('#') or default is Color: return Color(v)
     else: 
         return v if (default is None or v is None or type(v) is default) else default(v)
     
@@ -785,6 +790,19 @@ class Font(object):
 
     def __repr__(self):
         return '<Font[%s] at 0x%x>' % (str(self), hash(self))
+    
+    def modify(self, family=None, size=None, it=None, bf=None):
+        '''
+        Creates a modified copy of this font, whose attributes are all the same
+        as in the original font, but the attributes given in the parameters
+        have been replaced by the given ones. The original font is not altered.
+        '''
+        style = BitField(self._style)
+        if it is not None:
+            style.setbit(FONT.IT, it)
+        if bf is not None:
+            style.setbit(FONT.BF, bf)
+        return Font(family=ifnone(family, self.family), size=ifnone(size, self.size), style=style)
 
 
 class Image(object):
