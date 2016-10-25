@@ -12,7 +12,7 @@ from pyrap.communication import RWTMessage, RWTCreateOperation, \
     RWTError, rwterror, parse_msg
 from pyrap.widgets import Display, Label, Shell
 import pyrap
-from pyrap.types import BitMask, Color, Image
+from pyrap.types import BitMask, Color, Image, Font
 from web.utils import storify, Storage
 import os
 from pyrap.clientjs import gen_clientjs
@@ -258,6 +258,7 @@ class SessionRuntime(object):
         self.entrypoint_args = None
         
         self.fontmetrics = {}
+        self.default_font = None
         self.log_ = getlogger(type(self).__name__)
         
         
@@ -356,14 +357,21 @@ class SessionRuntime(object):
     
     
     def textsize_estimate(self, font, text):
-        if type(font) is not str: font = str(font)
-        return self.fontmetrics[font].estimate(text)
+        font_ = font
+        if type(font_) is not str: font_ = str(font)
+        if font_ not in self.fontmetrics:
+            self << self.create_textsize_measurement_call(font, FontMetrics.SAMPLE)
+            font_ = self.default_font
+        return self.fontmetrics[font_].estimate(text)
     
     def _handle_call(self, op):
         if op.target == 'rwt.client.TextSizeMeasurement':
             if op.method == 'storeMeasurements':
                 for id_, dims in op.args.results.iteritems():
+                    if self.default_font is None: self.default_font = id_
                     self.fontmetrics[id_] = FontMetrics(FontMetrics.SAMPLE, dims)
+                if hasattr(self, 'shell') and not self.shell.disposed:
+                    self.shell.dolayout()
                     
     
     def initialize_app(self, entrypoint, args):
