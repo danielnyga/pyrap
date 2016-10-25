@@ -452,11 +452,8 @@ class StackLayoutAdapter(GridLayoutAdapter):
                         c.data.cellheight.value = c.data.cellwidth.value = m
                         c._done = True
         
-#         if my.width.min == px(0):
-#             my.width.min = my.cellwidth.min
-#         if my.height.min == px(0):
-#             my.height.min = my.cellheight.min
         mywidth, myheight = widget.compute_fringe()
+        
         children_width = max(my.width.min, wmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_left + layout.padding_right)
         children_height = max(my.height.min, hmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_top + layout.padding_bottom)
         #=======================================================================
@@ -464,10 +461,10 @@ class StackLayoutAdapter(GridLayoutAdapter):
         # widget in case that halign/valign='fill'
         #=======================================================================
         if layout.halign == 'fill':
-            my.width.value = my.cellwidth.value
-            my.cellwidth.min = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0) #my.width.value
+            my.width.value = my.cellwidth.value 
+            my.cellwidth.min = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0)
         else:
-            my.width.value = mywidth + (children_width  if not RWT.HSCROLL in widget.style else 0)
+            my.width.value = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0)
             my.cellwidth.min = my.width.value
         if layout.valign == 'fill':
             my.height.value = my.cellheight.value
@@ -484,13 +481,13 @@ class StackLayoutAdapter(GridLayoutAdapter):
             for cells in self.itercols():
                 for c in cells: 
                     c.data.cellhpos.set(cum)
-                cum += c.data.cellwidth.value + layout.hspace
+#                 cum += c.data.cellwidth.value + layout.hspace
         if my.height.value is not None and all([c[0].data.cellheight.value is not None for c in self.iterrows()]):
             cum = layout.padding_top + yoffset
             for cells in self.iterrows():
                 for c in cells:
                     c.data.cellvpos.set(cum)
-                cum += c.data.cellheight.value + layout.vspace
+#                 cum += c.data.cellheight.value + layout.vspace
 #         if my.width.value is not None and my.height.value is not None and\
 #              (layout.halign != 'fill' and layout.valign != 'fill' or my.height.value is not None and my.width.value is not None):
 #             self._done = True
