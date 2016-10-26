@@ -3,7 +3,7 @@ Created on Nov 23, 2015
 
 @author: nyga
 '''
-from pyrap.types import Event
+from pyrap.ptypes import Event
 from pyrap.communication import RWTListenOperation
 from pyrap.base import session
 

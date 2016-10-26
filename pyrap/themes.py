@@ -14,9 +14,9 @@ import uuid
 import json
 from pyrap import pyraplog
 from logging import DEBUG
-from pyrap.types import Color, Pixels, parse_value, Dim,\
+from pyrap.ptypes import Color, Pixels, parse_value, Dim,\
     Font, Image, pc, Percent, px
-from pyrap.types import BitField
+from pyrap.ptypes import BitField
 import sys
 from copy import copy, deepcopy
 import re

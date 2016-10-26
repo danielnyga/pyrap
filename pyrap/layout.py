@@ -3,7 +3,7 @@ Created on Dec 2, 2015
 
 @author: nyga
 '''
-from pyrap.types import pc, BoundedDim, Var, VarCompound, px, parse_value
+from pyrap.ptypes import pc, BoundedDim, Var, VarCompound, px, parse_value
 from pyrap.utils import out, ifnone, pparti, stop
 from pyrap.constants import inf, RWT
 from pyrap.exceptions import LayoutError

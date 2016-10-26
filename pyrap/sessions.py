@@ -10,7 +10,7 @@ from web.utils import Storage, storify
 from copy import deepcopy
 import urlparse
 from web import utils
-from pyrap.types import Event
+from pyrap.ptypes import Event
 from pyrap.utils import ifnone
 
 

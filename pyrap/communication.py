@@ -10,7 +10,7 @@ from web.webapi import internalerror
 import web
 from pyrap.exceptions import forbidden
 from pyrap.utils import RStorage, jsonify, rstorify, ifnone
-from pyrap.types import Event
+from pyrap.ptypes import Event
 from pyrap.base import session
 
 

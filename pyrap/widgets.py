@@ -7,8 +7,9 @@ import os
 
 from pyrap.clientjs import gen_clientjs
 from pyrap.communication import RWTListenOperation, RWTSetOperation,\
-    RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
-from pyrap.types import Event, px, BitField, BitMask, BoolVar, NumVar, Color,\
+    RWTCreateOperation, RWTCallOperation, RWTDestroyOperation, \
+    RWTNotifyOperation
+from pyrap.ptypes import Event, px, BitField, BitMask, BoolVar, NumVar, Color,\
     parse_value, Var, VarCompound, BoundedDim, pc, StringVar
 from pyrap.base import session
 from pyrap.utils import RStorage, BiMap, out, ifnone, pparti, stop
@@ -28,7 +29,7 @@ import md5
 import time
 from pyrap import pyraplog
 import mimetypes
-import types
+import ptypes
 
 
 
@@ -537,7 +538,7 @@ class Combo(Widget):
         self._items = items
         self.on_select = OnSelect(self)
         self._editable = editable
-        self._selidx = None
+        self._selidx = -1
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -575,6 +576,11 @@ class Combo(Widget):
             events[op.event].notify(_rwt_selection_event(op))
         return True
 
+    def select(self, idx):
+        self._selidx = idx
+        session.runtime << RWTSetOperation(self.id, {'selectionIndex': idx, 'text': self.selected})
+
+
     @property
     def selected(self):
         return self.items[self._selidx]
@@ -605,7 +611,7 @@ class DropDown(Widget):
         self.on_select = OnSelect(self)
         self._visibleitemcount = visibleItemCount
         self._visible = visible
-        self._selidx = None
+        self._selidx = -1
         if self in parent.children:
             parent.children.remove(self)
 
@@ -2217,7 +2223,7 @@ class GC(object):
         '''Sets the color and opacity of the stroke.'''
         def __init__(self, color):
             GC.Operation.__init__(self)
-            self.color = types.color(color)
+            self.color = ptypes.color(color)
         
         def json(self):
             return ['strokeStyle', [int(round(255 * self.color.red)), 
