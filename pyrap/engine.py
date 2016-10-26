@@ -3,35 +3,36 @@ Created on Oct 2, 2015
 
 @author: nyga
 '''
-from threading import Lock, Event
-import web
-
-from pyrap import pyraplog, locations
-from web.webapi import notfound, badrequest, seeother
-from pyrap.communication import RWTMessage, RWTCreateOperation, \
-    RWTNotifyOperation, RWTSetOperation, RWTCallOperation, RWTOperation,\
-    RWTError, rwterror, parse_msg
-from pyrap.widgets import Display, Label, Shell
-import pyrap
-from pyrap.ptypes import BitMask, Color, Image
-from web.utils import storify, Storage
-import os
-from pyrap.clientjs import gen_clientjs
-from pyrap.themes import Theme, FontMetrics
-from pyrap.base import session
 import json
-from web.session import SessionExpired
+import md5
+import mimetypes
+import os
 import traceback
-from pyrap.utils import ifnone, out, stop
 import urllib
+from threading import Lock, Event
+
+import web
+from datetime import datetime
+from web.session import SessionExpired
+from web.utils import storify, Storage
+from web.webapi import notfound, badrequest, seeother
+
+import pyrap
+from pyrap import locations
+from pyrap.base import session
+from pyrap.clientjs import gen_clientjs
+from pyrap.communication import RWTMessage, RWTNotifyOperation, RWTSetOperation, RWTCallOperation, RWTOperation,\
+    RWTError, rwterror, parse_msg
 from pyrap.constants import APPSTATE
 from pyrap.events import FocusEventData
-from pyrap.layout import CellLayout
-import md5
 from pyrap.exceptions import ResourceError
-from datetime import datetime
+from pyrap.ptypes import Color, Image
 from pyrap.pyraplog import getlogger
-import mimetypes
+from pyrap.themes import Theme, FontMetrics
+from pyrap.utils import ifnone, out
+from pyrap.widgets import Display, Shell
+
+
 mimetypes.init()
 
 class ApplicationManager(object):
@@ -264,12 +265,11 @@ class SessionRuntime(object):
         self.headers = {}
         self.windows = WindowManager()
         self.state = APPSTATE.UNINITIALIZED
-        
         # the entrypoint and its arguments
         self.entrypoint = None
         self.entrypoint_args = None
-        
         self.fontmetrics = {}
+        self.default_font = None
         self.log_ = getlogger(type(self).__name__)
 
         self.push = Event()
@@ -372,14 +372,22 @@ class SessionRuntime(object):
     
     
     def textsize_estimate(self, font, text):
-        if type(font) is not str: font = str(font)
-        return self.fontmetrics[font].estimate(text)
+        font_ = font
+        if type(font_) is not str: font_ = str(font)
+        if font_ not in self.fontmetrics:
+            self << self.create_textsize_measurement_call(font, FontMetrics.SAMPLE)
+            font_ = self.default_font
+        return self.fontmetrics[font_].estimate(text)
     
     def _handle_call(self, op):
         if op.target == 'rwt.client.TextSizeMeasurement':
             if op.method == 'storeMeasurements':
                 for id_, dims in op.args.results.iteritems():
+                    if self.default_font is None: self.default_font = id_
                     self.fontmetrics[id_] = FontMetrics(FontMetrics.SAMPLE, dims)
+                if hasattr(self, 'shell') and not self.shell.disposed:
+                    self.shell.dolayout()
+
     
     def initialize_app(self, entrypoint, args):
         self.put_header('url', 'pyrap')

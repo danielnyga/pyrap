@@ -3,34 +3,30 @@ Created on Oct 9, 2015
 
 @author: nyga
 '''
-import os
 
-from pyrap.clientjs import gen_clientjs
-from pyrap.communication import RWTListenOperation, RWTSetOperation,\
-    RWTCreateOperation, RWTCallOperation, RWTDestroyOperation, \
-    RWTNotifyOperation
-from pyrap.ptypes import Event, px, BitField, BitMask, BoolVar, NumVar, Color,\
-    parse_value, Var, VarCompound, BoundedDim, pc, StringVar
+import mimetypes
+import time
+
+import ptypes
+from pyrap import pyraplog
 from pyrap.base import session
-from pyrap.utils import RStorage, BiMap, out, ifnone, pparti, stop
+from pyrap.communication import RWTSetOperation,\
+    RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
+from pyrap.constants import RWT
 from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify
-from pyrap.exceptions import WidgetDisposedError, LayoutError, ResourceError
-from pyrap.constants import RWT, inf
+from pyrap.exceptions import WidgetDisposedError
+from pyrap.layout import Layout, LayoutAdapter, CellLayout,\
+    StackLayout
+from pyrap.ptypes import px, BitField, BoolVar, NumVar, Color,\
+    parse_value
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme
-from pyrap.layout import GridLayout, Layout, LayoutAdapter, CellLayout,\
-    StackLayout
-import md5
-import time
-from pyrap import pyraplog
-import mimetypes
-import ptypes
-
+from pyrap.utils import RStorage, BiMap, out, ifnone
 
 
 def checkwidget(f, *args):
@@ -70,7 +66,6 @@ class Widget(object):
         self.children = []
         self.layout = Layout()
         self._update_layout_from_dict(options)
-        self._font = None
         self._css = None
         if self not in parent.children:
             parent.children.append(self)
@@ -252,11 +247,9 @@ class Widget(object):
         else: img = None
         session.runtime << RWTSetOperation(self.id, {'backgroundImage': img})
 
-
     @property
     def color(self):
         return self.theme.color
-
 
     @color.setter
     @checkwidget
@@ -264,16 +257,14 @@ class Widget(object):
         self.theme.color = parse_value(color, Color)
         session.runtime << RWTSetOperation(self.id, {'foreground': [int(round(v * 255)) for v in [self.theme.color.red, self.theme.color.green, self.theme.color.blue, self.theme.color.alpha]]})
 
-
     @property
     def font(self):
-        if self._font is not None: return self._font
-        else: return self.theme.font
+        return self.theme.font
 
     @font.setter
     @checkwidget
     def font(self, font):
-        self._font = font
+        self.theme._font = font
         session.runtime << RWTSetOperation(self.id, {'font': [font.family, font.size.value, font.bf, font.it]})
 
     @property
@@ -1057,6 +1048,46 @@ class Composite(Widget):
         return Widget.compute_size(self)
     
     
+class StackedComposite(Composite):
+    '''
+    A composite that stacks its elements in z direction.
+    '''
+    @constructor('StackedComposite')
+    def __init__(self, parent, **options):
+        Composite.__init__(self, parent, **options)
+        self.layout = StackLayout(minwidth=options.get('minwidth'), 
+                                  maxwidth=options.get('maxwidth'), 
+                                  minheight=options.get('minheight'), 
+                                  maxheight=options.get('maxheight'), 
+                                  valign=options.get('valign'), 
+                                  halign=options.get('halign'), 
+                                  cell_minwidth=options.get('cell_minwidth'), 
+                                  cell_maxwidth=options.get('cell_maxwidth'), 
+                                  cell_minheight=options.get('cell_minheight'), 
+                                  cell_maxheight=options.get('cell_maxheight'), 
+                                  padding_top=options.get('padding_top'), 
+                                  padding_bottom=options.get('padding_bottom'), 
+                                  padding_left=options.get('padding_left'), 
+                                  padding_right=options.get('padding_right'), 
+                                  padding=options.get('padding'))
+        self._selection = None
+        
+    @property
+    def selection(self):
+        return self._selection
+    
+    @selection.setter
+    def selection(self, c):
+        if type(c) is int:
+            c = self.children[c]
+        self._selection = c
+        out(c)
+        for c_ in self.children:
+            out(c, c_, c is c_)
+            c_.visible = c_ is self._selection
+    
+    
+    
 class ScrolledComposite(Composite):
 
     _rwt_class_name_ = 'rwt.widgets.ScrolledComposite'
@@ -1155,8 +1186,12 @@ class TabFolder(Composite):
         self.on_select = OnSelect(self)
         self._selected = None
         self._tooltip = None
-        self.layout = StackLayout(halign=options.get('halign'), 
-                                  valign=options.get('valign'))
+        self.layout = StackLayout(halign=self.layout.halign, 
+                                  valign=self.layout.valign,
+                                  padding_top=self.layout.padding_top,
+                                  padding_right=self.layout.padding_right,
+                                  padding_bottom=self.layout.padding_bottom,
+                                  padding_left=self.layout.padding_left)
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1699,13 +1734,14 @@ class List(Widget):
     _defstyle_ = Widget._defstyle_ |  RWT.BORDER
     
     @constructor('List')
-    def __init__(self, parent, items=None, **options):
+    def __init__(self, parent, items=None, markup=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ListTheme(self, session.runtime.mngr.theme)
         self._items = items
         self._selidx = []
         self.on_select = OnSelect(self)
-            
+        self._markup = markup
+        self._itemheight = None
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1713,17 +1749,35 @@ class List(Widget):
             options.style.append('MULTI')
         else:
             options.style.append('SINGLE')
-        options.markupEnabled = False
+        options.markupEnabled = self._markup
         options.items = map(str, self._items)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
+        
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else: events[op.event].notify(_rwt_selection_event(op))
+        return True
+    
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.iteritems():
+            if key == 'selection':
+                self._selidx = value
     
     @Widget.bounds.setter
     def bounds(self, b):
         Widget.bounds.fset(self, b)
-        _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
+        if self.itemheight is None:
+            _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
+            if self.markup:
+                h *= max([len(i.split('<br>')) for i in map(str, self.items)])
+        else:
+            h = self.itemheight
         padding = self.theme.item_padding
         if padding:
-            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0) 
+            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
         session.runtime << RWTSetOperation(self.id, {'itemDimensions': [b[2].value, h.value]})
     
     def create_content(self):
@@ -1736,8 +1790,26 @@ class List(Widget):
         self.content = Composite(self)
     
     @property
+    def markup(self):
+        return self._markup
+    
+    @markup.setter
+    def markup(self, m):
+        self._markup = m
+        session.runtime << RWTSetOperation(self.id, {'markupEnabled': self._markup})
+    
+    @property
+    def itemheight(self):
+        return self._itemheight
+    
+    @itemheight.setter
+    def itemheight(self, h):
+        self._itemheight = h
+        self.bounds = self.bounds # update the bounds
+    
+    @property
     def items(self):
-        return self.items
+        return self._items
     
     @items.setter
     def items(self, items):
@@ -1747,14 +1819,14 @@ class List(Widget):
     @property
     def selection(self):
         sel = [self.items[i] for i in self._selidx]
-        if RWT.MULTI in self.style: return sel
-        else: None if not sel else sel[0]
+        if RWT.MULTI not in self.style: sel = sel[0]
+        return sel
     
     @selection.setter
     def selection(self, sel):
         if type(sel) not in (list, tuple) and RWT.MULTI in self.style:
             raise TypeError('Expected list or tuple, got %s' % type(sel))
-        if not RWT.MULTI in self.style: sel = [sel]
+        if RWT.MULTI not in self.style: sel = [sel]
         sel = [self.items.index(s) for s in sel]
         self.selidx = sel
         
@@ -1770,10 +1842,10 @@ class List(Widget):
         session.runtime << RWTSetOperation(self.id, {'selection': sel})
     
     def compute_size(self):
-        return 100, 100
+        return 0, 0
     
     def compute_fringe(self):
-        return 100, 100
+        return 0, 0
 
 
 class Table(Widget):
@@ -2223,8 +2295,8 @@ class GC(object):
         '''Sets the color and opacity of the stroke.'''
         def __init__(self, color):
             GC.Operation.__init__(self)
-            self.color = ptypes.color(color)
-        
+            self.color = parse_value(color, Color)
+
         def json(self):
             return ['strokeStyle', [int(round(255 * self.color.red)), 
                                     int(round(255 * self.color.green)), 

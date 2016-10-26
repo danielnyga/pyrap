@@ -1006,8 +1006,9 @@ class LabelTheme(WidgetTheme):
         
     @property
     def font(self):
+        if self._font is not None: return self._font
         return self._theme.get_property('font', 'Label', self.custom_variant(), self.styles(), self.states())
-    
+        
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Label', self.custom_variant(), self.styles(), self.states())
@@ -1032,9 +1033,7 @@ class LabelTheme(WidgetTheme):
 
     @color.setter
     def color(self, color):
-        out('setting color', color)
         self._color = color
-        out(self._color)
         
     @property
     def margin(self):
