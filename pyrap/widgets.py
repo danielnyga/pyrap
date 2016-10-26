@@ -66,6 +66,7 @@ class Widget(object):
         self.children = []
         self.layout = Layout()
         self._update_layout_from_dict(options)
+        self._zindex = None
         self._css = None
         if self not in parent.children:
             parent.children.append(self)
@@ -166,7 +167,17 @@ class Widget(object):
     @property
     def bounds(self):
         return self._bounds
-    
+    #
+    # @property
+    # def zindex(self):
+    #     return self._zindex
+    #
+    # @zindex.setter
+    # @checkwidget
+    # def zindex(self, zindex):
+    #     self._zindex = zindex
+
+
     @bounds.setter
     @checkwidget
     def bounds(self, bounds):
@@ -710,7 +721,7 @@ class Label(Widget):
         
     def _get_rwt_img(self, img):
         if img is not None:
-            res = session.runtime.mngr.resources.registerc(None, 'image/%s' % img.fileext, img.content)
+            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         return img
@@ -1081,9 +1092,7 @@ class StackedComposite(Composite):
         if type(c) is int:
             c = self.children[c]
         self._selection = c
-        out(c)
         for c_ in self.children:
-            out(c, c_, c is c_)
             c_.visible = c_ is self._selection
     
     
@@ -1555,7 +1564,6 @@ class Browser(Widget):
         options = Widget._rwt_options(self)
         options.style.append('NONE')
         options.url = self.url
-        out(options)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
 
@@ -1979,7 +1987,6 @@ class Table(Widget):
     @colsmoveable.setter
     @checkwidget
     def colsmoveable(self, moveable):
-        out('cols moveable:', moveable, '---------------------------------')
         self._colsmoveable = moveable
         for c in self.cols:
             c.moveable(moveable)
@@ -2230,7 +2237,6 @@ class TableColumn(Widget):
         return width, height
 
     def moveable(self, moveable):
-        out('Setting', self, 'moveable:', moveable)
         if moveable:
             self.on_select += self.mv
         else:

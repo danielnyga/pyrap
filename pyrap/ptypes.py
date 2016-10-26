@@ -3,16 +3,19 @@ Created on Oct 18, 2015
 
 @author: nyga
 '''
-import random
-import string
-from colorsys import hsv_to_rgb, rgb_to_hsv
-from PIL import Image as PILImage
+import mimetypes
 import os
-from _pyio import StringIO, BytesIO
-from web.utils import storify, Storage
 import threading
-from pyrap.utils import BiMap, out, BitMask, stop, ifnone
+from _pyio import BytesIO
+from colorsys import hsv_to_rgb, rgb_to_hsv
+import xml.etree.ElementTree as ET
+
+from xml.dom import minidom
+
+from PIL import Image as PILImage
+
 from pyrap.constants import FONT
+from pyrap.utils import out, BitMask, ifnone
 
 
 class Event(object):
@@ -550,7 +553,7 @@ class Pixels(Dim):
             if v.endswith('px'):
                 Dim.__init__(self, int(v[:-2]))
             else:
-                raise Exception('Illegal number format: %s' % v)
+                raise Exception('Illegal number format: %s' % repr(v))
         elif isinstance(v, Dim):
             Dim.__init__(self, v.value)
         else:
@@ -805,6 +808,56 @@ class Font(object):
         return Font(family=ifnone(family, self.family), size=ifnone(size, self.size), style=style)
 
 
+class SVG(object):
+
+    def __init__(self):
+        self.tree = None
+        self.root = None
+        self._content = None
+        self.fpath = None
+        self._width = None
+        self._height = None
+        self.namespaces = {'svg': "http://www.w3.org/2000/svg"}
+
+    def open(self, fpath):
+        self.fpath = fpath
+        self.tree = ET.parse(fpath)
+        self.root = self.tree.getroot()
+        w, h = self.root.attrib['viewBox'].split()[-2:]
+        self._width = int(w)
+        self._height = int(h)
+        stream = BytesIO()
+        self.save(stream)
+        self._content = str(stream.getvalue())
+        stream.close()
+        return self
+
+    def close(self):
+        pass
+
+    def setattr(self, id, attr, val):
+        elem = self.root.find('*//*[@id="{}"]'.format(id), self.namespaces)
+        elem.set(attr, val)
+        # self.tree.write(self.fpath)
+        stream = BytesIO()
+        self.save(stream)
+        self._content = str(stream.getvalue())
+        stream.close()
+        return self
+
+    @property
+    def size(self):
+        return px(self._width), px(self._height)
+
+    def resize(self, w=None, h=None):
+        self._width = w
+        self._height = h
+        return self
+
+    def save(self, stream=None):
+        stream.write(ET.tostring(self.root))
+
+
 class Image(object):
     
     def __init__(self, filepath):
@@ -815,17 +868,27 @@ class Image(object):
         self.close() 
         
     def load(self):
-        self._img = PILImage.open(self._filepath)
+        if self.fileext == 'svg':
+            self._img = SVG().open(self._filepath)
+        else:
+            self._img = PILImage.open(self._filepath)
         return self
         
     def close(self):
         if self._img is not None:
             self._img.close()
+
+    @property
+    def mimetype(self):
+        return mimetypes.types_map['.' + self.fileext]
             
     @property
     def content(self):
-        return str(self._content)
-        
+        if hasattr(self._img, '_content'):
+            return self._img._content
+        else:
+            return str(self._content)
+
     @property
     def filename(self):
         return os.path.basename(self._filepath)
@@ -901,10 +964,15 @@ class Image(object):
             h = w * ratio
         elif width is None:
             w = h / ratio
-        self._img = PILImage.open(self._filepath)
-        self._img = self._img.resize((w.value, h.value), PILImage.LANCZOS)
+        self.load()
         stream = BytesIO()
-        self._img.save(stream, format=self.fileext)
+        if self.fileext == 'svg':
+            self._img = self._img.resize(w.value, h.value)
+            self._img.save(stream)
+        else:
+            self._img = self._img.resize((w.value, h.value), PILImage.LANCZOS)
+            self._img.save(stream, format=self.fileext)
+
         self._content = str(stream.getvalue())
         stream.close()
         return self
