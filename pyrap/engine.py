@@ -3,8 +3,9 @@ Created on Oct 2, 2015
 
 @author: nyga
 '''
-from threading import Lock
+from threading import Lock, Event
 import web
+
 from pyrap import pyraplog, locations
 from web.webapi import notfound, badrequest, seeother
 from pyrap.communication import RWTMessage, RWTCreateOperation, \
@@ -12,7 +13,7 @@ from pyrap.communication import RWTMessage, RWTCreateOperation, \
     RWTError, rwterror, parse_msg
 from pyrap.widgets import Display, Label, Shell
 import pyrap
-from pyrap.types import BitMask, Color, Image
+from pyrap.ptypes import BitMask, Color, Image
 from web.utils import storify, Storage
 import os
 from pyrap.clientjs import gen_clientjs
@@ -127,7 +128,8 @@ class ApplicationManager(object):
         if session.expired: # session id has expired
             self.log_.debug('session %s has expired' % session.session_id)
             raise rwterror(RWTError.SESSION_EXPIRED)
-        
+
+
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # SERVE RESOURCES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -160,7 +162,17 @@ class ApplicationManager(object):
                     raise badrequest('No such entrypoint: "%s"' % entrypoint)
                 # send the parameterized the start page to the client
                 return str(self.startup_page % (self.config.name, self.icon.location if hasattr(self, 'icon') else '', entrypoint, str(query)))
-            
+
+
+        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        # HANDLE PUSH MESSAGES
+        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        if 'servicehandler' in query and query['servicehandler'] == 'org.eclipse.rap.serverpush':
+            while not session.runtime.push.wait(2): pass
+            session.runtime.push.clear()
+            return ''
+
+
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -259,6 +271,8 @@ class SessionRuntime(object):
         
         self.fontmetrics = {}
         self.log_ = getlogger(type(self).__name__)
+
+        self.push = Event()
         
         
     def put_operation(self, op):
@@ -430,7 +444,8 @@ class SessionRuntime(object):
     def install_default_theme(self):
         self << RWTCallOperation('rwt.theme.ThemeStore', 'loadDefaultTheme', {'url': 'rwt-resources/rap-rwt.theme.Default.json'})
         
-        
+    def activate_push(self, active):
+        self << RWTSetOperation('rwt.client.ServerPush', {'active': active})
     
 
 
