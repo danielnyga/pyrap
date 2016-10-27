@@ -39,7 +39,7 @@ def isnone(cssval):
     elif type(cssval) is list and len(cssval) == 1:
         return isnone(cssval[0])
     else: return False
-    
+
 def none_or_value(values):
     if type(values) is not list:
         values = [values]
@@ -53,9 +53,9 @@ def none_or_value(values):
             ret.append(str(v.cssText.encode('utf8')))
     if len(ret) == 1:return ret[0]
     else: return ret
-        
-    
-    
+
+
+
 def totuple(value):
     if type(value) is dict:
         return tuple([(totuple(k), totuple(value[k])) for k in sorted(value)])
@@ -70,18 +70,18 @@ def tostring(x):
     else: return str(x)
 
 class Theme(object):
-    
+
     def __init__(self, name):
         self.name = name
         self.rules = defaultdict(list)
-        
+
     def extract(self, *types):
         if '*' not in types: types = types + ('*',)
         theme = Theme('%s-%s' % (self.name, '/'.join(types)))
         for t in types:
             theme.rules[t] = deepcopy(self.rules[t])
         return theme
-        
+
     def load(self, filename=None):
         if filename is None:
             filename = os.path.join(pyrap_path, 'css', 'default.css')
@@ -96,7 +96,7 @@ class Theme(object):
         rule = ThemeRule(typ, set(clazz), set(attrs), set(pcs))
         ruleset.append(rule)
         return rule
-    
+
     def _get_property(self, name, typ, clazz=set(), attrs=set(), pcs=set()):
         ruleset = self.rules[typ]
         matches = []
@@ -111,10 +111,10 @@ class Theme(object):
         while matches:
             m = matches.pop(0)
             r = m[0] # the rule
-            if name in r.properties: 
+            if name in r.properties:
                 return r.properties[name]
         return None
-    
+
     def get_property(self, name, typ, clazz=set(), attrs=set(), pcs=set()):
         _done = []
         for args in ((clazz, attrs, pcs), (clazz, set(), pcs), (clazz, attrs, set()), (clazz, set(), set()),
@@ -122,19 +122,19 @@ class Theme(object):
             if args in _done: continue
             _done.append(args)
             prop = self._get_property(name, typ, *args)
-            if prop is not None: 
+            if prop is not None:
                 return prop
         if typ == '*': return None
         return self.get_property(name, '*', clazz, attrs, pcs)
-        
-    
+
+
     def write(self, stream=sys.stdout):
         stream.write('<Theme "%s" %d rules>\n' % (self.name, len(self.rules)))
-        for typ in sorted(self.rules): 
+        for typ in sorted(self.rules):
             for rule in self.rules[typ]:
                 rule.write(stream)
-                
-        
+
+
     def _build_theme_from_rules(self, cssrules):
         for cssrule in cssrules:
             if isinstance(cssrule, CSSComment): continue
@@ -151,8 +151,8 @@ class Theme(object):
 #                             rule.properties[name] = copy(value)
 #                         continue
                     rule.properties[name] = copy(value)
-            
-        
+
+
     def _build_selector_triplets(self, selectors):
         typesel = []
         clazzsel = []
@@ -183,8 +183,8 @@ class Theme(object):
         curclazz = []
         curattr = []
         curpseudo = []
-        return [(t, set(c), set(a), set(p)) for t, c, p, a in zip(typesel, clazzsel, pseudosel, attrsel)]    
-    
+        return [(t, set(c), set(a), set(p)) for t, c, p, a in zip(typesel, clazzsel, pseudosel, attrsel)]
+
     def _convert_css_rule(self, cssrule):
         selectors = [(str(item.type), item.value) for selector in cssrule.selectorList for item in selector.seq if item.type in (TYPE, CLASS, PSEUDOCLASS, ATTRIBUTE, UNIVERSAL)]
         selectors = tuple([(t if t != UNIVERSAL else TYPE, str(i[1]) if t in (TYPE, UNIVERSAL) else str(i)) for (t, i) in selectors])
@@ -197,12 +197,12 @@ class Theme(object):
         triplets = self._build_selector_triplets(selectors)
         properties = self._convert_css_properties(cssrule.style.getProperties(all=True))
         return triplets, properties
-    
-        
+
+
     def _convert_css_properties(self, props):
         return dict([self._convert_css_property(prop) for prop in props])
-            
-    
+
+
     def _convert_css_property(self, prop):
         name = prop.name
         values = [prop.propertyValue.item(i) for i in range(prop.propertyValue.length)]
@@ -237,8 +237,8 @@ class Theme(object):
         elif name == 'animation':
             return name, self._build_animation(values)
         else: return name, none_or_value(values)
-        
-        
+
+
     def _convert_fct(self, f):
         fct = Theme.Function(None, [])
         curarg = []
@@ -259,12 +259,12 @@ class Theme(object):
             elif i.type == 'Function':
                 fct.args.append(self._convert_fct(i.value))
         return fct
-    
-    
+
+
     def _build_color(self, values):
         if len(values) != 1:
             raise Exception('Illegal color value: %s' % str(values))
-        v = values[0] 
+        v = values[0]
         if isinstance(v, ColorValue):
             m = re.match(r'rgb\((?P<r>\d+)\s*?,\s*?(?P<g>\d+)\s*?,\s*?(?P<b>\d+)\s*?\)', str(v.cssText))
             if m is not None:
@@ -279,8 +279,8 @@ class Theme(object):
             return Color(fct=self._convert_fct(v))
         v = none_or_value(v)
         return v
-    
-        
+
+
     def _build_border(self, values):
         color, width, style = None, 0, BORDER.NONE
         for v in values:
@@ -293,53 +293,53 @@ class Theme(object):
                 elif v.value == 'dotted': style = BORDER.DOTTED
                 elif v.value == 'none': style = BORDER.NONE
         return Theme.Border(color=color, width=width, style=style)
-        
-    
+
+
     def _build_border_radius(self, values):
         if type(values) is not list or not all([isinstance(v, DimensionValue) for v in values]):
             return none_or_value(values)
         values = [v.value for v in values]
         return Theme.BorderRadius(*values)
-    
-    
+
+
     def _build_padding(self, values):
         if type(values) is not list or not all([isinstance(v, DimensionValue) for v in values]):
             return none_or_value(values)
         values = [v.value for v in values]
         return Theme.Padding(*values)
-    
-    
+
+
     def _build_margin(self, values):
         if type(values) is not list or not all([isinstance(v, DimensionValue) for v in values]):
             return none_or_value(values)
         values = [v.value for v in values]
         return Theme.Margin(*values)
-    
-        
-        
+
+
+
     def _build_dim(self, values):
         if len(values) != 1:
             raise Exception('Illegal dimension value: %s' % '.'.join(map(str, values)))
         if not isinstance(values[0], DimensionValue):
             return none_or_value(values[0])
         return parse_value(values[0].value, Pixels)
-    
-    
+
+
     def _build_percentage(self, values):
         if len(values) != 1:
             raise Exception('Illegal dimension value: %s' % '.'.join(map(str, values)))
         if not isinstance(values[0], DimensionValue):
             return none_or_value(values[0])
         return Percent(values[0].value * 100.)
-    
-    
+
+
     def _build_cursor(self, values):
         if len(values) != 1 and not isinstance(values[0], Value):
             return none_or_value(None)
         style = {'default': CURSOR.DEFAULT, 'pointer': CURSOR.POINTER}
         return Theme.Cursor(style[values[0].cssText])
-    
-    
+
+
     def _build_font(self, values):
         size = None
         family = []
@@ -355,8 +355,8 @@ class Theme(object):
         if size is None or not family:
             raise Exception('Illegal font: %s' % ''.join([v.cssText for v in values]))
         return Font(family=family, size=size, style=style)
-    
-    
+
+
     def _build_image(self, values):
         if len(values) != 1:
             raise Exception('Illegal image value: %s' % values)
@@ -365,8 +365,8 @@ class Theme(object):
             img = Image(imgpath)
             return img
         return none_or_value(values[0])
-    
-    
+
+
     def _build_shadow(self, values):
         if len(values) == 1: return Theme.Shadow(0, 0, 0, None, SHADOW.NONE) #none_or_value(values[0])
         dims, c, s = [0, 0, 0], 'black', SHADOW.OUT
@@ -377,11 +377,11 @@ class Theme(object):
                 dimcount += 1
             elif isinstance(v, ColorValue):
                 c = Color(v.value)
-            elif isinstance(v, Value) and v.value == 'inset': 
+            elif isinstance(v, Value) and v.value == 'inset':
                 s = SHADOW.IN
         return Theme.Shadow(x=dims[0], y=dims[1], r=dims[2], color=c, style=s)
-     
-     
+
+
     def _build_animation(self, values):
         if len(values) < 6:
             return none_or_value(values[0])
@@ -396,8 +396,8 @@ class Theme(object):
                 elif v.value == 'ease-out': a[key][1] = ANIMATION.EASE_OUT
                 elif v.value == 'linear': a[key][1] = ANIMATION.LINEAR
         return Theme.Animation(a['in'][1], a['out'][1], a['in'][0], a['out'][0])
-                
-    
+
+
     def _build_gradient(self, values):
         if len(values) != 1: raise Exception('Illegal gradient value')
         if not isinstance(values[0], CSSFunction):
@@ -406,7 +406,7 @@ class Theme(object):
         fct = self._convert_fct(val)
         grad = self._build_gradient_rec(fct)
         return Theme.Gradient(grad['percents'], map(parse_value, grad['colors']), grad['orientation'])
-    
+
     def _build_gradient_rec(self, fct, gradient=None):
         if fct.name == 'gradient':
             gradient = {'percents': [], 'colors': [], 'orientation': None}
@@ -455,18 +455,18 @@ class Theme(object):
             gradient['colors'].append(color)
         return gradient
 
-        
+
     class Dim4(object):
         def __init__(self, values):
             if len(values) != 4: raise Exception('Illegal value: %s' % str(values))
             self._v1, self._v2, self._v3, self._v4 = tuple(values)
-        
+
         def __str__(self):
             return '%s %s %s %s' % (str(self._v1), str(self._v2), str(self._v3), str(self._v4))
-        
+
         def __repr__(self):
             return '<%s[%s] at 0x%x>' % (type(self).__name__, str(self), hash(self))
-        
+
         @property
         def values(self):
             return [self._v1, self._v2, self._v3, self._v4]
@@ -476,26 +476,26 @@ class Theme(object):
             self._color = parse_value(color)
             self._width = parse_value(width, Pixels)
             self._style = style
-            
+
         @property
         def color(self):
             return self._color
-        
+
         @property
         def width(self):
             return self._width
-        
+
         @property
         def style(self):
             return self._style
-            
+
         def __str__(self):
             return '%s %s %s' % (self._width, self._style, self._color)
-        
+
         def __repr__(self):
             return '<Border[%s] at 0x%x>' % (self, hash(self))
-        
-        
+
+
     class BorderRadius(Dim4):
         def __init__(self, topleft=None, topright=None, bottomright=None, bottomleft=None):
             values = [parse_value(v, Pixels) for v in (topleft, topright, bottomright, bottomleft) if v is not None]
@@ -504,7 +504,7 @@ class Theme(object):
             if len(values) != 4:
                 raise Exception('Illegal value for border radius: %s' % values)
             Theme.Dim4.__init__(self, values)
-        
+
         @property
         def topleft(self):
             return self._v1
@@ -517,8 +517,8 @@ class Theme(object):
         @property
         def bottomleft(self):
             return self._v4
-        
-            
+
+
     class Padding(Dim4):
         def __init__(self, top=None, right=None, bottom=None, left=None):
             values = [parse_value(v, Pixels) for v in (top, right, bottom, left) if v is not None]
@@ -542,8 +542,8 @@ class Theme(object):
         @property
         def left(self):
             return self._v4
-        
-        
+
+
     class Margin(Dim4):
         def __init__(self, top=None, right=None, bottom=None, left=None):
             values = [parse_value(v, Pixels) for v in (top, right, bottom, left) if v is not None]
@@ -567,167 +567,167 @@ class Theme(object):
         @property
         def left(self):
             return self._v4
-        
-        
+
+
     class Gradient(object):
         def __init__(self, percents, colors, orientation):
             self._percents = percents
             self._colors = colors
             self._orientation = orientation
-            
+
         @property
         def percents(self):
             return self._percents
-        
+
         @property
         def colors(self):
             return self._colors
-        
+
         @property
         def orientation(self):
             return self._orientation
-        
+
         def __str__(self):
             return 'percents: %s, colors: %s, orientation: %s' % (','.join(map(str, self.percents)), ','.join(map(str, self.colors)), self.orientation)
-        
+
         def __repr__(self):
-            return '<Gradient at 0x%x %s; %s; %s' % (hash(self), self.orientation, ','.join(map(str, self.percents)), ','.join(map(str, self.colors))) 
-        
+            return '<Gradient at 0x%x %s; %s; %s' % (hash(self), self.orientation, ','.join(map(str, self.percents)), ','.join(map(str, self.colors)))
+
     class Shadow(object):
         def __init__(self, x, y, r, color, style=SHADOW.NONE):
             self._x = parse_value(x, Pixels)
             self._y = parse_value(y, Pixels)
             self._r = parse_value(r, Pixels)
             self._color = parse_value(color)
-            self._style = style 
-            
+            self._style = style
+
         @property
         def xoffset(self):
             return self._x
-        
+
         @property
         def yoffset(self):
             return self._y
-        
+
         @property
         def radius(self):
             return self._r
-        
+
         @property
         def color(self):
             return self._color
-        
+
         @property
         def style(self):
             return self._style
-        
+
         def __str__(self):
             return '%s %s %s %s %s' % (self.style, self.xoffset, self.yoffset, self.radius, self.color)
-        
+
 
     class Cursor(object):
-    
+
         def __init__(self, style):
             self._style = style
-            
+
         @property
         def style(self):
             return self._style
 
         def __str__(self):
             return CURSOR.str(self.style)
-        
-        
+
+
     class Animation(object):
         def __init__(self, instyle, outstyle, induration, outduration):
             self._in = instyle
             self._out = outstyle
             self._induration = induration
             self._outduration = outduration
-                
+
         @property
         def instyle(self):
             return self._in
-        
+
         @property
         def outstyle(self):
             return self._out
-        
+
         @property
         def induration(self):
             return self._induration
-        
+
         @property
         def outduration(self):
             return self._outduration
-        
+
         def __str__(self):
             return json.dumps({'fade-in': [self.induration, self.instyle], 'fade-out': [self.outduration, self.outstyle]})
-            
+
     class Function(object):
         '''
         Represents a symbolic function.
         '''
-        
+
         def __init__(self, name, args):
             self._name = name
             self._args = args
-            
+
         @property
         def name(self):
             return self._name
-        
+
         @name.setter
         def name(self, n):
             self._name = n
-            
+
         @property
         def args(self):
             return self._args
-            
+
         def __str__(self):
             return '%s(%s)' % (self._name, ','.join(map(str, self._args)))
-        
-        
-    
+
+
+
     class ValueMap(object):
-        
+
         def __init__(self):
             self._values2hash = defaultdict(dict) # mapping from value tuples to hash ids
             self._hash2values = defaultdict(dict) # mapping from hash ids to value dicts
             self._hash2objects = defaultdict(dict) # mapping from hash ids to style objects
-            
+
         def handle_value(self, value, add=True):
             category = None
             valdict = None
-            if isinstance(value, Theme.Dim4) or isinstance(value, Theme.BorderRadius): 
+            if isinstance(value, Theme.Dim4) or isinstance(value, Theme.BorderRadius):
                 valdict = Theme.ValueMap._boxdim2json(value)
                 category = 'boxdims'
-            elif isinstance(value, Font): 
+            elif isinstance(value, Font):
                 valdict = Theme.ValueMap._font2json(value)
                 category = 'fonts'
-            elif isinstance(value, Color) or isinstance(value, basestring) and value in ('inherit', 'transparent'): 
+            elif isinstance(value, Color) or isinstance(value, basestring) and value in ('inherit', 'transparent'):
                 valdict = Theme.ValueMap._color2json(value)
                 category = 'colors'
-            elif isinstance(value, Theme.Border): 
+            elif isinstance(value, Theme.Border):
                 valdict = Theme.ValueMap._border2json(value)
                 category = 'borders'
-            elif isinstance(value, Theme.Animation) : 
+            elif isinstance(value, Theme.Animation) :
                 valdict = Theme.ValueMap._animation2json(value)
                 category = 'animations'
-            elif isinstance(value, Theme.Gradient) : 
+            elif isinstance(value, Theme.Gradient) :
                 valdict = Theme.ValueMap._gradient2json(value)
                 category = 'gradients'
-            elif type(value) is Pixels : 
+            elif type(value) is Pixels :
                 valdict = Theme.ValueMap._dim2json(value)
                 category = 'dimensions'
-            elif isinstance(value, Theme.Shadow): 
+            elif isinstance(value, Theme.Shadow):
                 valdict = Theme.ValueMap._shadow2json(value)
                 category = 'shadows'
-            elif isinstance(value, Theme.Cursor) : 
+            elif isinstance(value, Theme.Cursor) :
                 valdict = Theme.ValueMap._cursor2json(value)
                 category = 'cursors'
-            elif isinstance(value, Image) : 
+            elif isinstance(value, Image) :
                 valdict = Theme.ValueMap._image2json(value)
                 category = 'images'
             if category is None: return None
@@ -742,59 +742,59 @@ class Theme(object):
                 self._hash2objects[category][hashid] = value
                 return hashid
             return None
-            
+
         @staticmethod
         def _border2json(border):
             return {'color': border.color.html if isinstance(border.color, Color) else border.color, 'width': border.width.value, 'style': BORDER.str(border.style)}
-        
-        @staticmethod    
+
+        @staticmethod
         def _color2json(color):
             if isinstance(color, Color):
                 return ([int(v * 255) for v in color.rgb] + [color.alpha])
             elif color in ('inherit', 'transparent'):
                 return 'undefined'
-                
+
         @staticmethod
         def _boxdim2json(dim4val):
             return [v.value for v in dim4val.values]
-            
+
         @staticmethod
         def _dim2json(dim):
             return dim.value
-        
+
         @staticmethod
         def _cursor2json(cur):
             return CURSOR.str(cur.style)
-        
+
         @staticmethod
         def _font2json(font):
             return {'family': font.family, 'size': font.size.value, 'bold': font.bf, 'italic': font.it}
-        
+
         @staticmethod
         def _image2json(img):
             return [img.width.value, img.height.value]
-        
+
         @staticmethod
         def _gradient2json(grad):
             return {'percents': [p.value for p in grad.percents], 'colors': [c.html for c in grad.colors], 'vertical': GRADIENT.VERTICAL == grad.orientation}
-                
+
         @staticmethod
         def _shadow2json(shw):
             if shw.style == SHADOW.NONE: return None
             return [shw.style == SHADOW.IN, shw.xoffset.value, shw.yoffset.value, shw.radius.value, 0, shw.color.html if isinstance(shw.color, Color) else str(shw.color) , 1]
-         
+
         @staticmethod
         def _animation2json(anim):
             return {'fadeIn': [anim.induration, ANIMATION.str(anim.instyle)], 'fadeOut': [anim.outduration, ANIMATION.str(anim.outstyle)]}
-        
+
         @property
         def images(self):
             for h, o in self._hash2objects['images'].iteritems(): yield h, o
-            
+
         @property
         def fonts(self):
             for h, o in self._hash2objects['fonts'].iteritems(): yield h, o
-        
+
         @property
         def values(self):
             return self._hash2values
@@ -822,44 +822,44 @@ class Theme(object):
             if 'font' not in properties:
                 properties['font'] = [[[], valuereg.handle_value(self.get_property('font', typ), add=False)]]
             theme[typ] = properties
-        return {'values': valuereg.values, 'theme': theme}, valuereg 
-            
-    
+        return {'values': valuereg.values, 'theme': theme}, valuereg
+
+
     def iterfonts(self):
         f = set()
         for rules in self.rules.values():
             for rule in rules:
                 for propvalue in rule.properties.values():
-                    if type(propvalue) is Font and str(propvalue) not in f: 
+                    if type(propvalue) is Font and str(propvalue) not in f:
                         f.add(str(propvalue))
                         yield propvalue
 
-    
+
 
 class FontMetrics(object):
-    
+
     SAMPLE = '!#$%&()*+,-./0123456789:;<=>?@AzByCxDwEvFuGtHsIrJqKpLoMnNmOlPkQjRiShTgUfVeWdXcYbZa[\\]^_`"\''
-    
+
     def __init__(self, sample=SAMPLE, dimensions=None):
         self.sample = sample
         self.avgwidth = None
         self.x, self.y = None, None
         if dimensions is not None:
             self.dimensions = dimensions
-    
-    @property 
+
+    @property
     def dimensions(self):
         return (px(self._x), px(self._y))
-    
+
     @dimensions.setter
     def dimensions(self, dim):
         self._x, self._y = dim
-        self.avgwidth = float(self._x) / len(self.sample)  
-    
+        self.avgwidth = float(self._x) / len(self.sample)
+
     def estimate(self, sample):
         return px(math.ceil(len(sample) * self.avgwidth)), px(math.ceil(self._y))
-    
-    
+
+
 class WidgetTheme(object):
     def __init__(self, widget, theme, *types):
         self._theme = theme.extract(*types)
@@ -871,11 +871,11 @@ class WidgetTheme(object):
         self._bg = None
         self._bgimg = None
         self._color = None
-        
+
     def custom_variant(self):
         variants = set(['.%s' % self._widget.css])
         return variants if self._widget.css is not None else set()
-        
+
     def states(self):
         states = set()
         if self._widget.disabled:
@@ -883,8 +883,8 @@ class WidgetTheme(object):
         if self._widget.focused:
             states.add(':focused')
         return states
-    
-    
+
+
     def styles(self):
         styles = set()
         if RWT.BORDER in self._widget.style:
@@ -893,7 +893,7 @@ class WidgetTheme(object):
 
 
 class CanvasTheme(WidgetTheme):
-    
+
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Canvas')
         self.separator = None
@@ -919,8 +919,8 @@ class CanvasTheme(WidgetTheme):
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Canvas', self.custom_variant(), self.styles(), self.states())
-    
-    
+
+
 
 class ComboTheme(WidgetTheme):
     def __init__(self, widget, theme):
@@ -960,7 +960,7 @@ class ComboTheme(WidgetTheme):
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Combo', self.custom_variant(), self.styles(), self.states())
-    
+
 
 class DropDownTheme(WidgetTheme):
     def __init__(self, widget, theme):
@@ -992,27 +992,27 @@ class DropDownTheme(WidgetTheme):
     @property
     def itempadding(self):
         return self._theme.get_property('padding', 'DropDown-Item', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Composite', self.custom_variant(), self.styles(), self.states())
-    
+
 
 
 class LabelTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Label')
         self.separator = None
-        
+
     @property
     def font(self):
         if self._font is not None: return self._font
         return self._theme.get_property('font', 'Label', self.custom_variant(), self.styles(), self.states())
-        
+
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Label', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Label', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
@@ -1021,7 +1021,7 @@ class LabelTheme(WidgetTheme):
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'Label', self.custom_variant(), self.styles(), self.states())
-    
+
     @bg.setter
     def bg(self, color):
         self._bg = color
@@ -1034,11 +1034,11 @@ class LabelTheme(WidgetTheme):
     @color.setter
     def color(self, color):
         self._color = color
-        
+
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Label', self.custom_variant(), self.styles(), self.states())
-    
+
 
 
 class ButtonTheme(WidgetTheme):
@@ -1053,35 +1053,35 @@ class ButtonTheme(WidgetTheme):
         styles = WidgetTheme.styles(self)
         styles.add('[PUSH')
         return styles
-    
+
     @property
     def font(self):
         return self._theme.get_property('font', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Button', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-    
+
     @property
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
     @bg.setter
     def bg(self, color):
-        self._bg = color 
-    
+        self._bg = color
+
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Button', self.custom_variant(), self.styles(), self.states())
-    
-    
+
+
 class CheckboxTheme(WidgetTheme):
-    
+
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Button', 'Button-CheckIcon', 'Button-FocusIndicator')
 
@@ -1094,15 +1094,15 @@ class CheckboxTheme(WidgetTheme):
         styles.add('[CHECK')
         return styles
 
-        
+
     @property
     def font(self):
         return self._theme.get_property('font', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Button', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
@@ -1110,20 +1110,20 @@ class CheckboxTheme(WidgetTheme):
     @property
     def spacing(self):
         return self._theme.get_property('spacing', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def icon(self):
         return self._theme.get_property('background-image', 'Button-CheckIcon', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'Label', self.custom_variant(), self.styles(), self.states())
-    
+
     @bg.setter
     def bg(self, color):
         self._bg = color
-        
+
     @property
     def fipadding(self): # the focus indicator
         return self._theme.get_property('padding', 'Button-FocusIndicator', self.custom_variant(), self.styles(), self.states())
@@ -1135,10 +1135,10 @@ class CheckboxTheme(WidgetTheme):
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Button', self.custom_variant(), self.styles(), self.states())
-    
-    
+
+
 class OptionTheme(WidgetTheme):
-    
+
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Button', 'Button-RadioIcon', 'Button-FocusIndicator')
 
@@ -1151,36 +1151,36 @@ class OptionTheme(WidgetTheme):
         styles.add('[RADIO')
         return styles
 
-        
+
     @property
     def font(self):
         return self._theme.get_property('font', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Button', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-    
+
     @property
     def spacing(self):
         return self._theme.get_property('spacing', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def icon(self):
         return self._theme.get_property('background-image', 'Button-RadioIcon', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
     @bg.setter
     def bg(self, color):
-        self._bg = color 
-        
+        self._bg = color
+
     @property
     def fipadding(self): # the focus indicator
         return self._theme.get_property('padding', 'Button-FocusIndicator', self.custom_variant(), self.styles(), self.states())
@@ -1192,14 +1192,14 @@ class OptionTheme(WidgetTheme):
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Button', self.custom_variant(), self.styles(), self.states())
-    
+
 
 class CompositeTheme(WidgetTheme):
-    
+
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Composite')
         self._bg = None
-        
+
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Composite', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
@@ -1216,20 +1216,20 @@ class CompositeTheme(WidgetTheme):
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'Composite', self.custom_variant(), self.styles(), self.states())
-    
+
     @bg.setter
     def bg(self, color):
         self._bg = color
-        
+
     @property
     def bgimg(self):
         if self._bgimg: return self._bgimg
         return self._theme.get_property('background-image', 'Composite', self.custom_variant(), self.styles(), self.states())
-    
+
     @bgimg.setter
     def bgimg(self, img):
         self._bgimg = img
-        
+
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Composite', self.custom_variant(), self.styles(), self.states())
@@ -1261,7 +1261,7 @@ class ScrolledCompositeTheme(WidgetTheme):
     @bg.setter
     def bg(self, color):
         self._bg = color
-        
+
     @property
     def margin(self):
         return self._theme.get_property('margin', 'ScrolledComposite', self.custom_variant(), self.styles(), self.states())
@@ -1272,11 +1272,41 @@ class ScrollBarTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'ScrollBar')
         self._bg = None
-        
+
     @property
     def margin(self):
         return self._theme.get_property('margin', 'ScrollBar', self.custom_variant(), self.styles(), self.states())
-    
+
+
+class ScaleTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Scale', 'Scale-Thumb')
+        self._bg = None
+
+    def styles(self):
+        styles = WidgetTheme.styles(self)
+        if RWT.HORIZONTAL in self._widget.style:
+            styles.add('[HORIZONTAL')
+        elif RWT.VERTICAL in self._widget.style:
+            styles.add('[VERTICAL')
+        return styles
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Scale', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def icon(self):
+        return self._theme.get_property('background-image', 'Scale-Thumb', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Scale', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Scale', self.custom_variant(), self.styles(), self.states())
 
 
 class SliderTheme(WidgetTheme):
@@ -1293,7 +1323,6 @@ class SliderTheme(WidgetTheme):
             styles.add('[VERTICAL')
         return styles
 
-
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Slider', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
@@ -1305,7 +1334,8 @@ class SliderTheme(WidgetTheme):
     @property
     def icons(self):
         return [self._theme.get_property('background-image', 'Slider-UpButton-Icon', self.custom_variant(), self.styles(), self.states()),
-                self._theme.get_property('background-image', 'Slider-DownButton-Icon', self.custom_variant(), self.styles(), self.states())]
+                self._theme.get_property('background-image', 'Slider-DownButton-Icon', self.custom_variant(), self.styles(), self.states()),
+                self._theme.get_property('background-image', 'Slider-Thumb', self.custom_variant(), self.styles(), self.states())]
 
     @property
     def margin(self):
@@ -1314,6 +1344,12 @@ class SliderTheme(WidgetTheme):
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Slider', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def paddingicons(self):
+        return [self._theme.get_property('padding', 'Slider-UpButton', self.custom_variant(), self.styles(), self.states()),
+                self._theme.get_property('padding', 'Slider-DownButton', self.custom_variant(), self.styles(), self.states())]
+
 
 
 class TabFolderTheme(WidgetTheme):
@@ -1334,7 +1370,7 @@ class TabFolderTheme(WidgetTheme):
     @bg.setter
     def bg(self, color):
         self._bg = color
-        
+
     @property
     def padding(self):
         return self._theme.get_property('padding', 'TabFolder', self.custom_variant(), self.styles(), self.states())
@@ -1342,18 +1378,18 @@ class TabFolderTheme(WidgetTheme):
     @property
     def margin(self):
         return self._theme.get_property('margin', 'TabFolder', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def container_borders(self):
         return [self._theme.get_property('border-%s' % b, 'TabFolder-ContentContainer', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-        
+
 
 class TabItemTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'TabItem')
         self._bg = None
-        
+
     def states(self):
         states = WidgetTheme.states(self)
         if self._widget.selected:
@@ -1376,7 +1412,7 @@ class TabItemTheme(WidgetTheme):
     @property
     def padding(self):
         return self._theme.get_property('padding', 'TabItem', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def margin(self):
         return self._theme.get_property('margin', 'TabItem', self.custom_variant(), self.styles(), self.states())
@@ -1384,7 +1420,7 @@ class TabItemTheme(WidgetTheme):
     @property
     def font(self):
         return self._theme.get_property('font', 'TabItem', self.custom_variant(), self.styles(), self.states())
-    
+
 
 class MenuTheme(WidgetTheme):
 
@@ -1448,33 +1484,33 @@ class MenuItemTheme(WidgetTheme):
 
 
 class ShellTheme(WidgetTheme):
-    
+
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Shell', 'Shell-Titlebar', 'Shell-CloseButton', 'Shell-DisplayOverlay', 'Shell-MinButton', 'Shell-MaxButton', 'Shell-CloseButton')
-    
+
     def styles(self):
         styles = WidgetTheme.styles(self)
         if RWT.TITLE in self._widget.style:
             styles.add('[TITLE')
         return styles
-    
+
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Shell', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-    
+
     @property
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'Shell', self.custom_variant(), self.styles(), self.states())
-    
+
     @bg.setter
     def bg(self, color):
         self._bg = color
-        
+
     @property
     def title_height(self):
         return self._theme.get_property('height', 'Shell-Titlebar', self.custom_variant(), self.styles(), self.states())
-        
+
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Shell', self.custom_variant(), self.styles(), self.states())
@@ -1482,90 +1518,90 @@ class ShellTheme(WidgetTheme):
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Shell', self.custom_variant(), self.styles(), self.states())
-    
+
 
 class EditTheme(WidgetTheme):
-    
+
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Text')
-        
+
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Text', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-    
+
     @property
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'Text', self.custom_variant(), self.styles(), self.states())
-    
+
     @bg.setter
     def bg(self, color):
         self._bg = color
-    
+
     @property
     def padding(self):
         return self._theme.get_property('padding', 'Text', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def font(self):
         return self._theme.get_property('font', 'Text', self.custom_variant(), self.styles(), self.states())
-        
+
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Text', self.custom_variant(), self.styles(), self.states())
-    
+
 
 class GroupTheme(WidgetTheme):
-    
+
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Group', 'Group-Frame', 'Group-Label')
         self._bg = None
-    
+
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'Group', self.custom_variant(), self.styles(), self.states())    
-    
+        return self._theme.get_property('padding', 'Group', self.custom_variant(), self.styles(), self.states())
+
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Composite', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-    
+
     @property
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'Composite', self.custom_variant(), self.styles(), self.states())
-    
+
     @bg.setter
     def bg(self, color):
         self._bg = color
-        
+
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Group', self.custom_variant(), self.styles(), self.states())
-        
+
     @property
     def frame_padding(self):
         return self._theme.get_property('padding', 'Group-Frame', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def label_padding(self):
         return self._theme.get_property('padding', 'Group-Label', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def frame_margin(self):
         return self._theme.get_property('margin', 'Group-Frame', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def label_margin(self):
         return self._theme.get_property('margin', 'Group-Label', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def frame_borders(self):
         return [self._theme.get_property('border-%s' % b, 'Group-Frame', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-    
+
     @property
     def label_borders(self):
         return [self._theme.get_property('border-%s' % b, 'Group-Label', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-    
+
 
 
 class BrowserTheme(WidgetTheme):
@@ -1581,25 +1617,25 @@ class BrowserTheme(WidgetTheme):
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Browser', self.custom_variant(), self.styles(), self.states())
-    
+
 
 class ListTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'List-Item', 'List')
-        
+
     @property
     def font(self):
         return self._theme.get_property('font', 'List-Item', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def padding(self):
         return self._theme.get_property('padding', 'List', self.custom_variant(), self.styles(), self.states())
-    
+
     @property
     def item_padding(self):
         return self._theme.get_property('padding', 'List-Item', self.custom_variant(), self.styles(), self.states())
-    
-    
+
+
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'List', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
@@ -1608,7 +1644,7 @@ class ListTheme(WidgetTheme):
     def bg(self):
         if self._bg: return self._bg
         return self._theme.get_property('background-color', 'List', self.custom_variant(), self.styles(), self.states())
-    
+
     @bg.setter
     def bg(self, color):
         self._bg = color
@@ -1621,12 +1657,12 @@ class ListTheme(WidgetTheme):
     @color.setter
     def color(self, color):
         self._color = color
-        
+
     @property
     def margin(self):
         return self._theme.get_property('margin', 'List', self.custom_variant(), self.styles(), self.states())
-    
-    
+
+
 class TableTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Table')
@@ -1747,33 +1783,33 @@ class TableItemTheme(WidgetTheme):
 
 
 class ThemeRule(object):
-    
+
     def __init__(self, typ='*', clazz=None, attrs=None, pcs=None):
         self.type = typ
         self.clazz = clazz
         self.attrs = attrs
         self.pcs = pcs
         self.properties = {}
-        
-    
+
+
     def perfect_match(self, clazz=set(), attrs=set(), pcs=set()):
         return set(clazz) == self.clazz and set(attrs) == self.attrs and set(pcs) == self.pcs
-    
+
     def match(self, clazz=set(), attrs=set(), pcs=set()):
         if set(clazz).issuperset(self.clazz) and set(attrs).issuperset(self.attrs) and set(pcs).issuperset(self.pcs):
             return (len(self.clazz), len(self.attrs), len(self.pcs))
         else: return (-1, -1, -1)
-        
+
     def write(self, stream=sys.stdout):
         stream.write('<ThemeRule type=%s class={%s}, attributes={%s}, pseudoclasses={%s}>\n' % (self.type, ','.join(self.clazz), ','.join(self.attrs), ','.join(self.pcs)))
         for name, value in self.properties.iteritems():
             stream.write('    %s = \t%s\n' % (name, repr(value)))
-        
+
     def __deepcopy__(self, memo):
         rule = ThemeRule()
         rule.__dict__ = dict(self.__dict__)
         return rule
-        
+
 
 if __name__ == '__main__':
     pyraplog.level(DEBUG)

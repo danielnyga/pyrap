@@ -25,7 +25,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
-    TableColumnTheme, CanvasTheme
+    TableColumnTheme, CanvasTheme, ScaleTheme
 from pyrap.utils import RStorage, BiMap, out, ifnone
 
 
@@ -1394,6 +1394,136 @@ class TabItem(Widget):
         return width, height
 
 
+class Scale(Widget):
+    _rwt_class_name_ = 'rwt.widgets.Scale'
+    _styles_ = Widget._styles_ + {'horizontal': RWT.HORIZONTAL,
+                                  'vertical': RWT.VERTICAL}
+    _defstyle_ = BitField(Widget._defstyle_ | RWT.HORIZONTAL)
+
+
+    @constructor('Scale')
+    def __init__(self, parent, minimum=None, maximum=None, selection=None, increment=None, pageIncrement=None, horizontal=True, thumb=None, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = ScaleTheme(self, session.runtime.mngr.theme)
+        self.orientation = horizontal
+        self._minimum = minimum
+        self._maximum = maximum
+        self._selection = selection
+        self._increment = increment
+        self._pageIncrement = pageIncrement
+        self._thumb = thumb
+        if self not in parent.children:
+            parent.children.append(self)
+
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if RWT.HORIZONTAL in self.style:
+            options.style.append('HORIZONTAL')
+        elif RWT.VERTICAL in self.style:
+            options.style.append('VERTICAL')
+        if self.minimum:
+            options.minimum = self._minimum
+        if self.maximum:
+            options.maximum = self._maximum
+        if self.selection:
+            options.selection = self._selection
+        if self.increment:
+            options.pageIncrement = self._increment
+        if self.thumb:
+            options.thumb = self._thumb
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+
+    @property
+    def selection(self):
+        return self._selection
+
+    @selection.setter
+    @checkwidget
+    def selection(self, selection):
+        self._selection = selection
+        session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
+
+    @property
+    def thumb(self):
+        return self._thumb
+
+    @thumb.setter
+    @checkwidget
+    def thumb(self, thumb):
+        self._thumb = thumb
+        session.runtime << RWTSetOperation(self.id, {'thumb': self.thumb})
+
+    @property
+    def increment(self):
+        return self._increment
+
+    @increment.setter
+    @checkwidget
+    def increment(self, increment):
+        self._increment = increment
+        session.runtime << RWTSetOperation(self.id, {'pageIncrement': self.increment})
+
+    @property
+    def selection(self):
+        return self._selection
+
+    @selection.setter
+    @checkwidget
+    def selection(self, selection):
+        self._selection = selection
+        session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
+
+    @property
+    def minimum(self):
+        return self._minimum
+
+    @minimum.setter
+    @checkwidget
+    def minimum(self, minimum):
+        self._minimum = minimum
+        session.runtime << RWTSetOperation(self.id, {'minimum': self.minimum})
+
+    @property
+    def maximum(self):
+        return self._maximum
+
+    @maximum.setter
+    @checkwidget
+    def maximum(self, maximum):
+        self._maximum = maximum
+        session.runtime << RWTSetOperation(self.id, {'maximum': self.maximum})
+
+    def compute_size(self):
+        w, h = Widget.compute_size(self)
+
+        # add widths/heights of up- and down icons depending on orientation
+        if self.theme.icon is not None and self.theme.icon != 'none':
+            w += self.theme.icon.width.value + ifnone(self.thumb, 0, self.thumb)
+            h += self.theme.icon.height.value + ifnone(self.thumb, 0, self.thumb)
+
+        # add borders
+        t, r, b, l = self.theme.borders
+        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+
+        # add paddings
+        if self.theme.padding:
+            w += ifnone(self.theme.padding.left, 0) + ifnone(self.theme.padding.right, 0)
+            h += ifnone(self.theme.padding.top, 0) + ifnone(self.theme.padding.bottom, 0)
+
+        #horizontal:
+        # w = icondownwidth + iconupwidth + iconthumbwidth + borderslider-left/right + borderthumb-left/right + self.thumb
+        # h = max(icondownheight/iconupheight/iconthumbheight) + borderslider-top/bottom + borderthumb-top/bottom
+
+        #vertical:
+        # w = max(icondownwidth/iconupwidth/iconthumbwidth) + borderslider-left/right + burderthumb-left/right
+        # h = icondownheight + iconupheight + iconthumbheight + borderslider-top/bottom + borderthumb-top/bottom + self.thumb
+
+        return w, h
+
+
+
 class Slider(Widget):
     _rwt_class_name_ = 'rwt.widgets.Slider'
     _styles_ = Widget._styles_ + {'horizontal': RWT.HORIZONTAL,
@@ -1495,24 +1625,33 @@ class Slider(Widget):
 
     def compute_size(self):
         w, h = Widget.compute_size(self)
-        # add widths/heights of up- and down icons
 
+        # add widths/heights of up- and down icons depending on orientation
         if RWT.HORIZONTAL in self.style:
-            w += sum([x.width.value for x in self.theme.icon] + [self.thumb])
-            h += max([x.height.value for x in self.theme.icon])
-        else:
-            w += max([x.width.value for x in self.theme.icon])
-            h += sum([x.height.value for x in self.theme.icon])
+            w += sum([x.width.value for x in self.theme.icons]) + ifnone(self.thumb, 0, self.thumb)
+            h += max([x.height.value for x in self.theme.icons])
+        elif RWT.VERTICAL in self.style:
+            w += max([x.width.value for x in self.theme.icons])
+            h += sum([x.height.value for x in self.theme.icons]) + ifnone(self.thumb, 0, self.thumb)
 
-        # for padding in (self.theme.padding, self.theme.fipadding):
-        #     if padding:
-        #         w += self.theme.padding.left + self.theme.padding.right
-        #         h += self.theme.padding.top + self.theme.padding.bottom
-        # for t, r, b, l in(self.theme.borders, self.theme.fiborders):
-        #     w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        #     h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        # w += self.theme.icon.width.value
-        # h += (self.theme.icon.height.value - textheight) if (self.theme.icon.height.value > textheight) else 0
+        # add borders
+        for t, r, b, l in (self.theme.borders, self.theme.bordersthumb):
+            w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+            h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+
+        # add paddings
+        for padding in [self.theme.padding] + self.theme.paddingicons:
+            if padding:
+                w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
+                h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+
+        #horizontal:
+        # w = icondownwidth + iconupwidth + iconthumbwidth + borderslider-left/right + borderthumb-left/right + self.thumb
+        # h = max(icondownheight/iconupheight/iconthumbheight) + borderslider-top/bottom + borderthumb-top/bottom
+
+        #vertical:
+        # w = max(icondownwidth/iconupwidth/iconthumbwidth) + borderslider-left/right + burderthumb-left/right
+        # h = icondownheight + iconupheight + iconthumbheight + borderslider-top/bottom + borderthumb-top/bottom + self.thumb
 
         return w, h
 
