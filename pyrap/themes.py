@@ -1106,7 +1106,7 @@ class CheckboxTheme(WidgetTheme):
     @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'Button', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
-    
+
     @property
     def spacing(self):
         return self._theme.get_property('spacing', 'Button', self.custom_variant(), self.styles(), self.states())
@@ -1285,19 +1285,36 @@ class SliderTheme(WidgetTheme):
         WidgetTheme.__init__(self, widget, theme, 'Slider', 'Slider-Thumb', 'Slider-UpButton', 'Slider-DownButton', 'Slider-UpButton-Icon', 'Slider-DownButton-Icon')
         self._bg = None
 
-    @property
-    def borders(self):
-        return [
-            self._theme.get_property('border-%s' % b, 'Slider', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+    def styles(self):
+        styles = WidgetTheme.styles(self)
+        if RWT.HORIZONTAL in self._widget.style:
+            styles.add('[HORIZONTAL')
+        elif RWT.VERTICAL in self._widget.style:
+            styles.add('[VERTICAL')
+        return styles
+
 
     @property
-    def icon(self):
-        return self._theme.get_property('background-image', 'Slider-UpButton-Icon', self.custom_variant(), self.styles(), self.states())
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Slider', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def bordersthumb(self):
+        return [self._theme.get_property('border-%s' % b, 'Slider-Thumb', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def icons(self):
+        return [self._theme.get_property('background-image', 'Slider-UpButton-Icon', self.custom_variant(), self.styles(), self.states()),
+                self._theme.get_property('background-image', 'Slider-DownButton-Icon', self.custom_variant(), self.styles(), self.states())]
 
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Slider', self.custom_variant(), self.styles(), self.states())
-    
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Slider', self.custom_variant(), self.styles(), self.states())
+
 
 class TabFolderTheme(WidgetTheme):
 

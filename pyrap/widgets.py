@@ -1402,14 +1402,15 @@ class Slider(Widget):
 
 
     @constructor('Slider')
-    def __init__(self, parent, minimum=0, maximum=100, selection=100, increment=1, orientation=RWT.HORIZONTAL, **options):
+    def __init__(self, parent, minimum=None, maximum=None, selection=None, increment=None, horizontal=True, thumb=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = SliderTheme(self, session.runtime.mngr.theme)
-        self.orientation = orientation
+        self.orientation = horizontal
         self._minimum = minimum
         self._maximum = maximum
         self._selection = selection
         self._increment = increment
+        self._thumb = thumb
         if self not in parent.children:
             parent.children.append(self)
 
@@ -1418,19 +1419,23 @@ class Slider(Widget):
         options = Widget._rwt_options(self)
         if RWT.HORIZONTAL in self.style:
             options.style.append('HORIZONTAL')
-        if RWT.VERTICAL in self.style:
+        elif RWT.VERTICAL in self.style:
             options.style.append('VERTICAL')
-        options.minimum = self._minimum
-        options.maximum = self._maximum
-        options.selection = self._selection
-        options.increment = self._increment
+        if self.minimum:
+            options.minimum = self._minimum
+        if self.maximum:
+            options.maximum = self._maximum
+        if self.selection:
+            options.selection = self._selection
+        if self.increment:
+            options.pageIncrement = self._increment
+        if self.thumb:
+            options.thumb = self._thumb
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
-
 
     @property
     def selection(self):
         return self._selection
-
 
     @selection.setter
     @checkwidget
@@ -1438,10 +1443,78 @@ class Slider(Widget):
         self._selection = selection
         session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
 
+    @property
+    def thumb(self):
+        return self._thumb
+
+    @thumb.setter
+    @checkwidget
+    def thumb(self, thumb):
+        self._thumb = thumb
+        session.runtime << RWTSetOperation(self.id, {'thumb': self.thumb})
+
+    @property
+    def increment(self):
+        return self._increment
+
+    @increment.setter
+    @checkwidget
+    def increment(self, increment):
+        self._increment = increment
+        session.runtime << RWTSetOperation(self.id, {'pageIncrement': self.increment})
+
+    @property
+    def selection(self):
+        return self._selection
+
+    @selection.setter
+    @checkwidget
+    def selection(self, selection):
+        self._selection = selection
+        session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
+
+    @property
+    def minimum(self):
+        return self._minimum
+
+    @minimum.setter
+    @checkwidget
+    def minimum(self, minimum):
+        self._minimum = minimum
+        session.runtime << RWTSetOperation(self.id, {'minimum': self.minimum})
+
+    @property
+    def maximum(self):
+        return self._maximum
+
+    @maximum.setter
+    @checkwidget
+    def maximum(self, maximum):
+        self._maximum = maximum
+        session.runtime << RWTSetOperation(self.id, {'maximum': self.maximum})
 
     def compute_size(self):
-        width, height = 0, 0
-        return width, height
+        w, h = Widget.compute_size(self)
+        # add widths/heights of up- and down icons
+
+        if RWT.HORIZONTAL in self.style:
+            w += sum([x.width.value for x in self.theme.icon] + [self.thumb])
+            h += max([x.height.value for x in self.theme.icon])
+        else:
+            w += max([x.width.value for x in self.theme.icon])
+            h += sum([x.height.value for x in self.theme.icon])
+
+        # for padding in (self.theme.padding, self.theme.fipadding):
+        #     if padding:
+        #         w += self.theme.padding.left + self.theme.padding.right
+        #         h += self.theme.padding.top + self.theme.padding.bottom
+        # for t, r, b, l in(self.theme.borders, self.theme.fiborders):
+        #     w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        #     h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        # w += self.theme.icon.width.value
+        # h += (self.theme.icon.height.value - textheight) if (self.theme.icon.height.value > textheight) else 0
+
+        return w, h
 
 
 class Group(Composite):

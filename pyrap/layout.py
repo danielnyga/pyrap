@@ -50,7 +50,7 @@ class LayoutData(object):
 class LayoutAdapter(object): 
 
     def __init__(self, widget, parent):
-        self.logger = pyraplog.getlogger(type(self).__name__)
+        self.logger = pyraplog.getlogger(type(self).__name__, level=pyraplog.DEBUG)
         self.widget = widget
         self.layout = widget.layout
         self.data = LayoutData(self.layout)
@@ -315,7 +315,7 @@ class GridLayoutAdapter(LayoutAdapter):
         mywidth, myheight = widget.compute_fringe()
         
         children_width = max(my.width.min, wmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_left + layout.padding_right)
-        children_height = max(my.height.min, hmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_top + layout.padding_bottom)
+        children_height = max(my.height.min, hmaxt + layout.vspace * (self.rowcount() - 1) + layout.padding_top + layout.padding_bottom)
         #=======================================================================
         # if the width/height of the cell is specified, adjust the width/height of the
         # widget in case that halign/valign='fill'
@@ -332,6 +332,7 @@ class GridLayoutAdapter(LayoutAdapter):
         else:
             my.height.value = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
             my.cellheight.min = my.height.value
+
         #=======================================================================
         # compute the cell positions if we know our width/height 
         # the width/height of all our children
@@ -454,8 +455,8 @@ class StackLayoutAdapter(GridLayoutAdapter):
         
         mywidth, myheight = widget.compute_fringe()
         
-        children_width = max(my.width.min, wmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_left + layout.padding_right)
-        children_height = max(my.height.min, hmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_top + layout.padding_bottom)
+        children_width = max(my.width.min, wmaxg  + layout.padding_left + layout.padding_right)
+        children_height = max(my.height.min, hmaxg  + layout.padding_top + layout.padding_bottom)
         #=======================================================================
         # if the width/height of the cell is specified, adjust the width/height of the
         # widget in case that halign/valign='fill'

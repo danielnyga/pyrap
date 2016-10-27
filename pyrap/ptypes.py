@@ -837,6 +837,8 @@ class SVG(object):
 
     def setattr(self, id, attr, val):
         elem = self.root.find('*//*[@id="{}"]'.format(id), self.namespaces)
+        if elem is None:
+            return self
         elem.set(attr, val)
         # self.tree.write(self.fpath)
         stream = BytesIO()
