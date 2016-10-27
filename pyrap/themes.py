@@ -1281,7 +1281,7 @@ class ScrollBarTheme(WidgetTheme):
 class ScaleTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'Scale', 'Scale-Thumb')
+        WidgetTheme.__init__(self, widget, theme, 'Scale', 'Scale-Thumb', 'Scale-Line')
         self._bg = None
 
     def styles(self):
@@ -1297,8 +1297,22 @@ class ScaleTheme(WidgetTheme):
         return [self._theme.get_property('border-%s' % b, 'Scale', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
+    def thumb_borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Scale-Thumb', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+
+    @property
     def icon(self):
         return self._theme.get_property('background-image', 'Scale-Thumb', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def bgimg(self):
+        return self._theme.get_property('background-image', 'Scale', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def lineimg(self):
+        return self._theme.get_property('background-image', 'Scale-Line', self.custom_variant(), self.styles(), self.states())
+
 
     @property
     def padding(self):

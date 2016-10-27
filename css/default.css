@@ -13,6 +13,7 @@
 
 * {
   color: #4a4a4a;
+  border: none;
   background-color: #fff;
   background-image: none;
   font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
@@ -1821,9 +1822,18 @@ Tree-Indent:first:last:expanded:hover {
 /* Scale default theme */
 
 Scale {
-  background-color: white;
+  background-color: inherit;
   background-image: none;
   border-radius: 3px;
+  border: none;
+}
+
+Scale-Line[HORIZONTAL] {
+	background-image: url( resource/widget/rap/scale/h_line.gif )
+}
+
+Scale-Line[VERTICAL] {
+	background-image: url( resource/widget/rap/scale/v_line.gif )
 }
 
 Scale-Thumb {
@@ -1836,6 +1846,8 @@ Scale-Thumb {
 Scale-Thumb:focused {
   border: 1px solid #4f7cb1;
 }
+
+
 
 /* DateTime default theme */
 

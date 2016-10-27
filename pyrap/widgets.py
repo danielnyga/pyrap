@@ -8,7 +8,7 @@ import mimetypes
 import time
 
 import ptypes
-from pyrap import pyraplog
+from pyrap import pyraplog, locations
 from pyrap.base import session
 from pyrap.communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
@@ -26,7 +26,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme
-from pyrap.utils import RStorage, BiMap, out, ifnone
+from pyrap.utils import RStorage, BiMap, out, ifnone, stop
 
 
 def checkwidget(f, *args):
@@ -1411,7 +1411,7 @@ class Scale(Widget):
         self._selection = selection
         self._increment = increment
         self._pageIncrement = pageIncrement
-        self._thumb = thumb
+#         self._thumb = thumb
         if self not in parent.children:
             parent.children.append(self)
 
@@ -1430,8 +1430,14 @@ class Scale(Widget):
             options.selection = self._selection
         if self.increment:
             options.pageIncrement = self._increment
-        if self.thumb:
-            options.thumb = self._thumb
+#         if self.thumb:
+#             options.thumb = self._thumb
+        # for some reason the line of the scale is not directly themable
+        # via CSS, so we fake a CSS class "Scale-Line" that holds the line image
+        # and make it available under a constant resource name
+        line_resource_name = 'resource/widget/rap/scale/h_line.gif'
+        line = self.theme.lineimg
+        session.runtime.mngr.resources.registerc(line_resource_name, line.mimetype, line.content)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
     @property
@@ -1444,15 +1450,15 @@ class Scale(Widget):
         self._selection = selection
         session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
 
-    @property
-    def thumb(self):
-        return self._thumb
-
-    @thumb.setter
-    @checkwidget
-    def thumb(self, thumb):
-        self._thumb = thumb
-        session.runtime << RWTSetOperation(self.id, {'thumb': self.thumb})
+#     @property
+#     def thumb(self):
+#         return self._thumb
+# 
+#     @thumb.setter
+#     @checkwidget
+#     def thumb(self, thumb):
+#         self._thumb = thumb
+#         session.runtime << RWTSetOperation(self.id, {'thumb': self.thumb})
 
     @property
     def increment(self):
@@ -1463,16 +1469,6 @@ class Scale(Widget):
     def increment(self, increment):
         self._increment = increment
         session.runtime << RWTSetOperation(self.id, {'pageIncrement': self.increment})
-
-    @property
-    def selection(self):
-        return self._selection
-
-    @selection.setter
-    @checkwidget
-    def selection(self, selection):
-        self._selection = selection
-        session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
 
     @property
     def minimum(self):
@@ -1496,30 +1492,19 @@ class Scale(Widget):
 
     def compute_size(self):
         w, h = Widget.compute_size(self)
-
-        # add widths/heights of up- and down icons depending on orientation
-        if self.theme.icon is not None and self.theme.icon != 'none':
-            w += self.theme.icon.width.value + ifnone(self.thumb, 0, self.thumb)
-            h += self.theme.icon.height.value + ifnone(self.thumb, 0, self.thumb)
-
+        if RWT.HORIZONTAL in self.style:
+            h += 9 + 9 # constant vertical offset of the thumb
+            w += 2 * 8 # constant horizontal offset of the thumb
+        if RWT.VERTICAL in self.style:
+            h += 2 * 8 # constant vertical offset of the thumb
+            w += 9 + 9 # constant horizontal offset of the thumb
+        if self.theme.bgimg is not None and self.theme.bgimg != 'none':
+            w += self.theme.bgimg.width.value
+            h += self.theme.bgimg.height.value
         # add borders
-        t, r, b, l = self.theme.borders
-        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-
-        # add paddings
-        if self.theme.padding:
-            w += ifnone(self.theme.padding.left, 0) + ifnone(self.theme.padding.right, 0)
-            h += ifnone(self.theme.padding.top, 0) + ifnone(self.theme.padding.bottom, 0)
-
-        #horizontal:
-        # w = icondownwidth + iconupwidth + iconthumbwidth + borderslider-left/right + borderthumb-left/right + self.thumb
-        # h = max(icondownheight/iconupheight/iconthumbheight) + borderslider-top/bottom + borderthumb-top/bottom
-
-        #vertical:
-        # w = max(icondownwidth/iconupwidth/iconthumbwidth) + borderslider-left/right + burderthumb-left/right
-        # h = icondownheight + iconupheight + iconthumbheight + borderslider-top/bottom + borderthumb-top/bottom + self.thumb
-
+#         t, r, b, l = self.theme.thumb_borders
+#         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+#         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         return w, h
 
 
