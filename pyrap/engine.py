@@ -522,7 +522,6 @@ class ResourceManager(object):
         with self.lock:
             resource_ = Resource(self, name, content_type, content)
             resource = self.resources.get(resource_.name)
-            if resource is not None: out(resource.md5)
             if resource is not None and (resource_.content_type != resource.content_type or \
                 resource_.md5 != resource.md5) and not force:
                 raise ResourceError('A different resource with the name "%s" is already registered.' % name)
