@@ -1412,17 +1412,19 @@ class Scale(Widget):
         self._selection = selection
         self._increment = increment
         self._pageIncrement = pageIncrement
-#         self._thumb = thumb
+        self.on_select = OnSelect(self)
         if self not in parent.children:
             parent.children.append(self)
 
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
+        line_resource_name = 'resource/widget/rap/scale/h_line.gif'
         if RWT.HORIZONTAL in self.style:
             options.style.append('HORIZONTAL')
         elif RWT.VERTICAL in self.style:
             options.style.append('VERTICAL')
+            line_resource_name = 'resource/widget/rap/scale/v_line.gif'
         if self.minimum:
             options.minimum = self._minimum
         if self.maximum:
@@ -1436,7 +1438,6 @@ class Scale(Widget):
         # for some reason the line of the scale is not directly themable
         # via CSS, so we fake a CSS class "Scale-Line" that holds the line image
         # and make it available under a constant resource name
-        line_resource_name = 'resource/widget/rap/scale/h_line.gif'
         line = self.theme.lineimg
         session.runtime.mngr.resources.registerc(line_resource_name, line.mimetype, line.content)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
@@ -1451,15 +1452,15 @@ class Scale(Widget):
         self._selection = selection
         session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
 
-#     @property
-#     def thumb(self):
-#         return self._thumb
-# 
-#     @thumb.setter
-#     @checkwidget
-#     def thumb(self, thumb):
-#         self._thumb = thumb
-#         session.runtime << RWTSetOperation(self.id, {'thumb': self.thumb})
+    @property
+    def pageIncrement(self):
+        return self._pageIncrement
+
+    @pageIncrement.setter
+    @checkwidget
+    def pageIncrement(self, pageIncrement):
+        self._pageIncrement = pageIncrement
+        session.runtime << RWTSetOperation(self.id, {'pageIncrement': self.pageIncrement})
 
     @property
     def increment(self):
@@ -1527,6 +1528,7 @@ class Slider(Widget):
         self._selection = selection
         self._increment = increment
         self._thumb = thumb
+        self.on_select = OnSelect(self)
         if self not in parent.children:
             parent.children.append(self)
 
