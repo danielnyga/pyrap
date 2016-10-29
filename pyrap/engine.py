@@ -434,6 +434,13 @@ class SessionRuntime(object):
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/css', f)
         self << RWTCallOperation('rwt.client.CSSLoader', 'load', {'files': [resource.location]})
 
+    def executejs(self, code):
+        self << RWTCallOperation('rwt.client.JavaScriptExecutor', 'execute', {'content': code})
+
+    def download(self, path, mimetype):
+        resource = session.runtime.mngr.resources.registerf(os.path.basename(path), mimetype, path)
+        self.executejs('window.open("{}", "_blank");'.format(resource.location))
+
     def create_display(self):
         self.display = Display(self.windows)
     
