@@ -349,7 +349,8 @@ class Display(Widget):
         for k, v in op.args.iteritems():
             if k not in ('cursorLocation', ): Widget._handle_set(self, op) 
             if k == 'cursorLocation': self._cursor_loc = map(px, v)
-            if k == 'focusControl': 
+            if k == 'focusControl':
+                out(session.runtime.windows)
                 if v in session.runtime.windows:
                     session.runtime.windows._set_focus(session.runtime.windows[v])
                     session.runtime.windows[v].focus()
@@ -1942,7 +1943,7 @@ class List(Widget):
     def __init__(self, parent, items=None, markup=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ListTheme(self, session.runtime.mngr.theme)
-        self._items = items
+        self._items = items if items is not None else []
         self._selidx = []
         self.on_select = OnSelect(self)
         self._markup = markup
@@ -1974,17 +1975,22 @@ class List(Widget):
     @Widget.bounds.setter
     def bounds(self, b):
         Widget.bounds.fset(self, b)
+        self.setitemheight()
+
+    def setitemheight(self):
         if self.itemheight is None:
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
             if self.markup:
-                h *= max([len(i.split('<br>')) for i in map(str, self.items)])
+                lines = [len(i.split('<br>')) for i in map(str, self.items)]
+                if lines:
+                    h *= max(lines)
         else:
             h = self.itemheight
         padding = self.theme.item_padding
         if padding:
             h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
-        session.runtime << RWTSetOperation(self.id, {'itemDimensions': [b[2].value, h.value]})
-    
+        session.runtime << RWTSetOperation(self.id, {'itemDimensions': [self.bounds[2].value, h.value]})
+
     def create_content(self):
         if RWT.HSCROLL in self.style:
             self._hbar = ScrollBar(self, orientation=RWT.HORIZONTAL)
@@ -2020,6 +2026,7 @@ class List(Widget):
     def items(self, items):
         self._items = items
         session.runtime << RWTSetOperation(self.id, {'items': map(str, self._items)})
+        self.setitemheight()
         
     @property
     def selection(self):

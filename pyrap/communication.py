@@ -25,7 +25,7 @@ class RWTMessage(RStorage):
     __slots__ = RStorage.__slots__ + ['json']
     
     def __init__(self, head=None, operations=None):
-        RStorage.__init__(self, utf8=True)
+        RStorage.__init__(self, utf8=False)
         self.head = ifnone(head, {})
         self.operations = ifnone(operations, [])
     
@@ -50,7 +50,7 @@ class RWTCreateOperation(RWTOperation):
     :param options: additional options (like style attributes) of the widget.
     '''
     def __init__(self, id_, clazz, options=None):
-        RWTOperation.__init__(self, utf8=True)
+        RWTOperation.__init__(self, utf8=False)
         self.id = id_
         self.clazz = clazz
         self.options = options
@@ -69,7 +69,7 @@ class RWTListenOperation(RWTOperation):
     :param events:        a list of events we want to receive events.
     '''
     def __init__(self, target, events):
-        RWTOperation.__init__(self, utf8=True)
+        RWTOperation.__init__(self, utf8=False)
         self.target = target
         self.events = events
     
@@ -86,7 +86,7 @@ class RWTSetOperation(RWTOperation):
     :param target:        the id of the widget whose properties shall be set.
     '''
     def __init__(self, target, args):
-        RWTOperation.__init__(self, utf8=True)
+        RWTOperation.__init__(self, utf8=False)
         self.target = target
         self.args = args
         
@@ -104,7 +104,7 @@ class RWTCallOperation(RWTOperation):
     :param args:      arguments to be handed to the target method call.
     '''
     def __init__(self, target, method, args=None):
-        RWTOperation.__init__(self, utf8=True)
+        RWTOperation.__init__(self, utf8=False)
         self.target = target
         self.method = method
         self.args = args
@@ -121,7 +121,7 @@ class RWTDestroyOperation(RWTOperation):
     :param target:    the id of the widget to be disposed.
     '''    
     def __init__(self, target):
-        RWTOperation.__init__(self, utf8=True)
+        RWTOperation.__init__(self, utf8=False)
         self.target = target
 
     @property
@@ -138,7 +138,7 @@ class RWTNotifyOperation(RWTOperation):
     :param args:          more precise parameters of the event can be stored here.
     '''    
     def __init__(self, target, event, args=None):
-        RWTOperation.__init__(self, utf8=True)
+        RWTOperation.__init__(self, utf8=False)
         self.target = target
         self.event = event
         self.args = args
@@ -254,8 +254,3 @@ class ResumableThread(threading.Thread):
         with self.state: 
             self.paused = True
             self.state.wait()
-            
-            
-            
-        
-    
