@@ -15,7 +15,7 @@ import web
 from datetime import datetime
 from web.session import SessionExpired
 from web.utils import storify, Storage
-from web.webapi import notfound, badrequest, seeother
+from web.webapi import notfound, badrequest, seeother, notmodified
 
 import pyrap
 from pyrap import locations
@@ -31,6 +31,7 @@ from pyrap.pyraplog import getlogger
 from pyrap.themes import Theme, FontMetrics
 from pyrap.utils import ifnone, out
 from pyrap.widgets import Display, Shell
+import rfc822
 
 
 mimetypes.init()
@@ -139,6 +140,13 @@ class ApplicationManager(object):
             resource = self.resources.get(rcname)
             if resource is None:
                 raise notfound('Resource not available: %s' % rcname)
+            cache_date = web.ctx.env.get('HTTP_IF_MODIFIED_SINCE', 0)
+            if cache_date:
+                # check if the requested resource is younger than in the client's cache
+                ttuple = rfc822.parsedate_tz(cache_date)
+                cache_date = datetime.utcfromtimestamp(rfc822.mktime_tz(ttuple))
+                if cache_date > resource.last_change:
+                    raise notmodified()
             web.modified(resource.last_change)
             web.header('Content-Type', resource.content_type)
             web.header('Content-Length', len(resource.content))
@@ -495,6 +503,7 @@ class Resource(object):
         if name is None:
             self.name = self.md5 + mimetypes.guess_extension(content_type)
         self.last_change = datetime.now()
+        self.downloads = 0
 
     @property
     def location(self):
