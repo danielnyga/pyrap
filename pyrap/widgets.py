@@ -1412,8 +1412,6 @@ class Scale(Widget):
         self._inc = inc
         self._pageinc = pageinc
         self.on_select = OnSelect(self)
-#         if self not in parent.children:
-#             parent.children.append(self)
 
 
     def _create_rwt_widget(self):
@@ -1491,12 +1489,12 @@ class Scale(Widget):
 
     def compute_size(self):
         w, h = Widget.compute_size(self)
-        if RWT.HORIZONTAL in self.style:
-            h += 9 + 9 # constant vertical offset of the thumb
-            w += 2 * 8 # constant horizontal offset of the thumb
-        if RWT.VERTICAL in self.style:
-            h += 2 * 8 # constant vertical offset of the thumb
-            w += 9 + 9 # constant horizontal offset of the thumb
+#         if RWT.HORIZONTAL in self.style:
+        h += (19) * 2 + 3 # constant vertical offset of the thumb
+        w += 2 * 8 # constant horizontal offset of the thumb
+#         if RWT.VERTICAL in self.style:/
+#             h += 2 * 8 # constant vertical offset of the thumb
+#             w += 9 + 9 # constant horizontal offset of the thumb
         if self.theme.bgimg is not None and self.theme.bgimg != 'none':
             w += self.theme.bgimg.width.value
             h += self.theme.bgimg.height.value
@@ -1504,7 +1502,8 @@ class Scale(Widget):
 #         t, r, b, l = self.theme.thumb_borders
 #         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
 #         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        return w, h
+        out(w, h)
+        return (w, h) if RWT.HORIZONTAL in self.style else (h, w)
 
 
 
