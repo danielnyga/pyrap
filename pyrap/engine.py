@@ -23,7 +23,7 @@ from pyrap.base import session
 from pyrap.clientjs import gen_clientjs
 from pyrap.communication import RWTMessage, RWTNotifyOperation, RWTSetOperation, RWTCallOperation, RWTOperation,\
     RWTError, rwterror, parse_msg
-from pyrap.constants import APPSTATE
+from pyrap.constants import APPSTATE, inf
 from pyrap.events import FocusEventData
 from pyrap.exceptions import ResourceError
 from pyrap.ptypes import Color, Image
@@ -137,20 +137,7 @@ class ApplicationManager(object):
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         if args and args[0] == self.config.rcpath:
             rcname = '/'.join(args[1:])
-            resource = self.resources.get(rcname)
-            if resource is None:
-                raise notfound('Resource not available: %s' % rcname)
-            cache_date = web.ctx.env.get('HTTP_IF_MODIFIED_SINCE', 0)
-            if cache_date:
-                # check if the requested resource is younger than in the client's cache
-                ttuple = rfc822.parsedate_tz(cache_date)
-                cache_date = datetime.utcfromtimestamp(rfc822.mktime_tz(ttuple))
-                if cache_date > resource.last_change:
-                    raise notmodified()
-            web.modified(resource.last_change)
-            web.header('Content-Type', resource.content_type)
-            web.header('Content-Length', len(resource.content))
-            return resource.content
+            return self.resources.serve(rcname)
         
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # START NEW SESSION
@@ -494,7 +481,7 @@ class Resource(object):
     obtained by the `location` property.
     '''
     
-    def __init__(self, registry, name, content_type, content):
+    def __init__(self, registry, name, content_type, content, maxdl=inf):
         self.name = name
         self.content_type = content_type
         self.content = content
@@ -504,6 +491,8 @@ class Resource(object):
             self.name = self.md5 + mimetypes.guess_extension(content_type)
         self.last_change = datetime.now()
         self.downloads = 0
+        self.max_downloads = maxdl
+        self.lock = Lock()
 
     @property
     def location(self):
@@ -529,12 +518,29 @@ class ResourceManager(object):
     def __getitem__(self, name):
         return self.get(name)
 
-    def registerf(self, name, content_type, filepath, force=False):
+    def registerf(self, name, content_type, filepath, force=False, limit=inf):
+        '''
+        Make a file available for download under the given path.
+        
+        :param name:            the name of the resource under which it will be availble
+                                for download to the outside.
+        :param content_type:    the MIME type of the resource
+        :param filepath:        the local file path where the resource is located.
+        :param force:           whether or not an already registered resource
+                                under the same name shall be replaced.
+        :param limit:           limit the number of downloads to the specified amount.
+                                the resource will be unregistered after the
+                                specified number of downloads has been reached.
+        '''
         with open(filepath) as f:
-            return self.registerc(name, content_type, f.read(), force=force)
+            return self.registerc(name, content_type, f.read(), force=force, limit=limit)
         
         
-    def registerc(self, name, content_type, content, force=False):
+    def registerc(self, name, content_type, content, force=False, limit=inf):
+        '''
+        Makes the given content available for download under the given path
+        and the given MIME type.
+        '''
         with self.lock:
             resource_ = Resource(self, name, content_type, content)
             resource = self.resources.get(resource_.name)
@@ -545,4 +551,31 @@ class ResourceManager(object):
                 self.resources[resource_.name] = resource_
                 return resource_
             return resource
+        
 
+    def unregister(self, rc):
+        if isinstance(rc, basestring):
+            rc = self.get(rc)
+        del self.resources[rc.name]
+    
+        
+    def serve(self, rcname):
+        resource = self.resources.get(rcname)
+        if resource is None:
+            raise notfound('Resource not available: %s' % rcname)
+        with resource.lock:
+            resource.downloads += 1
+            if resource.downloads >= resource.max_downloads:
+                self.unregister(resource)
+        cache_date = web.ctx.env.get('HTTP_IF_MODIFIED_SINCE', 0)
+        if cache_date:
+            # check if the requested resource is younger than in the client's cache
+            ttuple = rfc822.parsedate_tz(cache_date)
+            cache_date = datetime.utcfromtimestamp(rfc822.mktime_tz(ttuple))
+            if cache_date > resource.last_change:
+                raise notmodified()
+        web.modified(resource.last_change)
+        web.header('Content-Type', resource.content_type)
+        web.header('Content-Length', len(resource.content))
+        return resource.content
+        
