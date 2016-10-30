@@ -1397,24 +1397,23 @@ class TabItem(Widget):
 
 class Scale(Widget):
     _rwt_class_name_ = 'rwt.widgets.Scale'
-    _styles_ = Widget._styles_ + {'horizontal': RWT.HORIZONTAL,
-                                  'vertical': RWT.VERTICAL}
-    _defstyle_ = BitField(Widget._defstyle_ | RWT.HORIZONTAL)
+    _styles_ = Widget._styles_ + {}
+    _defstyle_ = BitField(Widget._defstyle_)
 
 
     @constructor('Scale')
-    def __init__(self, parent, minimum=None, maximum=None, selection=None, increment=None, pageIncrement=None, horizontal=True, thumb=None, **options):
+    def __init__(self, parent, minimum=None, maximum=None, selection=None, inc=None, pageinc=None, orientation=RWT.HORIZONTAL, thumb=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ScaleTheme(self, session.runtime.mngr.theme)
-        self.orientation = horizontal
+        self.style |= orientation
         self._minimum = minimum
         self._maximum = maximum
         self._selection = selection
-        self._increment = increment
-        self._pageIncrement = pageIncrement
+        self._inc = inc
+        self._pageinc = pageinc
         self.on_select = OnSelect(self)
-        if self not in parent.children:
-            parent.children.append(self)
+#         if self not in parent.children:
+#             parent.children.append(self)
 
 
     def _create_rwt_widget(self):
@@ -1431,10 +1430,8 @@ class Scale(Widget):
             options.maximum = self._maximum
         if self.selection:
             options.selection = self._selection
-        if self.increment:
+        if self.inc:
             options.pageIncrement = self._increment
-#         if self.thumb:
-#             options.thumb = self._thumb
         # for some reason the line of the scale is not directly themable
         # via CSS, so we fake a CSS class "Scale-Line" that holds the line image
         # and make it available under a constant resource name
@@ -1453,24 +1450,24 @@ class Scale(Widget):
         session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
 
     @property
-    def pageIncrement(self):
+    def pageinc(self):
         return self._pageIncrement
 
-    @pageIncrement.setter
+    @pageinc.setter
     @checkwidget
-    def pageIncrement(self, pageIncrement):
-        self._pageIncrement = pageIncrement
+    def pageinc(self, inc):
+        self._pageinc = inc
         session.runtime << RWTSetOperation(self.id, {'pageIncrement': self.pageIncrement})
 
     @property
-    def increment(self):
-        return self._increment
+    def inc(self):
+        return self._inc
 
-    @increment.setter
+    @inc.setter
     @checkwidget
-    def increment(self, increment):
-        self._increment = increment
-        session.runtime << RWTSetOperation(self.id, {'pageIncrement': self.increment})
+    def inc(self, inc):
+        self._inc = inc
+        session.runtime << RWTSetOperation(self.id, {'pageIncrement': self.inc})
 
     @property
     def minimum(self):
