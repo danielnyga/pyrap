@@ -1974,7 +1974,7 @@ DateTime-UpButton {
     linear, left top, left bottom,
     from( #f9f9f9 ),
     to( #efefef )
-  );;
+  );
   width: 30px;
   border: none;
   border-left: 1px solid #bdbdbd;
