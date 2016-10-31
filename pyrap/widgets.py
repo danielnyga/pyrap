@@ -720,7 +720,7 @@ class Label(Widget):
     _defstyle_ = BitField(Widget._defstyle_ | RWT.MARKUP)
     
     @constructor('Label')
-    def __init__(self, parent, text='', img=None, **options):
+    def __init__(self, parent, text='', img=None, markup=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = LabelTheme(self, session.runtime.mngr.theme)
         self._text = text
@@ -1895,6 +1895,17 @@ class MenuItem(Widget):
         # options.customVariant = 'variant_navigation'
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_selection_event(op))
+        return True
+
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+                
     def compute_size(self):
         w, h = Widget.compute_size(self)
         if self.text:
