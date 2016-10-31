@@ -181,6 +181,7 @@ class ApplicationManager(object):
                 session.runtime.handle_msg(msg)
                 r = session.runtime.compose_msg()
                 smsg = json.dumps(r.json)
+                web.header('Content-Type', 'application/json')
                 return smsg
         except SessionExpired:
             raise rwterror(RWTError.SESSION_EXPIRED)
