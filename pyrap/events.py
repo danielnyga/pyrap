@@ -15,11 +15,20 @@ class RWTEvent(Event):
         self._listeners = []
         self._widget = widget
         self.event = event
-        
+    
+    @property
+    def widget(self):
+        return self._widget
+    
+    @widget.setter
+    def widget(self, w):
+        self._widget = w
+    
     def __iadd__(self, l):
         if not self._listeners:
             # register the listener
-            session.runtime << RWTListenOperation(self._widget.id, {self.event: True})
+#             session.runtime << RWTListenOperation(self._widget.id, {self.event: True})
+            session.runtime << self._create_subscribe_msg()
         if l not in self._listeners:
             self._listeners.append(l)
         return self
@@ -29,7 +38,8 @@ class RWTEvent(Event):
             self._listeners.remove(l)
         if not self._listeners:
             # unregister the listener
-            session.runtime << RWTListenOperation(self._widget.id, {self.event: False})
+#             session.runtime << RWTListenOperation(self._widget.id, {self.event: False})
+            session.runtime << self._create_unsubscribe_msg()
         return self
             
 
@@ -38,46 +48,49 @@ class OnResize(RWTEvent):
         RWTEvent.__init__(self, 'Resize', widget)
     
     def _create_subscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Resize': True})
+        return RWTListenOperation(self.widget.id, {'Resize': True})
     
     def _create_unsubscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Resize': False})
+        return RWTListenOperation(self.widget.id, {'Resize': False})
     
     def _notify(self, listener): listener()
+    
     
 class OnMouseDown(RWTEvent):
     def __init__(self, widget):
         RWTEvent.__init__(self, 'MouseDown', widget)
     
     def _create_subscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'MouseDown': True})
+        return RWTListenOperation(self.widget.id, {'MouseDown': True})
     
     def _create_unsubscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'MouseDown': False})
+        return RWTListenOperation(self.widget.id, {'MouseDown': False})
     
     def _notify(self, listener, data): listener(data)
+    
     
 class OnMouseUp(RWTEvent):
     def __init__(self, widget):
         RWTEvent.__init__(self, 'MouseUp', widget)
     
     def _create_subscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'MouseUp': True})
+        return RWTListenOperation(self.widget.id, {'MouseUp': True})
     
     def _create_unsubscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'MouseUp': False})
+        return RWTListenOperation(self.widget.id, {'MouseUp': False})
     
     def _notify(self, listener, data): listener(data)
+    
     
 class OnDblClick(RWTEvent):
     def __init__(self, widget):
         RWTEvent.__init__(self, 'MouseDoubleClick', widget)
     
     def _create_subscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'MouseDoubleClick': True})
+        return RWTListenOperation(self.widget.id, {'MouseDoubleClick': True})
     
     def _create_unsubscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'MouseDoubleClick': False})
+        return RWTListenOperation(self.widget.id, {'MouseDoubleClick': False})
     
     def _notify(self, listener, data): listener(data)
     
@@ -87,10 +100,10 @@ class OnSelect(RWTEvent):
         RWTEvent.__init__(self, 'Selection', widget)
     
     def _create_subscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Selection': True, 'DefaultSelection': True})
+        return RWTListenOperation(self.widget.id, {'Selection': True, 'DefaultSelection': True})
     
     def _create_unsubscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Selection': False})
+        return RWTListenOperation(self.widget.id, {'Selection': False})
     
     def _notify(self, listener, data): listener(data)
 
@@ -101,11 +114,11 @@ class OnNavigate(RWTEvent):
 
 
     def _create_subscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Navigation': True})
+        return RWTListenOperation(self.widget.id, {'Navigation': True})
 
 
     def _create_unsubscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Navigation': False})
+        return RWTListenOperation(self.widget.id, {'Navigation': False})
 
 
     def _notify(self, listener, data): listener(data)
@@ -117,10 +130,10 @@ class OnClose(RWTEvent):
         RWTEvent.__init__(self, 'Close', widget)
     
     def _create_subscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Close': True})
+        return RWTListenOperation(self.widget.id, {'Close': True})
     
     def _create_unsubscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Close': False})
+        return RWTListenOperation(self.widget.id, {'Close': False})
     
     def _notify(self, listener): listener()
     
@@ -130,10 +143,10 @@ class OnMove(RWTEvent):
         RWTEvent.__init__(self, 'Move', widget)
     
     def _create_subscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Move': True})
+        return RWTListenOperation(self.widget.id, {'Move': True})
     
     def _create_unsubscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Move': False})
+        return RWTListenOperation(self.widget.id, {'Move': False})
     
     def _notify(self, listener): listener()    
 
@@ -143,15 +156,26 @@ class OnModify(RWTEvent):
         RWTEvent.__init__(self, 'Modify', widget)
     
     def _create_subscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Modify': True})
+        return RWTListenOperation(self.widget.id, {'Modify': True})
     
     def _create_unsubscribe_msg(self):
-        return RWTListenOperation(self.target.id, {'Modify': False})
+        return RWTListenOperation(self.widget.id, {'Modify': False})
     
     def _notify(self, listener): listener()    
 
-class OnFocus(Event):
+
+class OnFocus(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, ('FocusIn', 'FocusOut'), widget)
+    
+    def _create_subscribe_msg(self):
+        return [RWTListenOperation(self.widget.id, {event: True}) for event in self.event]
+    
+    def _create_unsubscribe_msg(self):
+        return [RWTListenOperation(self.widget.id, {event: False}) for event in self.event]
+
     def _notify(self, listener, focus_data): listener(focus_data)
+
 
 class OnDispose(Event):
     def _notify(self, listener): listener()
