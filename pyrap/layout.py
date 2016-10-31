@@ -50,7 +50,7 @@ class LayoutData(object):
 class LayoutAdapter(object): 
 
     def __init__(self, widget, parent):
-        self.logger = pyraplog.getlogger(type(self).__name__, level=pyraplog.DEBUG)
+        self.logger = pyraplog.getlogger(type(self).__name__, level=pyraplog.INFO)
         self.widget = widget
         self.layout = widget.layout
         self.data = LayoutData(self.layout)
@@ -63,6 +63,8 @@ class LayoutAdapter(object):
     @staticmethod
     def create(widget, parent):
         layout = widget.layout
+        if layout.exclude:
+            raise Exception('Cannot create a LayoutAdapter for a Widget that is excluded from layouting.')
         if type(layout) in (GridLayout, RowLayout, ColumnLayout, CellLayout, StackLayout) and widget.children:
             if type(layout) is GridLayout:
                 layout = GridLayoutAdapter(widget, parent)
@@ -74,7 +76,9 @@ class LayoutAdapter(object):
                 layout = CellLayoutAdapter(widget, parent)
             elif type(layout) is StackLayout:
                 layout = StackLayoutAdapter(widget, parent)
-            layout.children.extend([layout.create(w, layout) for w in widget.children])
+            # if the "exclude" flag is set, do not consider the respective 
+            # in the layout computations.
+            layout.children.extend([layout.create(w, layout) for w in widget.children if not w.layout.exclude])
         else:
             layout = TerminalLayoutAdapter(widget, parent)
         layout.prepare()
@@ -229,7 +233,7 @@ class GridLayoutAdapter(LayoutAdapter):
                 fixcols = []
                 flexcols = {i: 1 for i in range(self.colcount())}
             if not flexcols:
-                raise Exception('Layout is underdetermined: I was told to fill %s horizontally, but I do not have any flexcols.' % repr(self.widget))
+                raise Exception('Layout is underdetermined: I was told to fill %s horizontally, but I do not have any flexcols. (created at %s)' % (repr(self.widget), self.widget._created))
             if all([c.data.cellwidth.value is not None for i in fixcols for c in self.col(i)]):
                 occ = sum([self.col(i)[0].data.cellwidth.value for i in fixcols if self.col(i)])
                 occ += sum([self.col(i)[0].data.cellwidth.min for i in flexcols if self.col(i)])
@@ -251,7 +255,7 @@ class GridLayoutAdapter(LayoutAdapter):
                 fixrows = []
                 flexrows = {i: 1 for i in range(self.rowcount())}
             if not flexrows:
-                raise Exception('Layout is underdetermined: I was told to fill %s vertically, but I do not have any flexrows.' % repr(self.widget))
+                raise LayoutError('Layout is underdetermined: I was told to fill %s vertically, but I do not have any flexrows. (created at %s)' % (repr(self.widget), self.widget._created))
             if all([c.data.cellheight.value is not None for i in fixrows for c in self.row(i)]):
                 occ = sum([self.row(i)[0].data.cellheight.value for i in fixrows if self.row(i)])
                 occ += sum([self.row(i)[0].data.cellheight.min for i in flexrows if self.row(i)])
@@ -268,13 +272,11 @@ class GridLayoutAdapter(LayoutAdapter):
         for i in range(self.colcount()):
             wmax = px(0)
             for c in self.col(i):
-#                 if RWT.HSCROLL in c.widget.style: continue 
                 wmax = max(wmax, c.data.cellwidth.min)
                 wmaxg = max(wmax, wmaxg)
             for c in self.col(i): 
                 c.data.cellwidth.min = wmax 
                 if i not in flexcols or not layout.halign == 'fill':
-#                     if RWT.HSCROLL in c.widget.style: continue 
                     c.data.cellwidth.value = wmax
             wmaxt += wmax
         if layout.equalwidths:
@@ -288,13 +290,11 @@ class GridLayoutAdapter(LayoutAdapter):
         for i in range(self.rowcount()):
             hmax = px(0)
             for c in self.row(i): 
-#                 if RWT.VSCROLL in c.widget.style: continue 
                 hmax = max(hmax, c.data.cellheight.min)
                 hmaxg = max(hmax, hmaxg)
             for c in self.row(i): 
                 c.data.cellheight.min = hmax
                 if i not in flexrows or not layout.valign == 'fill': 
-#                     if RWT.VSCROLL in c.widget.style: continue 
                     c.data.cellheight.value = hmax
             hmaxt += hmax
         if layout.equalheights:
@@ -558,6 +558,8 @@ class Layout(object):
         self.padding_right = ifnone(padding_right, self.padding_right)
         self.padding_bottom = ifnone(padding_bottom, self.padding_bottom)
         self.padding_left = ifnone(padding_left, self.padding_left)
+        
+        self.exclude = False
         
     @property
     def padding_top(self):

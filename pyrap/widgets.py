@@ -26,7 +26,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme
-from pyrap.utils import RStorage, BiMap, out, ifnone, stop
+from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller
 
 
 def checkwidget(f, *args):
@@ -80,11 +80,15 @@ class Widget(object):
         self.on_mouseup = OnMouseUp(self)
         self.on_dblclick = OnDblClick(self)
         self.on_navigate = OnNavigate(self)
-        self.on_focus = OnFocus()
+        self.on_focus = OnFocus(self)
         self.on_dispose = OnDispose()
         self.style = BitField(type(self)._defstyle_)
         for k, v in options.iteritems():
             if k in type(self)._styles_: self.style.setbit(type(self)._styles_[k:], v)
+        # save meta information about where in the code the object
+        # has been create for better debugging
+        self._created = caller(3)
+        
 
             
     def __repr__(self):
@@ -386,6 +390,7 @@ class Shell(Widget):
         self._title = options.get('title')
         self.on_close = OnClose(self)
         self.on_move = OnMove(self)
+        self._tabseq = []
     
     def create_content(self):
         self.content = Composite(self)
@@ -428,6 +433,18 @@ class Shell(Widget):
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
         if RWT.CLOSE in self.style:
             self.on_close += self.dispose
+        
+    @property
+    def tabseq(self):
+        return self._tabseq
+    
+    @tabseq.setter
+    @checkwidget
+    def tabseq(self, widgets):
+        self._tabseq = widgets
+        for i, w in enumerate(widgets):
+            session.runtime << RWTSetOperation(w.id, {'tabIndex': (i+1)})
+    
         
     @property
     def title(self):
@@ -1489,20 +1506,11 @@ class Scale(Widget):
 
     def compute_size(self):
         w, h = Widget.compute_size(self)
-#         if RWT.HORIZONTAL in self.style:
         h += (19) * 2 + 3 # constant vertical offset of the thumb
         w += 2 * 8 # constant horizontal offset of the thumb
-#         if RWT.VERTICAL in self.style:/
-#             h += 2 * 8 # constant vertical offset of the thumb
-#             w += 9 + 9 # constant horizontal offset of the thumb
         if self.theme.bgimg is not None and self.theme.bgimg != 'none':
             w += self.theme.bgimg.width.value
             h += self.theme.bgimg.height.value
-        # add borders
-#         t, r, b, l = self.theme.thumb_borders
-#         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-#         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        out(w, h)
         return (w, h) if RWT.HORIZONTAL in self.style else (h, w)
 
 
