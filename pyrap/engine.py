@@ -22,7 +22,7 @@ from pyrap import locations
 from pyrap.base import session
 from pyrap.clientjs import gen_clientjs
 from pyrap.communication import RWTMessage, RWTNotifyOperation, RWTSetOperation, RWTCallOperation, RWTOperation,\
-    RWTError, rwterror, parse_msg
+    RWTError, rwterror, parse_msg, RWTListenOperation
 from pyrap.constants import APPSTATE, inf
 from pyrap.events import FocusEventData
 from pyrap.exceptions import ResourceError
@@ -281,6 +281,10 @@ class SessionRuntime(object):
                 if type(o) is RWTSetOperation and type(op) is RWTSetOperation:
                     if o.target == op.target:
                         o.args.update(op.args)
+                        return
+                elif type(o) is RWTListenOperation and type(op) is RWTListenOperation:
+                    if o.target == op.target:
+                        o.events.update(op.events)
                         return  
             self.operations.append(op)
     
@@ -296,6 +300,8 @@ class SessionRuntime(object):
     def __lshift__(self, o):
         if isinstance(o, RWTOperation):
             self.put_operation(o)
+        elif type(o) in (list, tuple):
+            for op in o: self.put_operation(op)
             
     
     def flush(self):
