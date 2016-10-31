@@ -2,20 +2,18 @@ pwt = {};
 svgNS = "http://www.w3.org/2000/svg";
 
 pwt.SVG = function(parent, cssid, svg) {
-    console.log('initialize!');
-
-    this._parent = this.createElement(parent);
+    this._parentDIV = this.createElement(parent);
     if (cssid) {
-        this._parent.setAttribute('id', cssid);
+        this._parentDIV.setAttribute('id', cssid);
     }
     if (svg) {
-        this._parent.innerHTML = svg;
-        this.svg = this._parent.childNodes[0];
+        this._parentDIV.innerHTML = svg;
+        this.svg = this._parentDIV.childNodes[0];
     } else {
         this.svg = document.createElementNS(svgNS, "svg");
         this.svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
         this.svg.setAttribute('encoding', 'utf-8');
-        this._parent.append( this.svg );
+        this._parentDIV.append( this.svg );
     }
 
     this._needsLayout = true;
@@ -47,12 +45,16 @@ pwt.SVG.prototype = {
     },
 
     createElement: function( parent ) {
+        var clientarea = parent.getClientArea();
         var element = document.createElement( "div" );
         element.style.position = "absolute";
-        element.style.left = "0";
-        element.style.top = "0";
-        element.style.width = "100%";
-        element.style.height = "100%";
+        element.style.left = clientarea[0];
+        element.style.top = clientarea[1];
+        element.style.width = clientarea[2] + "px";
+        element.style.height = clientarea[3] + "px";
+        console.log('clientarea', clientarea);
+        console.log('parent', parent);
+        console.log('element', element);
         parent.append( element );
         return element;
     },
@@ -62,30 +64,37 @@ pwt.SVG.prototype = {
     },
 
     setZIndex : function(e) {
-//        this._parent.setZIndex(e);
         console.log('someone tried to set my zindex!', e);
     },
 
     setSvg : function( svgcontent ) {
         console.log('setting svgcontent');
-        this._parent.innerHTML = svgcontent;
-        this.svg = this._parent.childNodes[0];
+        this._parentDIV.innerHTML = svgcontent;
+        this.svg = this._parentDIV.childNodes[0];
     },
 
     setAttr : function( attr ) {
-        console.log(attr);
+        console.log('setattr', attr);
         el = document.getElementById(attr[0]);
         el.setAttribute(attr[1], attr[2]);
     },
 
-    setIdstyle : function ( style ) {
-        console.log('style', style);
-        if (style[0]) {
-            document.getElementById(style[0]).style.fill = style[3] ? "none" : "#bee280";
+    highlight : function ( args ) {
+        if (document.getElementById(args.id)) {
+            document.getElementById(args.id).style.fill = args.clear ? "#ffffff" : "#bee280";
+        }
+    },
+
+    clear : function ( args ) {
+        for (var i = 0; i < args.ids.length; i++) {
+            if (document.getElementById(args.ids[i])) {
+                document.getElementById(args.ids[i]).style.fill = "none";
+            }
         }
     },
 
     _resize: function( clientArea ) {
+        console.log('this', this);
         this._width = clientArea[ 2 ];
         this._height = clientArea[ 3 ];
         this._scheduleUpdate( false );
@@ -103,7 +112,7 @@ pwt.SVG.prototype = {
     },
 
     destroy: function() {
-        var element = this._parent;
+        var element = this._parentDIV;
         if( element.parentNode ) {
             element.parentNode.removeChild( element );
         }
@@ -116,13 +125,14 @@ rap.registerTypeHandler( 'pwt.customs.SVG', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    console.log('svg parent', parent);
     return new pwt.SVG( parent, properties.cssid, properties.svg );
   },
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'attr', 'idstyle', 'svg'],
+  properties: [ 'remove', 'attr', 'svg'],
+
+  methods : [ "clear", "highlight" ],
 
   events: [ ]
 

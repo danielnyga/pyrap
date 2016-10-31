@@ -1,7 +1,6 @@
 d3graph = {};
 
 d3graph.Graph = function(parent, cssid, cssclass, renderer) {
-    console.log('d3graph.Graph');
     this._renderer = renderer;
 
     this._parent = this.createElement(parent);
@@ -34,7 +33,6 @@ d3graph.Graph = function(parent, cssid, cssclass, renderer) {
         that._resize( parent.getClientArea() );
     } );
     this._resize( parent.getClientArea() );
-    console.log('d3graph.Graph END');
 };
 
 d3graph.Graph.prototype = {
@@ -51,8 +49,6 @@ d3graph.Graph.prototype = {
     },
 
     getcontainer: function() {
-        console.log('d3graph.Graph.prototype getcontainer');
-
         return this._svg;
     },
 
