@@ -1605,6 +1605,7 @@ rwt.theme.AppearanceManager.getInstance().setCurrentTheme( {
       result.backgroundColor = tv.getCssColor( "Scale-Thumb", "background-color" );
       result.backgroundImage = tv.getCssImage( "Scale-Thumb", "background-image" );
       result.backgroundGradient = tv.getCssGradient( "Scale-Thumb", "background-image" );
+      result.shadow = tv.getCssShadow( "Scale-Thumb", "box-shadow" );
       return result;
     }
   }

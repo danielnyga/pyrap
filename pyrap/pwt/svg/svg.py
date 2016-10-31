@@ -1,8 +1,12 @@
+from io import BytesIO
+
 from pyrap import session
-from pyrap.communication import RWTCreateOperation, RWTSetOperation
+from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
+    RWTCallOperation
 from pyrap.themes import WidgetTheme
+from pyrap.utils import out
 from pyrap.widgets import Widget, constructor, checkwidget
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 
 class SVG(Widget):
@@ -21,6 +25,7 @@ class SVG(Widget):
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.cssid = self._cssid
+        options.selfid = self.id
         if self._svgfile is not None:
             options.svg = self._get_rwt_svg(self._svgfile)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
@@ -32,13 +37,11 @@ class SVG(Widget):
         self._width = int(w)
         self._height = int(h)
 
-        with open(fpath, 'r') as content_file:
-            self._content = content_file.read()
-        #
-        # stream = BytesIO()
-        # stream.write(ET.tostring(self.root))
-        # self._content = str(stream.getvalue())
-        # stream.close()
+        # writing the stream to the content will omit leading doc infos
+        stream = BytesIO()
+        self.tree.write(stream)
+        self._content = str(stream.getvalue())
+        stream.close()
 
         return self._content
 
@@ -53,34 +56,41 @@ class SVG(Widget):
         session.runtime << RWTSetOperation(self.id, {'svg': self._get_rwt_svg(path)})
 
     def getattr(self, id, attr):
-        elem = self.root.find('*//*[@id="{}"]'.format(id), self.namespaces)
-        return elem
+        elem = self.tree.find('*//*[@id="{}"]'.format(id))
+        if attr in elem.attrib:
+            return elem.attrib[attr]
+        else:
+            return None
 
     def setattr(self, id, attr, val):
+        # set in gui
         session.runtime << RWTSetOperation(self.id, {'attr': [id, attr, val]})
+        # update local content
+        elem = self.tree.find('*//*[@id="{}"]'.format(id))
+        if elem is not None:
+            elem.set(attr, val)
+        self.save()
 
-    def setstyle(self, id, clear):
-        session.runtime << RWTSetOperation(self.id, {'idstyle': [id, clear]})
+    def highlight(self, id, clear):
+        session.runtime << RWTCallOperation(self.id, 'highlight', { 'id': id, 'clear': clear })
 
+    def clear(self, ids):
+        session.runtime << RWTCallOperation(self.id, 'clear', {'ids': ids})
 
-    # def setattr(self, id, attr, val):
-    #     elem = self.root.find('*//*[@id="{}"]'.format(id), self.namespaces)
-    #     if elem is None:
-    #         return self
-    #     elem.set(attr, val)
-    #     # self.tree.write(self.fpath)
-    #     stream = BytesIO()
-    #     self.save(stream)
-    #     self._content = str(stream.getvalue())
-    #     stream.close()
-    #     return self
+    def save(self):
+        stream = BytesIO()
+        self.tree.write(stream)
+        self._content = str(stream.getvalue())
+        stream.close()
 
     def compute_size(self):
-        w, h = Widget.compute_size(self)
-        # if self.img is not None:
-        #     w, h = self.img.size
-        # else:
-        #     w, h = session.runtime.textsize_estimate(self.theme.font, self._text)
+        _, _, w, h = session.runtime.windows.display.bounds
+        prop = float(self._width)/self._height
+        h = h/2.
+        h = min(h, self._height)
+        w = h * prop
+        out('svg sizes', w, h)
+
         return w, h
 
 
