@@ -27,6 +27,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme
 from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller
+from collections import OrderedDict
 
 
 def checkwidget(f, *args):
@@ -1963,7 +1964,9 @@ class List(Widget):
     def __init__(self, parent, items=None, markup=False, menu=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ListTheme(self, session.runtime.mngr.theme)
-        self._items = items if items is not None else []
+        self._items = None
+        self._itemidx = None
+        self._setitems(items)
         self._selidx = []
         self.on_select = OnSelect(self)
         self._markup = markup
@@ -2002,7 +2005,7 @@ class List(Widget):
         if self.itemheight is None:
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
             if self.markup:
-                lines = [len(i.split('<br>')) for i in map(str, self.items)]
+                lines = [len(i.split('<br>')) for i in self.items]
                 if lines:
                     h *= max(lines)
         else:
@@ -2039,14 +2042,30 @@ class List(Widget):
         self._itemheight = h
         self.bounds = self.bounds # update the bounds
     
+    
+    def _setitems(self, items):
+        if items is None:
+            items = []
+        if isinstance(items, dict):
+            if not all([type(i) is str for i in items]): 
+                raise TypeError('All keys in an item dictionary must be strings.')
+            if type(items) is dict:
+                self._items = OrderedDict(((k, items[k]) for k in sorted(items)))
+        elif type(items) in (list, tuple):
+            items = OrderedDict(((str(i), i) for i in items))
+        else: raise TypeError('Invalid type for List items: %s' % type(items))
+        self._items = items
+        self._itemidx = {v: i for i, v in enumerate(self._items.values())}
+            
+    
     @property
     def items(self):
         return self._items
     
     @items.setter
     def items(self, items):
-        self._items = items
-        session.runtime << RWTSetOperation(self.id, {'items': map(str, self._items)})
+        self._setitems(items)
+        session.runtime << RWTSetOperation(self.id, {'items': self.items.keys()})
         self.setitemheight()
 
     @property
@@ -2060,27 +2079,36 @@ class List(Widget):
 
     @property
     def selection(self):
-        sel = [self.items[i] for i in self._selidx]
-        if RWT.MULTI not in self.style: sel = sel[0]
+        sel = [self.items[self.items.keys()[i]] for i in self._selidx]
+        if RWT.MULTI not in self.style: 
+            if not sel: return None
+            sel = sel[0]
         return sel
     
     @selection.setter
     def selection(self, sel):
-        if type(sel) not in (list, tuple) and RWT.MULTI in self.style:
-            raise TypeError('Expected list or tuple, got %s' % type(sel))
-        if RWT.MULTI not in self.style: sel = [sel]
-        sel = [self.items.index(s) for s in sel]
+        if RWT.MULTI in self.style:
+            if type(sel) is list:
+                raise TypeError('Expected list, got %s' % type(sel))
+            sel = [self._itemidx[s] for s in sel]
+        else:
+            sel = self._itemidx[sel] if sel is not None else None
         self.selidx = sel
         
     @property
     def selidx(self):
+        if RWT.MULTI not in self.style:
+            if not self._selidx: return None
+            else: return self._selidx[0]
         return self._selidx
     
     @selidx.setter
     def selidx(self, sel):
-        if type(sel) not in (list, tuple) and RWT.MULTI in self.style:
-            raise TypeError('Expected list or tuple, got %s' % type(sel))
-        if not RWT.MULTI in self.style: sel = [sel]
+        if type(sel) is list:
+            if RWT.MULTI in self.style:
+                raise TypeError('Expected list, got %s' % type(sel))
+            else: 
+                sel = [sel] if sel is not None else []
         session.runtime << RWTSetOperation(self.id, {'selection': sel})
     
     def compute_size(self):
