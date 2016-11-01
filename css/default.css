@@ -17,6 +17,7 @@
   background-color: #fff;
   background-image: none;
   font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+  cursor: default;
 }
 
 *:disabled {
@@ -1842,6 +1843,7 @@ Scale-Thumb {
   border: 1px solid #a4a4a4;
   border-radius: 2px 2px 2px 2px;
   box-shadow: none;
+  cursor: pointer;
 }
 
 Scale-Thumb:focused {

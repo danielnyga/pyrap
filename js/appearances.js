@@ -1601,6 +1601,7 @@ rwt.theme.AppearanceManager.getInstance().setCurrentTheme( {
         result.width = 21;
         result.height = 11;
       }
+      result.cursor = tv.getCssCursor( "Scale-Thumb", "cursor" );
       result.border = tv.getCssBorder( "Scale-Thumb", "border" );
       result.backgroundColor = tv.getCssColor( "Scale-Thumb", "background-color" );
       result.backgroundImage = tv.getCssImage( "Scale-Thumb", "background-image" );
