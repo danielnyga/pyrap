@@ -96,6 +96,13 @@ class ControlsDemo():
         self.create_button_page(page)
         self.pages['Button'] = page
         
+        #=======================================================================
+        # create browser page
+        #=======================================================================
+        page = self.create_page_template('Browser Widget Demo')
+        self.create_browser_page(page)
+        self.pages['Browser'] = page
+        
         self.navigation.items = self.pages
         
 
@@ -110,14 +117,11 @@ class ControlsDemo():
         
 
     def create_scale_page(self, parent):
-#         upper = Composite(parent)
-#         upper.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
         eq = Group(parent, text='Equalizer', halign='fill', valign='fill')
         eq.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=1)
         scales = []
         for _ in range(20):
             s = Scale(eq, valign='fill', orientation=RWT.VERTICAL)
-#             s.on_focus += lambda *_: out('focus on ')
             scales.append(s)
         self.mainwnd.tabseq = [self.navigation] + scales
         lower = Composite(parent)
@@ -126,25 +130,20 @@ class ControlsDemo():
         grpleft = Group(lower, text='Balance')
         grpleft.layout = RowLayout(valign='fill', halign='fill', equalheights=1)
         Scale(grpleft, halign='fill', orientation=RWT.HORIZONTAL)
-#         Scale(grpleft, halign='fill', orientation=RWT.HORIZONTAL)
-#         Scale(grpleft, halign='fill', orientation=RWT.HORIZONTAL)
-#         Scale(grpleft, halign='fill', orientation=RWT.HORIZONTAL)
-#         Scale(grpleft, halign='fill', orientation=RWT.HORIZONTAL)
-#         Scale(grpleft, halign='fill', orientation=RWT.HORIZONTAL)
         grpright = Group(lower, text='Fader', valign='fill', halign='fill')
         grpright.layout = RowLayout(valign='fill', halign='fill', equalheights=1)
-#         Label(grpright, text='here will be other controls.')
-#         Scale(grpright, halign='fill', orientation=RWT.HORIZONTAL)
-#         Scale(grpright, halign='fill', orientation=RWT.HORIZONTAL)
-#         Scale(grpright, halign='fill', orientation=RWT.HORIZONTAL)
-#         Scale(grpright, halign='fill', orientation=RWT.HORIZONTAL)
-#         Scale(grpright, halign='fill', orientation=RWT.HORIZONTAL)
-#         Scale(grpright, halign='fill', orientation=RWT.HORIZONTAL)
     
     def create_button_page(self, parent):
         grp = Group(parent, text='Push Buttons')
         grp.layout = CellLayout(halign='fill', valign='fill')
         Label(grp, text='here come the buttons')
+        
+    
+    def create_browser_page(self, parent):
+        grp = Group(parent, text='Browser')
+        grp.layout = CellLayout(halign='left', valign='top')
+        browser = Button(grp, text='Open Browser')
+        browser.on_select += self.open_browser 
 
         
     def open_browser(self, data):
@@ -162,16 +161,10 @@ class ControlsDemo():
         browser = Browser(content, message='Type your address here', halign='fill', valign='fill', border=True)
         browser.url = address.text
         def load(*_):
-            out(address.text)
             browser.url = address.text
         btngo.on_select += load
         dlg.dolayout()
         
-    def onclick(self, *args):
-        self.clicks += 1
-        self.label.text = 'clicks: %d, from IP: %s' % (self.clicks, pyrap.session.ip)
-        b = self.label.bounds
-        self.label.bounds = (b[0] + random.randint(-5, 5), b[1] + random.randint(-5, 5), b[2], b[3])
         
     def mobile(self, shell, **kwargs):
         parent = shell.content
