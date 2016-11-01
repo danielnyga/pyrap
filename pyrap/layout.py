@@ -379,7 +379,7 @@ class StackLayoutAdapter(GridLayoutAdapter):
                 fixcols = []
                 flexcols = {i: 1 for i in range(self.colcount())}
             if not flexcols:
-                raise Exception('Layout is underdetermined: I was told to fill %s horizontally, but I do not have any flexcols.' % repr(self.widget))
+                raise Exception('Layout is underdetermined: I was told to fill %s horizontally, but I do not have any flexcols. (created at %s)' % (repr(self.widget), self.widget._created))
             if all([c.data.cellwidth.value is not None for i in fixcols for c in self.col(i)]):
                 for fci in flexcols:
                     for c in self.col(fci):
@@ -397,7 +397,7 @@ class StackLayoutAdapter(GridLayoutAdapter):
                 fixrows = []
                 flexrows = {i: 1 for i in range(self.rowcount())}
             if not flexrows:
-                raise Exception('Layout is underdetermined: I was told to fill %s vertically, but I do not have any flexrows.' % repr(self.widget))
+                raise Exception('Layout is underdetermined: I was told to fill %s vertically, but I do not have any flexrows. (created at %s)' % (repr(self.widget), self.widget._created))
             if all([c.data.cellheight.value is not None for i in fixrows for c in self.row(i)]):
                 for fci in flexrows:
                     for c in self.row(fci):
@@ -716,7 +716,7 @@ class StackLayout(GridLayout):
                             cell_maxheight=cell_maxheight, padding_top=padding_top,
                             padding_bottom=padding_bottom, padding_left=padding_left,
                             padding_right=padding_right, padding=padding, vspace=None,
-                            equalwidths=halign=='fill', equalheights=valign=='fill')
+                            equalwidths=(halign=='fill'), equalheights=(valign=='fill'))
         
         
         
