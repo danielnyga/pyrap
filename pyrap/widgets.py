@@ -54,10 +54,10 @@ def constructor(cls):
 
 class Widget(object):
     
-    _styles_ = BiMap({'visible': RWT.VISIBLE, 
+    _styles_ = BiMap({'visible': RWT.VISIBLE,
                       'border': RWT.BORDER,
                       'enabled': RWT.ENABLED})
-    
+
     _defstyle_ = BitField(RWT.VISIBLE | RWT.ENABLED)
     
     def __init__(self, parent, **options):
@@ -2488,15 +2488,18 @@ class GC(object):
     class Operation(object):
         '''Abstract base class for all GC Operations'''
         def json(self): raise NotImplemented()
-    
+
+
     class save(Operation):
         '''Saves the current state of the GC'''
         def json(self): return ['save']
-        
+
+
     class restore(Operation):
         '''Restores the most recently saved state of the GC'''
         def json(self): return ['restore']
-        
+
+
     class moveto(Operation):
         '''Moves the cursor to the given coordinates.'''
         def __init__(self, x, y):
@@ -2506,7 +2509,8 @@ class GC(object):
         
         def json(self):
             return ['moveTo', self.x, self.y]
-        
+
+
     class lineto(Operation):
         '''Draws a line from the current cursor position to the given coordinates.'''
         def __init__(self, x, y):
@@ -2516,7 +2520,8 @@ class GC(object):
             
         def json(self):
             return ['lineTo', self.x, self.y]
-    
+
+
     class linewidth(Operation):
         '''Sets the line width to the given size.'''
         def __init__(self, w):
@@ -2525,12 +2530,14 @@ class GC(object):
             
         def json(self):
             return ['lineWidth', self.w]
-        
+
+
     class stroke(Operation):
         '''Operation to actually paint?'''
         def json(self):
             return ['stroke']
-        
+
+
     class stroke_style(Operation):
         '''Sets the color and opacity of the stroke.'''
         def __init__(self, color):
@@ -2542,15 +2549,96 @@ class GC(object):
                                     int(round(255 * self.color.green)), 
                                     int(round(255 * self.color.blue)), 
                                     int(round(255 * self.color.alpha))]]
-        
+
+    class fill_style(Operation):
+        '''Sets the color and opacity of the fill.'''
+        def __init__(self, color):
+            GC.Operation.__init__(self)
+            self.color = parse_value(color, Color)
+
+        def json(self):
+            return ['fillStyle', [int(round(255 * self.color.red)),
+                                    int(round(255 * self.color.green)),
+                                    int(round(255 * self.color.blue)),
+                                    int(round(255 * self.color.alpha))]]
+
+
+    class fill_text(Operation):
+        '''Sets the color and opacity of the text fill.'''
+        _styles_ = BiMap({'mnemonic': RWT.DRAW_MNEMONIC,
+                          'delimiter': RWT.DRAW_DELIMITER,
+                          'tab': RWT.DRAW_TAB})
+        _defstyle_ = BitField()
+
+        def __init__(self, text, x, y, **options):
+            GC.Operation.__init__(self)
+            self.text = text
+            self.x = x
+            self.y = y
+            self.style = BitField(type(self)._defstyle_)
+            for k, v in options.iteritems():
+                out(type(self)._styles_)
+                if k in type(self)._styles_: self.style.setbit( type(self)._styles_[k:], v)
+
+        def json(self):
+            ## dasselbe brauche ich fuer stroke_text und analog sowas
+            ## mit RWT.BOLD, RWT.NORMAL und RWT.ITALICS fuer font
+            # if RWT.DRAW_MNEMONIC in self.style:
+            #     drawMnemonic = True
+            #     drawDelimiter = False
+            #     drawTab = False
+            # elif RWT.DRAW_DELIMITER in self.style:
+            #     drawMnemonic = False
+            #     drawDelimiter = True
+            #     drawTab = False
+            # elif RWT.DRAW_TAB in self.style:
+            #     drawMnemonic = False
+            #     drawDelimiter = False
+            #     drawTab = True
+            # else:
+            drawMnemonic = False
+            drawDelimiter = True
+            drawTab = True
+            return ['fillText', self.text, drawMnemonic, drawDelimiter, drawTab, self.x, self.y]
+
+
+    class stroke_text(Operation):
+        '''Sets the color and opacity of the text stroke.'''
+        def __init__(self, text, x, y, **options):
+            GC.Operation.__init__(self)
+            self.text = text
+            self.x = x
+            self.y = y
+            self.drawMnemonic = False
+            self.drawDelimiter = True
+            self.drawTab = True
+
+        def json(self):
+            return ['strokeText',  self.text, self.drawMnemonic, self.drawDelimiter, self.drawTab, self.x, self.y]
+
+
+    class draw_image(Operation):
+        '''Draws an image'''
+        def __init__(self, imgpath, x, y):
+            GC.Operation.__init__(self)
+            self.imgpath = imgpath
+            self.x = x
+            self.y = y
+
+        def json(self):
+            return ['drawImage', self.imgpath, self.x, self.y]
+
+
     class begin_path(Operation):
         '''Initializes a new path'''
         def json(self): return ['beginPath']
-        
+
+
     class fill(Operation):
         '''Issues a fill operation'''
         def json(self): return ['fill']
-        
+
+
     class ellipse(Operation):
         '''Draws an ellipse'''
         def __init__(self, x, y, rx, ry, rot, start, end, clockwise=True):
@@ -2566,8 +2654,33 @@ class GC(object):
             
         def json(self):
             return ['ellipse', self.x, self.y, self.rx, self.ry, self.rot, self.start, self.end, not self.clockwise]
-        
-    
+
+
+    class font(Operation):
+        '''Sets the font of the text'''
+        def __init__(self, font, fontsize, bold=False, italic=False):
+            self.font = font.split(',')
+            self.fontsize = fontsize
+            self.bold = bold
+            self.italic = italic
+
+        def json(self):
+            return ['font', [self.font, self.fontsize, self.bold, self.italic]]
+
+
+    class rect(Operation):
+        '''Draws a rectangle'''
+        def __init__(self, x, y, w, h):
+            GC.Operation.__init__(self)
+            self.x = x
+            self.y = y
+            self.w = w
+            self.h = h
+
+        def json(self):
+            return ['rect', self.x, self.y, self.w, self.h]
+
+
     def __init__(self, _id, parent):
         self.id = _id
         self.parent = parent
