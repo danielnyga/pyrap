@@ -53,11 +53,9 @@ class ControlsDemo():
         #=======================================================================
         main = Composite(outer)
         main.layout = ColumnLayout(halign='fill', valign='fill', flexcols=1)
-        self.navigation = List(main, border=1, valign='fill', #halign='fill', 
-                          items=['%d. item' % (d+1) for d in range(100)], 
+        self.navigation = List(main, border=1, valign='fill', 
                           minwidth=px(250),
                           vscroll=1)
-        self.navigation.on_focus += lambda *_: out('focus')
         #=======================================================================
         # footer
         #=======================================================================
@@ -73,24 +71,32 @@ class ControlsDemo():
         self.create_pages()
         
         def switch_page(*args):
-            out(self.navigation.selection, self.navigation.selidx)
-            if self.navigation.selidx[0] < 3:
-                content.selection = self.navigation.selidx[0]
-            for page in (red, green, blue):
-                page.layout.exclude = content.selection is not page
+            out(self.navigation.selection, self.navigation.selidx, self.navigation.selection)
+            for page in (self.pages.values()):
+                out(page)
+                page.layout.exclude = self.navigation.selection is not page
                 out('%s layouting %s' % ({True: 'not', False: ''}[page.layout.exclude], page))
+            self.content.selection = self.navigation.selection
         self.navigation.on_select += switch_page
 
 
     def create_pages(self):
+        self.pages = {}
         #=======================================================================
         # create scale page
         #=======================================================================
-        list_items = {}
         page  = self.create_page_template('Scale Widget Demo')
         self.create_scale_page(page)
-        list_items['Scale'] = page
-        self.navigation.items = list_items
+        self.pages['Scale'] = page
+        
+        #=======================================================================
+        # create button page
+        #=======================================================================
+        page = self.create_page_template('Button Widget Demo')
+        self.create_button_page(page)
+        self.pages['Button'] = page
+        
+        self.navigation.items = self.pages
         
 
     def create_page_template(self, heading):
@@ -134,7 +140,11 @@ class ControlsDemo():
 #         Scale(grpright, halign='fill', orientation=RWT.HORIZONTAL)
 #         Scale(grpright, halign='fill', orientation=RWT.HORIZONTAL)
 #         Scale(grpright, halign='fill', orientation=RWT.HORIZONTAL)
-        
+    
+    def create_button_page(self, parent):
+        grp = Group(parent, text='Push Buttons')
+        grp.layout = CellLayout(halign='fill', valign='fill')
+        Label(grp, text='here come the buttons')
 
         
     def open_browser(self, data):
