@@ -14,7 +14,7 @@ RWT = BitMask('NONE', 'VISIBLE', 'ENABLED', 'ACTIVE', 'MAXIMIZED', 'MINIMIZED',
               'TITLE', 'MODAL', 'CENTER', 'LEFT', 'RIGHT', 'TOP', 'BOTTOM', 'FILL',
               'MULTI', 'WRAP', 'HSCROLL', 'VSCROLL', 'VERTICAL', 'HORIZONTAL',
               'BAR', 'CASCADE', 'DROP_DOWN', 'PUSH', 'SEPARATOR', 'MULTI', 'MARKUP',
-              'NOSCROLL', 'SINGLE', 'POPUP')
+              'NOSCROLL', 'SINGLE', 'POPUP', 'DRAW_MNEMONIC', 'DRAW_DELIMITER', 'DRAW_TAB')
 
 class CURSOR:
     DEFAULT      = 1 << 0

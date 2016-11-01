@@ -650,7 +650,8 @@ class Color(object):
              'cyan': '#00acc1',
              'purple': '#ab47bc',
              'orange': '#ff7043',
-             'marine': '#1e3f5a'}
+             'marine': '#1e3f5a',
+             'black': '#000'}
     
     
     def __init__(self, html=None, rgb=None, hsv=None, fct=None, alpha=None):
