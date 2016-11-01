@@ -350,6 +350,7 @@ class Display(Widget):
         
         
     def _handle_set(self, op):
+        out(op)
         for k, v in op.args.iteritems():
             if k not in ('cursorLocation', ): Widget._handle_set(self, op) 
             if k == 'cursorLocation': self._cursor_loc = map(px, v)
@@ -719,7 +720,7 @@ class Label(Widget):
     _defstyle_ = BitField(Widget._defstyle_ | RWT.MARKUP)
     
     @constructor('Label')
-    def __init__(self, parent, text='', img=None, **options):
+    def __init__(self, parent, text='', img=None, markup=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = LabelTheme(self, session.runtime.mngr.theme)
         self._text = text
@@ -1794,7 +1795,7 @@ class Browser(Widget):
 class Menu(Widget):
 
     _rwt_class_name = 'rwt.widgets.Menu'
-    _styles_ = Widget._styles_ + {'bar': RWT.BAR, 'dropdown': RWT.DROP_DOWN}
+    _styles_ = Widget._styles_ + {'bar': RWT.BAR, 'dropdown': RWT.DROP_DOWN, 'popup': RWT.POPUP}
     _defstyle_ = BitField(Widget._defstyle_)
 
 
@@ -1815,6 +1816,8 @@ class Menu(Widget):
             options.style.append('DROP_DOWN')
         elif RWT.BAR in self.style:
             options.style.append('BAR')
+        elif RWT.POPUP in self.style:
+            options.style.append('POP_UP')
         options.mnemonicIndex = self._mIndex
         # options.customVariant = 'variant_navigation'
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
@@ -1867,9 +1870,10 @@ class MenuItem(Widget):
         self._index = index
         self._menu = menu
         self._mIndex = None
+        if self in self.parent.children:
+            self.parent.children.remove(self)
         self.parent.items.append(self)
         self.on_select = OnSelect(self)
-
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1891,7 +1895,17 @@ class MenuItem(Widget):
         # options.customVariant = 'variant_navigation'
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_selection_event(op))
+        return True
 
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+                
     def compute_size(self):
         w, h = Widget.compute_size(self)
         if self.text:
@@ -1946,13 +1960,14 @@ class List(Widget):
     _defstyle_ = Widget._defstyle_ |  RWT.BORDER
     
     @constructor('List')
-    def __init__(self, parent, items=None, markup=False, **options):
+    def __init__(self, parent, items=None, markup=False, menu=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ListTheme(self, session.runtime.mngr.theme)
         self._items = items if items is not None else []
         self._selidx = []
         self.on_select = OnSelect(self)
         self._markup = markup
+        self._menu = menu
         self._itemheight = None
 
     def _create_rwt_widget(self):
@@ -2033,7 +2048,16 @@ class List(Widget):
         self._items = items
         session.runtime << RWTSetOperation(self.id, {'items': map(str, self._items)})
         self.setitemheight()
-        
+
+    @property
+    def menu(self):
+        return self._menu.id
+
+    @menu.setter
+    def menu(self, menu):
+        self._menu = menu
+        session.runtime << RWTSetOperation(self.id, {'menu': self._menu.id})
+
     @property
     def selection(self):
         sel = [self.items[i] for i in self._selidx]
