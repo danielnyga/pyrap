@@ -85,6 +85,7 @@ rwt.qx.Class.define( "rwt.widgets.GC", {
             case "strokeText":
             case "ellipse":
             case "drawImage":
+            case "drawGrid":
               this[ "_" + op ]( operations[ i ] );
             break;
             default:
@@ -174,39 +175,58 @@ rwt.qx.Class.define( "rwt.widgets.GC", {
     },
 
     _strokeText : function( operation ) {
-      var x = operation[ 5 ];
-      var y = operation[ 6 ];
       var text = this._prepareText.apply( this, operation.slice( 1, 5 ) );
       var lines = text.split( "\n" );
-      if( lines.length > 1 ) {
-        var textBounds = this._getTextBounds.apply( this, operation.slice( 1, 7 ) );
-        this._drawText( lines, textBounds, false );
-      } else {
-        this._context.save();
-        this._context.fillStyle = this._context.strokeStyle;
-        this._context.fillText( text, x, y );
-        this._context.restore();
-      }
+      var textBounds = this._getTextBounds.apply( this, operation.slice( 1, 7 ) );
+      this._drawText( lines, textBounds, false, operation.slice( 7, 9 ));
     },
 
     _fillText : function( operation ) {
       var text = this._prepareText.apply( this, operation.slice( 1, 5 ) );
       var lines = text.split( "\n" );
       var textBounds = this._getTextBounds.apply( this, operation.slice( 1, 7 ) );
-      this._drawText( lines, textBounds, true );
+      this._drawText( lines, textBounds, true, operation.slice( 7, 9 ));
     },
 
-    _drawText : function( textLines, bounds, fill ) {
+    _drawText : function( textLines, bounds, fill, align ) {
       this._context.save();
-      if( fill ) {
-        this._context.fillRect.apply( this._context, bounds );
-      }
-      this._context.fillStyle = this._context.strokeStyle;
       var lineHeight = bounds[ 3 ] / textLines.length;
+      var maxlength = bounds[2];
       for( var i = 0; i < textLines.length; i++ ) {
-        this._context.fillText( textLines[ i ], bounds[ 0 ], i * lineHeight + bounds[ 1 ] );
+          var fontProps = {};
+          rwt.html.Font.fromString( this._context.font ).renderStyle( fontProps );
+          var x = align[0] ? bounds[ 0 ] - rwt.widgets.util.FontSizeCalculation.computeTextDimensions( textLines[ i ], fontProps )[0]/2 : bounds[ 0 ];
+          var y = align[1] ? bounds[ 1 ] - bounds[ 3 ] / 2 + i * lineHeight  : i * lineHeight + bounds[ 1 ];
+          if( fill ) {
+                this._context.fillText( textLines[ i ], x, y );
+          } else {
+                this._context.strokeText( textLines[ i ], x, y );
+          }
       }
       this._context.restore();
+    },
+
+    _drawGrid : function( operation ) {
+        this._context.save();
+        var stepwidthX = operation[1];
+        var stepwidthY = operation[2];
+        var bw = this._canvas.width;
+        var bh = this._canvas.height;
+
+        for (var x = 0; x <= bw; x += stepwidthX) {
+                this._context.moveTo(x, 0);
+                this._context.lineTo(x, bh);
+            }
+
+        for (var y = 0; y <= bh; y += stepwidthY) {
+            this._context.moveTo(0, y);
+            this._context.lineTo(bw, y);
+        }
+
+        this._context.strokeStyle = operation[3];
+        this._context.lineWidth = 1;
+        this._context.stroke();
+        this._context.restore();
     },
 
     _drawImage : function( operation ) {

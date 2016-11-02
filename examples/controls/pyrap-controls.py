@@ -42,7 +42,7 @@ class ControlsDemo():
 #         header.bgimg = Image('images/background_grey.png')
         header.bg = 'marine'
         
-        self.beny_logo = Image('/home/nyga/beny/beny_logo.png').resize(height='70px')
+        self.beny_logo = Image('images/beny_logo.png').resize(height='70px')
         logo = Label(header, img=self.beny_logo, valign='center', halign='right')
         logo.bg = 'transp'    
         welcome = Label(header, text='pyRAP - Controls Demo', halign='right', valign='top')

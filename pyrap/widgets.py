@@ -12,7 +12,7 @@ from pyrap import pyraplog, locations
 from pyrap.base import session
 from pyrap.communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
-from pyrap.constants import RWT
+from pyrap.constants import RWT, GCBITS
 from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify
@@ -26,7 +26,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme
-from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller
+from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask
 from collections import OrderedDict
 
 
@@ -2504,9 +2504,10 @@ class TableColumn(Widget):
 class GC(object):
     '''the graphics context'''
     _rwt_class_name = 'rwt.widgets.GC'
-    
+
     class Operation(object):
         '''Abstract base class for all GC Operations'''
+
         def json(self): raise NotImplemented()
 
 
@@ -2558,6 +2559,18 @@ class GC(object):
             return ['stroke']
 
 
+    class draw_grid(Operation):
+        '''Draws a grid filling the whole canvas.'''
+        def __init__(self, stepwidthX, stepwidthY, color):
+            GC.Operation.__init__(self)
+            self.stepwidthX = stepwidthX
+            self.stepwidthY = stepwidthY
+            self.color = color
+
+        def json(self):
+            return ['drawGrid', self.stepwidthX, self.stepwidthY, self.color]
+
+
     class stroke_style(Operation):
         '''Sets the color and opacity of the stroke.'''
         def __init__(self, color):
@@ -2585,10 +2598,12 @@ class GC(object):
 
     class fill_text(Operation):
         '''Sets the color and opacity of the text fill.'''
-        _styles_ = BiMap({'mnemonic': RWT.DRAW_MNEMONIC,
-                          'delimiter': RWT.DRAW_DELIMITER,
-                          'tab': RWT.DRAW_TAB})
-        _defstyle_ = BitField()
+        _styles_ = BiMap({'mnemonic': GCBITS.DRAW_MNEMONIC,
+                          'delimiter': GCBITS.DRAW_DELIMITER,
+                          'tab': GCBITS.DRAW_TAB,
+                          'aligncenterx': GCBITS.ALIGN_CENTERX,
+                          'aligncentery': GCBITS.ALIGN_CENTERY})
+        _defstyle_ = BitField(GCBITS.DRAW_DELIMITER | GCBITS.DRAW_TAB)
 
         def __init__(self, text, x, y, **options):
             GC.Operation.__init__(self)
@@ -2597,44 +2612,41 @@ class GC(object):
             self.y = y
             self.style = BitField(type(self)._defstyle_)
             for k, v in options.iteritems():
-                out(type(self)._styles_)
                 if k in type(self)._styles_: self.style.setbit( type(self)._styles_[k:], v)
 
         def json(self):
-            ## dasselbe brauche ich fuer stroke_text und analog sowas
-            ## mit RWT.BOLD, RWT.NORMAL und RWT.ITALICS fuer font
-            # if RWT.DRAW_MNEMONIC in self.style:
-            #     drawMnemonic = True
-            #     drawDelimiter = False
-            #     drawTab = False
-            # elif RWT.DRAW_DELIMITER in self.style:
-            #     drawMnemonic = False
-            #     drawDelimiter = True
-            #     drawTab = False
-            # elif RWT.DRAW_TAB in self.style:
-            #     drawMnemonic = False
-            #     drawDelimiter = False
-            #     drawTab = True
-            # else:
-            drawMnemonic = False
-            drawDelimiter = True
-            drawTab = True
-            return ['fillText', self.text, drawMnemonic, drawDelimiter, drawTab, self.x, self.y]
+            drawMnemonic = GCBITS.DRAW_MNEMONIC in self.style
+            drawDelimiter = GCBITS.DRAW_DELIMITER in self.style
+            drawTab = GCBITS.DRAW_TAB in self.style
+            aligncenterx = GCBITS.ALIGN_CENTERX in self.style
+            aligncentery = GCBITS.ALIGN_CENTERY in self.style
+            return ['fillText', self.text, drawMnemonic, drawDelimiter, drawTab, self.x, self.y, aligncenterx, aligncentery ]
 
 
     class stroke_text(Operation):
         '''Sets the color and opacity of the text stroke.'''
+        _styles_ = BiMap({'mnemonic': GCBITS.DRAW_MNEMONIC,
+                          'delimiter': GCBITS.DRAW_DELIMITER,
+                          'tab': GCBITS.DRAW_TAB,
+                          'aligncenterx': GCBITS.ALIGN_CENTERX,
+                          'aligncentery': GCBITS.ALIGN_CENTERY})
+        _defstyle_ = BitField(GCBITS.DRAW_DELIMITER | GCBITS.DRAW_TAB)
         def __init__(self, text, x, y, **options):
             GC.Operation.__init__(self)
             self.text = text
             self.x = x
             self.y = y
-            self.drawMnemonic = False
-            self.drawDelimiter = True
-            self.drawTab = True
+            self.style = BitField(type(self)._defstyle_)
+            for k, v in options.iteritems():
+                if k in type(self)._styles_: self.style.setbit( type(self)._styles_[k:], v)
 
         def json(self):
-            return ['strokeText',  self.text, self.drawMnemonic, self.drawDelimiter, self.drawTab, self.x, self.y]
+            drawMnemonic = GCBITS.DRAW_MNEMONIC in self.style
+            drawDelimiter = GCBITS.DRAW_DELIMITER in self.style
+            drawTab = GCBITS.DRAW_TAB in self.style
+            aligncenterx = GCBITS.ALIGN_CENTERX in self.style
+            aligncentery = GCBITS.ALIGN_CENTERY in self.style
+            return ['strokeText', self.text, drawMnemonic, drawDelimiter, drawTab, self.x, self.y, aligncenterx, aligncentery ]
 
 
     class draw_image(Operation):
@@ -2678,13 +2690,24 @@ class GC(object):
 
     class font(Operation):
         '''Sets the font of the text'''
-        def __init__(self, font, fontsize, bold=False, italic=False):
-            self.font = font.split(',')
+        _styles_ = BiMap({'bold': GCBITS.BOLD,
+                          'normal': GCBITS.NORMAL,
+                          'italic': GCBITS.ITALIC})
+        _defstyle_ = BitField(GCBITS.NORMAL)
+        def __init__(self, font, fontsize, **options):
+            self.font = font.split(',') # needs to be a list with fallback options
             self.fontsize = fontsize
-            self.bold = bold
-            self.italic = italic
+            self.style = BitField(type(self)._defstyle_)
+            for k, v in options.iteritems():
+                if k in type(self)._styles_: self.style.setbit(type(self)._styles_[k:], v)
 
         def json(self):
+            if GCBITS.NORMAL in self.style:
+                self.bold = False
+                self.italic = False
+            else:
+                self.bold = GCBITS.BOLD in self.style
+                self.italic = GCBITS.ITALIC in self.style
             return ['font', [self.font, self.fontsize, self.bold, self.italic]]
 
 
@@ -2699,7 +2722,6 @@ class GC(object):
 
         def json(self):
             return ['rect', self.x, self.y, self.w, self.h]
-
 
     def __init__(self, _id, parent):
         self.id = _id
