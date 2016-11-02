@@ -74,19 +74,3 @@ d3graph.Graph.prototype = {
         }
     }
 };
-
-// Type handler
-rap.registerTypeHandler( 'pwt.customs.Graph', {
-
-  factory: function( properties ) {
-    var parent = rap.getObject( properties.parent );
-    return new d3graph.Graph( parent, properties.cssid, properties.cssclass);
-  },
-
-  destructor: 'destroy',
-
-  properties: [ 'remove' ],
-
-  events: [ ]
-
-} );

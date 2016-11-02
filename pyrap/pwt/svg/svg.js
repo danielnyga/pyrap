@@ -18,16 +18,6 @@ pwt.SVG = function(parent, cssid, svg) {
 
     this._needsLayout = true;
     var that = this;
-    rap.on( "render", function() {
-        if( that._needsRender ) {
-            if( that._needsLayout ) {
-                that.initialize( that );
-                that._needsLayout = false;
-            }
-            that.render( that );
-            that._needsRender = false;
-        }
-    } );
     parent.addListener( "Resize", function() {
         that._resize( parent.getClientArea() );
     } );
@@ -35,14 +25,6 @@ pwt.SVG = function(parent, cssid, svg) {
 };
 
 pwt.SVG.prototype = {
-
-    initialize: function() {
-        console.log('initialize!');
-    },
-
-    render: function() {
-        console.log('render!');
-    },
 
     createElement: function( parent ) {
         var clientarea = parent.getClientArea();
@@ -52,9 +34,6 @@ pwt.SVG.prototype = {
         element.style.top = clientarea[1];
         element.style.width = clientarea[2] + "px";
         element.style.height = clientarea[3] + "px";
-        console.log('clientarea', clientarea);
-        console.log('parent', parent);
-        console.log('element', element);
         parent.append( element );
         return element;
     },
@@ -63,18 +42,16 @@ pwt.SVG.prototype = {
         return this.svg;
     },
 
-    setZIndex : function(e) {
-        console.log('someone tried to set my zindex!', e);
+    setZIndex : function(index) {
+        this._parentDIV.style.zIndex = index;
     },
 
     setSvg : function( svgcontent ) {
-        console.log('setting svgcontent');
         this._parentDIV.innerHTML = svgcontent;
         this.svg = this._parentDIV.childNodes[0];
     },
 
     setAttr : function( attr ) {
-        console.log('setattr', attr);
         el = document.getElementById(attr[0]);
         el.setAttribute(attr[1], attr[2]);
     },
@@ -94,7 +71,6 @@ pwt.SVG.prototype = {
     },
 
     _resize: function( clientArea ) {
-        console.log('this', this);
         this._width = clientArea[ 2 ];
         this._height = clientArea[ 3 ];
         this._scheduleUpdate( false );
@@ -105,10 +81,6 @@ pwt.SVG.prototype = {
             this._needsLayout = true;
         }
         this._needsRender = true;
-    },
-
-    addelem : function() {
-        console.log('addelem!');
     },
 
     destroy: function() {
