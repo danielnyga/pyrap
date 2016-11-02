@@ -7,7 +7,7 @@ Created on Oct 2, 2015
 import pyrap
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite,\
     Edit, Combo, TabFolder, TabItem, Group, ScrolledComposite, ScrollBar,\
-    Browser, List, Canvas, GC, StackedComposite, Scale
+    Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem
 import random
 from pyrap import pyraplog, locations
 from pyrap.utils import out
@@ -38,11 +38,12 @@ class ControlsDemo():
         #=======================================================================
         header = Composite(outer)
         header.layout = ColumnLayout(halign='fill', minheight='90px', flexcols=1)
-#         header.bgimg = Image('images/salvage.gif')
-        header.bgimg = Image('images/background_grey.png')
+        header.bgimg = Image('images/salvage.gif')
+#         header.bgimg = Image('images/background_grey.png')
         header.bg = 'marine'
         
-        logo = Label(header, img=Image('/home/nyga/beny/beny_logo.png').resize(height='70px'), valign='center', halign='right')
+        self.beny_logo = Image('/home/nyga/beny/beny_logo.png').resize(height='70px')
+        logo = Label(header, img=self.beny_logo, valign='center', halign='right')
         logo.bg = 'transp'    
         welcome = Label(header, text='pyRAP - Controls Demo', halign='right', valign='top')
         welcome.color = 'white'
@@ -69,15 +70,13 @@ class ControlsDemo():
         #=======================================================================
         self.content = StackedComposite(main, halign='fill', valign='fill')
         self.create_pages()
+        self.navigation.on_select += self.switch_page
+        self.navigation.selection = self.pages['Button']
         
-        def switch_page(*args):
-            out(self.navigation.selection, self.navigation.selidx, self.navigation.selection)
-            for page in (self.pages.values()):
-                out(page)
-                page.layout.exclude = self.navigation.selection is not page
-                out('%s layouting %s' % ({True: 'not', False: ''}[page.layout.exclude], page))
-            self.content.selection = self.navigation.selection
-        self.navigation.on_select += switch_page
+    def switch_page(self, *args):
+        for page in (self.pages.values()):
+            page.layout.exclude = self.navigation.selection is not page
+        self.content.selection = self.navigation.selection
 
 
     def create_pages(self):
@@ -103,6 +102,13 @@ class ControlsDemo():
         self.create_browser_page(page)
         self.pages['Browser'] = page
         
+        #=======================================================================
+        # crete menu page
+        #=======================================================================
+        page = self.create_page_template('Menu Demo')
+        self.create_menu_page(page)
+        self.pages['Menu'] = page
+        
         self.navigation.items = self.pages
         
 
@@ -114,6 +120,25 @@ class ControlsDemo():
         header = Label(tab, text=heading, halign='left')
         header.font = header.font.modify(size='16px', bf=1)
         return tab
+        
+
+    def create_menu_page(self, parent):
+        grp_ctxmenu = Group(parent, text='Context Menus')
+        grp_ctxmenu.layout = CellLayout(minwidth=200, minheight=200)
+        label = Label(grp_ctxmenu, text='Right-click in this label\nto open the context menu', halign='fill', valign='fill')
+        
+        menu = Menu(label, popup=True)
+        item1 = MenuItem(menu, index=0, push=True, text='MenuItem 1', img=self.beny_logo.resize(height='16px'))
+        item1.on_select += lambda *args: out('menu item 1 was selected', args)
+        item2 = MenuItem(menu, index=1, push=True, text='MenuItem 2')
+        item3 = MenuItem(menu, index=2, push=True, text='MenuItem 3')
+        item4 = MenuItem(menu, index=5, cascade=True, text='MenuItem 4')
+        submenu = Menu(item4, dropdown=True)
+        item4.menu = submenu
+        subitem = MenuItem(submenu, index=0, push=True, text='this is the submenu...')
+        item5 = MenuItem(menu, index=4, push=True, text='MenuItem 5')
+        
+        label.menu = menu
         
 
     def create_scale_page(self, parent):
@@ -143,7 +168,9 @@ class ControlsDemo():
         grp = Group(parent, text='Browser')
         grp.layout = CellLayout(halign='left', valign='top')
         browser = Button(grp, text='Open Browser')
-        browser.on_select += self.open_browser 
+        def select(*_):
+            self.navigation.selection = self.pages['Button']
+        browser.on_select += select
 
         
     def open_browser(self, data):
