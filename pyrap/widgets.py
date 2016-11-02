@@ -5,7 +5,10 @@ Created on Oct 9, 2015
 '''
 
 import mimetypes
+import os
 import time
+
+import re
 
 import ptypes
 from pyrap import pyraplog, locations
@@ -1759,10 +1762,10 @@ class Browser(Widget):
 
 
     @constructor('Browser')
-    def __init__(self, parent, url='', **options):
+    def __init__(self, parent, url=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = BrowserTheme(self, session.runtime.mngr.theme)
-        self._url = url
+        self._url = self._loadurl(url)
         self._FN_TEMPLATE = "(function(){{{}}})();"
 
 
@@ -1772,6 +1775,36 @@ class Browser(Widget):
         options.url = self.url
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
+    def _loadurl(self, url):
+        '''
+        Will check is either a valid url or a local file.
+        If it is a file, it will register the resource and
+        provide the location as the url.
+        Note: The url is only being checked for a valid format,
+        there is no guarantee that the url actually exists.
+        :param url:     the input url
+        :return:        either the input url or a resource location
+                        of a registered resource file
+        '''
+        regex = re.compile(
+            r'^(?:http|ftp)s?://'  # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+            r'localhost|'  # localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+            r'(?::\d+)?'  # optional port
+            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        if url:
+            m = regex.match(url)
+            if m:
+                return url
+            elif os.path.isfile(os.path.abspath(url)):
+                res = session.runtime.mngr.resources.registerf(url, 'text/html', os.path.abspath(url))
+                return res.location
+            else:
+                raise Exception('URL "{}" is not a valid url or existing local file!')
+        else:
+            res = session.runtime.mngr.resources.registerf('_blank.html', 'text/html', os.path.join(locations.rc_loc, 'static', 'html', 'blank.html'))
+            return res.location
 
     @property
     def url(self):
@@ -1781,7 +1814,7 @@ class Browser(Widget):
     @url.setter
     @checkwidget
     def url(self, url):
-        self._url = url
+        self._url = self._loadurl(url)
         session.runtime << RWTSetOperation(self.id, {'url': self.url})
 
 
