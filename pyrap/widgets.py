@@ -1780,8 +1780,9 @@ class Browser(Widget):
 
     def _loadurl(self, url):
         '''
-        Will check is either a valid url or a local file.
-        If it is a file, it will register the resource and
+        Will check is either a valid url, an already registered file
+        or a local file.
+        If it is a local file, it will register the resource and
         provide the location as the url.
         Note: The url is only being checked for a valid format,
         there is no guarantee that the url actually exists.
@@ -1800,11 +1801,14 @@ class Browser(Widget):
             m = regex.match(url)
             if m:
                 return url
+            elif session.runtime.mngr.resources.get(url):
+                return session.runtime.mngr.resources.get(url).location
             elif os.path.isfile(os.path.abspath(url)):
                 res = session.runtime.mngr.resources.registerf(url, 'text/html', os.path.abspath(url))
                 return res.location
             else:
-                raise Exception('URL "{}" is not a valid url or existing local file!')
+                out(session.runtime.mngr.resources.get(url))
+                raise Exception('URL "{}" is not a valid url or existing local file!'.format(url))
         else:
             res = session.runtime.mngr.resources.registerf('_blank.html', 'text/html', os.path.join(locations.rc_loc, 'static', 'html', 'blank.html'))
             return res.location
