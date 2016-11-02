@@ -72,6 +72,7 @@ class Widget(object):
         self._update_layout_from_dict(options)
         self._zindex = None
         self._css = None
+        self._menu = None
         if self not in parent.children:
             parent.children.append(self)
         if self not in parent.children:
@@ -175,16 +176,15 @@ class Widget(object):
     @property
     def bounds(self):
         return self._bounds
-    #
-    # @property
-    # def zindex(self):
-    #     return self._zindex
-    #
-    # @zindex.setter
-    # @checkwidget
-    # def zindex(self, zindex):
-    #     self._zindex = zindex
+    
+    @property
+    def menu(self):
+        return self._menu.id
 
+    @menu.setter
+    def menu(self, menu):
+        self._menu = menu
+        session.runtime << RWTSetOperation(self.id, {'menu': self._menu.id})
 
     @bounds.setter
     @checkwidget
@@ -721,7 +721,7 @@ class Label(Widget):
     _rwt_class_name_ = 'rwt.widgets.Label'
     _styles_ = Widget._styles_ + {'markup': RWT.MARKUP,
                                   'wrap': RWT.WRAP}
-    _defstyle_ = BitField(Widget._defstyle_ | RWT.MARKUP)
+    _defstyle_ = BitField(Widget._defstyle_)
     
     @constructor('Label')
     def __init__(self, parent, text='', img=None, markup=False, **options):
@@ -1994,7 +1994,7 @@ class List(Widget):
     _defstyle_ = Widget._defstyle_ |  RWT.BORDER
     
     @constructor('List')
-    def __init__(self, parent, items=None, markup=False, menu=None, **options):
+    def __init__(self, parent, items=None, markup=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ListTheme(self, session.runtime.mngr.theme)
         self._items = None
@@ -2003,7 +2003,6 @@ class List(Widget):
         self._selidx = []
         self.on_select = OnSelect(self)
         self._markup = markup
-        self._menu = menu
         self._itemheight = None
 
     def _create_rwt_widget(self):
@@ -2102,15 +2101,6 @@ class List(Widget):
         self.setitemheight()
 
     @property
-    def menu(self):
-        return self._menu.id
-
-    @menu.setter
-    def menu(self, menu):
-        self._menu = menu
-        session.runtime << RWTSetOperation(self.id, {'menu': self._menu.id})
-
-    @property
     def selection(self):
         sel = [self.items[self.items.keys()[i]] for i in self._selidx]
         if RWT.MULTI not in self.style: 
@@ -2126,6 +2116,7 @@ class List(Widget):
             sel = [self._itemidx[s] for s in sel]
         else:
             sel = self._itemidx[sel] if sel is not None else None
+        out(sel)
         self.selidx = sel
         
     @property
@@ -2137,12 +2128,13 @@ class List(Widget):
     
     @selidx.setter
     def selidx(self, sel):
-        if type(sel) is list:
+        if type(sel) is not list:
             if RWT.MULTI in self.style:
                 raise TypeError('Expected list, got %s' % type(sel))
             else: 
                 sel = [sel] if sel is not None else []
-        session.runtime << RWTSetOperation(self.id, {'selection': sel})
+        out(sel)
+        session.runtime << RWTSetOperation(self.id, {'selectionIndices': sel})
     
     def compute_size(self):
         return 0, 0

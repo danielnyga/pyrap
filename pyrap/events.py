@@ -27,7 +27,6 @@ class RWTEvent(Event):
     def __iadd__(self, l):
         if not self._listeners:
             # register the listener
-#             session.runtime << RWTListenOperation(self._widget.id, {self.event: True})
             session.runtime << self._create_subscribe_msg()
         if l not in self._listeners:
             self._listeners.append(l)
@@ -38,7 +37,6 @@ class RWTEvent(Event):
             self._listeners.remove(l)
         if not self._listeners:
             # unregister the listener
-#             session.runtime << RWTListenOperation(self._widget.id, {self.event: False})
             session.runtime << self._create_unsubscribe_msg()
         return self
             
@@ -103,7 +101,7 @@ class OnSelect(RWTEvent):
         return RWTListenOperation(self.widget.id, {'Selection': True, 'DefaultSelection': True})
     
     def _create_unsubscribe_msg(self):
-        return RWTListenOperation(self.widget.id, {'Selection': False})
+        return RWTListenOperation(self.widget.id, {'Selection': False, 'DefaultSelection': False})
     
     def _notify(self, listener, data): listener(data)
 
