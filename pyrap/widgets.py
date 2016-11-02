@@ -2096,7 +2096,6 @@ class List(Widget):
             items = OrderedDict(((str(i), i) for i in items))
         else: raise TypeError('Invalid type for List items: %s' % type(items))
         self._items = items
-        self._itemidx = {v: i for i, v in enumerate(self._items.values())}
             
     
     @property
@@ -2122,10 +2121,9 @@ class List(Widget):
         if RWT.MULTI in self.style:
             if type(sel) is list:
                 raise TypeError('Expected list, got %s' % type(sel))
-            sel = [self._itemidx[s] for s in sel]
+            sel = [self._items.values().index(s) for s in sel]
         else:
-            sel = self._itemidx[sel] if sel is not None else None
-        out(sel)
+            sel = self._items.values().index(sel) if sel is not None else None
         self.selidx = sel
         
     @property
@@ -2142,7 +2140,6 @@ class List(Widget):
                 raise TypeError('Expected list, got %s' % type(sel))
             else: 
                 sel = [sel] if sel is not None else []
-        out(sel)
         session.runtime << RWTSetOperation(self.id, {'selectionIndices': sel})
     
     def compute_size(self):
