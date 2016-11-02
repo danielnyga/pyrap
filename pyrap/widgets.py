@@ -724,7 +724,7 @@ class Label(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
     
     @constructor('Label')
-    def __init__(self, parent, text='', img=None, markup=False, **options):
+    def __init__(self, parent, text='', img=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = LabelTheme(self, session.runtime.mngr.theme)
         self._text = text
