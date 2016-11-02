@@ -178,27 +178,30 @@ rwt.qx.Class.define( "rwt.widgets.GC", {
       var text = this._prepareText.apply( this, operation.slice( 1, 5 ) );
       var lines = text.split( "\n" );
       var textBounds = this._getTextBounds.apply( this, operation.slice( 1, 7 ) );
-      this._drawText( lines, textBounds, false, operation.slice( 8, 9 ));
+      this._drawText( lines, textBounds, false, operation.slice( 7, 9 ));
     },
 
     _fillText : function( operation ) {
       var text = this._prepareText.apply( this, operation.slice( 1, 5 ) );
       var lines = text.split( "\n" );
       var textBounds = this._getTextBounds.apply( this, operation.slice( 1, 7 ) );
-      this._drawText( lines, textBounds, true, operation.slice( 8, 9 ));
+      this._drawText( lines, textBounds, true, operation.slice( 7, 9 ));
     },
 
-    _drawText : function( textLines, bounds, fill, aligncenterx, aligncentery ) {
+    _drawText : function( textLines, bounds, fill, align ) {
       this._context.save();
       var lineHeight = bounds[ 3 ] / textLines.length;
-      if( fill ) {
-          for( var i = 0; i < textLines.length; i++ ) {
-            this._context.fillText( textLines[ i ], bounds[ 0 ], i * lineHeight + bounds[ 1 ] );
+      var maxlength = bounds[2];
+      for( var i = 0; i < textLines.length; i++ ) {
+          var fontProps = {};
+          rwt.html.Font.fromString( this._context.font ).renderStyle( fontProps );
+          var x = align[0] ? bounds[ 0 ] - rwt.widgets.util.FontSizeCalculation.computeTextDimensions( textLines[ i ], fontProps )[0]/2 : bounds[ 0 ];
+          var y = align[1] ? bounds[ 1 ] - bounds[ 3 ] / 2 + i * lineHeight  : i * lineHeight + bounds[ 1 ];
+          if( fill ) {
+                this._context.fillText( textLines[ i ], x, y );
+          } else {
+                this._context.strokeText( textLines[ i ], x, y );
           }
-      } else {
-        for( var i = 0; i < textLines.length; i++ ) {
-            this._context.strokeText( textLines[ i ], bounds[ 0 ], i * lineHeight + bounds[ 1 ] );
-        }
       }
       this._context.restore();
     },
