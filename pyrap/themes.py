@@ -24,6 +24,9 @@ from pyrap.constants import BORDER, GRADIENT, ANIMATION, FONT, SHADOW, CURSOR,\
     RWT
 from pyrap.utils import out, stop
 import math
+from cssutils.css.cssfontfacerule import CSSFontFaceRule
+from pyparsing import Literal, alphanums, alphas, Word, ZeroOrMore, quotedString,\
+    removeQuotes
 
 TYPE = 'type-selector'
 CLASS = 'class'
@@ -32,6 +35,29 @@ ATTRIBUTE = 'attribute-selector'
 UNIVERSAL = 'universal'
 
 logger = pyraplog.getlogger(__name__)
+
+def parse_fcts(s):
+    s = 'local("Open Sans"), local("OpenSans"), url(https://fonts.gstatic.com/s/opensans/v13/cJZKeOuBrn4kERxqtaUH3VtXRa8TVwTICgirnJhmVJw.woff2) format("woff2")'
+    lpar = Literal('(')
+    rpar = Literal(')')
+    comma = Literal(',')
+    delim = ZeroOrMore(' ') + comma + ZeroOrMore(' ')
+    fdelim = delim | ZeroOrMore(' ')
+    symb = Word(alphas + alphanums + '_' + '-')
+    argsym = Word(alphas + alphanums + '_' + '-' + '/' + ':' + '.' + '-')
+    arg = argsym | quotedString.setParseAction(removeQuotes)#q.suppress() + argsym + q.suppress() | qq.suppress() + argsym + qq.suppress()
+    args = arg + ZeroOrMore(comma.suppress() + arg) 
+    function = symb + lpar.suppress() + args + rpar.suppress()
+    calls = []
+    def collect(s, parsed):
+        fct, args = parsed[0], parsed[1:]
+        calls.append({fct: args})
+    function.setParseAction(collect)
+    flist = function + ZeroOrMore(fdelim.suppress() + function)
+    flist.parseString(s)
+    for c in calls:
+        out(c)
+    
 
 def isnone(cssval):
     if isinstance(cssval, Value):
@@ -190,6 +216,11 @@ class Theme(object):
 
 
     def _convert_css_rule(self, cssrule):
+        if isinstance(cssrule, CSSFontFaceRule):
+            out(dir(cssrule))
+            for style in cssrule.style:
+                out(dir(style))
+                out(style.name, ':', repr(style.value))
         selectors = [(str(item.type), item.value) for selector in cssrule.selectorList for item in selector.seq if item.type in (TYPE, CLASS, PSEUDOCLASS, ATTRIBUTE, UNIVERSAL)]
         selectors = tuple([(t if t != UNIVERSAL else TYPE, str(i[1]) if t in (TYPE, UNIVERSAL) else str(i)) for (t, i) in selectors])
         triplets = self._build_selector_triplets(selectors)
@@ -1825,8 +1856,9 @@ class ThemeRule(object):
 
 
 if __name__ == '__main__':
-    theme = Theme('default').load('../resource/theme/default.css')
+    parse_fcts('local("Open Sans"), local("OpenSans"), url(https://fonts.gstatic.com/s/opensans/v13/cJZKeOuBrn4kERxqtaUH3VtXRa8TVwTICgirnJhmVJw.woff2) format("woff2")')
+#     theme = Theme('default').load('../examples/controls/mytheme.css')
 #     theme.write()
-    btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
-    btn_theme.write()
-    out(btn_theme.get_property('font', 'List-Item', set([]), set(['[BORDER']), set([])))
+#     btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
+#     btn_theme.write()
+#     out(btn_theme.get_property('font', 'List-Item', set([]), set(['[BORDER']), set([])))
