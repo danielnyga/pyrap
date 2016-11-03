@@ -74,6 +74,8 @@ class Theme(object):
     def __init__(self, name):
         self.name = name
         self.rules = defaultdict(list)
+        self.rcpath = None
+        self.logger = pyraplog.getlogger(type(self).__name__, level=pyraplog.INFO)
 
     def extract(self, *types):
         if '*' not in types: types = types + ('*',)
@@ -84,8 +86,10 @@ class Theme(object):
 
     def load(self, filename=None):
         if filename is None:
-            filename = os.path.join(pyrap_path, 'css', 'default.css')
+            filename = os.path.join(pyrap_path, 'resource', 'theme', 'default.css')
+        filename = os.path.abspath(filename)
         csscontent = parseFile(filename, validate=False)
+        self.rcpath = os.path.split(filename)[-2]
         self._build_theme_from_rules(csscontent.cssRules)
         return self
 
@@ -361,7 +365,7 @@ class Theme(object):
         if len(values) != 1:
             raise Exception('Illegal image value: %s' % values)
         if isinstance(values[0], URIValue):
-            imgpath = os.path.join(pyrap_path, values[0].value)
+            imgpath = os.path.join(self.rcpath, values[0].value)
             img = Image(imgpath)
             return img
         return none_or_value(values[0])
@@ -1826,8 +1830,7 @@ class ThemeRule(object):
 
 
 if __name__ == '__main__':
-    pyraplog.level(DEBUG)
-    theme = Theme('default').load('../css/default.css')
+    theme = Theme('default').load('../resource/theme/default.css')
 #     theme.write()
     btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
     btn_theme.write()

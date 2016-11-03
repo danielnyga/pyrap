@@ -88,9 +88,19 @@ class ApplicationManager(object):
                 self.icon = self.resources.registerc('resource/static/favicon.ico', 'image/%s' % self.config.icon.fileext, self.config.icon.content)
             else:
                 self.icon = self.resources.registerf('resource/static/favicon.ico', 'image/vnd.microsoft.icon', self.config.icon)
-        themepath = ifnone(self.config.theme, os.path.join(locations.css_loc, 'default.css'))
-        self.log_.debug('loading theme', themepath)
-        self.theme = Theme(themepath).load(themepath)
+        #=======================================================================
+        # load the theme
+        #=======================================================================
+        fb_themepath = os.path.join(locations.pyrap_path, 'resource', 'theme', 'default.css')
+        self.log_.debug('loading fallback theme from', fb_themepath)
+        fallback_theme = Theme('default').load(fb_themepath)
+        if self.config.theme is None:
+            default_theme = fallback_theme
+            self.log_.debug('No default theme given. Taking fallback theme.', fb_themepath)
+        else:
+            self.log_.debug('Loading theme', themepath)
+            default_theme = Theme(os.path.split(self.config.theme[-1])).load(self.config.theme)
+        self.theme = default_theme
         self._install_theme('rap-rwt.theme.Default', self.theme)
         self._install_theme('rap-rwt.theme.Fallback', self.theme)
         # call the custom setup of the app
