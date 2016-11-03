@@ -38,10 +38,11 @@ class ControlsDemo():
         # header
         #=======================================================================
         header = Composite(outer)
-        header.layout = ColumnLayout(halign='fill', minheight='90px', flexcols=1)
+        header.layout = ColumnLayout(halign='fill', minheight='90px', flexcols=1, padding_bottom=px(100))
         header.bgimg = Image('images/salvage.gif')
 #         header.bgimg = Image('images/background_grey.png')
         header.bg = 'marine'
+        header.css = 'header'
         
         self.beny_logo = Image('images/beny_logo.png').resize(height='70px')
         logo = Label(header, img=self.beny_logo, valign='center', halign='right')
@@ -216,12 +217,11 @@ class ControlsDemo():
         scroll = ScrolledComposite(parent, vscroll=True)
         scroll.layout = CellLayout(valign='fill', halign='fill')
         container = Composite(scroll)
-#         container.bg = Color('red')
         container.layout = RowLayout(halign='fill', valign='top')
         for i in range(200):
             Checkbox(container, text='this is the %d-th item' % (i+1), halign='left', checked=False)
         scroll.content = container
-        
+
 
 
 if __name__ == '__main__':
@@ -230,7 +230,8 @@ if __name__ == '__main__':
                        path='controls', 
                        name='pyRAP Controls Demo', 
                        entrypoints={'desktop': ControlsDemo.desktop,
-                                    'mobile': ControlsDemo.mobile}, 
+                                    'mobile': ControlsDemo.mobile},
+                       theme='mytheme.css', 
                        setup=ControlsDemo.setup, default=lambda: 'mobile' if pyrap.session.useragent.mobile else 'desktop')
     pyrap.run()
 

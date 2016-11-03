@@ -88,13 +88,24 @@ class ApplicationManager(object):
                 self.icon = self.resources.registerc('resource/static/favicon.ico', 'image/%s' % self.config.icon.fileext, self.config.icon.content)
             else:
                 self.icon = self.resources.registerf('resource/static/favicon.ico', 'image/vnd.microsoft.icon', self.config.icon)
-        themepath = ifnone(self.config.theme, os.path.join(locations.css_loc, 'default.css'))
-        self.log_.debug('loading theme', themepath)
-        self.theme = Theme(themepath).load(themepath)
+        #=======================================================================
+        # load the theme
+        #=======================================================================
+        fb_themepath = os.path.join(locations.pyrap_path, 'resource', 'theme', 'default.css')
+        self.log_.debug('loading fallback theme from', fb_themepath)
+        fallback_theme = Theme('default').load(fb_themepath)
+        if self.config.theme is None:
+            default_theme = fallback_theme
+            self.log_.debug('No default theme given. Taking fallback theme.', fb_themepath)
+        else:
+            themename = os.path.split(self.config.theme)[-1]
+            default_theme = fallback_theme.load(self.config.theme)
+            self.log_.debug('Loading theme', themename)
+        self.theme = default_theme
         self._install_theme('rap-rwt.theme.Default', self.theme)
-        self._install_theme('rap-rwt.theme.Fallback', self.theme)
+        self._install_theme('rap-rwt.theme.Fallback', fallback_theme)
         # call the custom setup of the app
-        if self.config.get('setup') is not None: 
+        if self.config.get('setup') is not None:
             self.config.setup(self)
         
         
@@ -286,7 +297,11 @@ class SessionRuntime(object):
                 elif type(o) is RWTListenOperation and type(op) is RWTListenOperation:
                     if o.target == op.target:
                         o.events.update(op.events)
-                        return  
+                        return
+                elif type(o) is RWTCallOperation and type(op) is RWTCallOperation:
+                    if o.target == op.target and o.method == op.method and o.args == op.args:
+                        return
+                        
             self.operations.append(op)
     
     
@@ -329,6 +344,7 @@ class SessionRuntime(object):
     def handle_msg(self, msg):
         # first consolidate the operations to avoid duplicate computations
         ops = []
+        self._layout_needed = 0
         for o in msg.operations:
             consolidated = False
             for o_ in ops:
@@ -357,16 +373,21 @@ class SessionRuntime(object):
                 target = self.windows[o.target]
                 if target is None: target = self
                 target._handle_call(o)
+        if self._layout_needed and hasattr(self, 'shell') and not self.shell.disposed:
+            self.shell.dolayout()
+
         if self.state == APPSTATE.INITIALIZED:
             self.log_.info('creating shell...')
             self.create_shell()
             self.state = APPSTATE.RUNNING
+            
         if len(msg.operations) == 1 and self.state == APPSTATE.UNINITIALIZED:
             o = msg.operations[0]
             if isinstance(o, RWTCallOperation) and o.target == 'pyrap' and o.method == 'initialize':
                 self.log_.info('initializing app...')
                 self.initialize_app(o.args.entrypoint, o.args.args)
                 self.state = APPSTATE.INITIALIZED
+
 
     @staticmethod
     def create_textsize_measurement_call(font, sample):
@@ -388,7 +409,7 @@ class SessionRuntime(object):
                     if self.default_font is None: self.default_font = id_
                     self.fontmetrics[id_] = FontMetrics(FontMetrics.SAMPLE, dims)
                 if hasattr(self, 'shell') and not self.shell.disposed:
-                    self.shell.dolayout()
+                    self._layout_needed = 1
 
     
     def initialize_app(self, entrypoint, args):
