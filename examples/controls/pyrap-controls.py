@@ -17,6 +17,7 @@ from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout,\
 import os
 from pyrap.communication import RWTSetOperation
 import math
+from collections import OrderedDict
 
 
 class ControlsDemo():
@@ -109,6 +110,16 @@ class ControlsDemo():
         self.create_menu_page(page)
         self.pages['Menu'] = page
         
+        #=======================================================================
+        # crete list page
+        #=======================================================================
+        page = self.create_page_template('List Demo')
+        self.create_list_page(page)
+        self.pages['List'] = page
+        
+        
+        for page in (self.pages.values()[1:]):
+            page.layout.exclude = True
         self.navigation.items = self.pages
         
 
@@ -121,6 +132,13 @@ class ControlsDemo():
         header.font = header.font.modify(size='16px', bf=1)
         return tab
         
+    
+    def create_list_page(self, parent):
+        grp_ctxmenu = Group(parent, text='Lists')
+        grp_ctxmenu.layout = CellLayout(minwidth=200, minheight=200)
+        list = List(grp_ctxmenu, halign='fill', valign='fill', minheight=200, minwidth=200)
+        list.items = OrderedDict([('str1', 'bla')])
+    
 
     def create_menu_page(self, parent):
         grp_ctxmenu = Group(parent, text='Context Menus')
@@ -130,8 +148,8 @@ class ControlsDemo():
         menu = Menu(label, popup=True)
         item1 = MenuItem(menu, index=0, push=True, text='MenuItem 1', img=self.beny_logo.resize(height='16px'))
         item1.on_select += lambda *args: out('menu item 1 was selected', args)
-        item2 = MenuItem(menu, index=1, push=True, text='MenuItem 2')
-        item3 = MenuItem(menu, index=2, push=True, text='MenuItem 3')
+        item2 = MenuItem(menu, index=1, check=True, text='MenuItem 2')
+        item3 = MenuItem(menu, index=2, check=True, text='MenuItem 3')
         item4 = MenuItem(menu, index=5, cascade=True, text='MenuItem 4')
         submenu = Menu(item4, dropdown=True)
         item4.menu = submenu
@@ -168,9 +186,7 @@ class ControlsDemo():
         grp = Group(parent, text='Browser')
         grp.layout = CellLayout(halign='left', valign='top')
         browser = Button(grp, text='Open Browser')
-        def select(*_):
-            self.navigation.selection = self.pages['Button']
-        browser.on_select += select
+        browser.on_select += self.open_browser
 
         
     def open_browser(self, data):
