@@ -69,6 +69,7 @@ def tostring(x):
         return ' '.join(map(str, x))
     else: return str(x)
 
+
 class Theme(object):
 
     def __init__(self, name):
@@ -89,9 +90,11 @@ class Theme(object):
             filename = os.path.join(pyrap_path, 'resource', 'theme', 'default.css')
         filename = os.path.abspath(filename)
         csscontent = parseFile(filename, validate=False)
-        self.rcpath = os.path.split(filename)[-2]
-        self._build_theme_from_rules(csscontent.cssRules)
-        return self
+        theme = Theme(name=self.name)
+        theme.rules = deepcopy(self.rules)
+        theme.rcpath = os.path.split(filename)[-2]
+        theme._build_theme_from_rules(csscontent.cssRules)
+        return theme
 
     def get_rule_exact(self, typ, clazz=set(), attrs=set(), pcs=set()):
         ruleset = self.rules[typ]
@@ -150,10 +153,6 @@ class Theme(object):
                         for name in ('border-left', 'border-top', 'border-right', 'border-bottom'):
                             rule.properties[name] = copy(value)
                         continue
-#                     if name == 'margin':
-#                         for name in ('margin-left', 'margin-top', 'margin-right', 'margin-bottom'):
-#                             rule.properties[name] = copy(value)
-#                         continue
                     rule.properties[name] = copy(value)
 
 
@@ -189,15 +188,10 @@ class Theme(object):
         curpseudo = []
         return [(t, set(c), set(a), set(p)) for t, c, p, a in zip(typesel, clazzsel, pseudosel, attrsel)]
 
+
     def _convert_css_rule(self, cssrule):
         selectors = [(str(item.type), item.value) for selector in cssrule.selectorList for item in selector.seq if item.type in (TYPE, CLASS, PSEUDOCLASS, ATTRIBUTE, UNIVERSAL)]
         selectors = tuple([(t if t != UNIVERSAL else TYPE, str(i[1]) if t in (TYPE, UNIVERSAL) else str(i)) for (t, i) in selectors])
-#         if cssrule.selectorText == 'Composite.navbar':
-#             for sel in cssrule.selectorList:
-#                 out(sel)
-#                 for item in sel.seq:
-#                     out(item.type, item.value)
-#             stop(selectors)
         triplets = self._build_selector_triplets(selectors)
         properties = self._convert_css_properties(cssrule.style.getProperties(all=True))
         return triplets, properties
@@ -806,7 +800,8 @@ class Theme(object):
     def compile(self):
         valuereg = Theme.ValueMap()
         theme = {}
-        for typ, rules in self.rules.iteritems():
+        for typ in self.rules.keys():
+            rules = self.rules[typ]
             properties = defaultdict(list)
             for rule in sorted(rules, key=lambda r: len(r.clazz) + len(r.attrs) + len(r.pcs), reverse=True):
                 selectors = sorted(list(rule.clazz)) + sorted(list(rule.pcs)) + sorted(list(rule.attrs))
