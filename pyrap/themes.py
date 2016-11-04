@@ -22,7 +22,7 @@ from copy import copy, deepcopy
 import re
 from pyrap.constants import BORDER, GRADIENT, ANIMATION, FONT, SHADOW, CURSOR,\
     RWT
-from pyrap.utils import out, stop
+from pyrap.utils import out, stop, ifnone
 import math
 from cssutils.css.cssfontfacerule import CSSFontFaceRule
 from pyparsing import Literal, alphanums, alphas, Word, ZeroOrMore, quotedString,\
@@ -36,28 +36,6 @@ UNIVERSAL = 'universal'
 
 logger = pyraplog.getlogger(__name__)
 
-def parse_fcts(s):
-    s = 'local("Open Sans"), local("OpenSans"), url(https://fonts.gstatic.com/s/opensans/v13/cJZKeOuBrn4kERxqtaUH3VtXRa8TVwTICgirnJhmVJw.woff2) format("woff2")'
-    lpar = Literal('(')
-    rpar = Literal(')')
-    comma = Literal(',')
-    delim = ZeroOrMore(' ') + comma + ZeroOrMore(' ')
-    fdelim = delim | ZeroOrMore(' ')
-    symb = Word(alphas + alphanums + '_' + '-')
-    argsym = Word(alphas + alphanums + '_' + '-' + '/' + ':' + '.' + '-')
-    arg = argsym | quotedString.setParseAction(removeQuotes)#q.suppress() + argsym + q.suppress() | qq.suppress() + argsym + qq.suppress()
-    args = arg + ZeroOrMore(comma.suppress() + arg) 
-    function = symb + lpar.suppress() + args + rpar.suppress()
-    calls = []
-    def collect(s, parsed):
-        fct, args = parsed[0], parsed[1:]
-        calls.append({fct: args})
-    function.setParseAction(collect)
-    flist = function + ZeroOrMore(fdelim.suppress() + function)
-    flist.parseString(s)
-    for c in calls:
-        out(c)
-    
 
 def isnone(cssval):
     if isinstance(cssval, Value):
@@ -1853,10 +1831,61 @@ class ThemeRule(object):
         rule = ThemeRule()
         rule.__dict__ = dict(self.__dict__)
         return rule
+    
+    
+class FontFaceRule(object):
+    
+    class Source(object):
+        def __init__(self, url, fformat=None, flocals=None):
+            self.url = url
+            self.format = fformat
+            self.locals = ifnone(flocals, [])
+            
+        @staticmethod
+        def _parse_src(s):
+            lpar = Literal('(')
+            rpar = Literal(')')
+            comma = Literal(',')
+            delim = ZeroOrMore(' ') + comma + ZeroOrMore(' ')
+            fdelim = delim | ZeroOrMore(' ')
+            symb = Word(alphas + alphanums + '_' + '-')
+            argsym = Word(alphas + alphanums + '_' + '-' + '/' + ':' + '.' + '-')
+            arg = argsym | quotedString.setParseAction(removeQuotes)#q.suppress() + argsym + q.suppress() | qq.suppress() + argsym + qq.suppress()
+            args = arg + ZeroOrMore(comma.suppress() + arg) 
+            function = symb + lpar.suppress() + args + rpar.suppress()
+            props = {'flocals': [], 'url': None, 'fformat': None}
+            keymap = {'format': 'fformat', 'local': 'flocals', 'url': 'url'}
+            def collect(s, parsed):
+                fct, args = parsed[0], parsed[1:]
+                if fct == 'local':
+                    props[keymap[fct]].append(args[0])
+                else:
+                    props[keymap[fct]] = args[0]
+            function.setParseAction(collect)
+            flist = function + ZeroOrMore(fdelim.suppress() + function)
+            flist.parseString(s)
+            return FontFaceRule.Source(**props)
+                
+    
+    
+    def __init__(self, family, src, stretch=None, style=None, weight=None, urange=None):
+        self.family = family
+        self.src = src if isinstance(src, self.Source) else self.Source._parse_src(src)
+        self.strectch = stretch
+        self.style = style
+        self.weight = weight
+        self.urange = urange
+        
+        
+        
+        
 
 
 if __name__ == '__main__':
-    parse_fcts('local("Open Sans"), local("OpenSans"), url(https://fonts.gstatic.com/s/opensans/v13/cJZKeOuBrn4kERxqtaUH3VtXRa8TVwTICgirnJhmVJw.woff2) format("woff2")')
+    s = FontFaceRule.Source._parse_src('local("Open Sans"), local("OpenSans"), url(https://fonts.gstatic.com/s/opensans/v13/cJZKeOuBrn4kERxqtaUH3VtXRa8TVwTICgirnJhmVJw.woff2) format("woff2")')
+    out(s.url)
+    out(s.locals)
+    out(s.format)
 #     theme = Theme('default').load('../examples/controls/mytheme.css')
 #     theme.write()
 #     btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
