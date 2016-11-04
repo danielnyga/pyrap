@@ -22,7 +22,7 @@ from copy import copy, deepcopy
 import re
 from pyrap.constants import BORDER, GRADIENT, ANIMATION, FONT, SHADOW, CURSOR,\
     RWT
-from pyrap.utils import out, stop, ifnone
+from pyrap.utils import out, stop, ifnone, ifnot
 import math
 from cssutils.css.cssfontfacerule import CSSFontFaceRule
 from pyparsing import Literal, alphanums, alphas, Word, ZeroOrMore, quotedString,\
@@ -80,6 +80,7 @@ class Theme(object):
         self.name = name
         self.rules = defaultdict(list)
         self.rcpath = None
+        self.fontfaces = []
         self.logger = pyraplog.getlogger(type(self).__name__, level=pyraplog.INFO)
 
     def extract(self, *types):
@@ -144,11 +145,23 @@ class Theme(object):
         for typ in sorted(self.rules):
             for rule in self.rules[typ]:
                 rule.write(stream)
+        for ff in self.fontfaces:
+            stream.write(str(ff))
 
 
     def _build_theme_from_rules(self, cssrules):
         for cssrule in cssrules:
             if isinstance(cssrule, CSSComment): continue
+            if isinstance(cssrule, CSSFontFaceRule):
+                style = cssrule.style
+                ff = FontFaceRule(family=ifnot(style['font-family'], None), 
+                                  src=ifnot(style['src'], None), 
+                                  stretch=ifnot(style['font-stretch'], None), 
+                                  style=ifnot(style['font-style'], None), 
+                                  weight=ifnot(style['font-weight'], None), 
+                                  urange=ifnot(style['unicode-range'], None))
+                self.fontfaces.append(ff)
+                continue
             selectors, properties = self._convert_css_rule(cssrule)
             for typ, clazz, attrs, pcs in selectors:
                 rule = self.get_rule_exact(typ, clazz, attrs, pcs)
@@ -194,11 +207,6 @@ class Theme(object):
 
 
     def _convert_css_rule(self, cssrule):
-        if isinstance(cssrule, CSSFontFaceRule):
-            out(dir(cssrule))
-            for style in cssrule.style:
-                out(dir(style))
-                out(style.name, ':', repr(style.value))
         selectors = [(str(item.type), item.value) for selector in cssrule.selectorList for item in selector.seq if item.type in (TYPE, CLASS, PSEUDOCLASS, ATTRIBUTE, UNIVERSAL)]
         selectors = tuple([(t if t != UNIVERSAL else TYPE, str(i[1]) if t in (TYPE, UNIVERSAL) else str(i)) for (t, i) in selectors])
         triplets = self._build_selector_triplets(selectors)
@@ -1838,7 +1846,7 @@ class FontFaceRule(object):
     class Source(object):
         def __init__(self, url, fformat=None, flocals=None):
             self.url = url
-            self.format = fformat
+            self.format = ifnone(fformat, os.path.splitext(url)[-1].replace('.', ''))
             self.locals = ifnone(flocals, [])
             
         @staticmethod
@@ -1850,7 +1858,7 @@ class FontFaceRule(object):
             fdelim = delim | ZeroOrMore(' ')
             symb = Word(alphas + alphanums + '_' + '-')
             argsym = Word(alphas + alphanums + '_' + '-' + '/' + ':' + '.' + '-')
-            arg = argsym | quotedString.setParseAction(removeQuotes)#q.suppress() + argsym + q.suppress() | qq.suppress() + argsym + qq.suppress()
+            arg = argsym | quotedString.setParseAction(removeQuotes)
             args = arg + ZeroOrMore(comma.suppress() + arg) 
             function = symb + lpar.suppress() + args + rpar.suppress()
             props = {'flocals': [], 'url': None, 'fformat': None}
@@ -1865,11 +1873,27 @@ class FontFaceRule(object):
             flist = function + ZeroOrMore(fdelim.suppress() + function)
             flist.parseString(s)
             return FontFaceRule.Source(**props)
-                
-    
-    
+        
+        
+        def __str__(self):
+            s = ''
+            if self.locals:
+                s += ', '.join(['local(%s)' % (l if ' ' not in l else '"%s"' % l) for l in self.locals])
+            if self.url:
+                if s: s += ', '
+                s += 'url(%s)' % self.url
+            if self.format:
+                if s: s += ' '
+                s += 'format("%s")' % self.format
+            return s
+            
+            
+        def __repr__(self):
+            return '<FontFaceRule.Source: ' + str(self)
+
+
     def __init__(self, family, src, stretch=None, style=None, weight=None, urange=None):
-        self.family = family
+        self.family = family.strip('"')
         self.src = src if isinstance(src, self.Source) else self.Source._parse_src(src)
         self.strectch = stretch
         self.style = style
@@ -1877,17 +1901,27 @@ class FontFaceRule(object):
         self.urange = urange
         
         
+    def __str__(self):
+        return '<FontFace font-family="%s", src="%s">' % (self.family, str(self.src))
         
+    def tocss(self):
+        values = ['font-family: "%s"' % self.family]
+        if self.style:
+            values.append('font-style: %s' % self.style)
+        if self.weight:
+            values.append('font-weight: %s' % self.weight)
+        if self.src:
+            values.append('src: %s' % str(self.src))
+        return '@font-face {%s}' % ';'.join(values)
         
 
 
 if __name__ == '__main__':
-    s = FontFaceRule.Source._parse_src('local("Open Sans"), local("OpenSans"), url(https://fonts.gstatic.com/s/opensans/v13/cJZKeOuBrn4kERxqtaUH3VtXRa8TVwTICgirnJhmVJw.woff2) format("woff2")')
-    out(s.url)
-    out(s.locals)
-    out(s.format)
-#     theme = Theme('default').load('../examples/controls/mytheme.css')
-#     theme.write()
+    theme = Theme('default').load('../examples/controls/mytheme.css')
+    theme.write()
+    print
+    for ff in theme.fontfaces:
+        print ff.tocss()
 #     btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
 #     btn_theme.write()
 #     out(btn_theme.get_property('font', 'List-Item', set([]), set(['[BORDER']), set([])))

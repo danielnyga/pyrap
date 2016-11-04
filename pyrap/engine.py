@@ -455,7 +455,10 @@ class SessionRuntime(object):
 
     def requirecss(self, f):
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/css', f)
-        self << RWTCallOperation('rwt.client.CSSLoader', 'load', {'files': [resource.location]})
+        self << RWTCallOperation('rwt.client.CSSLoader', 'linkCss', {'files': [resource.location]})
+
+    def sendstyle(self, style):
+        self << RWTCallOperation('rwt.client.CSSLoader', 'loadCss', {'content': style})
 
     def executejs(self, code):
         self << RWTCallOperation('rwt.client.JavaScriptExecutor', 'execute', {'content': code})

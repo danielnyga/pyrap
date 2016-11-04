@@ -72,6 +72,18 @@ def ifnone(if_, else_, transform=None):
     else:
         if transform is not None: return transform(if_)
         else: return if_
+
+def ifnot(if_, else_, transform=None):
+    '''
+    Returns the condition if_ iff it evaluates to False, or if a transformation is
+    specified, transform(if_). Returns else_ if the condition is None.
+    '''
+    if not bool(if_):
+        return else_
+    else:
+        if transform is not None: return transform(if_)
+        else: return if_
+
         
 def allnone(it):
     return not ([1 for e in it if e is not None])

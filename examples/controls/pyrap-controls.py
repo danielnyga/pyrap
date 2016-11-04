@@ -18,6 +18,7 @@ import os
 from pyrap.communication import RWTSetOperation
 import math
 from collections import OrderedDict
+from pyrap import session
 
 
 class ControlsDemo():
@@ -49,8 +50,9 @@ class ControlsDemo():
         logo.bg = 'transp'    
         welcome = Label(header, text='pyRAP - Controls Demo', halign='right', valign='top')
         welcome.color = 'white'
+        welcome.css = 'header'
         welcome.bg = 'transp'
-        welcome.font = welcome.font.modify(size=24, bf=True, it=True)
+#         welcome.font = welcome.font.modify(size=24, bf=True, it=True)
         #=======================================================================
         # main area
         #=======================================================================
@@ -180,7 +182,12 @@ class ControlsDemo():
     def create_button_page(self, parent):
         grp = Group(parent, text='Push Buttons')
         grp.layout = CellLayout(halign='fill', valign='fill')
-        Label(grp, text='here come the buttons')
+        b = Button(grp, text='click')
+        def select(*_):
+            for fontface in session.runtime.mngr.theme.fontfaces: pass
+            session.runtime.sendstyle(fontface.tocss())
+
+        b.on_select += select
         
     
     def create_browser_page(self, parent):
