@@ -18,7 +18,7 @@ from pyrap.communication import RWTSetOperation,\
 from pyrap.constants import RWT, GCBITS
 from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
-    OnNavigate, OnModify
+    OnNavigate, OnModify, FocusEventData
 from pyrap.exceptions import WidgetDisposedError
 from pyrap.layout import Layout, LayoutAdapter, CellLayout,\
     StackLayout
@@ -63,7 +63,38 @@ class Widget(object):
                       'enabled': RWT.ENABLED})
 
     _defstyle_ = BitField(RWT.VISIBLE | RWT.ENABLED)
-    
+
+    class Layer(object):
+
+        def __init__(self, widget):
+            self.widget = widget
+            self._layer = len(widget.parent.children)
+
+        def __iadd__(self, i):
+            if self.widget.parent.children is not None and self.widget in self.widget.parent.children:
+                curidx = self.widget.parent.children.index(self.widget)
+                self.layer = curidx + i
+
+        def __isub__(self, i):
+            if self.widget.parent.children is not None and self.widget in self.widget.parent.children:
+                curidx = self.widget.parent.children.index(self.widget)
+                self.layer = max(curidx - i, 0)
+
+        @property
+        def layer(self):
+            return self._layer
+
+        @layer.setter
+        def layer(self, layer):
+            if self.widget.parent.children is not None and self.widget in self.widget.parent.children:
+                self.widget.parent.children.remove(self.widget)
+                self.widget.parent.children.insert(layer, self.widget)
+                session.runtime << RWTSetOperation(self.widget.parent.id, {'children': [x.id for x in self.widget.parent.children]})
+
+            else:
+                raise Exception(self.widget + " is not among its parent's children!")
+
+
     def __init__(self, parent, **options):
         self._disposed = True
         self.parent = parent
@@ -73,6 +104,7 @@ class Widget(object):
         self._zindex = None
         self._css = None
         self._menu = None
+        self._layer = Widget.Layer(self)
         if self not in parent.children:
             parent.children.append(self)
         if self not in parent.children:
@@ -137,7 +169,11 @@ class Widget(object):
     def _handle_notify(self, op):
         if op.event == 'Resize': self.on_resize.notify()
         elif op.event == 'MouseUp': self.on_mouseup.notify(_rwt_mouse_event(op))
-        elif op.event == 'MouseDown': self.on_mousedown.notify(_rwt_mouse_event(op))
+        elif op.event == 'MouseDown':
+            if self._menu is None: self.on_mousedown.notify(_rwt_mouse_event(op))
+            else:
+                self._menu.unhide()
+                session.runtime.push.set()
         elif op.event == 'MouseDoubleClick': self.on_dblclick.notify(_rwt_mouse_event(op))
         elif op.event == 'Navigation': self.on_navigate.notify(_rwt_mouse_event(op))
         else: return False
@@ -235,9 +271,12 @@ class Widget(object):
         return self._bounds[3]
     
     @checkwidget
-    def focus(self):
+    def focus(self, notify=False):
         session.runtime.windows.focus = self
-    
+        if notify:
+            self.on_focus.notify(FocusEventData(True))
+
+
     @property
     def focused(self):
         return session.runtime.windows.focus == self
@@ -343,6 +382,16 @@ class Widget(object):
         return px(0), px(0)
 
 
+    @property
+    def layer(self):
+        return self._layer
+
+    @layer.setter
+    @checkwidget
+    def layer(self, layer):
+        self._layer.layer = layer
+
+
 class Display(Widget):
     
     _rwt_class_name_ = 'rwt.widgets.Display'
@@ -354,12 +403,10 @@ class Display(Widget):
         
         
     def _handle_set(self, op):
-        out(op)
         for k, v in op.args.iteritems():
             if k not in ('cursorLocation', ): Widget._handle_set(self, op) 
             if k == 'cursorLocation': self._cursor_loc = map(px, v)
             if k == 'focusControl':
-                out(session.runtime.windows)
                 if v in session.runtime.windows:
                     session.runtime.windows._set_focus(session.runtime.windows[v])
                     session.runtime.windows[v].focus()
@@ -748,7 +795,8 @@ class Label(Widget):
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         return img
-        
+
+
 
     @property
     def img(self):
@@ -1807,7 +1855,6 @@ class Browser(Widget):
                 res = session.runtime.mngr.resources.registerf(url, 'text/html', os.path.abspath(url))
                 return res.location
             else:
-                out(session.runtime.mngr.resources.get(url))
                 raise Exception('URL "{}" is not a valid url or existing local file!'.format(url))
         else:
             res = session.runtime.mngr.resources.registerf('_blank.html', 'text/html', os.path.join(locations.rc_loc, 'static', 'html', 'blank.html'))
@@ -1992,13 +2039,6 @@ class MenuItem(Widget):
         self._text = text
 
 
-    # ["create", "w296", "rwt.widgets.MenuItem",
-    #  {"parent": "w62", "style": ["PUSH"], "index": 0, "text": "Import...",
-    #   "mnemonicIndex": 0,
-    #   "image": ["rwt-resources/generated/d3074efb.gif", 16, 16]}]
-
-
-
 class List(Widget):
     _rwt_class_name = 'rwt.widgets.List'
     _styles_ = Widget._styles_ + {'multi': RWT.MULTI,
@@ -2047,6 +2087,10 @@ class List(Widget):
         self.setitemheight()
 
     def setitemheight(self):
+        h = self._computeitemheight()
+        session.runtime << RWTSetOperation(self.id, {'itemDimensions': [self.bounds[2].value, h.value]})
+
+    def _computeitemheight(self):
         if self.itemheight is None:
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
             if self.markup:
@@ -2058,7 +2102,8 @@ class List(Widget):
         padding = self.theme.item_padding
         if padding:
             h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
-        session.runtime << RWTSetOperation(self.id, {'itemDimensions': [self.bounds[2].value, h.value]})
+        return h
+
 
     def create_content(self):
         if RWT.HSCROLL in self.style:
@@ -2147,7 +2192,10 @@ class List(Widget):
         session.runtime << RWTSetOperation(self.id, {'selectionIndices': sel})
     
     def compute_size(self):
-        return 0, 0
+        h = w = 0
+        if RWT.VSCROLL not in self.style:
+            h = len(self.items) * self._computeitemheight()
+        return w, h
     
     def compute_fringe(self):
         return 0, 0
