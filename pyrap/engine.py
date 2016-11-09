@@ -29,7 +29,7 @@ from pyrap.exceptions import ResourceError
 from pyrap.ptypes import Color, Image
 from pyrap.pyraplog import getlogger
 from pyrap.themes import Theme, FontMetrics
-from pyrap.utils import ifnone, out
+from pyrap.utils import ifnone, out, trace
 from pyrap.widgets import Display, Shell
 import rfc822
 
@@ -218,6 +218,7 @@ class WindowManager(object):
     
     @focus.setter
     def focus(self, wnd):
+        self._set_focus(wnd)
         session.runtime << RWTSetOperation(self.display.id, {'focusControl': wnd.id})
         
     def _set_focus(self, wnd):
@@ -343,7 +344,7 @@ class SessionRuntime(object):
             if not consolidated:
                 ops.append(o)
                     
-        for o in ops:
+        for o in sorted(ops, key=lambda o: {RWTSetOperation: 0, RWTNotifyOperation: 1, RWTCallOperation: 2}[type(o)]):
             self.log_.debug('   >>> ' + str(o))
             if isinstance(o, RWTNotifyOperation):
                 wnd = self.windows[o.target]
