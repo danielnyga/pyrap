@@ -34,7 +34,7 @@ from pyrap.widgets import Display, Shell
 import rfc822
 
 
-mimetypes.init()
+# mimetypes.init()
 
 class ApplicationManager(object):
     '''
@@ -66,7 +66,9 @@ class ApplicationManager(object):
         compiled, valuemap = theme.compile()
         # register the images so they are statically available
         for hashid, image in valuemap.images:
-            self.resources.registerc('themes/images/%s' % str(hashid), 'image/%s' % image.fileext, image.content)
+            self.resources.registerc('themes/images/%s' % str(hashid), image.mimetype, image.content)
+        # make fonts available statically
+        for ff in theme.font
         if not name.endswith('.json'): name += '.json'
         self.resources.registerc(name=name, content_type='application/json', content=json.dumps(compiled))
         
@@ -480,11 +482,14 @@ class SessionRuntime(object):
         self._initialized = True
         
     
-    def install_fallback_theme(self):
-        self << RWTCallOperation('rwt.theme.ThemeStore', 'loadFallbackTheme', {'url': 'rwt-resources/rap-rwt.theme.Fallback.json'})
+    def install_fallback_theme(self, url):
+        self << RWTCallOperation('rwt.theme.ThemeStore', 'loadFallbackTheme', {'url': url})
         
-    def install_default_theme(self):
-        self << RWTCallOperation('rwt.theme.ThemeStore', 'loadDefaultTheme', {'url': 'rwt-resources/rap-rwt.theme.Default.json'})
+    def install_default_theme(self, url):
+        self << RWTCallOperation('rwt.theme.ThemeStore', 'loadDefaultTheme', {'url': url})
+        
+    def install_active_theme(self, url):
+        self << RWTCallOperation('rwt.theme.ThemeStore', 'loadActiveTheme', {'url': url})
         
     def activate_push(self, active):
         self << RWTSetOperation('rwt.client.ServerPush', {'active': active})
