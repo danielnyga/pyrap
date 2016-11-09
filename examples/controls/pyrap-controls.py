@@ -17,6 +17,8 @@ from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout,\
 import os
 from pyrap.communication import RWTSetOperation
 import math
+from collections import OrderedDict
+from pyrap import session
 
 
 class ControlsDemo():
@@ -37,18 +39,20 @@ class ControlsDemo():
         # header
         #=======================================================================
         header = Composite(outer)
-        header.layout = ColumnLayout(halign='fill', minheight='90px', flexcols=1)
+        header.layout = ColumnLayout(halign='fill', minheight='90px', flexcols=1, padding_bottom=px(100))
         header.bgimg = Image('images/salvage.gif')
 #         header.bgimg = Image('images/background_grey.png')
         header.bg = 'marine'
+        header.css = 'header'
         
         self.beny_logo = Image('images/beny_logo.png').resize(height='70px')
         logo = Label(header, img=self.beny_logo, valign='center', halign='right')
         logo.bg = 'transp'    
         welcome = Label(header, text='pyRAP - Controls Demo', halign='right', valign='top')
         welcome.color = 'white'
+        welcome.css = 'header'
         welcome.bg = 'transp'
-        welcome.font = welcome.font.modify(size=24, bf=True, it=True)
+#         welcome.font = welcome.font.modify(size=24, bf=True, it=True)
         #=======================================================================
         # main area
         #=======================================================================
@@ -109,6 +113,16 @@ class ControlsDemo():
         self.create_menu_page(page)
         self.pages['Menu'] = page
         
+        #=======================================================================
+        # crete list page
+        #=======================================================================
+        page = self.create_page_template('List Demo')
+        self.create_list_page(page)
+        self.pages['List'] = page
+        
+        
+        for page in (self.pages.values()[1:]):
+            page.layout.exclude = True
         self.navigation.items = self.pages
         
 
@@ -121,6 +135,13 @@ class ControlsDemo():
         header.font = header.font.modify(size='16px', bf=1)
         return tab
         
+    
+    def create_list_page(self, parent):
+        grp_ctxmenu = Group(parent, text='Lists')
+        grp_ctxmenu.layout = CellLayout(minwidth=200, minheight=200)
+        list = List(grp_ctxmenu, halign='fill', valign='fill', minheight=200, minwidth=200)
+        list.items = OrderedDict([('str1', 'bla')])
+    
 
     def create_menu_page(self, parent):
         grp_ctxmenu = Group(parent, text='Context Menus')
@@ -130,8 +151,8 @@ class ControlsDemo():
         menu = Menu(label, popup=True)
         item1 = MenuItem(menu, index=0, push=True, text='MenuItem 1', img=self.beny_logo.resize(height='16px'))
         item1.on_select += lambda *args: out('menu item 1 was selected', args)
-        item2 = MenuItem(menu, index=1, push=True, text='MenuItem 2')
-        item3 = MenuItem(menu, index=2, push=True, text='MenuItem 3')
+        item2 = MenuItem(menu, index=1, check=True, text='MenuItem 2')
+        item3 = MenuItem(menu, index=2, check=True, text='MenuItem 3')
         item4 = MenuItem(menu, index=5, cascade=True, text='MenuItem 4')
         submenu = Menu(item4, dropdown=True)
         item4.menu = submenu
@@ -161,16 +182,19 @@ class ControlsDemo():
     def create_button_page(self, parent):
         grp = Group(parent, text='Push Buttons')
         grp.layout = CellLayout(halign='fill', valign='fill')
-        Label(grp, text='here come the buttons')
+        b = Button(grp, text='click')
+        def select(*_):
+            for fontface in session.runtime.mngr.theme.fontfaces: pass
+            session.runtime.sendstyle(fontface.tocss())
+
+        b.on_select += select
         
     
     def create_browser_page(self, parent):
         grp = Group(parent, text='Browser')
         grp.layout = CellLayout(halign='left', valign='top')
         browser = Button(grp, text='Open Browser')
-        def select(*_):
-            self.navigation.selection = self.pages['Button']
-        browser.on_select += select
+        browser.on_select += self.open_browser
 
         
     def open_browser(self, data):
@@ -200,12 +224,11 @@ class ControlsDemo():
         scroll = ScrolledComposite(parent, vscroll=True)
         scroll.layout = CellLayout(valign='fill', halign='fill')
         container = Composite(scroll)
-#         container.bg = Color('red')
         container.layout = RowLayout(halign='fill', valign='top')
         for i in range(200):
             Checkbox(container, text='this is the %d-th item' % (i+1), halign='left', checked=False)
         scroll.content = container
-        
+
 
 
 if __name__ == '__main__':
@@ -214,7 +237,8 @@ if __name__ == '__main__':
                        path='controls', 
                        name='pyRAP Controls Demo', 
                        entrypoints={'desktop': ControlsDemo.desktop,
-                                    'mobile': ControlsDemo.mobile}, 
+                                    'mobile': ControlsDemo.mobile},
+                       theme='mytheme.css', 
                        setup=ControlsDemo.setup, default=lambda: 'mobile' if pyrap.session.useragent.mobile else 'desktop')
     pyrap.run()
 

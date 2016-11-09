@@ -22,8 +22,11 @@ from copy import copy, deepcopy
 import re
 from pyrap.constants import BORDER, GRADIENT, ANIMATION, FONT, SHADOW, CURSOR,\
     RWT
-from pyrap.utils import out, stop
+from pyrap.utils import out, stop, ifnone, ifnot
 import math
+from cssutils.css.cssfontfacerule import CSSFontFaceRule
+from pyparsing import Literal, alphanums, alphas, Word, ZeroOrMore, quotedString,\
+    removeQuotes
 
 TYPE = 'type-selector'
 CLASS = 'class'
@@ -32,6 +35,7 @@ ATTRIBUTE = 'attribute-selector'
 UNIVERSAL = 'universal'
 
 logger = pyraplog.getlogger(__name__)
+
 
 def isnone(cssval):
     if isinstance(cssval, Value):
@@ -69,11 +73,15 @@ def tostring(x):
         return ' '.join(map(str, x))
     else: return str(x)
 
+
 class Theme(object):
 
     def __init__(self, name):
         self.name = name
         self.rules = defaultdict(list)
+        self.rcpath = None
+        self.fontfaces = []
+        self.logger = pyraplog.getlogger(type(self).__name__, level=pyraplog.INFO)
 
     def extract(self, *types):
         if '*' not in types: types = types + ('*',)
@@ -84,10 +92,14 @@ class Theme(object):
 
     def load(self, filename=None):
         if filename is None:
-            filename = os.path.join(pyrap_path, 'css', 'default.css')
+            filename = os.path.join(pyrap_path, 'resource', 'theme', 'default.css')
+        filename = os.path.abspath(filename)
         csscontent = parseFile(filename, validate=False)
-        self._build_theme_from_rules(csscontent.cssRules)
-        return self
+        theme = Theme(name=self.name)
+        theme.rules = deepcopy(self.rules)
+        theme.rcpath = os.path.split(filename)[-2]
+        theme._build_theme_from_rules(csscontent.cssRules)
+        return theme
 
     def get_rule_exact(self, typ, clazz=set(), attrs=set(), pcs=set()):
         ruleset = self.rules[typ]
@@ -133,11 +145,23 @@ class Theme(object):
         for typ in sorted(self.rules):
             for rule in self.rules[typ]:
                 rule.write(stream)
+        for ff in self.fontfaces:
+            stream.write(str(ff))
 
 
     def _build_theme_from_rules(self, cssrules):
         for cssrule in cssrules:
             if isinstance(cssrule, CSSComment): continue
+            if isinstance(cssrule, CSSFontFaceRule):
+                style = cssrule.style
+                ff = FontFaceRule(family=ifnot(style['font-family'], None), 
+                                  src=ifnot(style['src'], None), 
+                                  stretch=ifnot(style['font-stretch'], None), 
+                                  style=ifnot(style['font-style'], None), 
+                                  weight=ifnot(style['font-weight'], None), 
+                                  urange=ifnot(style['unicode-range'], None))
+                self.fontfaces.append(ff)
+                continue
             selectors, properties = self._convert_css_rule(cssrule)
             for typ, clazz, attrs, pcs in selectors:
                 rule = self.get_rule_exact(typ, clazz, attrs, pcs)
@@ -146,10 +170,6 @@ class Theme(object):
                         for name in ('border-left', 'border-top', 'border-right', 'border-bottom'):
                             rule.properties[name] = copy(value)
                         continue
-#                     if name == 'margin':
-#                         for name in ('margin-left', 'margin-top', 'margin-right', 'margin-bottom'):
-#                             rule.properties[name] = copy(value)
-#                         continue
                     rule.properties[name] = copy(value)
 
 
@@ -185,15 +205,10 @@ class Theme(object):
         curpseudo = []
         return [(t, set(c), set(a), set(p)) for t, c, p, a in zip(typesel, clazzsel, pseudosel, attrsel)]
 
+
     def _convert_css_rule(self, cssrule):
         selectors = [(str(item.type), item.value) for selector in cssrule.selectorList for item in selector.seq if item.type in (TYPE, CLASS, PSEUDOCLASS, ATTRIBUTE, UNIVERSAL)]
         selectors = tuple([(t if t != UNIVERSAL else TYPE, str(i[1]) if t in (TYPE, UNIVERSAL) else str(i)) for (t, i) in selectors])
-#         if cssrule.selectorText == 'Composite.navbar':
-#             for sel in cssrule.selectorList:
-#                 out(sel)
-#                 for item in sel.seq:
-#                     out(item.type, item.value)
-#             stop(selectors)
         triplets = self._build_selector_triplets(selectors)
         properties = self._convert_css_properties(cssrule.style.getProperties(all=True))
         return triplets, properties
@@ -361,7 +376,7 @@ class Theme(object):
         if len(values) != 1:
             raise Exception('Illegal image value: %s' % values)
         if isinstance(values[0], URIValue):
-            imgpath = os.path.join(pyrap_path, values[0].value)
+            imgpath = os.path.join(self.rcpath, values[0].value)
             img = Image(imgpath)
             return img
         return none_or_value(values[0])
@@ -802,7 +817,8 @@ class Theme(object):
     def compile(self):
         valuereg = Theme.ValueMap()
         theme = {}
-        for typ, rules in self.rules.iteritems():
+        for typ in self.rules.keys():
+            rules = self.rules[typ]
             properties = defaultdict(list)
             for rule in sorted(rules, key=lambda r: len(r.clazz) + len(r.attrs) + len(r.pcs), reverse=True):
                 selectors = sorted(list(rule.clazz)) + sorted(list(rule.pcs)) + sorted(list(rule.attrs))
@@ -1823,12 +1839,89 @@ class ThemeRule(object):
         rule = ThemeRule()
         rule.__dict__ = dict(self.__dict__)
         return rule
+    
+    
+class FontFaceRule(object):
+    
+    class Source(object):
+        def __init__(self, url, fformat=None, flocals=None):
+            self.url = url
+            self.format = ifnone(fformat, os.path.splitext(url)[-1].replace('.', ''))
+            self.locals = ifnone(flocals, [])
+            
+        @staticmethod
+        def _parse_src(s):
+            lpar = Literal('(')
+            rpar = Literal(')')
+            comma = Literal(',')
+            delim = ZeroOrMore(' ') + comma + ZeroOrMore(' ')
+            fdelim = delim | ZeroOrMore(' ')
+            symb = Word(alphas + alphanums + '_' + '-')
+            argsym = Word(alphas + alphanums + '_' + '-' + '/' + ':' + '.' + '-')
+            arg = argsym | quotedString.setParseAction(removeQuotes)
+            args = arg + ZeroOrMore(comma.suppress() + arg) 
+            function = symb + lpar.suppress() + args + rpar.suppress()
+            props = {'flocals': [], 'url': None, 'fformat': None}
+            keymap = {'format': 'fformat', 'local': 'flocals', 'url': 'url'}
+            def collect(s, parsed):
+                fct, args = parsed[0], parsed[1:]
+                if fct == 'local':
+                    props[keymap[fct]].append(args[0])
+                else:
+                    props[keymap[fct]] = args[0]
+            function.setParseAction(collect)
+            flist = function + ZeroOrMore(fdelim.suppress() + function)
+            flist.parseString(s)
+            return FontFaceRule.Source(**props)
+        
+        
+        def __str__(self):
+            s = ''
+            if self.locals:
+                s += ', '.join(['local(%s)' % (l if ' ' not in l else '"%s"' % l) for l in self.locals])
+            if self.url:
+                if s: s += ', '
+                s += 'url(%s)' % self.url
+            if self.format:
+                if s: s += ' '
+                s += 'format("%s")' % self.format
+            return s
+            
+            
+        def __repr__(self):
+            return '<FontFaceRule.Source: ' + str(self)
+
+
+    def __init__(self, family, src, stretch=None, style=None, weight=None, urange=None):
+        self.family = family.strip('"')
+        self.src = src if isinstance(src, self.Source) else self.Source._parse_src(src)
+        self.strectch = stretch
+        self.style = style
+        self.weight = weight
+        self.urange = urange
+        
+        
+    def __str__(self):
+        return '<FontFace font-family="%s", src="%s">' % (self.family, str(self.src))
+        
+    def tocss(self):
+        values = ['font-family: "%s"' % self.family]
+        if self.style:
+            values.append('font-style: %s' % self.style)
+        if self.weight:
+            values.append('font-weight: %s' % self.weight)
+        if self.src:
+            values.append('src: %s' % str(self.src))
+        return '@font-face {%s}' % ';'.join(values)
+        
 
 
 if __name__ == '__main__':
-    pyraplog.level(DEBUG)
-    theme = Theme('default').load('../css/default.css')
-#     theme.write()
-    btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
-    btn_theme.write()
-    out(btn_theme.get_property('font', 'List-Item', set([]), set(['[BORDER']), set([])))
+    theme = Theme('default').load('../examples/controls/mytheme.css')
+    theme.write()
+    print
+    for ff in theme.fontfaces:
+        print ff.tocss()
+#     btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
+#     btn_theme.write()
+#     out(btn_theme.get_property('font', 'List-Item', set([]), set(['[BORDER']), set([])))

@@ -7,7 +7,8 @@ rwt.remote.HandlerRegistry.add( "rwt.client.CSSLoader", {
   service : true,
 
   methods : [
-    "load"
+    "linkCss", 
+    "loadCss"
   ]
 
 } );
