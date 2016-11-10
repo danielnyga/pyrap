@@ -132,7 +132,7 @@ class ControlsDemo():
         tab.layout = RowLayout(halign='fill', valign='fill', flexrows=(1, 2))
         #heading
         header = Label(tab, text=heading, halign='left')
-        header.font = header.font.modify(size='16px', bf=1)
+        header.css = 'headline'#font = header.font.modify(size='16px', bf=1)
         return tab
         
     

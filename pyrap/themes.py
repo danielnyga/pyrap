@@ -160,6 +160,9 @@ class Theme(object):
                                   style=ifnot(style['font-style'], None), 
                                   weight=ifnot(style['font-weight'], None), 
                                   urange=ifnot(style['unicode-range'], None))
+                if ff.src.islocal:
+                    with open(os.path.join(self.rcpath, ff.src.url)) as f:
+                        ff.content = f.read() 
                 self.fontfaces.append(ff)
                 continue
             selectors, properties = self._convert_css_rule(cssrule)
@@ -1848,6 +1851,10 @@ class FontFaceRule(object):
             self.url = url
             self.format = ifnone(fformat, os.path.splitext(url)[-1].replace('.', ''))
             self.locals = ifnone(flocals, [])
+
+        @property
+        def islocal(self):
+            return not self.url.startswith('http')
             
         @staticmethod
         def _parse_src(s):
@@ -1899,6 +1906,7 @@ class FontFaceRule(object):
         self.style = style
         self.weight = weight
         self.urange = urange
+        self.content = None
         
         
     def __str__(self):

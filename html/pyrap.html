@@ -90,7 +90,7 @@
     <script type="text/javascript">
       if( rwt.runtime.System.getInstance().isSupported() ) {
       	rwt.remote.Connection.getInstance();
-        rwt.remote.MessageProcessor.processMessage( {"head":{"url":"pyrap"},"operations":[["call","rwt.theme.ThemeStore","loadFallbackTheme",{"url":"rwt-resources/rap-rwt.theme.Fallback.json"}],["call","rwt.theme.ThemeStore","loadActiveTheme",{"url":"rwt-resources/rap-rwt.theme.Default.json"}]]});
+        rwt.remote.MessageProcessor.processMessage( {"head":{"url":"pyrap"},"operations":[]} );//["call","rwt.theme.ThemeStore","loadFallbackTheme",{"url":"rwt-resources/rap-rwt.theme.Fallback.json"}],["call","rwt.theme.ThemeStore","loadActiveTheme",{"url":"rwt-resources/rap-rwt.theme.Default.json"}]]});
         console.log('sending');
         rwt.remote.Connection.getInstance().getMessageWriter().appendCall("pyrap", "initialize", {"entrypoint": "%s", "args": %s});
         rwt.remote.Connection.getInstance().sendImmediate();

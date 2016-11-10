@@ -34,7 +34,7 @@ from pyrap.widgets import Display, Shell
 import rfc822
 
 
-# mimetypes.init()
+mimetypes.init()
 
 class ApplicationManager(object):
     '''
@@ -63,12 +63,19 @@ class ApplicationManager(object):
         
     
     def _install_theme(self, name, theme):
+        '''
+        Make all resources of a theme available as static resources.
+        '''
         compiled, valuemap = theme.compile()
         # register the images so they are statically available
         for hashid, image in valuemap.images:
             self.resources.registerc('themes/images/%s' % str(hashid), image.mimetype, image.content)
         # make fonts available statically
-        for ff in theme.font
+        for ff in theme.fontfaces:
+            if not ff.src.islocal: continue
+            fileext = os.path.splitext(ff.src.url)[-1]
+            r = self.resources.registerc('themes/fonts/%s%s' % (md5.new(ff.content).hexdigest(), fileext), mimetypes.types_map[fileext], ff.content)
+            ff.src.url = r.location
         if not name.endswith('.json'): name += '.json'
         self.resources.registerc(name=name, content_type='application/json', content=json.dumps(compiled))
         
@@ -418,6 +425,10 @@ class SessionRuntime(object):
     def initialize_app(self, entrypoint, args):
         self.put_header('url', 'pyrap')
         self.put_header('cid', pyrap.session.session_id)
+        self.load_fallback_theme('rwt-resources/rap-rwt.theme.Fallback.json')
+        self.load_active_theme('rwt-resources/rap-rwt.theme.Default.json')
+        for ff in self.mngr.theme.fontfaces:
+            self.loadstyle(ff.tocss())
         for font in self.mngr.theme.iterfonts():
             self << SessionRuntime.create_textsize_measurement_call(font, FontMetrics.SAMPLE)
         self.entrypoint = entrypoint
@@ -460,7 +471,7 @@ class SessionRuntime(object):
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/css', f)
         self << RWTCallOperation('rwt.client.CSSLoader', 'linkCss', {'files': [resource.location]})
 
-    def sendstyle(self, style):
+    def loadstyle(self, style):
         self << RWTCallOperation('rwt.client.CSSLoader', 'loadCss', {'content': style})
 
     def executejs(self, code):
@@ -481,14 +492,10 @@ class SessionRuntime(object):
         self.shell.onresize_shell()
         self._initialized = True
         
-    
-    def install_fallback_theme(self, url):
+    def load_fallback_theme(self, url):
         self << RWTCallOperation('rwt.theme.ThemeStore', 'loadFallbackTheme', {'url': url})
         
-    def install_default_theme(self, url):
-        self << RWTCallOperation('rwt.theme.ThemeStore', 'loadDefaultTheme', {'url': url})
-        
-    def install_active_theme(self, url):
+    def load_active_theme(self, url):
         self << RWTCallOperation('rwt.theme.ThemeStore', 'loadActiveTheme', {'url': url})
         
     def activate_push(self, active):
