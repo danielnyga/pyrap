@@ -399,25 +399,33 @@ class SessionRuntime(object):
                 self.state = APPSTATE.INITIALIZED
 
 
-    @staticmethod
-    def create_textsize_measurement_call(font, sample):
-        return RWTCallOperation('rwt.client.TextSizeMeasurement', 'measureItems', {'items': [[str(font), sample, font.family, font.size.value, font.bf, font.it, -1, True]]})
+    def create_textsize_measurement_call(self, font, sample):
+        hash_ = font
+        if type(hash_) is not str: hash_ = str(font)
+        hash_ += sample
+        self.fontmetrics[hash_] = FontMetrics(sample=sample)
+        return RWTCallOperation('rwt.client.TextSizeMeasurement', 'measureItems', {'items': [[hash_, sample, font.family, font.size.value, font.bf, font.it, -1, True]]})
     
     
     def textsize_estimate(self, font, text):
-        font_ = font
-        if type(font_) is not str: font_ = str(font)
-        if font_ not in self.fontmetrics:
-            self << self.create_textsize_measurement_call(font, FontMetrics.SAMPLE)
-            font_ = self.default_font
-        return self.fontmetrics[font_].estimate(text)
+        hash_ = font
+        if type(hash_) is not str: hash_ = str(font)
+        hash_ += text
+        if hash_ not in self.fontmetrics or self.fontmetrics[hash_].dimensions == (None, None):
+            self << self.create_textsize_measurement_call(font, text)
+            
+            return self.default_font.estimate(text)
+        else:
+            return self.fontmetrics[hash_].dimensions
+    
     
     def _handle_call(self, op):
         if op.target == 'rwt.client.TextSizeMeasurement':
             if op.method == 'storeMeasurements':
                 for id_, dims in op.args.results.iteritems():
-                    if self.default_font is None: self.default_font = id_
-                    self.fontmetrics[id_] = FontMetrics(FontMetrics.SAMPLE, dims)
+                    self.fontmetrics[id_].dimensions = dims
+                    if self.default_font is None: 
+                        self.default_font = self.fontmetrics[id_]
                 if hasattr(self, 'shell') and not self.shell.disposed:
                     self._layout_needed = 1
 
@@ -430,7 +438,7 @@ class SessionRuntime(object):
         for ff in self.mngr.theme.fontfaces:
             self.loadstyle(ff.tocss())
         for font in self.mngr.theme.iterfonts():
-            self << SessionRuntime.create_textsize_measurement_call(font, FontMetrics.SAMPLE)
+            self << self.create_textsize_measurement_call(font, FontMetrics.SAMPLE)
         self.entrypoint = entrypoint
         self.args = args
         if self.mngr.config.requirejs:

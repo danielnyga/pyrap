@@ -862,13 +862,15 @@ class FontMetrics(object):
     def __init__(self, sample=SAMPLE, dimensions=None):
         self.sample = sample
         self.avgwidth = None
-        self.x, self.y = None, None
+        self._x, self._y = None, None
         if dimensions is not None:
             self.dimensions = dimensions
 
     @property
     def dimensions(self):
-        return (px(self._x), px(self._y))
+        x = px(self._x) if self._x is not None else None
+        y = px(self._y) if self._y is not None else None 
+        return x, y
 
     @dimensions.setter
     def dimensions(self, dim):

@@ -217,7 +217,9 @@ class GridLayoutAdapter(LayoutAdapter):
         indent = '   ' * level
         self.logger.debug(indent, 'computing layout for', widget.id, repr(widget), 'cell:', self.data.cellwidth, 
             self.data.cellheight, 'widget', self.data.width, self.data.height)
-        self._compute_children(level)
+        
+        if (layout.halign == 'fill' and layout.valign == 'fill'): 
+            self._compute_children(level)
         
         fringe_width, fringe_height = widget.compute_fringe()
         #=======================================================================
@@ -332,7 +334,9 @@ class GridLayoutAdapter(LayoutAdapter):
         else:
             my.height.value = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
             my.cellheight.min = my.height.value
-
+            
+        if not (layout.halign == 'fill' and layout.valign == 'fill'): 
+            self._compute_children(level)
         #=======================================================================
         # compute the cell positions if we know our width/height 
         # the width/height of all our children
@@ -361,7 +365,9 @@ class StackLayoutAdapter(GridLayoutAdapter):
         indent = '   ' * level
         self.logger.debug(indent, 'computing layout for', widget.id, repr(widget), 'cell:', self.data.cellwidth, 
             self.data.cellheight, 'widget', self.data.width, self.data.height)
-        self._compute_children(level)
+        
+        if not (layout.halign == 'fill' and layout.valign == 'fill'): 
+            self._compute_children(level)
         
 #         my.cellwidth.min = max(my.width.min, mywidth)
 #         my.cellheight.min = max(my.height.min, myheight)
@@ -473,6 +479,9 @@ class StackLayoutAdapter(GridLayoutAdapter):
         else:
             my.height.value = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
             my.cellheight.min = my.height.value
+        
+        if (layout.halign == 'fill' and layout.valign == 'fill'): 
+            self._compute_children(level)
         
         # compute the cell positions if we know our width/height 
         # the width/height of all our children

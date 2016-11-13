@@ -39,17 +39,16 @@ class ControlsDemo():
         # header
         #=======================================================================
         header = Composite(outer)
-        header.layout = ColumnLayout(halign='fill', minheight='90px', flexcols=1, padding_bottom=px(100))
-        header.bgimg = Image('images/salvage.gif')
-#         header.bgimg = Image('images/background_grey.png')
+        header.layout = ColumnLayout(halign='fill', minheight='90px', flexcols=1)
+        header.bgimg = Image('images/background-green.jpg')
         header.bg = 'marine'
         header.css = 'header'
         
-        self.beny_logo = Image('images/beny_logo.png').resize(height='70px')
-        logo = Label(header, img=self.beny_logo, valign='center', halign='right')
+        self.beny_logo = Image('images/beny_logo.png')
+        logo = Label(header, img=self.beny_logo, valign='center', halign='fill')
         logo.bg = 'transp'    
-        welcome = Label(header, text='pyRAP - Controls Demo', halign='right', valign='top')
-        welcome.color = 'white'
+        welcome = Label(header, text='pyRAP - Controls Demo', halign='center', valign='center')
+#         welcome.color = 'white'
         welcome.css = 'header'
         welcome.bg = 'transp'
 #         welcome.font = welcome.font.modify(size=24, bf=True, it=True)
@@ -67,7 +66,7 @@ class ControlsDemo():
         footer = Composite(outer, border=True)
         footer.layout = ColumnLayout(halign='fill', flexcols=0, minheight=50)
         footer.bgimg = Image('images/background_grey.png')
-        footer.bg = 'grey'
+        footer.bg = 'light grey'
         Label(footer, halign='left', valign='bottom', text='powered by pyRAP v0.1').bg = 'transp'
         #=======================================================================
         # content area
@@ -145,11 +144,11 @@ class ControlsDemo():
 
     def create_menu_page(self, parent):
         grp_ctxmenu = Group(parent, text='Context Menus')
-        grp_ctxmenu.layout = CellLayout(minwidth=200, minheight=200)
+        grp_ctxmenu.layout = CellLayout()
         label = Label(grp_ctxmenu, text='Right-click in this label\nto open the context menu', halign='fill', valign='fill')
-        
+        label.font = label.font.modify(family='Debby', size=48)
         menu = Menu(label, popup=True)
-        item1 = MenuItem(menu, index=0, push=True, text='MenuItem 1', img=self.beny_logo.resize(height='16px'))
+        item1 = MenuItem(menu, index=0, push=True, text='MenuItem 1', img=self.beny_logo)
         item1.on_select += lambda *args: out('menu item 1 was selected', args)
         item2 = MenuItem(menu, index=1, check=True, text='MenuItem 2')
         item3 = MenuItem(menu, index=2, check=True, text='MenuItem 3')
@@ -185,7 +184,7 @@ class ControlsDemo():
         b = Button(grp, text='click')
         def select(*_):
             for fontface in session.runtime.mngr.theme.fontfaces: pass
-            session.runtime.sendstyle(fontface.tocss())
+            session.runtime.loadstyle(fontface.tocss())
 
         b.on_select += select
         
