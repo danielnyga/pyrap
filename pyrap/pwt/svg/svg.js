@@ -80,8 +80,12 @@ pwt.SVG.prototype = {
     },
 
 
-     bounds: function( args ) {
-        console.log('setting bounds', args);
+     setBounds: function( args ) {
+        console.log('setting bounds [svg] to ', args);
+        this._parentDIV.style.left = args[0] + "px";
+        this._parentDIV.style.top = args[1] + "px";
+        this._parentDIV.style.width = args[2] + "px";
+        this._parentDIV.style.height = args[3] + "px";
      },
 
     _scheduleUpdate: function( needsLayout ) {
@@ -111,7 +115,7 @@ rap.registerTypeHandler( 'pwt.customs.SVG', {
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'attr', 'svg'],
+  properties: [ 'remove', 'attr', 'svg', 'bounds'],
 
   methods : [ "clear", "highlight" ],
 
