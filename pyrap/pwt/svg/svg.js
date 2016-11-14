@@ -13,8 +13,11 @@ pwt.SVG = function(parent, cssid, svg) {
         this.svg = document.createElementNS(svgNS, "svg");
         this.svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
         this.svg.setAttribute('encoding', 'utf-8');
+
         this._parentDIV.append( this.svg );
     }
+    this._parentDIV.style.width = this.svg.attributes.viewBox.value.split(" ")[2] + 'px';
+    this._parentDIV.style.height = this.svg.attributes.viewBox.value.split(" ")[3] + 'px';
 
     this._needsLayout = true;
     var that = this;
@@ -32,8 +35,8 @@ pwt.SVG.prototype = {
         element.style.position = "absolute";
         element.style.left = clientarea[0];
         element.style.top = clientarea[1];
-        element.style.width = clientarea[2] + "px";
-        element.style.height = clientarea[3] + "px";
+//        element.style.width = clientarea[2] + "px";
+//        element.style.height = clientarea[3] + "px";
         parent.append( element );
         return element;
     },
@@ -71,10 +74,15 @@ pwt.SVG.prototype = {
     },
 
     _resize: function( clientArea ) {
-        this._width = clientArea[ 2 ];
-        this._height = clientArea[ 3 ];
+//        this._width = clientArea[ 2 ];
+//        this._height = clientArea[ 3 ];
         this._scheduleUpdate( false );
     },
+
+
+     bounds: function( args ) {
+        console.log('setting bounds', args);
+     },
 
     _scheduleUpdate: function( needsLayout ) {
         if( needsLayout ) {
@@ -97,6 +105,7 @@ rap.registerTypeHandler( 'pwt.customs.SVG', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
+    console.log('parent svg', parent);
     return new pwt.SVG( parent, properties.cssid, properties.svg );
   },
 

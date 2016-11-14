@@ -875,7 +875,7 @@ class FontMetrics(object):
     @dimensions.setter
     def dimensions(self, dim):
         self._x, self._y = dim
-        self.avgwidth = float(self._x) / len(self.sample)
+        self.avgwidth = 0 if not self.sample else float(self._x) / len(self.sample)
 
     def estimate(self, sample):
         return px(math.ceil(len(sample) * self.avgwidth)), px(math.ceil(self._y))

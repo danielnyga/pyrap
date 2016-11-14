@@ -89,7 +89,7 @@ class SVG(Widget):
         h = h/2.
         h = min(h, self._height)
         w = h * prop
-        out('svg sizes', w, h)
+        out('svg sizes========================================================', w, h)
 
         return w, h
 
