@@ -26,7 +26,12 @@ class ControlsDemo():
     @staticmethod
     def setup(application): pass
 
-    def desktop(self, shell, **kwargs):
+    def desktop(self, display, **kwargs):
+        self.shell = Shell(display, titlebar=1, btnclose=True, resize=True, btnmax=True, btnmin=True)
+        self.shell.maximized = True
+        
+        
+        shell = self.shell
         self.mainwnd = shell
         
         #=======================================================================
@@ -75,6 +80,8 @@ class ControlsDemo():
         self.create_pages()
         self.navigation.on_select += self.switch_page
         self.navigation.selection = self.pages['Button']
+        self.shell.onresize_shell()
+        
         
     def switch_page(self, *args):
         for page in (self.pages.values()):

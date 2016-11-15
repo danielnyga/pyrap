@@ -383,8 +383,8 @@ class SessionRuntime(object):
                 target = self.windows[o.target]
                 if target is None: target = self
                 target._handle_call(o)
-        if self._layout_needed and hasattr(self, 'shell') and not self.shell.disposed:
-            self.shell.dolayout()
+        if self._layout_needed:
+            self.display.on_resize.notify()
 
         if self.state == APPSTATE.INITIALIZED:
             self.log_.info('creating shell...')
@@ -426,7 +426,6 @@ class SessionRuntime(object):
                     self.fontmetrics[id_].dimensions = dims
                     if self.default_font is None: 
                         self.default_font = self.fontmetrics[id_]
-                if hasattr(self, 'shell') and not self.shell.disposed:
                     self._layout_needed = 1
 
     
@@ -466,11 +465,6 @@ class SessionRuntime(object):
         self.create_display()
 
 
-    # def requirecss(self, css):
-    #     resource = session.runtime.mngr.resources.registerf(os.path.basename(css), 'text/css', css)
-    #     self << RWTCallOperation('rwt.client.ClientFileLoader', 'load', {'files': [resource.location]})
-
-
     def requirejs(self, f):
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/javascript', f)
         self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
@@ -493,11 +487,11 @@ class SessionRuntime(object):
         self.display = Display(self.windows)
     
     def create_shell(self):
-        self.shell = Shell(self.display, maximized=True)
-        self.shell.bg = Color('green')
-        self.shell.maximized = True
-        self.mngr.config.entrypoints[self.entrypoint](self.app, self.shell, **self.args)
-        self.shell.onresize_shell()
+#         self.shell = Shell(self.display, maximized=True)
+#         self.shell.bg = Color('green')
+#         self.shell.maximized = True
+        self.mngr.config.entrypoints[self.entrypoint](self.app, self.display, **self.args)
+#         self.shell.onresize_shell()
         self._initialized = True
         
     def load_fallback_theme(self, url):
