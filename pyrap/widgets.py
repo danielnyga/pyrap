@@ -29,7 +29,8 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme
-from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask
+from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask,\
+    ifnot
 from collections import OrderedDict
 
 
@@ -468,8 +469,7 @@ class Shell(Widget):
             options.parentShell = parentshell.id
         if self.title is not None or RWT.TITLE in self.style:
             options.style.append('TITLE')
-            if self.title is not None:
-                options.text = self.title
+            options.text = ifnone(self.title, '')
         if RWT.CLOSE in self.style:
             options.showClose = True
             options.allowClose = True
@@ -528,7 +528,7 @@ class Shell(Widget):
         session.runtime << RWTSetOperation(self.id, {'mode': 'maximized'})
         if m: 
             self._maximize()
-#             session.runtime.display.on_resize += self.dolayout
+            session.runtime.display.on_resize += self.dolayout
             
         
     @property
@@ -548,14 +548,9 @@ class Shell(Widget):
             area[2] -= padding.left + padding.right
             area[1] += padding.top
             area[3] -= padding.top + padding.bottom
-        if self.title: 
+        if self.title is not None or RWT.TITLE in self.style: 
             area[3] -= self.theme.title_height
             area[1] += self.theme.title_height
-        top, right, bottom, left = self.theme.borders
-        area[0] += ifnone(left, 0, lambda b: b.width)
-        area[2] -= ifnone(left, 0, lambda b: b.width) + ifnone(right, 0, lambda b: b.width)
-        area[1] += ifnone(top, 0, lambda b: b.width)
-        area[3] -= ifnone(top, 0, lambda b: b.width) + ifnone(bottom, 0, lambda b: b.width)
         return area
     
     @checkwidget
