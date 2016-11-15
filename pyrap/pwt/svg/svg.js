@@ -16,8 +16,6 @@ pwt.SVG = function(parent, cssid, svg) {
 
         this._parentDIV.append( this.svg );
     }
-    this._parentDIV.style.width = this.svg.attributes.viewBox.value.split(" ")[2] + 'px';
-    this._parentDIV.style.height = this.svg.attributes.viewBox.value.split(" ")[3] + 'px';
 
     this._needsLayout = true;
     var that = this;
@@ -35,8 +33,6 @@ pwt.SVG.prototype = {
         element.style.position = "absolute";
         element.style.left = clientarea[0];
         element.style.top = clientarea[1];
-//        element.style.width = clientarea[2] + "px";
-//        element.style.height = clientarea[3] + "px";
         parent.append( element );
         return element;
     },
@@ -74,14 +70,10 @@ pwt.SVG.prototype = {
     },
 
     _resize: function( clientArea ) {
-//        this._width = clientArea[ 2 ];
-//        this._height = clientArea[ 3 ];
         this._scheduleUpdate( false );
     },
 
-
      setBounds: function( args ) {
-        console.log('setting bounds [svg] to ', args);
         this._parentDIV.style.left = args[0] + "px";
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
