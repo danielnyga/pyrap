@@ -106,6 +106,7 @@ class Widget(object):
         self._css = None
         self._menu = None
         self._layer = Widget.Layer(self)
+        self._badge = None
         if self not in parent.children:
             parent.children.append(self)
         if self not in parent.children:
@@ -335,6 +336,19 @@ class Widget(object):
     def css(self, css):
         self._css = css
         session.runtime << RWTSetOperation(self.id, {'customVariant': 'variant_%s' % css})
+        
+    @property
+    def badge(self):
+        return self._badge
+    
+    @badge.setter
+    @checkwidget
+    def badge(self, text):
+        self._badge = text
+        if self._badge is None:
+            text = ''
+        session.runtime << RWTSetOperation(self.id, {'badge': text})
+        
         
     def compute_size(self):
         '''
