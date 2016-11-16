@@ -27,6 +27,7 @@ import math
 from cssutils.css.cssfontfacerule import CSSFontFaceRule
 from pyparsing import Literal, alphanums, alphas, Word, ZeroOrMore, quotedString,\
     removeQuotes
+from cssutils.css import value
 
 TYPE = 'type-selector'
 CLASS = 'class'
@@ -291,10 +292,14 @@ class Theme(object):
                 m = re.match(r'rgba\((?P<r>\d+)\s*?,\s*?(?P<g>\d+)\s*?,\s*?(?P<b>\d+)\s*?,\s*?(?P<a>.+)\s*?\)', str(v.cssText))
                 if m is not None:
                     return Color(rgb=(float(m.group('r')) / 255, float(m.group('g'))/255, float(m.group('b'))/255), alpha=float(m.group('a')))
-            v = parse_value(str(v.cssText))
+            v = parse_value(str(v.cssText), Color)
             return v
         elif isinstance(v, CSSFunction):
             return Color(fct=self._convert_fct(v))
+        elif isinstance(v, Value):
+            v_ = str(v.cssText).strip('"\\')
+            if v_ in Color.names: 
+                return Color(html=v_)
         v = none_or_value(v)
         return v
 
