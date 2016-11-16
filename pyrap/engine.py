@@ -179,12 +179,12 @@ class ApplicationManager(object):
                 # send the parameterized the start page to the client
                 return str(self.startup_page % (self.config.name, self.icon.location if hasattr(self, 'icon') else '', entrypoint, str(query)))
 
-
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE PUSH MESSAGES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         if 'servicehandler' in query and query['servicehandler'] == 'org.eclipse.rap.serverpush':
             while not session.runtime.push.wait(2): pass
+            web.header('Content-Type', 'text/html')
             session.runtime.push.clear()
             return ''
 
