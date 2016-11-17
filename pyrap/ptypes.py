@@ -751,7 +751,7 @@ def parse_value(v, default=None):
     if isinstance(v, basestring):
         if v.endswith('px'): return Pixels(v)
         elif v.endswith('%'): return Percent(v)
-        elif v.startswith('#') or default is Color: return Color(v)
+        elif v.startswith('#') or (default is Color and v in Color.names): return Color(v)
     else: 
         return v if (default is None or v is None or type(v) is default) else default(v)
     
