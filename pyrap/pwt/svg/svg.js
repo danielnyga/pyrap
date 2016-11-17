@@ -101,7 +101,6 @@ rap.registerTypeHandler( 'pwt.customs.SVG', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    console.log('parent svg', parent);
     return new pwt.SVG( parent, properties.cssid, properties.svg );
   },
 
