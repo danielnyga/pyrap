@@ -1,52 +1,42 @@
-import os
-
 from pyrap import session
-from pyrap.communication import RWTCreateOperation
+from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
+    RWTCallOperation
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.widgets import Widget, constructor
+from pyrap.utils import ifnone, out
+from pyrap.widgets import Widget, constructor, checkwidget
 
 
 class Graph(Widget):
 
-    _rwt_class_name = 'd3graph.Graph'
+    _rwt_class_name = 'pwt.customs.Graph'
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('Graph')
-    def __init__(self, parent, cssid=None, cssclass=None, jsfiles=None, **options):
+    def __init__(self, parent, cssid=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = GraphTheme(self, session.runtime.mngr.theme)
-        self._jsfiles = jsfiles
-        self.ensurejsresources()
+        self._gwidth = None
+        self._gheight = None
         self._links = []
         self._cssid = cssid
-        self._cssclass = cssclass
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         if self._cssid:
             options.cssid = self._cssid
-        if self._cssclass:
-            options.cssclass = self._cssclass
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
         w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX')
+        padding = self.theme.padding
+        if padding:
+            w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
+            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        t, r, b, l = self.theme.borders
+        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         return w, h
-
-    def ensurejsresources(self):
-        if self._jsfiles:
-            if not isinstance(self._jsfiles, list):
-                files = [self._jsfiles]
-            else:
-                files = self._jsfiles
-            for p in files:
-                if os.path.isfile(p):
-                    session.runtime.requirejs(p)
-                elif os.path.isdir(p):
-                    for f in [x for x in os.listdir(p) if x.endswith('.js')]:
-                        session.runtime.requirejs(f)
-
 
     @property
     def links(self):
@@ -61,12 +51,24 @@ class Graph(Widget):
         self._cssid = cssid
 
     @property
-    def cssclass(self):
-        return self._cssclass
+    def gwidth(self):
+        return self._gwidth
 
-    @cssclass.setter
-    def cssclass(self, cl):
-        self._cssclass = cl
+    @gwidth.setter
+    @checkwidget
+    def gwidth(self, w):
+        self._gwidth = w
+        session.runtime << RWTSetOperation(self.id, {'width': self.gwidth})
+
+    @property
+    def gheight(self):
+        return self._gheight
+
+    @gheight.setter
+    @checkwidget
+    def gheight(self, h):
+        self._gheight = h
+        session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
 
     def addlink(self, source=None, target=None, value=None):
         tmplink = GraphLink(source=source, target=target, value=value)
@@ -81,6 +83,18 @@ class Graph(Widget):
             self.links.remove(tmplink)
             return True
         return False
+
+    def clear(self):
+        session.runtime << RWTCallOperation(self.id, 'updateData', {'remove': self.links, 'add': []})
+        self._links = []
+
+    def updatedata(self, newlinks):
+        remove = [x for x in self.links if x not in newlinks]
+        add = [x for x in newlinks if x not in self.links]
+        out(remove, add)
+        session.runtime << RWTCallOperation(self.id, 'updateData', {'remove': remove, 'add': add})
+        self._links = [x for x in self.links if x not in remove] + add
+        return remove, add
 
 
 class GraphLink(object):
