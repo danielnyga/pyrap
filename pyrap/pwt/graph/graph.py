@@ -28,14 +28,21 @@ class Graph(Widget):
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
-        w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX')
+        w = self.parent.width
+        h = self.parent.height
+
         padding = self.theme.padding
         if padding:
             w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
             h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        margin = self.theme.margin
+        if margin:
+            w += ifnone(margin.left, 0) + ifnone(margin.right, 0)
+            h += ifnone(margin.top, 0) + ifnone(margin.bottom, 0)
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        out('compute_size graph', w,h)
         return w, h
 
     @property
@@ -166,3 +173,7 @@ class GraphTheme(WidgetTheme):
     @property
     def font(self):
         return self._theme.get_property('font', 'Graph', self.styles(), self.states())
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'SVG', self.custom_variant(), self.styles(), self.states())

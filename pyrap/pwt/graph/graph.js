@@ -3,8 +3,8 @@ pwt_d3 = {};
 pwt_d3.Graph = function( parent, cssid ) {
 
     this.WAITMSEC = 100;
-    this.width = window.innerWidth;
-    this.height = window.innerHeight;
+    this.width = parent.getClientArea()[2];
+    this.height = parent.getClientArea()[3];
     this.force = d3.layout.force();
     this.nodes = this.force.nodes();
     this.links = this.force.links();
@@ -15,8 +15,9 @@ pwt_d3.Graph = function( parent, cssid ) {
         this._parentDIV.setAttribute('id', cssid);
     }
 
-    this._svg = d3.select(this._parentDIV)
-        .append("svg");
+    this._svg = d3.select(this._parentDIV).append("svg");
+
+    this._svgContainer = this._svg.select('g');
 
     this._needsLayout = true;
     this._needsRender = true;
@@ -40,7 +41,6 @@ pwt_d3.Graph.prototype = {
 
     initialize: function() {
 
-        this._svgContainer = this._svg.select('g');
         if (this._svgContainer.empty()) {
             this._svg
             .attr('width', this.width)
@@ -81,17 +81,13 @@ pwt_d3.Graph.prototype = {
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
+        this.width = args[2];
+        this.height = args[3];
+        this.update();
      },
 
     setZIndex : function(index) {
         this._parentDIV.style.zIndex = index;
-    },
-
-     _scheduleUpdate: function( needsLayout ) {
-        if( needsLayout ) {
-            this._needsLayout = true;
-        }
-        this._needsRender = true;
     },
 
     destroy: function() {
@@ -328,6 +324,10 @@ pwt_d3.Graph.prototype = {
      * redraws the graph with the updated nodes and links
      */
     update : function () {
+
+        this._svg
+            .attr('width', this.width)
+            .attr('height', this.height);
 
       var path = this._svgContainer.selectAll("path.link")
         .data(this.links, function(d) {
