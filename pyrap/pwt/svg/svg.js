@@ -2,7 +2,9 @@ pwt = {};
 svgNS = "http://www.w3.org/2000/svg";
 
 pwt.SVG = function(parent, cssid, svg) {
+
     this._parentDIV = this.createElement(parent);
+
     if (cssid) {
         this._parentDIV.setAttribute('id', cssid);
     }
@@ -17,12 +19,11 @@ pwt.SVG = function(parent, cssid, svg) {
         this._parentDIV.append( this.svg );
     }
 
-    this._needsLayout = true;
     var that = this;
     parent.addListener( "Resize", function() {
-        that._resize( parent.getClientArea() );
+        that.setBounds( parent.getClientArea() );
     } );
-    this._resize( parent.getClientArea() );
+    this.setBounds( parent.getClientArea() );
 };
 
 pwt.SVG.prototype = {
@@ -57,7 +58,7 @@ pwt.SVG.prototype = {
 
     highlight : function ( args ) {
         if (document.getElementById(args.id)) {
-            document.getElementById(args.id).style.fill = args.clear ? "#ffffff" : "#bee280";
+            document.getElementById(args.id).style.fill = args.clear ? "none" : "#bee280";
         }
     },
 
@@ -69,30 +70,21 @@ pwt.SVG.prototype = {
         }
     },
 
-    _resize: function( clientArea ) {
-        this._scheduleUpdate( false );
-    },
-
      setBounds: function( args ) {
+        console.log('setting bounds to ', args);
         this._parentDIV.style.left = args[0] + "px";
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
+        console.log('after setting bounds', this._parentDIV);
      },
-
-    _scheduleUpdate: function( needsLayout ) {
-        if( needsLayout ) {
-            this._needsLayout = true;
-        }
-        this._needsRender = true;
-    },
 
     destroy: function() {
         var element = this._parentDIV;
         if( element.parentNode ) {
             element.parentNode.removeChild( element );
         }
-  }
+    }
 
 };
 
@@ -101,7 +93,7 @@ rap.registerTypeHandler( 'pwt.customs.SVG', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    console.log('parent svg', parent);
+    console.log('svg parent', parent);
     return new pwt.SVG( parent, properties.cssid, properties.svg );
   },
 

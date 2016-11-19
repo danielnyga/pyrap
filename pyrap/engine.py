@@ -465,6 +465,19 @@ class SessionRuntime(object):
         self.create_display()
 
 
+    def ensurejsresources(self, jsfiles):
+        if jsfiles:
+            if not isinstance(jsfiles, list):
+                files = [jsfiles]
+            else:
+                files = jsfiles
+            for p in files:
+                if os.path.isfile(p):
+                    self.requirejs(p)
+                elif os.path.isdir(p):
+                    for f in [x for x in os.listdir(p) if x.endswith('.js')]:
+                        self.requirejs(f)
+
     def requirejs(self, f):
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/javascript', f)
         self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})

@@ -1,10 +1,11 @@
+import os
 from io import BytesIO
 
 from pyrap import session
 from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
 from pyrap.themes import WidgetTheme
-from pyrap.utils import out
+from pyrap.utils import out, ifnone
 from pyrap.widgets import Widget, constructor, checkwidget
 from lxml import etree as ET
 
@@ -15,11 +16,11 @@ class SVG(Widget):
     _defstyle_ = Widget._defstyle_
 
     @constructor('SVG')
-    def __init__(self, parent, svgfile=None, cssid=None, **options):
+    def __init__(self, parent, svg=None, cssid=None, **options):
         Widget.__init__(self, parent, **options)
         self._cssid = cssid
-        self._svgfile = svgfile
-        self._svgcontent = None
+        self._svgfile = svg
+        self._content = None
         self.theme = SVGTheme(self, session.runtime.mngr.theme)
 
     def _create_rwt_widget(self):
@@ -30,12 +31,17 @@ class SVG(Widget):
             options.svg = self._get_rwt_svg(self._svgfile)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
-    def _get_rwt_svg(self, fpath):
-        self.tree = ET.parse(fpath)
-        self.root = self.tree.getroot()
+    def _get_rwt_svg(self, svg):
+        if os.path.isfile(svg):
+            self.tree = ET.parse(svg)
+            self.root = self.tree.getroot()
+        else:
+            self.root = ET.fromstring(svg)
+            self.tree = ET.ElementTree(self.root)
         w, h = self.root.attrib['viewBox'].split()[-2:]
-        self._width = int(w)
-        self._height = int(h)
+        out(w, h, type(w), type(h))
+        self._vbwidth = int(float(w))
+        self._vbheight = int(float(h))
 
         # writing the stream to the content will omit leading doc infos
         stream = BytesIO()
@@ -47,13 +53,14 @@ class SVG(Widget):
 
     @property
     def svg(self):
-        return self._svgcontent
+        return self._content
 
     @svg.setter
     @checkwidget
-    def svg(self, path):
-        self._svgfile = path
-        session.runtime << RWTSetOperation(self.id, {'svg': self._get_rwt_svg(path)})
+    def svg(self, svg):
+        self._svgfile = svg
+        _svg = self._get_rwt_svg(svg)
+        session.runtime << RWTSetOperation(self.id, {'svg': _svg})
 
     def getattr(self, id, attr):
         elem = self.tree.find('*//*[@id="{}"]'.format(id))
@@ -84,11 +91,22 @@ class SVG(Widget):
         stream.close()
 
     def compute_size(self):
-        _, _, w, h = session.runtime.windows.display.bounds
-        prop = float(self._width)/self._height
-        h = h/2.
-        h = min(h, self._height)
-        w = h * prop
+        ratio = float(self._vbwidth)/self._vbheight
+
+        h = min(self._vbheight, self.parent.height)
+        w = h * ratio
+
+        padding = self.theme.padding
+        if padding:
+            w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
+            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        margin = self.theme.margin
+        if margin:
+            w += ifnone(margin.left, 0) + ifnone(margin.right, 0)
+            h += ifnone(margin.top, 0) + ifnone(margin.bottom, 0)
+        t, r, b, l = self.theme.borders
+        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         return w, h
 
 
