@@ -6,10 +6,10 @@ Created on Aug 1, 2015
 
 import web
 from web.webapi import notfound
-from pyrap import pyraplog
+from pyrap import threads, pyraplog
 import urlparse 
 from pyrap.sessions import Session
-from pyrap.utils import RStorage
+from pyrap.utils import RStorage, out
 
 routes = (
     '/test', 'Test',
@@ -17,7 +17,7 @@ routes = (
     '/(.*)', 'RequestDispatcher',
 )
 
-web.config.debug = False
+web.config.debug = True
 debug = True
 
 class Test():
@@ -28,9 +28,15 @@ class Test():
 class PyRAPServer(web.application):
 
     def run(self, port=8080, *middleware):
-        func = self.wsgifunc(*middleware)
-        return web.httpserver.runsimple(func, ('0.0.0.0', port))
-
+        logger = pyraplog.getlogger(__name__) 
+        try:
+            func = self.wsgifunc(*middleware)
+            web.httpserver.runbasic(func, ('0.0.0.0', port))
+        except (KeyboardInterrupt, SystemExit), e:
+            for _, t in dict(list(threads.iteractive())).items():
+                if isinstance(t, threads.SessionThread): t.kill()
+        logger.error('goodbye.')
+    
 
 class ApplicationRegistry(object):
     '''

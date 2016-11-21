@@ -6,12 +6,13 @@ Created on Oct 27, 2015
 import web
 import threading
 import time
-from web.utils import Storage, storify
+from web.utils import Storage
 from copy import deepcopy
 import urlparse
 from web import utils
 from pyrap.ptypes import Event
 from pyrap.utils import ifnone
+from pyrap import threads
 
 
 class SessionKilled(Event):
@@ -131,3 +132,8 @@ class DictStore(web.session.Store):
                 if session_id in self:
                     with self._lock: 
                         del self[session_id]
+                # clean up the SessionThreads belonging to this session
+                for _, t in threads.active():
+                    if isinstance(t, threads.SessionThread) and t._session_id == session_id:
+                        t.kill()
+                        
