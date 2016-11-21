@@ -6,7 +6,7 @@ import inspect
 import time
 from pyrap.utils import out
 from threading import _active_limbo_lock, _active, _limbo,\
-    _trace_hook, _profile_hook, _get_ident, Lock, _allocate_lock
+    _trace_hook, _profile_hook, _get_ident, Lock, _allocate_lock, RLock
 import sys
 import traceback
 import random
@@ -15,6 +15,13 @@ import random
 class ThreadInterrupt(Exception): pass
 
 from threading import enumerate  # @UnusedImport
+
+
+def sleep(sec):
+    '''Interruptable sleep'''
+    ev = Event(verbose=0)
+    ev.wait(sec)
+    
     
 def Condition(*args, **kwargs):
     """Factory function that returns a new condition variable object.
@@ -69,12 +76,17 @@ class _Condition(threading._Condition):
         
         waiter.acquire()
         if isinstance(t, InterruptableThread):
-            with t._InterruptableThread__lock:
-                t._waitingfor = self
+            t._InterruptableThread__lock.acquire()
+            if t.interrupted: 
+                t._InterruptableThread__lock.release()
+                return
+            t._waitingfor = self
         self.__waiters[t.ident] = waiter
         saved_state = self._release_save()
         try:    # restore state no matter what (e.g., KeyboardInterrupt)
             if timeout is None:
+                if isinstance(t, InterruptableThread):
+                    t._InterruptableThread__lock.release()
                 waiter.acquire()
                 if __debug__:
                     self._note("%s.wait(): got it", self)
@@ -84,6 +96,8 @@ class _Condition(threading._Condition):
                 # we'll be unresponsive.  The scheme here sleeps very
                 # little at first, longer as time goes on, but never longer
                 # than 20 times per second (or the timeout time remaining).
+                if isinstance(t, InterruptableThread):
+                    t._InterruptableThread__lock.release()
                 endtime = time.time() + timeout
                 delay = 0.0005 # 500 us -> initial delay of 1 ms
                 while True:
@@ -99,14 +113,15 @@ class _Condition(threading._Condition):
                     if __debug__:
                         self._note("%s.wait(%s): timed out", self, timeout)
                     try:
-                        self.__waiters.remove(waiter)
-                    except ValueError:
-                        pass
+                        del self.__waiters[t.ident]
+                    except ValueError: pass
                 else:
                     if __debug__:
                         self._note("%s.wait(%s): got it", self, timeout)
         finally:
             self._acquire_restore(saved_state)
+        if isinstance(t, InterruptableThread):
+            t.die_on_interrupt()
             
 
     def __enter__(self):
@@ -193,7 +208,7 @@ class _Event(threading._Event):
 
     def __init__(self, verbose=None):
         threading._Event.__init__(self, verbose)
-        self.__cond = Condition(Lock())
+        self.__cond = Condition(Lock(), verbose=verbose)
         self.__flag = False
 
     def _reset_internal_locks(self):
@@ -280,10 +295,25 @@ class InterruptableThread(threading.Thread):
                                   args=args, kwargs=kwargs, verbose=verbose)
         self.__waitingfor = None 
         self.__running = Event()
-        self.__lock = Lock()
+        self.__lock = RLock()
         self.interrupted = False
         self.finished = False
         
+    
+    def die_on_interrupt(self):
+        '''If an interrupt has been signaled to this thread, waits in a busy 
+        loop until the interpreter kills the thread by issuing the 
+        ThreadInterrupt exception.
+        
+        If no interrupt is issued, this method immediately returns without 
+        doing anything.
+        '''
+        with self.__lock:
+            if self.interrupted: 
+                if __debug__:
+                    self._note('%s.die_on_interrupt(): waiting to die...' % self)
+                while 1: time.sleep(.00001)
+            
     
     @property
     def _waitingfor(self):
@@ -292,7 +322,6 @@ class InterruptableThread(threading.Thread):
     @_waitingfor.setter
     def _waitingfor(self, waiter):
         if self.interrupted and waiter is not None: raise RuntimeError()
-        out('waiting for', waiter)
         self.__waitingfor = waiter
         
     
@@ -349,7 +378,7 @@ class InterruptableThread(threading.Thread):
     def kill(self):
         '''Raises an :class:`ThreadInterrupt` in this thread.'''
         self.__running.wait()
-#         if not self.is_alive(): return
+        if not self.is_alive(): return
         with self.__lock:
             if self.finished: return
             self.interrupted = True
@@ -376,23 +405,20 @@ class InterruptableThread(threading.Thread):
             try:
                 self.run()
             except ThreadInterrupt as e:
-#                 traceback.print_exc() 
+                sys.stdout.flush()
                 raise e 
             else:
                 with self.__lock:
-                    # if a ThreadInterrupt exception has been sent to
-                    # this thread, we have to waituntil it fires. This
-                    # is because it cannot be revoked reliably. 
                     self.finished = True
-                    if self.interrupted:
-                        out('waiting to die...')
-                        while 1: time.sleep(0.005)
+                    # if a ThreadInterrupt exception has been sent to
+                    # this thread, we have to wait until the interpreter 
+                    # actually fires it. This is because it cannot be revoked 
+                    # reliably. The thread has to busily wait until it dies. 
+                    self.die_on_interrupt()
         except (SystemExit, KeyboardInterrupt, ThreadInterrupt), e: 
-#             traceback.print_exc()
             if __debug__:
                 self._note("%s._run(): %s", self, type(e).__name__)
         except Exception as e:
-            traceback.print_exc()
             if __debug__:
                 self._note("%s._run(): calling %s._except(%s)", self, self, type(e).__name__)
             self._except(e)
@@ -437,7 +463,12 @@ class InterruptableThread(threading.Thread):
             except SystemExit as e:
                 if __debug__:
                     self._note("%s.__bootstrap(): raised SystemExit", self)
-            except:
+            except ThreadInterrupt:
+                if sys and sys.stderr is not None:
+                    print>>sys.stderr, ("Interrupt in thread %s: !!! THIS SHOULD NEVER HAPPEN !!!\n%s" %
+                                         (self.name, traceback.format_exc()))
+                
+            except Exception:
                 if __debug__:
                     self._note("%s.__bootstrap(): unhandled exception", self)
                 # If sys.stderr is no more (most likely from interpreter
@@ -445,7 +476,7 @@ class InterruptableThread(threading.Thread):
                 # _sys) in case sys.stderr was redefined since the creation of
                 # self.
                 if sys and sys.stderr is not None:
-                    print>>sys.stderr, ("Exception in thread %s:\n%s" %
+                    print>>sys.stderr, ("Caught Exception in thread %s:\n%s" %
                                          (self.name, traceback.format_exc()))
                 elif self._Thread__stderr is not None:
                     # Do the best job possible w/o a huge amt. of code to
@@ -454,7 +485,7 @@ class InterruptableThread(threading.Thread):
                     exc_type, exc_value, exc_tb = self._Thread__exc_info()
                     try:
                         print>>self._Thread__stderr, (
-                            "Exception in thread " + self.name +
+                            "Caught Exception in thread " + self.name +
                             " (most likely raised during interpreter shutdown):")
                         print>>self._Thread__stderr, (
                             "Traceback (most recent call last):")
@@ -510,27 +541,31 @@ if __name__ == '__main__':
     for i in range(100):
         out('Iter #%s' % (i+1))
         cond = Condition(verbose=0)
-        event = Event(verbose=1)
+        event = Event(verbose=0)
         def worker():
-            print(i+1, 'working...')
-            time.sleep(random.random() / 2.)
+#             print(i+1, 'working...')
+#             sleep(random.random() * 10)
 #             out(threading.current_thread().interrupted)
+            sleep(random.random())
+#             out('sleep finished')
             with cond:
-                cond.wait()
+                cond.wait(random.random())
 #             out(threading.current_thread().interrupted)
 #             print 'waiting for event'
-#             time.sleep(random.random())
+            sleep(random.random() * 5)
+#             out('thread returns')
 #             event.wait()
-                
-        
         t = InterruptableThread(target=worker, verbose=0)
+        waiting = random.random()
+        start = time.time()
         t.start()
-        time.sleep(random.random())
-        out(i+1, 'killing')
+        time.sleep(waiting)
         t.kill()
-#         out(i+1, 'notifying and sleeping')
-        sys.stdout.flush()
         t.join()
+        end = time.time()
+        out('total: %s sec, wait: %s sec, kill: %s sec' % (end-start, waiting, end-start-waiting))
+        sys.stdout.flush()
+#         out(i+1, 'notifying and sleeping')
     #     time.sleep(5)
 #         out('goodbye.')
 #     with cond:
