@@ -14,12 +14,27 @@ import random
 
 class ThreadInterrupt(Exception): pass
 
-from threading import enumerate  # @UnusedImport
+def iteractive():
+    '''Returns a generator of tuples of thread ids and respective thread objects
+    of threads that are currently active.'''
+    for tid, tobj in threading._active.iteritems():
+        yield tid, tobj
 
+def active():
+    '''Returns a dict of active local threads, which maps the thread ID to
+    the respective thread object.'''
+    return dict(list(iteractive()))
+
+def sessionthreads():
+    d = {}
+    for i, t in iteractive():
+        if isinstance(t, SessionThread):
+            d[i] = t
+    return d
 
 def sleep(sec):
     '''Interruptable sleep'''
-    ev = Event(verbose=0)
+    ev = Event(verbose=1)
     ev.wait(sec)
     
     
@@ -98,6 +113,8 @@ class _Condition(threading._Condition):
                 # than 20 times per second (or the timeout time remaining).
                 if isinstance(t, InterruptableThread):
                     t._InterruptableThread__lock.release()
+                if __debug__:
+                    self._note('%s.wait(%s): waiting for notification or timeout...', type(self).__name__, timeout)
                 endtime = time.time() + timeout
                 delay = 0.0005 # 500 us -> initial delay of 1 ms
                 while True:
@@ -111,7 +128,7 @@ class _Condition(threading._Condition):
                     time.sleep(delay)
                 if not gotit:
                     if __debug__:
-                        self._note("%s.wait(%s): timed out", self, timeout)
+                        self._note("%s.wait(%s): timed out", type(self).__name__, timeout)
                     try:
                         del self.__waiters[t.ident]
                     except ValueError: pass
@@ -311,8 +328,8 @@ class InterruptableThread(threading.Thread):
         with self.__lock:
             if self.interrupted: 
                 if __debug__:
-                    self._note('%s.die_on_interrupt(): waiting to die...' % self)
-                while 1: time.sleep(.00001)
+                    self._note('%s.die_on_interrupt(): waiting to die...', type(self).__name__)
+                while 1: time.sleep(.001)
             
     
     @property
@@ -349,6 +366,7 @@ class InterruptableThread(threading.Thread):
 
         raise AssertionError("could not determine the thread's id")
 
+
     def __raise_exc(self, exctype):
         """Raises the given exception type in the context of this thread.
 
@@ -377,6 +395,8 @@ class InterruptableThread(threading.Thread):
 
     def kill(self):
         '''Raises an :class:`ThreadInterrupt` in this thread.'''
+        if __debug__:
+            self._note('%s._run(): sending ThreadInterrupt', self)
         self.__running.wait()
         if not self.is_alive(): return
         with self.__lock:
@@ -405,8 +425,10 @@ class InterruptableThread(threading.Thread):
             try:
                 self.run()
             except ThreadInterrupt as e:
+                if __debug__:
+                    self._note('%s._run(): received ThreadInterrupt', self)
                 sys.stdout.flush()
-                raise e 
+                raise e
             else:
                 with self.__lock:
                     self.finished = True
@@ -419,6 +441,7 @@ class InterruptableThread(threading.Thread):
             if __debug__:
                 self._note("%s._run(): %s", self, type(e).__name__)
         except Exception as e:
+            traceback.print_exc()
             if __debug__:
                 self._note("%s._run(): calling %s._except(%s)", self, self, type(e).__name__)
             self._except(e)
@@ -432,7 +455,7 @@ class InterruptableThread(threading.Thread):
             self._finally()
             
 
-    def _except(self, e): 
+    def _except(self, e):
         if __debug__:
             self._note("%s._except(): re-raising exception", self) 
         raise e
@@ -476,7 +499,7 @@ class InterruptableThread(threading.Thread):
                 # _sys) in case sys.stderr was redefined since the creation of
                 # self.
                 if sys and sys.stderr is not None:
-                    print>>sys.stderr, ("Caught Exception in thread %s:\n%s" %
+                    print>>sys.stderr, ("Exception in thread %s:\n%s" %
                                          (self.name, traceback.format_exc()))
                 elif self._Thread__stderr is not None:
                     # Do the best job possible w/o a huge amt. of code to
@@ -485,7 +508,7 @@ class InterruptableThread(threading.Thread):
                     exc_type, exc_value, exc_tb = self._Thread__exc_info()
                     try:
                         print>>self._Thread__stderr, (
-                            "Caught Exception in thread " + self.name +
+                            "Exception in thread " + self.name +
                             " (most likely raised during interpreter shutdown):")
                         print>>self._Thread__stderr, (
                             "Traceback (most recent call last):")
@@ -521,20 +544,24 @@ class InterruptableThread(threading.Thread):
                     pass
 
 
-class UIThread(InterruptableThread):
-
+class SessionThread(InterruptableThread):
+    '''
+    An interruptable thread class that inherits the session information
+    from the parent thread.
+    '''
     def __init__(self, group=None, target=None, name=None,
                  args=(), kwargs=None, verbose=None):
-        InterruptableThread.__init__(self)
+        InterruptableThread.__init__(self, target=target, name=name,
+                 args=args, kwargs=kwargs, verbose=verbose)
         self._session = pyrap.session
         self._session_id = pyrap.session.session_id
 
-    def run(self):
+    def _run(self):
         pyrap.session.session_id = self._session_id
         pyrap.session.load()
-        self._run()
-        
-    def _run(self): pass
+        if __debug__:
+            self._note('%s._run(): inherited data from session %s', self, pyrap.session.session_id)
+        InterruptableThread._run(self)
 
 
 if __name__ == '__main__':
@@ -543,9 +570,6 @@ if __name__ == '__main__':
         cond = Condition(verbose=0)
         event = Event(verbose=0)
         def worker():
-#             print(i+1, 'working...')
-#             sleep(random.random() * 10)
-#             out(threading.current_thread().interrupted)
             sleep(random.random())
 #             out('sleep finished')
             with cond:
