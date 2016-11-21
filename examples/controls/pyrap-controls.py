@@ -27,7 +27,7 @@ class ControlsDemo():
     def setup(application): pass
 
     def desktop(self, display, **kwargs):
-        self.shell = Shell(display, titlebar=1, btnclose=True, resize=True, btnmax=True, btnmin=True)
+        self.shell = Shell(display)#, titlebar=1, btnclose=True, resize=True, btnmax=True, btnmin=True)
         self.shell.maximized = True
         
         
@@ -37,8 +37,9 @@ class ControlsDemo():
         #=======================================================================
         # main layout
         #=======================================================================
-        outer = Composite(self.mainwnd.content)
-        outer.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+        scroll = ScrolledComposite(self.mainwnd.content, vscroll=1, hscroll=1)
+        outer = scroll.content
+        outer.layout = RowLayout(halign='fill', valign='fill', flexrows=2)
         
         #=======================================================================
         # header
@@ -46,8 +47,13 @@ class ControlsDemo():
         header = Composite(outer)
         header.layout = ColumnLayout(halign='fill', minheight='90px', flexcols=1)
         header.bgimg = Image('images/background-green.jpg')
-        header.bg = 'marine'
         header.css = 'header'
+        
+        #=======================================================================
+        # nav bar
+        #=======================================================================
+        navbar = Composite(outer, minheight=px(30), halign='fill', valign='fill', padding=0, padding_bottom=15)
+        navbar.css = 'navbar'
         
         self.beny_logo = Image('images/beny_logo.png')
         logo = Label(header, img=self.beny_logo, valign='center', halign='fill')
@@ -187,13 +193,12 @@ class ControlsDemo():
     
     def create_button_page(self, parent):
         grp = Group(parent, text='Push Buttons')
-        grp.layout = CellLayout(halign='fill', valign='fill')
-        b = Button(grp, text='click')
-        def select(*_):
-            for fontface in session.runtime.mngr.theme.fontfaces: pass
-            session.runtime.loadstyle(fontface.tocss())
-
-        b.on_select += select
+        grp.layout = RowLayout(halign='fill', valign='center')
+        for i in range(10):
+            b = Checkbox(grp, text='click-%s' % i)
+            b.bind(BoolVar())
+            b.badge = str(i+1)
+#         b.on_select += select
         
     
     def create_browser_page(self, parent):
