@@ -1,6 +1,41 @@
 
+Button[CHECK] {
+	cursor: pointer;
+}
+
+Button-CheckIcon {
+  background-image: url( img/button/checkbox-unchecked.png );
+}
+
+Button-CheckIcon:hover {
+  background-image: url( img/button/checkbox-unchecked-hover.png );
+}
+
+Button-CheckIcon:selected {
+  background-image: url( img/button/checkbox-checked.png );
+  cursor: pointer;
+}
+
+Button-CheckIcon:selected:hover {
+  background-image: url( img/button/checkbox-checked-hover.png );
+}
+
+Button-CheckIcon:selected:grayed {
+  background-image: url( img/button/checkbox-greyed.png );
+}
+
+Button-CheckIcon:selected:grayed:hover {
+  background-image: url( img/button/checkbox-greyed-hover.png );
+}
+
 Composite.header {
   box-shadow: 0px 0px 20px #333333;
+  padding: 0px 0px 0px 0px;
+}
+
+Composite.navbar {
+  box-shadow: 0px 0px 20px #333333;
+  background-color: "dark grey";
   padding: 0px 0px 10px 0px;
 }
 
@@ -19,7 +54,7 @@ Label.headline {
 @font-face {
   font-family: 'Debby';
   font-style: normal;
-  font-weight: 400;
+  /*font-weight: 400;*/
   src: url(fonts/debby-webfont.woff) format('woff');
   /*unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;*/
 }
