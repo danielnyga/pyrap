@@ -5,7 +5,6 @@ Created on Oct 18, 2015
 '''
 import mimetypes
 import os
-import threading
 from _pyio import BytesIO
 from colorsys import hsv_to_rgb, rgb_to_hsv
 import xml.etree.ElementTree as ET
@@ -16,13 +15,14 @@ from PIL import Image as PILImage
 
 from pyrap.constants import FONT
 from pyrap.utils import out, BitMask, ifnone
+from pyrap import threads
 
 
 class Event(object):
     
     def __init__(self):
         self._listeners = []
-        self._wait = threading.Condition()
+        self._wait = threads.Condition()
         
     def __iadd__(self, l):
         if l not in self._listeners:
@@ -54,7 +54,6 @@ class Event(object):
     
     def __iter__(self):
         for l in self._listeners: yield l
-
 
     
 class ValueChanged(Event):
@@ -636,7 +635,9 @@ def color(c):
 class Color(object):
     
     names = {'red': '#C1351D', 
-             'green': '#0f9d58', 
+             'green': '#0f9d58',
+             'light green': '#5FBA7D',
+             'dark green': '#008000', 
              'blue': '#4285f4',
              'gray': '#8a8a8a', 
              'grey': '#8a8a8a',
