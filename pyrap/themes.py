@@ -1024,6 +1024,26 @@ class DropDownTheme(WidgetTheme):
         return self._theme.get_property('margin', 'Composite', self.custom_variant(), self.styles(), self.states())
 
 
+class DisplayTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Display')
+        
+    @property
+    def icon_info(self):
+        return self._theme.get_property('rwt-information-image', 'Display', self.custom_variant(), self.styles(), self.states())
+    
+    @property
+    def icon_warning(self):
+        return self._theme.get_property('rwt-warning-image', 'Display', self.custom_variant(), self.styles(), self.states())
+    
+    @property
+    def icon_question(self):
+        return self._theme.get_property('rwt-question-image', 'Display', self.custom_variant(), self.styles(), self.states())
+    
+    @property
+    def icon_error(self):
+        return self._theme.get_property('rwt-error-image', 'Display', self.custom_variant(), self.styles(), self.states())
+    
 
 class LabelTheme(WidgetTheme):
     def __init__(self, widget, theme):

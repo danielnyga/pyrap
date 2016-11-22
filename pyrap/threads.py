@@ -6,7 +6,8 @@ import inspect
 import time
 from pyrap.utils import out
 from threading import _active_limbo_lock, _active, _limbo,\
-    _trace_hook, _profile_hook, _get_ident, Lock, _allocate_lock, RLock
+    _trace_hook, _profile_hook, _get_ident, Lock, _allocate_lock, RLock,\
+    _start_new_thread
 import sys
 import traceback
 import random
@@ -315,6 +316,18 @@ class InterruptableThread(threading.Thread):
         self.__lock = RLock()
         self.interrupted = False
         self.finished = False
+        self.suspended = Event()
+        self.resumed = Event()
+        
+        
+    def setsuspended(self):
+        self.resumed.clear()
+        self.suspended.set()
+        
+    
+    def setresumed(self):
+        self.suspended.clear()
+        self.resumed.set()
         
     
     def die_on_interrupt(self):
@@ -536,12 +549,41 @@ class InterruptableThread(threading.Thread):
         finally:
             with _active_limbo_lock:
                 self._Thread__stop()
+                self.setsuspended()
                 try:
                     # We don't call self.__delete() because it also
                     # grabs _active_limbo_lock.
                     del _active[_get_ident()]
                 except:
                     pass
+                
+                
+    def start(self):
+        """Start the thread's activity.
+
+        It must be called at most once per thread object. It arranges for the
+        object's run() method to be invoked in a separate thread of control.
+
+        This method will raise a RuntimeError if called more than once on the
+        same thread object.
+
+        """
+        if not self._Thread__initialized:
+            raise RuntimeError("thread.__init__() not called")
+        if self._Thread__started.is_set():
+            raise RuntimeError("threads can only be started once")
+        if __debug__:
+            self._note("%s.start(): starting thread", self)
+        with _active_limbo_lock:
+            _limbo[self] = self
+        try:
+            _start_new_thread(self._Thread__bootstrap, ())
+        except Exception:
+            with _active_limbo_lock:
+                del _limbo[self]
+            raise
+        self._Thread__started.wait()
+        return self
 
 
 class SessionThread(InterruptableThread):

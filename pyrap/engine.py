@@ -18,7 +18,7 @@ from web.utils import storify, Storage
 from web.webapi import notfound, badrequest, seeother, notmodified
 
 import pyrap
-from pyrap import locations
+from pyrap import locations, threads
 from pyrap.base import session
 from pyrap.clientjs import gen_clientjs
 from pyrap.communication import RWTMessage, RWTNotifyOperation, RWTSetOperation, RWTCallOperation, RWTOperation,\
@@ -374,7 +374,9 @@ class SessionRuntime(object):
             if isinstance(o, RWTNotifyOperation):
                 wnd = self.windows[o.target]
                 if wnd is None: continue
-                wnd._handle_notify(o)
+                # start a new session thread for processing the notify messages
+                threads.SessionThread(target=wnd._handle_notify, args=(o,)).start().suspended.wait()
+                #wnd._handle_notify(o)
             elif isinstance(o, RWTSetOperation):
                 wnd = self.windows[o.target]
                 if wnd is None: continue
