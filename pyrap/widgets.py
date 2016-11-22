@@ -2856,18 +2856,18 @@ class Canvas(Widget):
         self.theme = CanvasTheme(self, session.runtime.mngr.theme)
         self.gc = GC('%s.gc' % self.id, self)
         self.operations = []
-    
-    
+
     def __lshift__(self, op):
         self.operations.append(op)
-        
-    
+
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
         self.gc._create_rwt_widget()
-        
-        
+
+    def draw(self):
+        self.gc.draw(self.operations)
+
     @Widget.bounds.setter
     def bounds(self, b):
         Widget.bounds.fset(self, b)
