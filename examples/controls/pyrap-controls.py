@@ -19,7 +19,9 @@ from pyrap.communication import RWTSetOperation
 import math
 from collections import OrderedDict
 from pyrap import session
-
+from threading import current_thread
+from pyrap.constants import DLG
+from pyrap.dialogs import ask_yesnocancel
 
 class ControlsDemo():
     
@@ -162,7 +164,13 @@ class ControlsDemo():
         label.font = label.font.modify(family='Debby', size=48)
         menu = Menu(label, popup=True)
         item1 = MenuItem(menu, index=0, push=True, text='MenuItem 1', img=self.beny_logo)
-        item1.on_select += lambda *args: out('menu item 1 was selected', args)
+        
+        def ask(*_):
+            resp = ask_yesnocancel(self.shell, title='pyRAP Message Box', text='this is my first message')
+            out('user clicked', resp)
+            
+        item1.on_select += ask
+        
         item2 = MenuItem(menu, index=1, check=True, text='MenuItem 2')
         item3 = MenuItem(menu, index=2, check=True, text='MenuItem 3')
         item4 = MenuItem(menu, index=5, cascade=True, text='MenuItem 4')
@@ -218,14 +226,17 @@ class ControlsDemo():
         address_bar = Composite(content)
         address_bar.layout = ColumnLayout(halign='fill', valign='fill', flexcols=1)
         Label(address_bar, text='URL:')
-        address = Edit(address_bar, text='http://www.tagesschau.de', halign='fill', valign='fill')
+        address = Edit(address_bar, text='http://www.tagesschau.de', message='Type your address here', halign='fill', valign='fill')
         btngo = Button(address_bar, text='Go!')
-        browser = Browser(content, message='Type your address here', halign='fill', valign='fill', border=True)
+        browser = Browser(content, halign='fill', valign='fill', border=True)
         browser.url = address.text
         def load(*_):
             browser.url = address.text
         btngo.on_select += load
         dlg.dolayout()
+        current_thread().setsuspended()
+        dlg.on_close.wait()
+        out('browser window closed')
         
         
     def mobile(self, shell, **kwargs):
