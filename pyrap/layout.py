@@ -278,15 +278,15 @@ class GridLayoutAdapter(LayoutAdapter):
                 wmaxg = max(wmax, wmaxg)
             for c in self.col(i): 
                 c.data.cellwidth.min = wmax 
-                if i not in flexcols or not layout.halign == 'fill':
+                if i not in flexcols  or not layout.halign == 'fill':
                     c.data.cellwidth.value = wmax
             wmaxt += wmax
         if layout.equalwidths:
             wmaxt = wmaxg * self.colcount()
             for cells in self.itercols():
                 for c in cells:
-                    if i not in flexcols or not layout.halign == 'fill':
-                        c.data.cellwidth.value = wmaxg
+#                     if i not in flexcols or not layout.halign == 'fill':
+                    c.data.cellwidth.value = wmaxg
         hmaxt = px(0)
         hmaxg = px(0)
         for i in range(self.rowcount()):
@@ -690,7 +690,7 @@ class RowLayout(GridLayout):
                         cell_maxheight=cell_maxheight, equalheights=equalheights,
                         padding_top=padding_top, padding_bottom=padding_bottom,
                         padding_left=padding_left, padding_right=padding_right, 
-                        vspace=vspace, padding=None)
+                        vspace=vspace, padding=padding)
         
 
 class ColumnLayout(GridLayout): 
@@ -707,7 +707,7 @@ class ColumnLayout(GridLayout):
                         cell_maxheight=cell_maxheight, equalwidths=equalwidths,
                         padding_top=padding_top, padding_bottom=padding_bottom,
                         padding_left=padding_left, padding_right=padding_right,
-                        hspace=hspace, padding=None)
+                        hspace=hspace, padding=padding)
         
 class StackLayout(GridLayout):
     

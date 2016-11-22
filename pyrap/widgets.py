@@ -576,7 +576,7 @@ class Shell(Widget):
         self.bounds = session.runtime.display.bounds
         
 
-    def dolayout(self):
+    def dolayout(self, pack=False):
         started = time.time()
         if self.maximized:
             self._maximize()
@@ -594,16 +594,32 @@ class Shell(Widget):
         layout.data.cellhpos.set(x)
         layout.data.cellvpos.set(y)
         layout.compute()
+        if pack: self.pack()
         end = time.time()
         self._logger.debug('layout computations took %s sec' % (end - started))
-#         layout.write()
 
 
+    def pack(self):
+        if not self.maximized:
+            w, h = self.compute_size()
+            if self.title is not None or RWT.TITLE in self.style: 
+                h += self.theme.title_height
+            _, _, wmin, hmin = self.content.children[0].bounds
+            w += wmin
+            h += hmin
+            _, _, dispw, disph = session.runtime.display.bounds
+            xpos = int(round(dispw.value / 2. - w.value / 2.))
+            ypos = int(round(disph.value / 2. - h.value / 2.))
+            out(xpos, ypos, w, h)
+            self.bounds = xpos, ypos, w, h
+            self.dolayout()
+            
+            
     def onresize_shell(self):
         self.dolayout()
         
     def compute_fringe(self):
-        width, height = self.compute_size()
+        return self.compute_size()
         
         
 

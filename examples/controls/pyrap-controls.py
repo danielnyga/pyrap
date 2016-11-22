@@ -166,7 +166,7 @@ class ControlsDemo():
         item1 = MenuItem(menu, index=0, push=True, text='MenuItem 1', img=self.beny_logo)
         
         def ask(*_):
-            resp = ask_yesnocancel(self.shell, title='pyRAP Message Box', text='this is my first message')
+            resp = ask_yesnocancel(self.shell, title='pyRAP Message Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
             out('user clicked', resp)
             
         item1.on_select += ask
