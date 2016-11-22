@@ -51,8 +51,9 @@ def constructor(cls):
                 if hasattr(self.parent, 'id') and not isinstance(self, Shell):
                     session.runtime << RWTSetOperation(self.parent.id, {'children': [c.id for c in self.parent.children]})
             self._disposed = False
-            if hasattr(self, 'create_content'):
-                self.create_content()
+            if type(self).__name__ == cls:
+                if hasattr(self, 'create_content'):
+                    type(self).create_content(self)
         return wrapper
     return outer
  
