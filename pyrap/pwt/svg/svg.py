@@ -21,6 +21,12 @@ class SVG(Widget):
         self._cssid = cssid
         self._svgfile = svg
         self._content = None
+        # size as read from the viewbox property in the svg attributes
+        self._vbwidth = None
+        self._vbheight = None
+        # size as can be set by the user
+        self._gwidth = None
+        self._gheight = None
         self.theme = SVGTheme(self, session.runtime.mngr.theme)
 
     def _create_rwt_widget(self):
@@ -62,18 +68,68 @@ class SVG(Widget):
         _svg = self._get_rwt_svg(svg)
         session.runtime << RWTSetOperation(self.id, {'svg': _svg})
 
+    @property
+    def gwidth(self):
+        return self._gwidth
+
+    @gwidth.setter
+    @checkwidget
+    def gwidth(self, w):
+        self._gwidth = w
+        session.runtime << RWTSetOperation(self.id, {'width': self.gwidth})
+
+    @property
+    def gheight(self):
+        return self._gheight
+
+    @gheight.setter
+    @checkwidget
+    def gheight(self, h):
+        self._gheight = h
+        session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
+
     def getattr(self, id, attr):
+        '''
+        Returns the value for the requested attribute of the element with the
+        given id.
+        :param id:      (str) the element to retrieve the attribute value from
+        :param attr:    (str) the attribute to retrieve the value from
+        :return:        (str) the value of the attribute
+        '''
         elem = self.tree.find('*//*[@id="{}"]'.format(id))
         if attr in elem.attrib:
             return elem.attrib[attr]
         else:
             return None
 
-    def setattr(self, id, attr, val):
+    def elattribute(self, id, attr, val):
+        '''
+        Sets the given value for the attribute attr of the element with the
+        specified id in the svg.
+        :param id:      (str) the id of the element to be updated
+        :param attr:    (str) the attribute to assign a value to
+        :param val:     (str) the value to set for the attribute
+        :return:        nothing
+        '''
         # set in gui
-        session.runtime << RWTSetOperation(self.id, {'attr': [id, attr, val]})
+        session.runtime << RWTCallOperation(self.id, 'elAttribute', {'id': id, 'attribute': attr, 'value': val})
         # update local content
         elem = self.tree.find('*//*[@id="{}"]'.format(id))
+        if elem is not None:
+            elem.set(attr, val)
+        self.save()
+
+    def attribute(self, attr, val):
+        '''
+        Assigns the given value to the attribute attr of the svg.
+        :param attr:    (str) the attribute to assign a value to
+        :param val:     (str) the value to set for the attribute
+        :return:        nothing
+        '''
+        # set in gui
+        session.runtime << RWTCallOperation(self.id, 'attribute', {'attribute': attr, 'value': val})
+        # update local content
+        elem = self.root
         if elem is not None:
             elem.set(attr, val)
         self.save()
@@ -91,10 +147,23 @@ class SVG(Widget):
         stream.close()
 
     def compute_size(self):
-        ratio = float(self._vbwidth)/self._vbheight
+        # prefer user given size, otherwise try to obtain size from svg content
+        # if still not successful, use parent size
+        w = self.gwidth or self._vbwidth
+        h = self.gheight or self._vbheight
 
-        h = min(self._vbheight, self.parent.height)
-        w = h * ratio
+        if self._vbwidth is not None and self._vbheight is not None:
+            ratio = float(self._vbwidth) / self._vbheight
+        else:
+            ratio = None
+
+        if w is None and ratio is not None and h is not None:
+                w = h * ratio
+        elif h is None and ratio is not None and w is not None:
+                h = w / ratio
+        else:
+            w = self.parent.width
+            h = self.parent.height
 
         padding = self.theme.padding
         if padding:

@@ -3,8 +3,6 @@ pwt_d3 = {};
 pwt_d3.Graph = function( parent, cssid ) {
 
     this.WAITMSEC = 100;
-    this.width = parent.getClientArea()[2];
-    this.height = parent.getClientArea()[3];
     this.force = d3.layout.force();
     this.nodes = this.force.nodes();
     this.links = this.force.links();
@@ -43,8 +41,8 @@ pwt_d3.Graph.prototype = {
 
         if (this._svgContainer.empty()) {
             this._svg
-            .attr('width', this.width)
-            .attr('height', this.height)
+            .attr('width', "100%")
+            .attr('height', "100%")
             .append( "svg:g" );
             this._svgContainer = this._svg.select('g');
         }
@@ -81,8 +79,8 @@ pwt_d3.Graph.prototype = {
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
-        this.width = args[2];
-        this.height = args[3];
+        this._w = args[2];
+        this._h = args[3];
         this.update();
      },
 
@@ -97,20 +95,16 @@ pwt_d3.Graph.prototype = {
         }
     },
 
-    _resize: function( clientArea ) {
-        this.width = clientArea[ 2 ];
-        this.height = clientArea[ 3 ];
-        this.update();
-    },
-
-    setwidth: function( width ) {
-        this.width = width;
+    setWidth: function( width ) {
+        this._parentDIV.style.width = width + "px";
+        this._w = width;
         this.update();
     },
 
 
-    setheight: function( height ) {
-        this.height = height;
+    setHeight: function( height ) {
+        this._parentDIV.style.height = height + "px";
+        this._h = height;
         this.update();
     },
 
@@ -325,10 +319,6 @@ pwt_d3.Graph.prototype = {
      */
     update : function () {
 
-        this._svg
-            .attr('width', this.width)
-            .attr('height', this.height);
-
       var path = this._svgContainer.selectAll("path.link")
         .data(this.links, function(d) {
                 return d.source.id + "-" + d.target.id;
@@ -460,8 +450,8 @@ pwt_d3.Graph.prototype = {
       };
 
       this.force
-        .size([this.width, this.height])
-        .linkDistance( this.height/2 )
+        .size([this._w, this._h])
+        .linkDistance( this._h/2 )
         .charge(-700)
         .on("tick", tick)
         .gravity( .1 )
