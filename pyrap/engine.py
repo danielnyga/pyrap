@@ -375,7 +375,9 @@ class SessionRuntime(object):
                 wnd = self.windows[o.target]
                 if wnd is None: continue
                 # start a new session thread for processing the notify messages
-                threads.SessionThread(target=wnd._handle_notify, args=(o,)).start().suspended.wait()
+                t = threads.SessionThread(target=wnd._handle_notify, args=(o,)).start()
+                with t.suspended:
+                    t.suspended.wait()
                 #wnd._handle_notify(o)
             elif isinstance(o, RWTSetOperation):
                 wnd = self.windows[o.target]
