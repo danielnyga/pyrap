@@ -1133,6 +1133,8 @@ class CheckboxTheme(WidgetTheme):
 
     def states(self):
         states = WidgetTheme.states(self)
+        if self._widget.checked:
+            states.add(':selected')
         return states
 
     def styles(self):
