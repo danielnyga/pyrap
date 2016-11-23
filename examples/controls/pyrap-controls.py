@@ -19,7 +19,9 @@ from pyrap.communication import RWTSetOperation
 import math
 from collections import OrderedDict
 from pyrap import session
-
+from threading import current_thread
+from pyrap.constants import DLG
+from pyrap.dialogs import ask_yesnocancel, msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, ask_okcancel
 
 class ControlsDemo():
     
@@ -139,6 +141,12 @@ class ControlsDemo():
         self.create_canvas_page(page)
         self.pages['Canvas'] = page
         
+        #=======================================================================
+        # create scale page
+        #=======================================================================
+        page  = self.create_page_template('Dialog Demo')
+        self.create_dialogs_page(page)
+        self.pages['Dialogs'] = page
         
         for page in (self.pages.values()[1:]):
             page.layout.exclude = True
@@ -153,6 +161,47 @@ class ControlsDemo():
         header = Label(tab, text=heading, halign='left')
         header.css = 'headline'#font = header.font.modify(size='16px', bf=1)
         return tab
+        
+    
+    def create_dialogs_page(self, parent):
+        grp_info_dlgs = Group(parent, text='Info Dialogs')
+        grp_info_dlgs.layout = ColumnLayout(equalwidths=1)
+        
+        b = Button(grp_info_dlgs, 'Show Info', halign='fill')
+        def showinfo(*_):
+            msg_ok(self.shell, title='pyRAP Message Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+        b.on_select += showinfo
+        
+        b = Button(grp_info_dlgs, 'Show Warning', halign='fill')
+        def showwarn(*_):
+            msg_warn(self.shell, title='pyRAP Warning', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+        b.on_select += showwarn
+        
+        b = Button(grp_info_dlgs, 'Show Error', halign='fill')
+        def showerr(*_):
+            msg_err(self.shell, title='Error Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+        b.on_select += showerr
+        
+        grp_info_dlgs = Group(parent, text='Question Dialogs')
+        grp_info_dlgs.layout = ColumnLayout()
+
+        b = Button(grp_info_dlgs, 'Yes-No Question')
+        def ask_yesno_(*_):
+            resp = ask_yesno(self.shell, title='pyRAP Message Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+            msg_ok(self.shell, 'Info', 'The user clicked %s' % resp)
+        b.on_select += ask_yesno_
+        
+        b = Button(grp_info_dlgs, 'Yes-No-Cancel Question')
+        def ask_yesnocancel_(*_):
+            resp = ask_yesnocancel(self.shell, title='pyRAP Message Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+            msg_ok(self.shell, 'Info', 'The user clicked %s' % resp)
+        b.on_select += ask_yesnocancel_
+        
+        b = Button(grp_info_dlgs, 'OK-Cancel Question')
+        def ask_okcancel_(*_):
+            resp = ask_okcancel(self.shell, title='pyRAP Message Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+            msg_ok(self.shell, 'Info', 'The user clicked %s' % resp)
+        b.on_select += ask_okcancel_
         
     
     def create_list_page(self, parent):
@@ -200,7 +249,13 @@ class ControlsDemo():
         label.font = label.font.modify(family='Debby', size=48)
         menu = Menu(label, popup=True)
         item1 = MenuItem(menu, index=0, push=True, text='MenuItem 1', img=self.beny_logo)
-        item1.on_select += lambda *args: out('menu item 1 was selected', args)
+        
+        def ask(*_):
+            resp = ask_yesnocancel(self.shell, title='pyRAP Message Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+            out('user clicked', resp)
+            
+        item1.on_select += ask
+        
         item2 = MenuItem(menu, index=1, check=True, text='MenuItem 2')
         item3 = MenuItem(menu, index=2, check=True, text='MenuItem 3')
         item4 = MenuItem(menu, index=5, cascade=True, text='MenuItem 4')
@@ -256,14 +311,17 @@ class ControlsDemo():
         address_bar = Composite(content)
         address_bar.layout = ColumnLayout(halign='fill', valign='fill', flexcols=1)
         Label(address_bar, text='URL:')
-        address = Edit(address_bar, text='http://www.tagesschau.de', halign='fill', valign='fill')
+        address = Edit(address_bar, text='http://www.tagesschau.de', message='Type your address here', halign='fill', valign='fill')
         btngo = Button(address_bar, text='Go!')
-        browser = Browser(content, message='Type your address here', halign='fill', valign='fill', border=True)
+        browser = Browser(content, halign='fill', valign='fill', border=True)
         browser.url = address.text
         def load(*_):
             browser.url = address.text
         btngo.on_select += load
         dlg.dolayout()
+        current_thread().setsuspended()
+        dlg.on_close.wait()
+        out('browser window closed')
         
         
     def mobile(self, shell, **kwargs):

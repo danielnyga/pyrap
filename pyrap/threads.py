@@ -316,18 +316,20 @@ class InterruptableThread(threading.Thread):
         self.__lock = RLock()
         self.interrupted = False
         self.finished = False
-        self.suspended = Event()
-        self.resumed = Event()
+        self.suspended = Condition()
+        self.resumed = Condition()
         
         
     def setsuspended(self):
-        self.resumed.clear()
-        self.suspended.set()
+#         self.resumed.notify_all()
+        with self.suspended: 
+            self.suspended.notify_all()
         
     
     def setresumed(self):
-        self.suspended.clear()
-        self.resumed.set()
+#         self.suspended.clear()
+        with self.resumed:
+            self.resumed.notify_all()
         
     
     def die_on_interrupt(self):
