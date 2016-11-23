@@ -3,6 +3,7 @@ Created on Oct 18, 2015
 
 @author: nyga
 '''
+import base64
 import mimetypes
 import os
 from _pyio import BytesIO
@@ -644,7 +645,7 @@ class Color(object):
              'light grey': '#c0c0c0',
              'light gray': '#c0c0c0',
              'dark grey': '#404040',
-             'dark grey': '#404040', 
+             'dark gray': '#404040',
              'white': '#FFF', 
              'yellow': '#f4b400', 
              'transp': '#FFFFFF00',
@@ -864,18 +865,33 @@ class SVG(object):
 
 class Image(object):
     
-    def __init__(self, filepath):
+    def __init__(self, filepath=None, content=None, mimetype=None):
         self._img = None
         self._filepath = filepath
+        self._cnt = content
+        if self.filepath is not None:
+            self._mimetype = mimetypes.guess_type(' .' + self.fileext)[0]
+        else:
+            self._mimetype = mimetypes.guess_type(' .' + 'png')[0]
+        if mimetype is not None:
+            self._mimetype = mimetype
         self.load()
-        with open(filepath) as f: self._content = f.read()
-        self.close() 
+        self.close()
         
     def load(self):
+        if self.filepath is None:
+            if self._cnt is not None:
+                self._content = base64.b64decode(self._cnt)
+                self._img = PILImage.open(BytesIO(self._content))
+                return self
+            else:
+                raise Exception('Unable to load Image without filepath or content!')
         if self.fileext == 'svg':
             self._img = SVG().open(self._filepath)
+            with open(self.filepath) as f: self._content = f.read()
         else:
             self._img = PILImage.open(self._filepath)
+            with open(self.filepath) as f: self._content = f.read()
         return self
         
     def close(self):
@@ -884,22 +900,31 @@ class Image(object):
 
     @property
     def mimetype(self):
-        return mimetypes.types_map['.' + self.fileext]
+        return self._mimetype
             
     @property
     def content(self):
         if hasattr(self._img, '_content'):
             return self._img._content
-        else:
-            return str(self._content)
+        return str(self._content)
 
     @property
     def filename(self):
-        return os.path.basename(self._filepath)
+        if self.filepath is not None:
+            return os.path.basename(self._filepath)
+        return None
+
+    @property
+    def filepath(self):
+        return self._filepath
         
     @property
     def fileext(self):
-        return self._filepath.split('.')[-1]
+        if self._filepath is not None:
+            return self._filepath.split('.')[-1]
+        elif self._mimetype is not None:
+            return mimetypes.guess_extension(self._mimetype).split('.')[-1]
+        return None
         
     @property
     def width(self):
