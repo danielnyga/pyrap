@@ -4,10 +4,10 @@ import pyrap
 import ctypes
 import inspect
 import time
-from pyrap.utils import out
+from pyrap.utils import out, ifnone
 from threading import _active_limbo_lock, _active, _limbo,\
-    _trace_hook, _profile_hook, _get_ident, Lock, _allocate_lock, RLock,\
-    _start_new_thread
+    _trace_hook, _profile_hook, _get_ident, Lock, _allocate_lock, \
+    _start_new_thread, _Verbose
 import sys
 import traceback
 import random
@@ -35,8 +35,208 @@ def sessionthreads():
 
 def sleep(sec):
     '''Interruptable sleep'''
-    ev = Event(verbose=1)
+    ev = Event(verbose=0)
     ev.wait(sec)
+    
+
+thisthread = threading.current_thread
+
+def Lock(verbose=None):
+    return _Lock(verbose=verbose)
+
+
+class _Lock(_Verbose):
+    '''A reimplementation of a lock that is interruptable.'''
+    
+    def __init__(self, verbose=None):
+        _Verbose.__init__(self, verbose)
+        self.__lock = threading.Lock()
+        self.__owner = None
+        self.__cancel = False
+        
+    def cancel(self):
+        self.__cancel = True
+        if thisthread() is self.owner:
+            self.release() 
+        
+    @property
+    def owner(self):
+        return self.__owner
+    
+    @property
+    def canceled(self):
+        return self.__cancel
+    
+        
+    def acquire(self, timeout=None):
+        delay = 0.0005
+        endtime = time.time() + ifnone(timeout, 0)
+        while True:
+            gotit = self.__lock.acquire(0)
+            if gotit or timeout == 0: 
+                if gotit: self.__owner = threading.current_thread()
+                break
+            remaining = endtime - time.time()
+            if remaining <= 0 and (timeout is not None) or self.__cancel:
+                break
+            if remaining < 0:
+                remaining = .05
+            delay = min(delay * 2, remaining, .05)
+            time.sleep(delay)
+        if self.canceled: 
+            raise ThreadInterrupt()
+        if gotit:
+            if __debug__:
+                self._note('%s.acquire(%s): successful' % (self, timeout))
+            self.__owner = thisthread()
+        return gotit
+        
+        
+    def release(self):
+        if self.owner is not thisthread():
+            raise RuntimeError('cannot acquire un-allocated lock.')
+        self.__owner = None
+        self.__lock.release()
+        
+    def __enter__(self):
+        self.acquire()
+        return self
+    
+    def __exit__(self, e, t, tb):
+        self.release()
+        
+        
+        
+def RLock(*args, **kwargs):
+    """Factory function that returns a new reentrant lock.
+
+    A reentrant lock must be released by the thread that acquired it. Once a
+    thread has acquired a reentrant lock, the same thread may acquire it again
+    without blocking; the thread must release it once for each time it has
+    acquired it.
+
+    """
+    return _RLock(*args, **kwargs)
+
+
+class _RLock(_Verbose):
+    """A reentrant lock must be released by the thread that acquired it. Once a
+       thread has acquired a reentrant lock, the same thread may acquire it
+       again without blocking; the thread must release it once for each time it
+       has acquired it.
+    """
+
+    def __init__(self, verbose=None):
+        _Verbose.__init__(self, verbose)
+        self.__block = Lock()
+        self.__count = 0
+        self.__owner = None
+
+
+    def __repr__(self):
+        owner = self.__owner
+        try:
+            owner = _active[owner].name
+        except KeyError:
+            pass
+        return "<%s owner=%r count=%d>" % (
+                self.__class__.__name__, owner, self.__count)
+
+
+    def acquire(self, blocking=1):
+        """Acquire a lock, blocking or non-blocking.
+
+        When invoked without arguments: if this thread already owns the lock,
+        increment the recursion level by one, and return immediately. Otherwise,
+        if another thread owns the lock, block until the lock is unlocked. Once
+        the lock is unlocked (not owned by any thread), then grab ownership, set
+        the recursion level to one, and return. If more than one thread is
+        blocked waiting until the lock is unlocked, only one at a time will be
+        able to grab ownership of the lock. There is no return value in this
+        case.
+
+        When invoked with the blocking argument set to true, do the same thing
+        as when called without arguments, and return true.
+
+        When invoked with the blocking argument set to false, do not block. If a
+        call without an argument would block, return false immediately;
+        otherwise, do the same thing as when called without arguments, and
+        return true.
+
+        """
+        me = _get_ident()
+        if self.__owner == me:
+            self.__count = self.__count + 1
+            if __debug__:
+                self._note("%s.acquire(%s): recursive success", self, blocking)
+            return 1
+        rc = self.__block.acquire(blocking)
+        if rc:
+            self.__owner = me
+            self.__count = 1
+            if __debug__:
+                self._note("%s.acquire(%s): initial success", self, blocking)
+        else:
+            if __debug__:
+                self._note("%s.acquire(%s): failure", self, blocking)
+        return rc
+
+    __enter__ = acquire
+
+    def release(self):
+        """Release a lock, decrementing the recursion level.
+
+        If after the decrement it is zero, reset the lock to unlocked (not owned
+        by any thread), and if any other threads are blocked waiting for the
+        lock to become unlocked, allow exactly one of them to proceed. If after
+        the decrement the recursion level is still nonzero, the lock remains
+        locked and owned by the calling thread.
+
+        Only call this method when the calling thread owns the lock. A
+        RuntimeError is raised if this method is called when the lock is
+        unlocked.
+
+        There is no return value.
+
+        """
+        if self.__owner != _get_ident():
+            raise RuntimeError("cannot release un-acquired lock")
+        self.__count = count = self.__count - 1
+        if not count:
+            self.__owner = None
+            self.__block.release()
+            if __debug__:
+                self._note("%s.release(): final release", self)
+        else:
+            if __debug__:
+                self._note("%s.release(): non-final release", self)
+
+    def __exit__(self, t, v, tb):
+        self.release()
+
+    # Internal methods used by condition variables
+
+    def _acquire_restore(self, count_owner):
+        count, owner = count_owner
+        self.__block.acquire()
+        self.__count = count
+        self.__owner = owner
+        if __debug__:
+            self._note("%s._acquire_restore()", self)
+
+    def _release_save(self):
+        if __debug__:
+            self._note("%s._release_save()", self)
+        count = self.__count
+        self.__count = 0
+        owner = self.__owner
+        self.__owner = None
+        self.__block.release()
+        return (count, owner)
+
+    def _is_owned(self):
+        return self.__owner == _get_ident()
+    
     
     
 def Condition(*args, **kwargs):
@@ -52,14 +252,58 @@ def Condition(*args, **kwargs):
     """
     return _Condition(*args, **kwargs)
 
-class _Condition(threading._Condition):
+class _Condition(_Verbose):
     """Condition variables allow one or more threads to wait until they are
        notified by another thread.
     """
-
     def __init__(self, lock=None, verbose=None):
-        threading._Condition.__init__(self, lock, verbose)
+        _Verbose.__init__(self, verbose)
+        if lock is None:
+            lock = RLock()
+        self.__lock = lock
+        # Export the lock's acquire() and release() methods
+        self.acquire = lock.acquire
+        self.release = lock.release
+        # If the lock defines _release_save() and/or _acquire_restore(),
+        # these override the default implementations (which just call
+        # release() and acquire() on the lock).  Ditto for _is_owned().
+        try:
+            self._release_save = lock._release_save
+        except AttributeError:
+            pass
+        try:
+            self._acquire_restore = lock._acquire_restore
+        except AttributeError:
+            pass
+        try:
+            self._is_owned = lock._is_owned
+        except AttributeError:
+            pass
         self.__waiters = {}
+
+    def __enter__(self):
+        return self.__lock.__enter__()
+
+    def __exit__(self, *args):
+        return self.__lock.__exit__(*args)
+
+    def __repr__(self):
+        return "<Condition(%s, %d)>" % (self.__lock, len(self.__waiters))
+
+    def _release_save(self):
+        self.__lock.release()           # No state to save
+
+    def _acquire_restore(self, x):
+        self.__lock.acquire()           # Ignore saved state
+
+    def _is_owned(self):
+        # Return True if lock is owned by current_thread.
+        # This method is called only if __lock doesn't have _is_owned().
+        if self.__lock.acquire(0):
+            self.__lock.release()
+            return False
+        else:
+            return True
 
     
     def wait(self, timeout=None):
@@ -142,14 +386,6 @@ class _Condition(threading._Condition):
             t.die_on_interrupt()
             
 
-    def __enter__(self):
-        return self._Condition__lock.__enter__()
-
-    def __exit__(self, *args):
-        if self._is_owned():
-            return self._Condition__lock.__exit__(*args)
-    
-
     def notify(self, n=1):
         """Wake up one or more threads waiting on this condition, if any.
 
@@ -203,6 +439,145 @@ class _Condition(threading._Condition):
 
         """
         self.notify(len(self.__waiters))
+        
+    notify_all = notifyAll
+        
+def Semaphore(*args, **kwargs):
+    """A factory function that returns a new semaphore.
+
+    Semaphores manage a counter representing the number of release() calls minus
+    the number of acquire() calls, plus an initial value. The acquire() method
+    blocks if necessary until it can return without making the counter
+    negative. If not given, value defaults to 1.
+
+    """
+    return _Semaphore(*args, **kwargs)
+
+
+class _Semaphore(threading._Semaphore):
+    """Semaphores manage a counter representing the number of release() calls
+       minus the number of acquire() calls, plus an initial value. The acquire()
+       method blocks if necessary until it can return without making the counter
+       negative. If not given, value defaults to 1.
+
+    """
+
+    # After Tim Peters' semaphore class, but not quite the same (no maximum)
+
+    def __init__(self, value=1, verbose=None):
+        threading._Semaphore.__init__(self, value, verbose)
+        self.__cond = Condition(Lock(verbose=1))
+        self.__owners = set()
+
+
+    def isowned(self):
+        return threading.current_thread().ident in self.__owners
+    
+
+    def acquire(self, blocking=1):
+        """Acquire a semaphore, decrementing the internal counter by one.
+
+        When invoked without arguments: if the internal counter is larger than
+        zero on entry, decrement it by one and return immediately. If it is zero
+        on entry, block, waiting until some other thread has called release() to
+        make it larger than zero. This is done with proper interlocking so that
+        if multiple acquire() calls are blocked, release() will wake exactly one
+        of them up. The implementation may pick one at random, so the order in
+        which blocked threads are awakened should not be relied on. There is no
+        return value in this case.
+
+        When invoked with blocking set to true, do the same thing as when called
+        without arguments, and return true.
+
+        When invoked with blocking set to false, do not block. If a call without
+        an argument would block, return false immediately; otherwise, do the
+        same thing as when called without arguments, and return true.
+
+        """
+        rc = False
+        with self.__cond:
+            while self._Semaphore__value == 0:
+                if not blocking:
+                    break
+                if __debug__:
+                    self._note("%s.acquire(%s): blocked waiting, value=%s",
+                            self, blocking, self._Semaphore__value)
+                self.__cond.wait()
+            else:
+                self.__value = self._Semaphore__value - 1
+                self.__owners.add(threading.current_thread().ident)
+                if __debug__:
+                    self._note("%s.acquire: success, value=%s", self, self._Semaphore__value)
+                rc = True
+        return rc
+
+    __enter__ = acquire
+
+    def release(self):
+        """Release a semaphore, incrementing the internal counter by one.
+
+        When the counter is zero on entry and another thread is waiting for it
+        to become larger than zero again, wake up that thread.
+
+        """
+        with self.__cond:
+            self._Semaphore__value += 1
+            if __debug__:
+                self._note("%s.release: success, value=%s",
+                        self, self._Semaphore__value)
+            self.__owners.remove(threading.current_thread().ident)
+            self.__cond.notify()
+
+    def __exit__(self, t, v, tb):
+        self.release()
+
+
+def BoundedSemaphore(*args, **kwargs):
+    """A factory function that returns a new bounded semaphore.
+
+    A bounded semaphore checks to make sure its current value doesn't exceed its
+    initial value. If it does, ValueError is raised. In most situations
+    semaphores are used to guard resources with limited capacity.
+
+    If the semaphore is released too many times it's a sign of a bug. If not
+    given, value defaults to 1.
+
+    Like regular semaphores, bounded semaphores manage a counter representing
+    the number of release() calls minus the number of acquire() calls, plus an
+    initial value. The acquire() method blocks if necessary until it can return
+    without making the counter negative. If not given, value defaults to 1.
+
+    """
+    return _BoundedSemaphore(*args, **kwargs)
+
+
+class _BoundedSemaphore(_Semaphore):
+    """A bounded semaphore checks to make sure its current value doesn't exceed
+       its initial value. If it does, ValueError is raised. In most situations
+       semaphores are used to guard resources with limited capacity.
+    """
+
+    def __init__(self, value=1, verbose=None):
+        _Semaphore.__init__(self, value, verbose)
+        self._initial_value = value
+
+    def release(self):
+        """Release a semaphore, incrementing the internal counter by one.
+
+        When the counter is zero on entry and another thread is waiting for it
+        to become larger than zero again, wake up that thread.
+
+        If the number of releases exceeds the number of acquires,
+        raise a ValueError.
+
+        """
+        with self._Semaphore__cond:
+            if self._Semaphore__value >= self._initial_value:
+                raise ValueError("Semaphore released too many times")
+            self._Semaphore__value += 1
+            self._Semaphore__cond.notify()
+
+
         
 
 def Event(*args, **kwargs):
@@ -316,20 +691,18 @@ class InterruptableThread(threading.Thread):
         self.__lock = RLock()
         self.interrupted = False
         self.finished = False
-        self.suspended = Condition()
-        self.resumed = Condition()
+        self.suspended = Event()
+        self.resumed = Event()
         
         
     def setsuspended(self):
-#         self.resumed.notify_all()
-        with self.suspended: 
-            self.suspended.notify_all()
+        self.resumed.clear()
+        self.suspended.set()
         
     
     def setresumed(self):
-#         self.suspended.clear()
-        with self.resumed:
-            self.resumed.notify_all()
+        self.suspended.clear()
+        self.resumed.set()
         
     
     def die_on_interrupt(self):
@@ -419,7 +792,7 @@ class InterruptableThread(threading.Thread):
             self.interrupted = True
             self.__raise_exc(ThreadInterrupt)
             if isinstance(self._waitingfor, _Condition):
-                with self._waitingfor:
+                with self._waitingfor, _active_limbo_lock:
                     self._waitingfor.notify_thread(self.__get_tid())
                     self._waitingfor = None
         self.join()
@@ -609,37 +982,33 @@ class SessionThread(InterruptableThread):
 
 
 if __name__ == '__main__':
-    for i in range(100):
-        out('Iter #%s' % (i+1))
-        cond = Condition(verbose=0)
-        event = Event(verbose=0)
-        def worker():
+    s = Semaphore(value=1, verbose=1)
+    
+    class IThread(InterruptableThread):
+        
+        def run(self):
             sleep(random.random())
-#             out('sleep finished')
-            with cond:
-                cond.wait(random.random())
-#             out(threading.current_thread().interrupted)
-#             print 'waiting for event'
+            out(threading.current_thread(), 'trying to acquire semaphore')
+            s.acquire()
+            out(threading.current_thread(), 'has semaphore') 
             sleep(random.random() * 5)
-#             out('thread returns')
-#             event.wait()
-        t = InterruptableThread(target=worker, verbose=0)
-        waiting = random.random()
-        start = time.time()
+        
+        def _finally(self):
+            if s.isowned():
+                out(threading.current_thread(), 'releasing')
+                s.release()
+                out(threading.current_thread(), 'released')
+        
+    thrs = []
+    for i in range(1):
+        out('Iter #%s' % (i+1))
+        t = IThread(verbose=1)
+        thrs.append(t)
         t.start()
-        time.sleep(waiting)
-        t.kill()
+    for t in thrs:
+#         out('killing', t)
+#         t.kill()
         t.join()
-        end = time.time()
-        out('total: %s sec, wait: %s sec, kill: %s sec' % (end-start, waiting, end-start-waiting))
-        sys.stdout.flush()
-#         out(i+1, 'notifying and sleeping')
-    #     time.sleep(5)
-#         out('goodbye.')
-#     with cond:
-#         cond.notify_all()
-    
-    
-    
+    out('goodbye')
     
 
