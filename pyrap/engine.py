@@ -578,6 +578,13 @@ class ResourceManager(object):
         return self.resources.get(name)
 
 
+    def getbycontent(self, content):
+        for name in self.resources:
+            if self.resources.get(name).content == content:
+                return self.resources.get(name)
+        return None
+
+
     def __getitem__(self, name):
         return self.get(name)
 

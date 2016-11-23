@@ -133,6 +133,13 @@ class ControlsDemo():
         page = self.create_page_template('List Demo')
         self.create_list_page(page)
         self.pages['List'] = page
+
+        # =======================================================================
+        # crete canvas page
+        # =======================================================================
+        page = self.create_page_template('Canvas Demo')
+        self.create_canvas_page(page)
+        self.pages['Canvas'] = page
         
         #=======================================================================
         # create scale page
@@ -202,7 +209,38 @@ class ControlsDemo():
         grp_ctxmenu.layout = CellLayout(minwidth=200, minheight=200)
         list = List(grp_ctxmenu, halign='fill', valign='fill', minheight=200, minwidth=200)
         list.items = OrderedDict([('str1', 'bla')])
-    
+
+    def create_canvas_page(self, parent):
+        grp_ctxmenu = Group(parent, text='Canvas')
+        grp_ctxmenu.layout = CellLayout(halign='fill', valign='fill')
+        canvas = Canvas(grp_ctxmenu, halign='fill', valign='fill')
+        context = canvas.gc
+        canvas << context.draw_grid(10, 10, 'lightgrey')
+
+        canvas << context.begin_path()
+        canvas << context.rect(50, 50, 300, 100)
+        canvas << context.fill_style(Color('white'))
+        canvas << context.fill()
+        canvas << context.linewidth(1)
+        canvas << context.stroke_style(Color('black'))
+        canvas << context.stroke()
+
+        canvas << context.fill_style(Color('red'))
+        canvas << context.font('Arial', 30)
+        canvas << context.stroke_text("Hello World!\nThis is Awesome!", 200, 100, aligncenterx=True, aligncentery=True)
+
+        canvas << context.begin_path()
+        canvas << context.rect(50, 150, 300, 100)
+        canvas << context.fill_style(Color('light grey'))
+        canvas << context.fill()
+        canvas << context.linewidth(1)
+        canvas << context.stroke_style(Color('black'))
+        canvas << context.stroke()
+
+        canvas << context.fill_style(Color('green'))
+        canvas << context.font('Arial', 30)
+        canvas << context.fill_text("Hello World!\nThis is Awesome!", 60, 200, aligncenterx=False, aligncentery=True)
+        canvas.draw()
 
     def create_menu_page(self, parent):
         grp_ctxmenu = Group(parent, text='Context Menus')

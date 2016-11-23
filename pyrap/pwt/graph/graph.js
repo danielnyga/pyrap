@@ -70,6 +70,8 @@ pwt_d3.Graph.prototype = {
         element.style.position = "absolute";
         element.style.left = clientarea[0];
         element.style.top = clientarea[1];
+        element.style.width = "100%";
+        element.style.height = "100%";
         parent.append( element );
         return element;
     },
@@ -96,14 +98,14 @@ pwt_d3.Graph.prototype = {
     },
 
     setWidth: function( width ) {
-        this._parentDIV.style.width = width + "px";
+//        this._parentDIV.style.width = width + "px";
         this._w = width;
         this.update();
     },
 
 
     setHeight: function( height ) {
-        this._parentDIV.style.height = height + "px";
+//        this._parentDIV.style.height = height + "px";
         this._h = height;
         this.update();
     },
