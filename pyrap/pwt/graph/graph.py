@@ -3,7 +3,7 @@ from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.utils import ifnone
+from pyrap.utils import ifnone, out
 from pyrap.widgets import Widget, constructor, checkwidget
 
 
@@ -28,8 +28,11 @@ class Graph(Widget):
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
-        w = self.gwidth or self.parent.width
-        h = self.gheight or self.parent.height
+        w, h = Widget.compute_size(self.parent)
+        if self.gwidth is not None:
+            w = self.gwidth
+        if self.gheight is not None:
+            h = self.gheight
 
         padding = self.theme.padding
         if padding:
@@ -42,6 +45,7 @@ class Graph(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+
         return w, h
 
     @property
