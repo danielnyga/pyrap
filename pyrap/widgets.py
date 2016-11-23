@@ -870,18 +870,38 @@ class Button(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
     
     @constructor('Button')
-    def __init__(self, parent, text='', **options):
+    def __init__(self, parent, text='', img=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ButtonTheme(self, session.runtime.mngr.theme)
         self.on_select = OnSelect(self)
         self._text = text
+        self._img = img
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
+        if self.img:
+            options.image = self._get_rwt_img(self.img)
         options.text = self.text
         options.style.append('PUSH')
         options.tabIndex = 1
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+
+    def _get_rwt_img(self, img):
+        if img is not None:
+            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
+            img = [res.location, img.width.value, img.height.value]
+        else: img = None
+        return img
+
+    @property
+    def img(self):
+        return self._img
+
+    @img.setter
+    @checkwidget
+    def img(self, img):
+        self._img = img
+        session.runtime << RWTSetOperation(self.id, {'image': self._get_rwt_img(self.img)})
 
     @property
     def text(self):
@@ -905,6 +925,10 @@ class Button(Widget):
         tw, th = session.runtime.textsize_estimate(self.theme.font, self._text)
         width += tw
         height += th
+        if self.img is not None:
+            w, h = self.img.size
+            width += w
+            height += (h - px(h)) if (h > px(h)) else 0
         return width, height
     
     
