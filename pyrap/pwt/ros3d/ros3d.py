@@ -11,9 +11,11 @@ class ROS3D(Widget):
     _defstyle_ = Widget._defstyle_
 
     @constructor('ROS3D')
-    def __init__(self, parent, cssid=None, **options):
+    def __init__(self, parent, cssid=None, requiredjs=None, **options):
         Widget.__init__(self, parent, **options)
         self._cssid = cssid
+        self._requiredjs = requiredjs
+        session.runtime.ensurejsresources(self._requiredjs)
         self.theme = ROS3DTheme(self, session.runtime.mngr.theme)
 
     def _create_rwt_widget(self):
@@ -22,7 +24,8 @@ class ROS3D(Widget):
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
-        w, h = Widget.compute_size(self)
+        w = 800
+        h = 600
 
         padding = self.theme.padding
         if padding:

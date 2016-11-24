@@ -1,6 +1,6 @@
-ros3d = {};
+pwt_ros3d = {};
 
-ros3d.Simulation = function(parent, cssid) {
+pwt_ros3d.Simulation = function(parent, cssid) {
     this._urdfnodeDiv = this.createElement(parent);
     this._rosliburl = 'ws://134.102.206.96:9090';
     this._w = 800;
@@ -8,9 +8,22 @@ ros3d.Simulation = function(parent, cssid) {
 
     if (cssid) {
         this._urdfnodeDiv.setAttribute('id', cssid);
+    } else {
+        this._urdfnodeDiv.setAttribute('id', 'urdf');
     }
 
+    this._needsLayout = true;
+    this._needsRender = true;
     var that = this;
+    rap.on( "render", function() {
+        if( that._needsRender ) {
+            if( that._needsLayout ) {
+                that.init( that );
+                that._needsLayout = false;
+            }
+            that._needsRender = false;
+        }
+    } );
     parent.addListener( 'Resize', function() {
         that.setBounds( parent.getClientArea() );
     } );
@@ -18,7 +31,7 @@ ros3d.Simulation = function(parent, cssid) {
 
 };
 
-ros3d.Simulation.prototype = {
+pwt_ros3d.Simulation.prototype = {
 
     createElement: function( parent ) {
         var clientarea = parent.getClientArea();
@@ -37,10 +50,13 @@ ros3d.Simulation.prototype = {
     setBounds: function( args ) {
         this._urdfnodeDiv.style.left = args[0] + 'px';
         this._urdfnodeDiv.style.top = args[1] + 'px';
-        this._urdfnodeDiv.style.width = args[2] + 'px';
-        this._urdfnodeDiv.style.height = args[3] + 'px';
+//        this._urdfnodeDiv.style.width = args[2] + 'px';
+//        this._urdfnodeDiv.style.height = args[3] + 'px';
+        this._urdfnodeDiv.style.width = this._w + 'px';
+        this._urdfnodeDiv.style.height = this._h + 'px';
         if (typeof this._simulation_viewer != 'undefined') {
-            this._simulation_viewer.resize(args[2], args[3]);
+//            this._simulation_viewer.resize(args[2], args[3]);
+            this._simulation_viewer.resize(this._w, this._h);
         }
      },
 
@@ -49,6 +65,17 @@ ros3d.Simulation.prototype = {
         if( element.parentNode ) {
             element.parentNode.removeChild( element );
         }
+    },
+
+    setWidth: function( width ) {
+        this._w = width;
+        this.update();
+    },
+
+
+    setHeight: function( height ) {
+        this._h = height;
+        this.update();
     },
 
     setURL: function( url ) {
@@ -69,7 +96,7 @@ ros3d.Simulation.prototype = {
 
         // Create the main viewer.
         this._simulation_viewer = new ROS3D.Viewer({
-          divID : this._urdfnodeDiv.attributes.id.value,//'urdf'
+          divID : this._urdfnodeDiv.attributes.id.value,
           width : this._w,
           height : this._h,
           antialias : true
@@ -161,7 +188,7 @@ rap.registerTypeHandler( 'pwt.customs.ROS3D', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    return new ros3d.Simulation( parent, properties.cssid);
+    return new pwt_ros3d.Simulation( parent, properties.cssid);
   },
 
   destructor: 'destroy',

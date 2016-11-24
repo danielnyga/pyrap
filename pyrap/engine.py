@@ -480,6 +480,8 @@ class SessionRuntime(object):
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
                         self.requirejs(f)
+                else:
+                    raise Exception('Could not load file', p)
 
     def requirejs(self, f):
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/javascript', f)
