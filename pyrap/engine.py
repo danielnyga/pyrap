@@ -242,9 +242,9 @@ class WindowManager(object):
         session.runtime << RWTSetOperation(self.display.id, {'focusControl': wnd.id})
         
     def _set_focus(self, wnd):
-        if self.focus and self.focus is not wnd: self.focus.on_focus.notify(FocusEventData(gained=False))
+        if self.focus and self.focus is not wnd: self.focus.on_focus.notify(FocusEventData(wnd, gained=False))
         self._focus = wnd
-        if self.focus: self.focus.on_focus.notify(FocusEventData(gained=True))
+        if self.focus: self.focus.on_focus.notify(FocusEventData(wnd, gained=True))
         
     @property
     def display(self):

@@ -6,6 +6,7 @@ Created on Nov 23, 2015
 from pyrap.ptypes import Event
 from pyrap.communication import RWTListenOperation
 from pyrap.base import session
+from pyrap.utils import out
 
 
 class RWTEvent(Event):
@@ -159,7 +160,7 @@ class OnModify(RWTEvent):
     def _create_unsubscribe_msg(self):
         return RWTListenOperation(self.widget.id, {'Modify': False})
     
-    def _notify(self, listener): listener()    
+    def _notify(self, listener, data): listener(data)
 
 
 class OnFocus(RWTEvent):
@@ -179,10 +180,13 @@ class OnDispose(Event):
     def _notify(self, listener): listener()
 
 
-class EventData(object): pass
+class EventData(object):
+    def __init__(self, widget):
+        self.widget = widget
 
 class FocusEventData(EventData):
-    def __init__(self, gained):
+    def __init__(self, widget, gained):
+        EventData.__init__(self, widget)
         self.gained = gained
     
     @property
@@ -191,7 +195,8 @@ class FocusEventData(EventData):
 
 class SelectionEventData(EventData):
     
-    def __init__(self, button, ctrl, alt, shift):
+    def __init__(self, widget, button, ctrl, alt, shift):
+        EventData.__init__(self, widget)
         self.button = button
         self.ctrl = ctrl
         self.alt = alt
@@ -199,7 +204,8 @@ class SelectionEventData(EventData):
         
 class MouseEventData(EventData):
     
-    def __init__(self, button, ctrl, alt, shift, timestamp, x, y):
+    def __init__(self, widget, button, ctrl, alt, shift, timestamp, x, y):
+        EventData.__init__(self, widget)
         self.button = button
         self.ctrl = ctrl
         self.alt = alt
@@ -213,7 +219,10 @@ class MouseEventData(EventData):
         return (self.x, self.y)
     
 def _rwt_selection_event(op):
-        return SelectionEventData(op.args.get('button'), op.args.ctrlKey, op.args.altKey, op.args.shiftKey)
+        return SelectionEventData(op.target, op.args.get('button'), op.args.ctrlKey, op.args.altKey, op.args.shiftKey)
     
 def _rwt_mouse_event(op):
-    return MouseEventData(op.args.button, op.args.ctrlKey, op.args.altKey, op.args.shiftKey, op.args.time, op.args.x, op.args.y)
+    return MouseEventData(op.target, op.args.button, op.args.ctrlKey, op.args.altKey, op.args.shiftKey, op.args.time, op.args.x, op.args.y)
+
+def _rwt_event(op):
+    return EventData(op.target)
