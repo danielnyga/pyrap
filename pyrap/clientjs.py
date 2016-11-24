@@ -273,6 +273,7 @@ rwt/widgets/util/DropDownSynchronizer.js
 rwt/remote/handler/DropDownHandler.js
 ../pyrap/pwt/graph/graph.js
 ../pyrap/pwt/svg/svg.js
+../pyrap/pwt/ros3d/ros3d.js
 appearances.js'''
 
 
