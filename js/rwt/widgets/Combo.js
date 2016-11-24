@@ -87,6 +87,15 @@ rwt.qx.Class.define( "rwt.widgets.Combo", {
       this._field.setMaxLength( value );
     },
 
+    showList : function(visible) {
+      if( !visible ) {
+        this._list.hide();
+      } else {
+        this._list.setMinWidth( this._getListMinWidth() );
+        this._list.show();
+      }
+    },
+
     addState : function( state ) {
       this.base( arguments, state );
       if( state === "rwt_FLAT" ) {

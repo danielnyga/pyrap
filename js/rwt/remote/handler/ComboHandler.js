@@ -87,7 +87,7 @@ rwt.remote.HandlerRegistry.add( "rwt.widgets.Combo", {
 
   listenerHandler : rwt.remote.HandlerUtil.extendControlListenerHandler( {} ),
 
-  methods: [ "addListener", "removeListener" ],
+  methods: [ "addListener", "removeListener", 'showList' ],
 
   methodHandler : rwt.remote.HandlerUtil.extendListenerMethodHandler( {} ),
 
