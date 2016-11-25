@@ -96,7 +96,8 @@ pwt_ros3d.Simulation.prototype = {
           divID : this._urdfnodeDiv.attributes.id.value,
           width : this._w,
           height : this._h,
-          antialias : true
+          antialias : true,
+          cameraPose : new THREE.Vector3(-3, 3, 3)
         });
 
         // Add a grid.
