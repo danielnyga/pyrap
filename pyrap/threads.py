@@ -673,16 +673,25 @@ class Kapo(_Verbose):
     '''
     def __init__(self, tasks=0, verbose=None):
         _Verbose.__init__(self, verbose)
-        self.__waiter = RLock()
-        self.acquire = self.__waiter.acquire
-        self.release = self.__waiter.release
-        self.__lock = Lock()
+        self.__mutex = Semaphore(value=1)
+        self.__mutex.acquire()
+        self.__lock = RLock()
         self.__tasks = 0
         self.__done = Event()
 
     def _checkowner(self):
-        if self.__waiter._RLock__owner is None:
+        if not self.__lock._RLock__owner:
             raise RuntimeError('Kapo must be owned by a thread.')
+
+
+    def acquire(self):
+        self.__lock.acquire()
+        self.__mutex.release()
+
+        
+    def release(self):
+        self.__mutex.acquire()
+        self.__lock.release()
 
         
     def __enter__(self):
@@ -696,17 +705,16 @@ class Kapo(_Verbose):
 
 
     def wait(self):
-        if self.__waiter._RLock__owner != _get_ident():
+        if _get_ident() != self.__lock._RLock__owner:
             raise RuntimeError('a thread must have acquired the kapo in order to wait for it.')
         if __debug__:
             self._note('%s.wait(): kapo is waiting until all jobs are done.' % self)
-        
         self.__done.wait()
 
 
     def reset(self):
         self._checkowner()
-        with self.__lock:
+        with self.__mutex:
             self.__tasks = 0
             self.__done.clear()
 
@@ -714,7 +722,7 @@ class Kapo(_Verbose):
     def inc(self):
         '''Increments the counter of tasks to accomplish.'''
         self._checkowner()
-        with self.__lock:
+        with self.__mutex:
             self.__tasks += 1
             if __debug__:
                 self._note('%s.inc(): new value is %s' % (self, self.__tasks))
@@ -726,7 +734,7 @@ class Kapo(_Verbose):
         Notifies the thread holding the kapo and waiting for the completio tasks 
         when the counter reaches 0.'''
         self._checkowner()
-        with self.__lock:
+        with self.__mutex:
             self.__tasks -= 1
             if self.__tasks == 0:
                 if __debug__:
