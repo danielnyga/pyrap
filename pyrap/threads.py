@@ -21,10 +21,12 @@ def iteractive():
     for tid, tobj in threading._active.iteritems():
         yield tid, tobj
 
+
 def active():
     '''Returns a dict of active local threads, which maps the thread ID to
     the respective thread object.'''
     return dict(list(iteractive()))
+
 
 def sessionthreads():
     d = {}
@@ -32,6 +34,7 @@ def sessionthreads():
         if isinstance(t, SessionThread):
             d[i] = t
     return d
+
 
 def sleep(sec):
     '''Interruptable sleep'''
@@ -41,11 +44,11 @@ def sleep(sec):
 
 thisthread = threading.current_thread
 
-def Lock(verbose=None):
-    return _Lock(verbose=verbose)
+def ILock(verbose=None):
+    return _ILock(verbose=verbose)
 
 
-class _Lock(_Verbose):
+class _ILock(_Verbose):
     '''A reimplementation of a lock that is interruptable.'''
     
     def __init__(self, verbose=None):
@@ -252,6 +255,7 @@ def Condition(*args, **kwargs):
     """
     return _Condition(*args, **kwargs)
 
+
 class _Condition(_Verbose):
     """Condition variables allow one or more threads to wait until they are
        notified by another thread.
@@ -284,8 +288,9 @@ class _Condition(_Verbose):
     def __enter__(self):
         return self.__lock.__enter__()
 
-    def __exit__(self, *args):
-        return self.__lock.__exit__(*args)
+    def __exit__(self, e, t, tb):
+#         if t is ThreadInterrupt: raise e
+        self.__lock.__exit__(e, t, tb)
 
     def __repr__(self):
         return "<Condition(%s, %d)>" % (self.__lock, len(self.__waiters))
@@ -329,7 +334,7 @@ class _Condition(_Verbose):
         then used to restore the recursion level when the lock is reacquired.
 
         """
-        t = threading.current_thread()
+        t = thisthread()
         if not self._is_owned():
             raise RuntimeError("cannot wait on un-acquired lock")
         waiter = _allocate_lock()
@@ -382,8 +387,8 @@ class _Condition(_Verbose):
                         self._note("%s.wait(%s): got it", self, timeout)
         finally:
             self._acquire_restore(saved_state)
-        if isinstance(t, InterruptableThread):
-            t.die_on_interrupt()
+            if isinstance(t, InterruptableThread) and t._InterruptableThread__interrupt:
+                raise ThreadInterrupt()
             
 
     def notify(self, n=1):
@@ -466,7 +471,7 @@ class _Semaphore(threading._Semaphore):
 
     def __init__(self, value=1, verbose=None):
         threading._Semaphore.__init__(self, value, verbose)
-        self.__cond = Condition(Lock(verbose=1))
+        self.__cond = Condition(Lock())
         self.__owners = set()
 
 
@@ -590,6 +595,7 @@ def Event(*args, **kwargs):
     """
     return _Event(*args, **kwargs)
 
+
 class _Event(threading._Event):
     """A factory function that returns a new event object. An event manages a
        flag that can be set to true with the set() method and reset to false
@@ -656,30 +662,83 @@ class _Event(threading._Event):
             return self.__flag        
 
 
-def _async_raise(tid, exctype):
-    '''Raises an exception in the threads with id tid'''
-    if not inspect.isclass(exctype):
-        raise TypeError("Only types can be raised (not instances)")
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), ctypes.py_object(exctype))
-    if res == 0:
-        raise ValueError("invalid thread id")
-    elif res != 1:
-        # "if it returns a number greater than one, you're in trouble,
-        # and you should call it again with exc=NULL to revert the effect"
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), None)
-        raise SystemError("PyThreadState_SetAsyncExc failed")
+class Kapo(_Verbose):
+    '''
+    More complex synchronization data structure implementing a Kapo (german 'foreman').
     
-    
-def _revoke_exc(tid):
-    '''Revokes a pending exception in the given thread.'''
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), None)
-    if res == 0:
-        raise ValueError("invalid thread id")
-    
+    A kapo can be used in a thread to wait until a number of tasks have been accomplished.
+    The thread holding the kapo, however, does not work any of the tasks itself, but it
+    just waits until all tasks have been done by other threads. Only one thread can hold
+    the kapo at a time.
+    '''
+    def __init__(self, tasks=0, verbose=None):
+        _Verbose.__init__(self, verbose)
+        self.__waiter = RLock()
+        self.acquire = self.__waiter.acquire
+        self.release = self.__waiter.release
+        self.__lock = Lock()
+        self.__tasks = 0
+        self.__done = Event()
+
+    def _checkowner(self):
+        if self.__waiter._RLock__owner is None:
+            raise RuntimeError('Kapo must be owned by a thread.')
+
+        
+    def __enter__(self):
+        self.acquire()
+        self.reset()
+
+        
+    def __exit__(self, e, t, tb):
+        self.wait()
+        self.release()
+
+
+    def wait(self):
+        if self.__waiter._RLock__owner != _get_ident():
+            raise RuntimeError('a thread must have acquired the kapo in order to wait for it.')
+        if __debug__:
+            self._note('%s.wait(): kapo is waiting until all jobs are done.' % self)
+        
+        self.__done.wait()
+
+
+    def reset(self):
+        self._checkowner()
+        with self.__lock:
+            self.__tasks = 0
+            self.__done.clear()
+
+        
+    def inc(self):
+        '''Increments the counter of tasks to accomplish.'''
+        self._checkowner()
+        with self.__lock:
+            self.__tasks += 1
+            if __debug__:
+                self._note('%s.inc(): new value is %s' % (self, self.__tasks))
+
+
+    def dec(self):
+        '''Decrements the counter of tasks to accomplish. 
+        
+        Notifies the thread holding the kapo and waiting for the completio tasks 
+        when the counter reaches 0.'''
+        self._checkowner()
+        with self.__lock:
+            self.__tasks -= 1
+            if self.__tasks == 0:
+                if __debug__:
+                    self._note('%s.inc(): all jobs done. notifying kapo.' % self)
+                self.__done.set()
+            else:
+                if __debug__:
+                    self._note('%s.dec(): new value is %s' % (self, self.__tasks))
 
 
 class InterruptableThread(threading.Thread):
-    '''A thread class that supports raising exception in the thread from
+    '''A thread class that supports interruption of blocking waits from within
        another thread.
     '''
     def __init__(self, group=None, target=None, name=None,
@@ -689,7 +748,7 @@ class InterruptableThread(threading.Thread):
         self.__waitingfor = None 
         self.__running = Event()
         self.__lock = RLock()
-        self.interrupted = False
+        self.__interrupt = False
         self.finished = False
         self.suspended = Event()
         self.resumed = Event()
@@ -703,22 +762,12 @@ class InterruptableThread(threading.Thread):
     def setresumed(self):
         self.suspended.clear()
         self.resumed.set()
-        
     
-    def die_on_interrupt(self):
-        '''If an interrupt has been signaled to this thread, waits in a busy 
-        loop until the interpreter kills the thread by issuing the 
-        ThreadInterrupt exception.
+    
+    def setdone(self):
+        self.resumed.clear()
+        self.suspended.set()
         
-        If no interrupt is issued, this method immediately returns without 
-        doing anything.
-        '''
-        with self.__lock:
-            if self.interrupted: 
-                if __debug__:
-                    self._note('%s.die_on_interrupt(): waiting to die...', type(self).__name__)
-                while 1: time.sleep(.001)
-            
     
     @property
     def _waitingfor(self):
@@ -726,131 +775,24 @@ class InterruptableThread(threading.Thread):
     
     @_waitingfor.setter
     def _waitingfor(self, waiter):
-        if self.interrupted and waiter is not None: raise RuntimeError()
+        if self.__interrupt and waiter is not None: raise RuntimeError()
         self.__waitingfor = waiter
         
-    
-    def __get_tid(self):
-        """determines this (self's) thread id
-
-        CAREFUL : this function is executed in the context of the caller
-        thread, to get the identity of the thread represented by this
-        instance.
-        """
-        if not self.is_alive():
-            raise threading.ThreadError("the thread is not active")
-
-        # do we have it cached?
-        if hasattr(self, "_thread_id"):
-            return self._thread_id
-
-        # no, look for it in the _active dict
-        for tid, tobj in threading._active.items():
-            if tobj is self:
-                self._thread_id = tid
-                return tid
-
-        # TODO: in python 2.6, there's a simpler way to do : self.ident
-
-        raise AssertionError("could not determine the thread's id")
-
-
-    def __raise_exc(self, exctype):
-        """Raises the given exception type in the context of this thread.
-
-        If the thread is busy in a system call (time.sleep(),
-        socket.accept(), ...), the exception is simply ignored.
-
-        If you are sure that your exception should terminate the thread,
-        one way to ensure that it works is:
-
-            t = ThreadWithExc( ... )
-            ...
-            t.raise_exc( SomeException )
-            while t.isAlive():
-                time.sleep( 0.1 )
-                t.raise_exc( SomeException )
-
-        If the exception is to be caught by the thread, you need a way to
-        check that your thread has caught it.
-
-        CAREFUL : this function is executed in the context of the
-        caller thread, to raise an excpetion in the context of the
-        thread represented by this instance.
-        """
-        _async_raise( self.__get_tid(), exctype )
-
-
-    def kill(self):
-        '''Raises an :class:`ThreadInterrupt` in this thread.'''
-        if __debug__:
-            self._note('%s._run(): sending ThreadInterrupt', self)
-        self.__running.wait()
-        if not self.is_alive(): return
+    @property
+    def interrupted(self):
+        return self.__interrupt
+        
+    def interrupt(self):
         with self.__lock:
-            if self.finished: return
-            self.interrupted = True
-            self.__raise_exc(ThreadInterrupt)
-            if isinstance(self._waitingfor, _Condition):
-                with self._waitingfor, _active_limbo_lock:
-                    self._waitingfor.notify_thread(self.__get_tid())
-                    self._waitingfor = None
-        self.join()
+            self.__interrupt = True
+            if isinstance(self.__waitingfor, _Condition):
+                with self.__waitingfor:
+                    self._waitingfor.notify_thread(self.ident)
                 
-                
-    def undo_kill(self):
-        '''Revokes a pending exception in the given thread.
-        
-        Note: this does not seem to work reliably. Better not use.'''
-        if __debug__:
-            self._note('%s.undo_kill()', self)
-        _revoke_exc(self.__get_tid())
-        
-    
-    def _run(self):
-        try:
-            self.__running.set()
-            try:
-                self.run()
-            except ThreadInterrupt as e:
-                if __debug__:
-                    self._note('%s._run(): received ThreadInterrupt', self)
-                sys.stdout.flush()
-                raise e
-            else:
-                with self.__lock:
-                    self.finished = True
-                    # if a ThreadInterrupt exception has been sent to
-                    # this thread, we have to wait until the interpreter 
-                    # actually fires it. This is because it cannot be revoked 
-                    # reliably. The thread has to busily wait until it dies. 
-                    self.die_on_interrupt()
-        except (SystemExit, KeyboardInterrupt, ThreadInterrupt), e: 
-            if __debug__:
-                self._note("%s._run(): %s", self, type(e).__name__)
-        except Exception as e:
-            traceback.print_exc()
-            if __debug__:
-                self._note("%s._run(): calling %s._except(%s)", self, self, type(e).__name__)
-            self._except(e)
-        else:
-            if __debug__:
-                self._note("%s._run(): calling %s._else()", self, self)
-            self._else()
-        finally:
-            if __debug__:
-                self._note("%s._run(): calling %s._finally()", self, self)
-            self._finally()
-            
 
-    def _except(self, e):
-        if __debug__:
-            self._note("%s._except(): re-raising exception", self) 
-        raise e
-    
-    def _finally(self): pass
-    
-    def _else(self): pass
+    def _run(self):
+        self.run()
+
 
     def _Thread__bootstrap_inner(self):
         try:
@@ -876,7 +818,7 @@ class InterruptableThread(threading.Thread):
                     self._note("%s.__bootstrap(): raised SystemExit", self)
             except ThreadInterrupt:
                 if sys and sys.stderr is not None:
-                    print>>sys.stderr, ("Interrupt in thread %s: !!! THIS SHOULD NEVER HAPPEN !!!\n%s" %
+                    print>>sys.stderr, ("Interrupt in thread %s:\n%s" %
                                          (self.name, traceback.format_exc()))
                 
             except Exception:
@@ -924,7 +866,7 @@ class InterruptableThread(threading.Thread):
         finally:
             with _active_limbo_lock:
                 self._Thread__stop()
-                self.setsuspended()
+                self.setdone()
                 try:
                     # We don't call self.__delete() because it also
                     # grabs _active_limbo_lock.
@@ -973,42 +915,57 @@ class SessionThread(InterruptableThread):
         self._session = pyrap.session
         self._session_id = pyrap.session.session_id
 
+    def setsuspended(self):
+        InterruptableThread.setsuspended(self)
+        pyrap.session.runtime.kapo.dec()
+
+    def setresumed(self):
+        InterruptableThread.setresumed(self)
+        pyrap.session.runtime.kapo.inc()
+
+    def setfinished(self):
+        InterruptableThread.setsuspended(self)
+
     def _run(self):
         pyrap.session.session_id = self._session_id
         pyrap.session.load()
+        pyrap.session.runtime.kapo.inc()
         if __debug__:
             self._note('%s._run(): inherited data from session %s', self, pyrap.session.session_id)
-        InterruptableThread._run(self)
+        try:
+            InterruptableThread._run(self)
+        finally:
+            pyrap.session.runtime.kapo.dec()
 
 
 if __name__ == '__main__':
     s = Semaphore(value=1, verbose=1)
+    c = Condition()
+    kapo = Kapo(verbose=1)
     
-    class IThread(InterruptableThread):
-        
-        def run(self):
-            sleep(random.random())
-            out(threading.current_thread(), 'trying to acquire semaphore')
-            s.acquire()
-            out(threading.current_thread(), 'has semaphore') 
-            sleep(random.random() * 5)
-        
-        def _finally(self):
-            if s.isowned():
-                out(threading.current_thread(), 'releasing')
-                s.release()
-                out(threading.current_thread(), 'released')
+    def worker():
+        kapo.inc()
+        sleep(random.random())
+#         out(threading.current_thread(), 'trying to acquire semaphore')
+#         with s:
+#             out(threading.current_thread(), 'has semaphore') 
+#             sleep(random.random() * 2)
+        kapo.dec()
         
     thrs = []
-    for i in range(1):
-        out('Iter #%s' % (i+1))
-        t = IThread(verbose=1)
-        thrs.append(t)
-        t.start()
-    for t in thrs:
+    
+    with kapo:
+        for i in range(10):
+            out('Iter #%s' % (i+1))
+            t = InterruptableThread(target=worker, verbose=0)
+            thrs.append(t)
+            t.start()
+        kapo.wait()
+
+#     for t in thrs:
 #         out('killing', t)
-#         t.kill()
-        t.join()
+#         t.interrupt()
+#         t.join()
     out('goodbye')
     
 
