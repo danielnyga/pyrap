@@ -20,6 +20,8 @@ class Graph(Widget):
         self._gheight = None
         self._links = []
         self._cssid = cssid
+        self._linkdist = None
+        self._cradius = None
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -59,6 +61,42 @@ class Graph(Widget):
     @cssid.setter
     def cssid(self, cssid):
         self._cssid = cssid
+
+    @property
+    def linkdist(self):
+        return self._linkdist
+
+    @linkdist.setter
+    def linkdist(self, linkdist):
+        self._linkdist = linkdist
+        session.runtime << RWTSetOperation(self.id, {'linkdistance': linkdist})
+
+    @property
+    def cradius(self):
+        return self._cradius
+
+    @cradius.setter
+    def cradius(self, cradius):
+        self._cradius = cradius
+        session.runtime << RWTSetOperation(self.id, {'circleradius': cradius})
+
+    @property
+    def gravity(self):
+        return self._gravity
+
+    @gravity.setter
+    def gravity(self, gravity):
+        self._gravity = gravity
+        session.runtime << RWTSetOperation(self.id, {'gravity': gravity})
+
+    @property
+    def charge(self):
+        return self._charge
+
+    @charge.setter
+    def charge(self, charge):
+        self._charge = charge
+        session.runtime << RWTSetOperation(self.id, {'charge': charge})
 
     @property
     def gwidth(self):

@@ -45,7 +45,6 @@ class SVG(Widget):
             self.root = ET.fromstring(svg)
             self.tree = ET.ElementTree(self.root)
         w, h = self.root.attrib['viewBox'].split()[-2:]
-        out(w, h, type(w), type(h))
         self._vbwidth = int(float(w))
         self._vbheight = int(float(h))
 
@@ -149,9 +148,9 @@ class SVG(Widget):
     def compute_size(self):
         # prefer user given size, otherwise try to obtain size from svg content
         # if still not successful, use parent size
+
         w = self.gwidth or self._vbwidth
         h = self.gheight or self._vbheight
-
         if self._vbwidth is not None and self._vbheight is not None:
             ratio = float(self._vbwidth) / self._vbheight
         else:
@@ -161,9 +160,8 @@ class SVG(Widget):
                 w = h * ratio
         elif h is None and ratio is not None and w is not None:
                 h = w / ratio
-        else:
-            w = self.parent.width
-            h = self.parent.height
+        elif w is None and h is None:
+            w, h = Widget.compute_size(self)
 
         padding = self.theme.padding
         if padding:

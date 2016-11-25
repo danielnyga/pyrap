@@ -246,9 +246,9 @@ class WindowManager(object):
         session.runtime << RWTSetOperation(self.display.id, {'focusControl': wnd.id})
         
     def _set_focus(self, wnd):
-        if self.focus and self.focus is not wnd: self.focus.on_focus.notify(FocusEventData(gained=False))
+        if self.focus and self.focus is not wnd: self.focus.on_focus.notify(FocusEventData(wnd, gained=False))
         self._focus = wnd
-        if self.focus: self.focus.on_focus.notify(FocusEventData(gained=True))
+        if self.focus: self.focus.on_focus.notify(FocusEventData(wnd, gained=True))
         
     @property
     def display(self):
@@ -483,6 +483,8 @@ class SessionRuntime(object):
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
                         self.requirejs(f)
+                else:
+                    raise Exception('Could not load file', p)
 
     def requirejs(self, f):
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/javascript', f)

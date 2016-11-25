@@ -3,6 +3,10 @@ pwt_d3 = {};
 pwt_d3.Graph = function( parent, cssid ) {
 
     this.WAITMSEC = 100;
+    this._linkdistance = 150;
+    this._circleradius = 10;
+    this._charge = -700;
+    this._gravity = .1;
     this.force = d3.layout.force();
     this.nodes = this.force.nodes();
     this.links = this.force.links();
@@ -14,7 +18,6 @@ pwt_d3.Graph = function( parent, cssid ) {
     }
 
     this._svg = d3.select(this._parentDIV).append("svg");
-
     this._svgContainer = this._svg.select('g');
 
     this._needsLayout = true;
@@ -98,15 +101,37 @@ pwt_d3.Graph.prototype = {
     },
 
     setWidth: function( width ) {
-//        this._parentDIV.style.width = width + "px";
+        this._parentDIV.style.width = width + "px";
         this._w = width;
         this.update();
     },
 
 
     setHeight: function( height ) {
-//        this._parentDIV.style.height = height + "px";
+        this._parentDIV.style.height = height + "px";
         this._h = height;
+        this.update();
+    },
+
+    setCircleradius: function( radius ) {
+        this._circleradius = radius;
+        this.update();
+    },
+
+
+    setLinkdistance: function( distance ) {
+        this._linkdistance = distance;
+        this.update();
+    },
+
+    setCharge: function( charg ) {
+        this._charge = charge;
+        this.update();
+    },
+
+
+    setGravity: function( gravity ) {
+        this._gravity = gravity;
         this.update();
     },
 
@@ -453,11 +478,10 @@ pwt_d3.Graph.prototype = {
 
       this.force
         .size([this._w, this._h])
-        .linkDistance( this._h/2 )
-        .charge(-700)
+        .linkDistance( this._linkdistance )
+        .charge( this._charge )
         .on("tick", tick)
-        .gravity( .1 )
-        .distance( 200 )
+        .gravity( this._gravity )
         .start();
     }
 };
@@ -472,7 +496,7 @@ rap.registerTypeHandler( 'pwt.customs.Graph', {
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'width', 'height' ],
+  properties: [ 'remove', 'width', 'height', 'linkdistance', 'circleradius', 'charge', 'gravity'],
 
   methods : [ 'updateData' ],
 

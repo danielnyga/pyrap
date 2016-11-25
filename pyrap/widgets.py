@@ -18,7 +18,7 @@ from pyrap.communication import RWTSetOperation,\
 from pyrap.constants import RWT, GCBITS
 from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
-    OnNavigate, OnModify, FocusEventData
+    OnNavigate, OnModify, FocusEventData, _rwt_event
 from pyrap.exceptions import WidgetDisposedError
 from pyrap.layout import Layout, LayoutAdapter, CellLayout,\
     StackLayout
@@ -277,7 +277,7 @@ class Widget(object):
     def focus(self, notify=False):
         session.runtime.windows.focus = self
         if notify:
-            self.on_focus.notify(FocusEventData(True))
+            self.on_focus.notify(FocusEventData(self.id, True))
 
 
     @property
@@ -634,13 +634,16 @@ class Combo(Widget):
         Widget.__init__(self, parent, **options)
         self.theme = ComboTheme(self, session.runtime.mngr.theme)
         self._items = items
+        self._setitems(items)
+        self._text = None
         self.on_select = OnSelect(self)
+        self.on_modify = OnModify(self)
         self._editable = editable
         self._selidx = -1
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        options.items = self._items
+        options.items = map(str, self._items)
         options.style.append("DROP_DOWN")
         options.editable = self._editable
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
@@ -658,40 +661,74 @@ class Combo(Widget):
         w += ifnone(self.theme.btnwidth, 0)
         return w, h
 
+    def _setitems(self, items):
+        if items is None:
+            items = []
+        if isinstance(items, dict):
+            if not all([type(i) is str for i in items]):
+                raise TypeError('All keys in an item dictionary must be strings.')
+            if type(items) is dict:
+                self._items = OrderedDict(((k, items[k]) for k in sorted(items)))
+        elif type(items) in (list, tuple):
+            items = OrderedDict(((str(i), i) for i in items))
+        else: raise TypeError('Invalid type for List items: %s' % type(items))
+        self._items = items
 
     def _handle_set(self, op):
         Widget._handle_set(self, op)
         for key, value in op.args.iteritems():
             if key == 'selectionIndex':
                 self._selidx = value
+            if key == 'text':
+                self._text = value
 
 
     def _handle_notify(self, op):
-        events = {'Selection': self.on_select}
+        events = {'Selection': self.on_select, 'Modify': self.on_modify}
+        out(op, op.event)
         if op.event not in events:
             return Widget._handle_notify(self, op)
-        else:
+        elif op.event == 'Selection':
             events[op.event].notify(_rwt_selection_event(op))
+        else:
+            events[op.event].notify(_rwt_event(op))
         return True
 
-    def select(self, idx):
-        self._selidx = idx
-        session.runtime << RWTSetOperation(self.id, {'selectionIndex': idx, 'text': self.selected})
-
+    def showlist(self, show):
+        session.runtime << RWTCallOperation(self.id, 'showList', show)
 
     @property
-    def selected(self):
-        return self.items[self._selidx]
+    def text(self):
+        return self._text
+
+    @text.setter
+    @checkwidget
+    def text(self, text):
+        self._text = text
+        session.runtime << RWTSetOperation(self.id, {'text': self._text})
+
+    @property
+    def selection(self):
+        return self.items[self.items.keys()[self._selidx]]
+
+    @selection.setter
+    def selection(self, sel):
+        sel = self._items.values().index(sel) if sel is not None else None
+        self._selidx = sel
+        session.runtime << RWTSetOperation(self.id, {'selectionIndex': sel, 'text': self.items.keys()[sel]})
+
+    @property
+    def selidx(self):
+        return self._selidx
 
     @property
     def items(self):
         return self._items
 
     @items.setter
-    @checkwidget
     def items(self, items):
-        self._items = items
-        session.runtime << RWTSetOperation(self.id, {'items': self.items})
+        self._setitems(items)
+        session.runtime << RWTSetOperation(self.id, {'items': self.items.keys()})
 
 
 class DropDown(Widget):
@@ -838,10 +875,10 @@ class Label(Widget):
     def img(self, img):
         self._img = img
         session.runtime << RWTSetOperation(self.id, {'image': self._get_rwt_img(self.img)})
-        
-    
+
+
     @text.setter
-    @checkwidget    
+    @checkwidget
     def text(self, text):
         self._text = text
         session.runtime << RWTSetOperation(self.id, {'text': self._text})
@@ -870,18 +907,38 @@ class Button(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
     
     @constructor('Button')
-    def __init__(self, parent, text='', **options):
+    def __init__(self, parent, text='', img=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ButtonTheme(self, session.runtime.mngr.theme)
         self.on_select = OnSelect(self)
         self._text = text
+        self._img = img
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
+        if self.img:
+            options.image = self._get_rwt_img(self.img)
         options.text = self.text
         options.style.append('PUSH')
         options.tabIndex = 1
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+
+    def _get_rwt_img(self, img):
+        if img is not None:
+            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
+            img = [res.location, img.width.value, img.height.value]
+        else: img = None
+        return img
+
+    @property
+    def img(self):
+        return self._img
+
+    @img.setter
+    @checkwidget
+    def img(self, img):
+        self._img = img
+        session.runtime << RWTSetOperation(self.id, {'image': self._get_rwt_img(self.img)})
 
     @property
     def text(self):
@@ -905,6 +962,10 @@ class Button(Widget):
         tw, th = session.runtime.textsize_estimate(self.theme.font, self._text)
         width += tw
         height += th
+        if self.img is not None:
+            w, h = self.img.size
+            width += w
+            height += (h - px(h)) if (h > px(h)) else 0
         return width, height
     
     
@@ -2158,7 +2219,6 @@ class List(Widget):
         self._itemheight = h
         self.bounds = self.bounds # update the bounds
     
-    
     def _setitems(self, items):
         if items is None:
             items = []
@@ -2172,7 +2232,6 @@ class List(Widget):
         else: raise TypeError('Invalid type for List items: %s' % type(items))
         self._items = items
             
-    
     @property
     def items(self):
         return self._items
