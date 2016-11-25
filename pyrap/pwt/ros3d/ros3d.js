@@ -1,16 +1,13 @@
 pwt_ros3d = {};
 
-pwt_ros3d.Simulation = function(parent, cssid) {
+pwt_ros3d.Simulation = function(parent, cssid, url, port) {
     this._urdfnodeDiv = this.createElement(parent);
-    this._rosliburl = 'ws://134.102.206.96:9090';
     this._w = 800;
     this._h = 600;
 
-    if (cssid) {
-        this._urdfnodeDiv.setAttribute('id', cssid);
-    } else {
-        this._urdfnodeDiv.setAttribute('id', 'urdf');
-    }
+    this._urdfnodeDiv.setAttribute('id', cssid ? cssid : 'urdf');
+    this._rosliburl = url ? url : 'ws://prac.open-ease.org';
+    this._roslibport = port ? port : '9090';
 
     this._needsLayout = true;
     this._needsRender = true;
@@ -50,13 +47,10 @@ pwt_ros3d.Simulation.prototype = {
     setBounds: function( args ) {
         this._urdfnodeDiv.style.left = args[0] + 'px';
         this._urdfnodeDiv.style.top = args[1] + 'px';
-//        this._urdfnodeDiv.style.width = args[2] + 'px';
-//        this._urdfnodeDiv.style.height = args[3] + 'px';
-        this._urdfnodeDiv.style.width = this._w + 'px';
-        this._urdfnodeDiv.style.height = this._h + 'px';
+        this._urdfnodeDiv.style.width = args[2] + 'px';
+        this._urdfnodeDiv.style.height = args[3] + 'px';
         if (typeof this._simulation_viewer != 'undefined') {
-//            this._simulation_viewer.resize(args[2], args[3]);
-            this._simulation_viewer.resize(this._w, this._h);
+            this._simulation_viewer.resize(args[2], args[3]);
         }
      },
 
@@ -69,17 +63,20 @@ pwt_ros3d.Simulation.prototype = {
 
     setWidth: function( width ) {
         this._w = width;
-        this.update();
+        this._simulation_viewer.style.width = width;
     },
-
 
     setHeight: function( height ) {
         this._h = height;
-        this.update();
+        this._simulation_viewer.style.height = height;
     },
 
     setURL: function( url ) {
         this._rosliburl = url;
+    },
+
+    setPort: function ( port ) {
+        this._roslibport = port;
     },
 
     init: function() {
@@ -91,7 +88,7 @@ pwt_ros3d.Simulation.prototype = {
 
         // Connect to ROS.
         var ros = new ROSLIB.Ros({
-          url : this._rosliburl
+          url : this._rosliburl + ':' + this._roslibport
         });
 
         // Create the main viewer.
@@ -188,12 +185,12 @@ rap.registerTypeHandler( 'pwt.customs.ROS3D', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    return new pwt_ros3d.Simulation( parent, properties.cssid);
+    return new pwt_ros3d.Simulation( parent, properties.cssid, properties.url, properties.port);
   },
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'bounds'],
+  properties: [ 'remove', 'bounds', 'port', 'url', 'width', 'height'],
 
   methods : [ ],
 

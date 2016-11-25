@@ -1,8 +1,8 @@
 from pyrap import session
-from pyrap.communication import RWTCreateOperation
+from pyrap.communication import RWTCreateOperation, RWTSetOperation
 from pyrap.themes import WidgetTheme
 from pyrap.utils import ifnone
-from pyrap.widgets import Widget, constructor
+from pyrap.widgets import Widget, constructor, checkwidget
 
 
 class ROS3D(Widget):
@@ -11,16 +11,25 @@ class ROS3D(Widget):
     _defstyle_ = Widget._defstyle_
 
     @constructor('ROS3D')
-    def __init__(self, parent, cssid=None, requiredjs=None, **options):
+    def __init__(self, parent, cssid=None, requiredjs=None, url=None, port=None, **options):
         Widget.__init__(self, parent, **options)
         self._cssid = cssid
+        self._url = url
+        self._port = port
         self._requiredjs = requiredjs
+        self._gwidth = None
+        self._gheight = None
         session.runtime.ensurejsresources(self._requiredjs)
         self.theme = ROS3DTheme(self, session.runtime.mngr.theme)
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        options.cssid = self._cssid
+        if self._cssid:
+            options.cssid = self._cssid
+        if self._url:
+            options.url = self._url
+        if self._port:
+            options.port = self._port
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
@@ -39,6 +48,52 @@ class ROS3D(Widget):
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         return w, h
+
+    @property
+    def cssid(self):
+        return self._cssid
+
+    @cssid.setter
+    def cssid(self, cssid):
+        self._cssid = cssid
+
+    @property
+    def url(self):
+        return self._url
+
+    @url.setter
+    def url(self, url):
+        self._url = url
+        session.runtime << RWTSetOperation(self.id, {'url': self.url})
+
+    @property
+    def port(self):
+        return self._port
+
+    @port.setter
+    def port(self, port):
+        self._port = port
+        session.runtime << RWTSetOperation(self.id, {'port': self.port})
+
+    @property
+    def gwidth(self):
+        return self._gwidth
+
+    @gwidth.setter
+    @checkwidget
+    def gwidth(self, w):
+        self._gwidth = w
+        session.runtime << RWTSetOperation(self.id, {'width': self.gwidth})
+
+    @property
+    def gheight(self):
+        return self._gheight
+
+    @gheight.setter
+    @checkwidget
+    def gheight(self, h):
+        self._gheight = h
+        session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
 
 
 class ROS3DTheme(WidgetTheme):
