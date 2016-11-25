@@ -11,15 +11,22 @@ class ROS3D(Widget):
     _defstyle_ = Widget._defstyle_
 
     @constructor('ROS3D')
-    def __init__(self, parent, cssid=None, requiredjs=None, url=None, port=None, **options):
+    def __init__(self, parent, cssid=None, requiredjs=[], url=None, port=None, **options):
         Widget.__init__(self, parent, **options)
         self._cssid = cssid
         self._url = url
         self._port = port
-        self._requiredjs = requiredjs
+        self._requiredjs = ['resource/static/script/robotwebtools/three.js',
+                            'resource/static/script/robotwebtools/ColladaLoader.js',
+                            'resource/static/script/robotwebtools/STLLoader.js',
+                            'resource/static/script/robotwebtools/ColladaLoader2.js',
+                            'resource/static/script/robotwebtools/eventemitter2.min.js',
+                            'resource/static/script/robotwebtools/roslib.js',
+                            'resource/static/script/robotwebtools/ros3d.js']
+        self._requiredjs.extend(requiredjs)
+        session.runtime.ensurejsresources(self._requiredjs)
         self._gwidth = None
         self._gheight = None
-        session.runtime.ensurejsresources(self._requiredjs)
         self.theme = ROS3DTheme(self, session.runtime.mngr.theme)
 
     def _create_rwt_widget(self):
