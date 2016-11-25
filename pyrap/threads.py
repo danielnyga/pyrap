@@ -530,7 +530,9 @@ class _Semaphore(threading._Semaphore):
             if __debug__:
                 self._note("%s.release: success, value=%s",
                         self, self._Semaphore__value)
-            self.__owners.remove(threading.current_thread().ident)
+            try:
+                self.__owners.remove(threading.current_thread().ident)
+            except KeyError: pass
             self.__cond.notify()
 
     def __exit__(self, t, v, tb):
