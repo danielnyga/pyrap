@@ -32,6 +32,7 @@ from pyrap.themes import Theme, FontMetrics
 from pyrap.utils import ifnone, out, trace
 from pyrap.widgets import Display, Shell
 import rfc822
+from pyrap.threads import Kapo
 
 
 mimetypes.init()
@@ -188,7 +189,6 @@ class ApplicationManager(object):
             session.runtime.push.clear()
             return ''
 
-
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -197,12 +197,16 @@ class ApplicationManager(object):
                 if sid is None : self._create_session()
                 msg = parse_msg(content)
                 self.log_.debug('>>> ' + str(msg))
-                # dispatch the event to the respective session
-                session.runtime.handle_msg(msg)
-                r = session.runtime.compose_msg()
-                smsg = json.dumps(r.json)
-                web.header('Content-Type', 'application/json')
-                return smsg
+                with session.runtime.kapo:
+                    session.runtime.kapo.inc()
+                    # dispatch the event to the respective session
+                    session.runtime.handle_msg(msg)
+                    session.runtime.kapo.dec()
+                    session.runtime.kapo.wait()
+                    r = session.runtime.compose_msg()
+                    smsg = json.dumps(r.json)
+                    web.header('Content-Type', 'application/json')
+                    return smsg
         except SessionExpired:
             raise rwterror(RWTError.SESSION_EXPIRED)
         except:
@@ -288,7 +292,7 @@ class SessionRuntime(object):
         self.fontmetrics = {}
         self.default_font = None
         self.log_ = getlogger(type(self).__name__)
-
+        self.kapo = Kapo(verbose=1)
         self.push = Event()
         
         
@@ -375,8 +379,7 @@ class SessionRuntime(object):
                 wnd = self.windows[o.target]
                 if wnd is None: continue
                 # start a new session thread for processing the notify messages
-                t = threads.SessionThread(target=wnd._handle_notify, args=(o,)).start()
-                t.suspended.wait()
+                threads.SessionThread(target=wnd._handle_notify, args=(o,)).start()
                 #wnd._handle_notify(o)
             elif isinstance(o, RWTSetOperation):
                 wnd = self.windows[o.target]
