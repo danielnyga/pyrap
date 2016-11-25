@@ -106,6 +106,13 @@ class ControlsDemo():
         self.create_scale_page(page)
         self.pages['Scale'] = page
         
+        # =======================================================================
+        # crete canvas page
+        # =======================================================================
+        page = self.create_page_template('Canvas Demo')
+        self.create_canvas_page(page)
+        self.pages['Canvas'] = page
+        
         #=======================================================================
         # create button page
         #=======================================================================
@@ -247,6 +254,40 @@ class ControlsDemo():
         Scale(grpleft, halign='fill', orientation=RWT.HORIZONTAL)
         grpright = Group(lower, text='Fader', valign='fill', halign='fill')
         grpright.layout = RowLayout(valign='fill', halign='fill', equalheights=1)
+        
+    
+    def create_canvas_page(self, parent):
+        grp_ctxmenu = Group(parent, text='Canvas')
+        grp_ctxmenu.layout = CellLayout(halign='fill', valign='fill')
+        canvas = Canvas(grp_ctxmenu, halign='fill', valign='fill')
+        context = canvas.gc
+        canvas << context.draw_grid(10, 10, 'lightgrey')
+
+        canvas << context.begin_path()
+        canvas << context.rect(50, 50, 300, 100)
+        canvas << context.fill_style(Color('white'))
+        canvas << context.fill()
+        canvas << context.linewidth(1)
+        canvas << context.stroke_style(Color('black'))
+        canvas << context.stroke()
+
+        canvas << context.fill_style(Color('red'))
+        canvas << context.font('Arial', 30)
+        canvas << context.stroke_text("Hello World!\nThis is Awesome!", 200, 100, aligncenterx=True, aligncentery=True)
+
+        canvas << context.begin_path()
+        canvas << context.rect(50, 150, 300, 100)
+        canvas << context.fill_style(Color('light grey'))
+        canvas << context.fill()
+        canvas << context.linewidth(1)
+        canvas << context.stroke_style(Color('black'))
+        canvas << context.stroke()
+
+        canvas << context.fill_style(Color('green'))
+        canvas << context.font('Arial', 30)
+        canvas << context.fill_text("Hello World!\nThis is Awesome!", 60, 200, aligncenterx=False, aligncentery=True)
+        canvas.draw()    
+       
     
     def create_button_page(self, parent):
         grp = Group(parent, text='Push Buttons')
