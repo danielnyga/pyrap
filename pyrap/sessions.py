@@ -11,13 +11,13 @@ from copy import deepcopy
 import urlparse
 from web import utils
 from pyrap.ptypes import Event
-from pyrap.utils import ifnone
+from pyrap.utils import RStorage
 from pyrap import threads
 
 
 class SessionKilled(Event):
-    def _notify(self, listener):
-        listener()
+    def _notify(self, listener, data):
+        listener(data)
         
 
 class Session(web.session.Session):
@@ -122,18 +122,21 @@ class DictStore(web.session.Store):
     def __setitem__(self, key, value):
         with self._lock:
             self._dict[key] = value
+            
+    def __delitem__(self, key):
+        with self._lock:
+            del self._dict[key]
 
     def cleanup(self, timeout):
         now = time.time()
-        for session_id, content in self._dict.iteritems():
+        for session_id, content in dict(self._dict).iteritems():
             if 'creation_time' not in content or (now - content['creation_time']) > timeout:
                 if 'on_kill' in content:
-                    content['on_kill'].notify()
+                    content['on_kill'].notify(RStorage(content))
                 if session_id in self:
-                    with self._lock: 
-                        del self[session_id]
+                    del self[session_id]
                 # clean up the SessionThreads belonging to this session
-                for _, t in threads.active():
+                for _, t in threads.iteractive():
                     if isinstance(t, threads.SessionThread) and t._session_id == session_id:
-                        t.kill()
+                        t.interrupt()
                         

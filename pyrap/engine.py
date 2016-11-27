@@ -125,7 +125,7 @@ class ApplicationManager(object):
         application `clazz` in from the config and attaching it to the HTTP session.
         '''
         session.create()
-        session.on_kill += lambda: out('kill session', session.session_id)
+        session.on_kill += lambda data: out('kill session', data.session_id)
         session.app = self
         session.runtime = SessionRuntime(session.session_id, self, self.config.clazz())
         session._save()
