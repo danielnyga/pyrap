@@ -64,6 +64,7 @@ class ApplicationRegistry(object):
     
 
 _server = PyRAPServer(routes, globals())
+web.config.session_parameters.timeout = 30 * 60 # 30 min session timeout
 session = Session(_server)
 _registry = ApplicationRegistry()
 
