@@ -346,6 +346,7 @@ class _Condition(_Verbose):
                 t._InterruptableThread__lock.release()
                 return
             t._waitingfor = self
+            t.setsuspended()
         self.__waiters[t.ident] = waiter
         saved_state = self._release_save()
         try:    # restore state no matter what (e.g., KeyboardInterrupt)
@@ -412,6 +413,9 @@ class _Condition(_Verbose):
         self._note("%s.notify(): notifying %d waiter%s", self, n,
                    n!=1 and "s" or "")
         for waiter in waiters:
+            t = active().get(waiter)
+            if isinstance(t, InterruptableThread): 
+                t.setresumed()
             __waiters[waiter].release()
             try:
                 del __waiters[waiter]
@@ -429,6 +433,9 @@ class _Condition(_Verbose):
                 self._note("%s.notify(): no thread with id %s waiting on condition", self, tid)
             return
         self._note("%s.notify(): notifying waiter of thread %s", self, tid)
+        t = active().get(tid)
+        if isinstance(t, InterruptableThread): 
+            t.setresumed()
         waiter.release()
         try:
             del self.__waiters[tid]
@@ -676,47 +683,46 @@ class Kapo(_Verbose):
     def __init__(self, tasks=0, verbose=None):
         _Verbose.__init__(self, verbose)
         self.__mutex = Semaphore(value=1)
-        self.__mutex.acquire()
         self.__lock = RLock()
         self.__tasks = 0
         self.__done = Event()
 
     def _checkowner(self):
-        if not self.__lock._RLock__owner:
+        if not self.__mutex._Semaphore__owners:
             raise RuntimeError('Kapo must be owned by a thread.')
 
 
     def acquire(self):
-        self.__lock.acquire()
-        self.__mutex.release()
+        with self.__lock:
+            self.__mutex.acquire()
 
         
     def release(self):
-        self.__mutex.acquire()
-        self.__lock.release()
+        with self.__lock:
+            self.__mutex.release()
 
         
     def __enter__(self):
-        self.acquire()
-        self.reset()
+        with self.__lock:
+            self.acquire()
+            self.reset()
 
         
     def __exit__(self, e, t, tb):
-        self.wait()
         self.release()
 
 
     def wait(self):
-        if _get_ident() != self.__lock._RLock__owner:
+        if _get_ident() not in self.__mutex._Semaphore__owners:
             raise RuntimeError('a thread must have acquired the kapo in order to wait for it.')
         if __debug__:
-            self._note('%s.wait(): kapo is waiting until all jobs are done.' % self)
+            self._note('%s.wait(): thread %s is waiting with kapo until all jobs are done.' % (self, thisthread()))
         self.__done.wait()
 
 
     def reset(self):
         self._checkowner()
-        with self.__mutex:
+        with self.__lock:
             self.__tasks = 0
             self.__done.clear()
 
@@ -724,7 +730,7 @@ class Kapo(_Verbose):
     def inc(self):
         '''Increments the counter of tasks to accomplish.'''
         self._checkowner()
-        with self.__mutex:
+        with self.__lock:
             self.__tasks += 1
             if __debug__:
                 self._note('%s.inc(): new value is %s' % (self, self.__tasks))
@@ -736,7 +742,7 @@ class Kapo(_Verbose):
         Notifies the thread holding the kapo and waiting for the completio tasks 
         when the counter reaches 0.'''
         self._checkowner()
-        with self.__mutex:
+        with self.__lock:
             self.__tasks -= 1
             if self.__tasks == 0:
                 if __debug__:
@@ -930,8 +936,8 @@ class SessionThread(InterruptableThread):
         pyrap.session.runtime.kapo.dec()
 
     def setresumed(self):
-        InterruptableThread.setresumed(self)
         pyrap.session.runtime.kapo.inc()
+        InterruptableThread.setresumed(self)
 
     def setfinished(self):
         InterruptableThread.setsuspended(self)
@@ -939,13 +945,17 @@ class SessionThread(InterruptableThread):
     def _run(self):
         pyrap.session.session_id = self._session_id
         pyrap.session.load()
-        pyrap.session.runtime.kapo.inc()
         if __debug__:
             self._note('%s._run(): inherited data from session %s', self, pyrap.session.session_id)
         try:
             InterruptableThread._run(self)
         finally:
             pyrap.session.runtime.kapo.dec()
+            
+    def start(self):
+        self.setresumed()
+        return InterruptableThread.start(self)
+        
 
 
 if __name__ == '__main__':

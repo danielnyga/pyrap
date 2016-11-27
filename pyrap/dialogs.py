@@ -17,17 +17,17 @@ from pyrap.threads import sleep
 def msg_box(parent, title, text, icon):
     msg = MessageBox(parent, title, text, icon)
     msg.dolayout(True)
-    current_thread().setsuspended()
+#     current_thread().setsuspended()
     msg.on_close.wait()
-    current_thread().setresumed()
+#     current_thread().setresumed()
     return msg.answer
     
 def ask_question(parent, title, text, buttons):
     msg = QuestionBox(parent, title, text, buttons, DLG.QUESTION)
     msg.dolayout(True)
-    current_thread().setsuspended()
+#     current_thread().setsuspended()
     msg.on_close.wait()
-    current_thread().setresumed()
+#     current_thread().setresumed()
     return msg.answer
 
 def ask_yesnocancel(parent, title, text):
@@ -57,7 +57,7 @@ class MessageBox(Shell):
     @constructor('MessageBox')    
     def __init__(self, parent, title, text, icon=None, modal=True):
         Shell.__init__(self, parent, title=title, titlebar=True, border=True, 
-                       btnclose=True, resize=True, modal=modal)
+                       btnclose=True, resize=False, modal=modal)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
         self.text = text
         self.icon = {DLG.INFORMATION: self.icontheme.icon_info,

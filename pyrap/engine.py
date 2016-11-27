@@ -292,7 +292,7 @@ class SessionRuntime(object):
         self.fontmetrics = {}
         self.default_font = None
         self.log_ = getlogger(type(self).__name__)
-        self.kapo = Kapo(verbose=1)
+        self.kapo = Kapo(verbose=0)
         self.push = Event()
         
         
