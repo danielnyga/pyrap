@@ -21,7 +21,8 @@ from collections import OrderedDict
 from pyrap import session
 from threading import current_thread
 from pyrap.constants import DLG
-from pyrap.dialogs import ask_yesnocancel, msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, ask_okcancel
+from pyrap.dialogs import ask_yesnocancel, msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, ask_okcancel,\
+    open_progress
 
 class ControlsDemo():
     
@@ -183,6 +184,13 @@ class ControlsDemo():
         def showerr(*_):
             msg_err(self.shell, title='Error Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
         b.on_select += showerr
+        
+        grp_progress_dlgs = Group(parent, text='Progress Dialog')
+        grp_progress_dlgs.layout = ColumnLayout(equalwidths=1)
+        b = Button(grp_progress_dlgs, 'Open Progress...', halign='fill')
+        def showprog(*_):
+            open_progress(self.shell, 'Progress Report', 'Running a long procedure...', None)
+        b.on_select += showprog
         
         grp_info_dlgs = Group(parent, text='Question Dialogs')
         grp_info_dlgs.layout = ColumnLayout()
