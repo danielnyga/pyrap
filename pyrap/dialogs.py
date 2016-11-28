@@ -3,11 +3,12 @@ Created on Nov 21, 2016
 
 @author: nyga
 '''
-from pyrap.widgets import Shell, constructor, Label, Composite, Button
+from pyrap.widgets import Shell, constructor, Label, Composite, Button,\
+    ProgressBar, StackedComposite
 from pyrap.themes import DisplayTheme
 import pyrap
 from pyrap.constants import DLG
-from pyrap.layout import ColumnLayout, RowLayout
+from pyrap.layout import ColumnLayout, RowLayout, StackLayout
 from pyrap.utils import out
 from threading import current_thread
 from pyrap.ptypes import px
@@ -51,9 +52,9 @@ class MessageBox(Shell):
     '''
     
     @constructor('MessageBox')    
-    def __init__(self, parent, title, text, icon=None, modal=True):
+    def __init__(self, parent, title, text, icon=None, modal=True, resize=False):
         Shell.__init__(self, parent, title=title, titlebar=True, border=True, 
-                       btnclose=True, resize=False, modal=modal)
+                       btnclose=True, resize=resize, modal=modal)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
         self.text = text
         self.icon = {DLG.INFORMATION: self.icontheme.icon_info,
@@ -108,5 +109,44 @@ class QuestionBox(MessageBox):
             cancel = Button(buttons, text='Cancel', halign='fill')
             cancel.on_select += lambda *_: self.answer_and_close(None)
             
+            
+def open_progress(parent, title, text, target):
+    dlg = ProgressDialog(parent, title, text, target)
+    dlg.dolayout(True)
+    
+            
+class ProgressDialog(MessageBox):
+    
+    @constructor('ProgressDialog')
+    def __init__(self, parent, title, text, target, modal=True):
+        MessageBox.__init__(self, parent, title, text, icon=DLG.INFORMATION, resize=1)
+        self._primary = None
+        self._secondart = None
+        
+        
+    def create_content(self):
+        Shell.create_content(self)
+        mainarea = Composite(self.content)
+        mainarea.layout = ColumnLayout(padding=10, hspace=5)
+        img = None
+        if self.icon is not None:
+            img = Label(mainarea, img=self.icon, valign='top', halign='left')
+        
+        textarea = Composite(mainarea)
+        textarea.layout = RowLayout()
+        text = Label(textarea, self.text, halign='left')
+        
+        bars = StackedComposite(textarea, halign='fill', valign='fill')
+        self._primary = ProgressBar(bars, horizontal=True, infinite=True, vmax=100, halign='fill')
+        self._secondary = ProgressBar(bars, horizontal=True, infinite=True, vmax=100, halign='fill')
+        
+        buttons = Composite(textarea)
+        buttons.layout = ColumnLayout(equalwidths=True, halign='right', valign='bottom')
+        
+        cancel = Button(buttons, text='Cancel', halign='fill')
+        cancel.on_select += lambda *_: self.answer_and_close(None)
+        
+        self.on_resize += self.dolayout
+        
         
         
