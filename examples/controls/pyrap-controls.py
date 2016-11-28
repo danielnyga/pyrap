@@ -190,21 +190,19 @@ class ControlsDemo():
         grp_progress_dlgs.layout = ColumnLayout(equalwidths=1)
         
         def process(dlg):
-            with PushService() as p:
-                dlg.status = 'Preparing a time-consuming task...'
-                dlg.setloop(1)
-                threads.thisthread().detach()
-                threads.sleep(3)
-                dlg.setloop(0)
-                dlg.max = 100
-                for i in range(100):
-                    dlg.status = 'Step %d completed' % (i+1)
-                    dlg.inc()
-                    p.flush()
-                    threads.sleep(.2)
-                dlg.setfinished()
-#                 dlg.close()
-                p.flush()
+            dlg.status = 'Preparing a time-consuming task...'
+            dlg.setloop(1)
+            threads.sleep(1)
+            dlg.setloop(0)
+            dlg.max = 100
+            for i in range(100):
+                dlg.status = 'Step %d completed' % (i+1)
+                dlg.inc()
+                dlg.push.flush()
+                threads.sleep(.1)
+            dlg.status = 'Done. All tasks completed.'
+            dlg.setfinished()
+            dlg.push.flush()
         
         b = Button(grp_progress_dlgs, 'Open Progress...', halign='fill')
         def showprog(*_):

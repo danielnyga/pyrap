@@ -4,16 +4,17 @@ Created on Nov 21, 2016
 @author: nyga
 '''
 from pyrap.widgets import Shell, constructor, Label, Composite, Button,\
-    ProgressBar, StackedComposite, checkwidget
+    ProgressBar, StackedComposite, checkwidget, Checkbox
 from pyrap.themes import DisplayTheme
 import pyrap
 from pyrap.constants import DLG
 from pyrap.layout import ColumnLayout, RowLayout, StackLayout
 from pyrap.utils import out
 from threading import current_thread
-from pyrap.ptypes import px
+from pyrap.ptypes import px, BoolVar
 from pyrap.threads import sleep, SessionThread, DetachedSessionThread
 from pyrap.base import session
+from pyrap.engine import PushService
 
 
 def msg_box(parent, title, text, icon):
@@ -53,9 +54,9 @@ class MessageBox(Shell):
     '''
     
     @constructor('MessageBox')    
-    def __init__(self, parent, title, text, icon=None, modal=True, resize=False):
+    def __init__(self, parent, title, text, icon=None, modal=True, resize=False, btnclose=True):
         Shell.__init__(self, parent, title=title, titlebar=True, border=True, 
-                       btnclose=True, resize=resize, modal=modal)
+                       btnclose=btnclose, resize=resize, modal=modal)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
         self.text = text
         self.icon = {DLG.INFORMATION: self.icontheme.icon_info,
@@ -111,24 +112,26 @@ class QuestionBox(MessageBox):
             cancel.on_select += lambda *_: self.answer_and_close(None)
             
             
-def open_progress(parent, title, text, target):
-    dlg = ProgressDialog(parent, title, text, target, modal=0)
+def open_progress(parent, title, text, target, autoclose=False):
+    dlg = ProgressDialog(parent, title, text, target, modal=0, autoclose=autoclose)
     dlg.dolayout(True)
     dlg.start()
             
 class ProgressDialog(MessageBox):
     
     @constructor('ProgressDialog')
-    def __init__(self, parent, title, text, target, modal=True):
-        MessageBox.__init__(self, parent, title, text, icon=DLG.INFORMATION, resize=1, modal=modal)
+    def __init__(self, parent, title, text, target, modal=True, autoclose=False):
+        MessageBox.__init__(self, parent, title, text, icon=DLG.INFORMATION, resize=1, modal=modal, btnclose=0)
         self._primary = None
         self._secondary = None
         self._bars = None
         self._max = 100
-        if isinstance(target, SessionThread):
+        if isinstance(target, DetachedSessionThread):
             self._target = target
         else:
-            self._target = SessionThread(target=target, args=(self,))
+            self._target = DetachedSessionThread(target=target, args=(self,))
+        self.push = PushService()
+        self.autoclose = BoolVar(autoclose)
         
     def setloop(self, show):
         self._bars.selection = self._secondary if show else self._primary
@@ -154,14 +157,15 @@ class ProgressDialog(MessageBox):
         self.text.text = msg 
     
     def start(self):
-#         out('starting process %s...' % self._target)
-#         session.runtime.activate_push(True)
+        self.push.start()
         self._target.start()
         
     def setfinished(self):
+        self.push.stop()
         self._btncancel.on_select -= self.terminate_and_close
-        self._btncancel.text = 'Done'
+        self._btncancel.text = 'Close'
         self._btncancel.on_select += lambda *_: self.close()
+        if self.autoclose: self.close()
         
         
     def terminate_and_close(self, *_):
@@ -188,7 +192,10 @@ class ProgressDialog(MessageBox):
         self._bars.selection = 0
         
         buttons = Composite(textarea)
-        buttons.layout = ColumnLayout(equalwidths=True, halign='right', valign='bottom')
+        buttons.layout = ColumnLayout(halign='right', valign='bottom')
+        
+        cb = Checkbox(buttons, text='close when done')
+        cb.bind(self.autoclose) 
         
         self._btncancel = Button(buttons, text='Cancel', halign='fill')
         self._btncancel.on_select += self.terminate_and_close

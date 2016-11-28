@@ -498,8 +498,8 @@ class Shell(Widget):
             options.showMinimize = True
             options.allowMinimize = True
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
-        if RWT.CLOSE in self.style:
-            self.on_close += self.dispose
+#         if RWT.CLOSE in self.style:
+        self.on_close += self.dispose
         
     @property
     def tabseq(self):
