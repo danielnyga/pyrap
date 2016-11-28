@@ -17,17 +17,13 @@ from pyrap.threads import sleep
 def msg_box(parent, title, text, icon):
     msg = MessageBox(parent, title, text, icon)
     msg.dolayout(True)
-#     current_thread().setsuspended()
     msg.on_close.wait()
-#     current_thread().setresumed()
     return msg.answer
     
 def ask_question(parent, title, text, buttons):
     msg = QuestionBox(parent, title, text, buttons, DLG.QUESTION)
     msg.dolayout(True)
-#     current_thread().setsuspended()
     msg.on_close.wait()
-#     current_thread().setresumed()
     return msg.answer
 
 def ask_yesnocancel(parent, title, text):
