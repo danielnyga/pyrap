@@ -1,3 +1,6 @@
+import os
+
+from pyrap import locations
 from pyrap import session
 from pyrap.communication import RWTCreateOperation, RWTSetOperation
 from pyrap.themes import WidgetTheme
@@ -16,13 +19,14 @@ class ROS3D(Widget):
         self._cssid = cssid
         self._url = url
         self._port = port
-        self._requiredjs = ['resource/static/script/robotwebtools/three.js',
-                            'resource/static/script/robotwebtools/ColladaLoader.js',
-                            'resource/static/script/robotwebtools/STLLoader.js',
-                            'resource/static/script/robotwebtools/ColladaLoader2.js',
-                            'resource/static/script/robotwebtools/eventemitter2.min.js',
-                            'resource/static/script/robotwebtools/roslib.js',
-                            'resource/static/script/robotwebtools/ros3d.js']
+        rwt_loc = os.path.join(locations.pwt_loc, 'ros3d', 'robotwebtools')
+        self._requiredjs = [os.path.join(rwt_loc, 'three.js'),
+                            os.path.join(rwt_loc, 'ColladaLoader.js'),
+                            os.path.join(rwt_loc, 'STLLoader.js'),
+                            os.path.join(rwt_loc, 'ColladaLoader2.js'),
+                            os.path.join(rwt_loc, 'eventemitter2.min.js'),
+                            os.path.join(rwt_loc, 'roslib.js'),
+                            os.path.join(rwt_loc, 'ros3d.js')]
         self._requiredjs.extend(requiredjs)
         session.runtime.ensurejsresources(self._requiredjs)
         self._gwidth = None
