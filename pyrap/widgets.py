@@ -28,7 +28,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
-    TableColumnTheme, CanvasTheme, ScaleTheme
+    TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme
 from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask,\
     ifnot
 from collections import OrderedDict
@@ -2949,3 +2949,47 @@ class Canvas(Widget):
         Widget.bounds.fset(self, b)
         self.gc.init(b[2].value, b[3].value)
         self.gc.draw(self.operations)
+        
+        
+class ProgressBar(Widget):
+    '''Represents a progress bar.'''
+    _rwt_class_name = 'rwt.widgets.ProgressBar'
+    _styles_ = Widget._styles_ + {'horizontal': RWT.HORIZONTAL,
+                                  'vertical': RWT.VERTICAL,
+                                  'infinite': RWT.INFINITE}
+    _defstyle_ = Widget._defstyle_ | RWT.HORIZONTAL
+    
+    @constructor('ProgressBar')
+    def __init__(self, parent, vmax=100, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = ProgressBarTheme(self, session.runtime.mngr.theme)
+        self._value = 0
+        self._max = vmax
+        
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if RWT.HORIZONTAL in self.style:
+            options.style.append('HORIZONTAL')
+        elif RWT.VERTICAL in self.style:
+            options.style.append('VERTICAL')
+        if RWT.INFINITE in self.style:
+            options.style.append('INDETERMINATE')
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
+        
+    @property
+    def value(self):
+        return self._value
+    
+    @value.setter
+    @checkwidget
+    def value(self, v):
+        self._value = v
+        session.runtime << RWTSetOperation(self.id, 'selection', self._value)
+        
+    def compute_size(self):
+        return self.theme.minwidth, px(15)
+            
+    
+    
+        
+    

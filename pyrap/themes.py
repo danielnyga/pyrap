@@ -1045,6 +1045,19 @@ class DisplayTheme(WidgetTheme):
         return self._theme.get_property('rwt-error-image', 'Display', self.custom_variant(), self.styles(), self.states())
     
 
+class ProgressBarTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'ProgressBar', 'ProgressBar-Indicator')
+        
+    @property
+    def indicator_img(self):
+        return self._theme.get_property('background-image', 'ProgressBar', self.custom_variant(), self.styles(), self.states())
+    
+    @property
+    def minwidth(self):
+        return self._theme.get_property('width', 'ProgressBar-Indicator', self.custom_variant(), self.styles(), self.states())
+    
+
 class LabelTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Label')
