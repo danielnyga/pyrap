@@ -919,42 +919,71 @@ class InterruptableThread(threading.Thread):
         return self
 
 
-class SessionThread(InterruptableThread):
-    '''
-    An interruptable thread class that inherits the session information
-    from the parent thread.
-    '''
+class DetachedSessionThread(InterruptableThread):
     def __init__(self, group=None, target=None, name=None,
                  args=(), kwargs=None, verbose=None):
         InterruptableThread.__init__(self, target=target, name=name,
                  args=args, kwargs=kwargs, verbose=verbose)
         self._session = pyrap.session
         self._session_id = pyrap.session.session_id
+    
+    def _run(self):
+        self.__sessionload()
+        InterruptableThread._run(self)
+    
+    def __sessionload(self):
+        pyrap.session.session_id = self._session_id
+        pyrap.session.load()
+        if __debug__:
+            self._note('%s._run(): inherited data from session %s', self, pyrap.session.session_id)
+        
+
+class SessionThread(DetachedSessionThread):
+    '''
+    An interruptable thread class that inherits the session information
+    from the parent thread.
+    '''
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs=None, verbose=None):
+        DetachedSessionThread.__init__(self, target=target, name=name,
+                 args=args, kwargs=kwargs, verbose=verbose)
+        self.__detached = False
 
     def setsuspended(self):
         InterruptableThread.setsuspended(self)
-        pyrap.session.runtime.kapo.dec()
+        if not self.__detached:
+            pyrap.session.runtime.kapo.dec()
 
     def setresumed(self):
-        pyrap.session.runtime.kapo.inc()
+        if not self.__detached: 
+            pyrap.session.runtime.kapo.inc()
         InterruptableThread.setresumed(self)
 
     def setfinished(self):
         InterruptableThread.setsuspended(self)
 
     def _run(self):
-        pyrap.session.session_id = self._session_id
-        pyrap.session.load()
-        if __debug__:
-            self._note('%s._run(): inherited data from session %s', self, pyrap.session.session_id)
-        try:
-            InterruptableThread._run(self)
-        finally:
+        self._DetachedSessionThread__sessionload()
+#         try:
+        InterruptableThread._run(self)
+#         except Exception as e:
+#             traceback.print_exc()
+#             raise e
+#         finally:
+        if not self.__detached:
             pyrap.session.runtime.kapo.dec()
             
     def start(self):
         self.setresumed()
         return InterruptableThread.start(self)
+    
+    def detach(self):
+        with self._InterruptableThread__lock:
+            if self.__detached:
+                raise RuntimeError('Thread is already detached from session.')
+            pyrap.session.runtime.kapo.dec()
+            self.__detached = True
+            
         
 
 

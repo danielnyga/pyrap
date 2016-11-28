@@ -1256,7 +1256,15 @@ class StackedComposite(Composite):
         for c_ in self.children:
             c_.visible = c_ is self._selection
     
+    @property
+    def selidx(self):
+        return self.children.index(self.selection)
     
+    @selidx.setter
+    @checkwidget
+    def selidx(self, i):
+        self.selection = i
+        
     
 class ScrolledComposite(Composite):
 
@@ -2977,6 +2985,16 @@ class ProgressBar(Widget):
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
         
     @property
+    def max(self):
+        return self._max
+    
+    @max.setter
+    @checkwidget
+    def max(self, m):
+        self._max = m
+        session.runtime << RWTSetOperation(self.id, {'maximum': self._max})
+        
+    @property
     def value(self):
         return self._value
     
@@ -2984,7 +3002,7 @@ class ProgressBar(Widget):
     @checkwidget
     def value(self, v):
         self._value = v
-        session.runtime << RWTSetOperation(self.id, 'selection', self._value)
+        session.runtime << RWTSetOperation(self.id, {'selection': self._value})
         
     def compute_size(self):
         return self.theme.minwidth, px(15)

@@ -32,7 +32,7 @@ from pyrap.themes import Theme, FontMetrics
 from pyrap.utils import ifnone, out, trace
 from pyrap.widgets import Display, Shell
 import rfc822
-from pyrap.threads import Kapo
+from pyrap.threads import Kapo, RLock
 
 
 mimetypes.init()
@@ -267,6 +267,34 @@ class WindowManager(object):
             wnd = wnd.id
         return wnd in self.registry
     
+
+class PushService(object):
+    '''Helper class for managing server push sessions.'''
+    __lock = RLock()
+    __active = 0
+    
+    def start(self):
+        with PushService.__lock:
+            if not PushService.__active:
+                session.runtime.activate_push(True) 
+            PushService.__active += 1
+            
+    def stop(self):
+        with PushService.__lock:
+            PushService.__active -= 1
+            if not PushService.__active:
+                session.runtime.activate_push(False)
+                
+    def flush(self):
+        session.runtime.push.set()
+                
+    def __enter__(self):
+        self.start()
+        return self
+    
+    def __exit__(self, e, t, tb):
+        self.stop() 
+
 
 class SessionRuntime(object):
     '''

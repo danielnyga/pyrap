@@ -9,13 +9,14 @@ from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite
     Edit, Combo, TabFolder, TabItem, Group, ScrolledComposite, ScrollBar,\
     Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem
 import random
-from pyrap import pyraplog, locations
+from pyrap import pyraplog, locations, threads
 from pyrap.utils import out
 from pyrap.ptypes import BoolVar, StringVar, Color, px, Image, pc
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout,\
     StackLayout
 import os
 from pyrap.communication import RWTSetOperation
+from pyrap.engine import PushService
 import math
 from collections import OrderedDict
 from pyrap import session
@@ -187,9 +188,27 @@ class ControlsDemo():
         
         grp_progress_dlgs = Group(parent, text='Progress Dialog')
         grp_progress_dlgs.layout = ColumnLayout(equalwidths=1)
+        
+        def process(dlg):
+            with PushService() as p:
+                dlg.status = 'Preparing a time-consuming task...'
+                dlg.setloop(1)
+                threads.thisthread().detach()
+                threads.sleep(3)
+                dlg.setloop(0)
+                dlg.max = 100
+                for i in range(100):
+                    dlg.status = 'Step %d completed' % (i+1)
+                    dlg.inc()
+                    p.flush()
+                    threads.sleep(.2)
+                dlg.setfinished()
+#                 dlg.close()
+                p.flush()
+        
         b = Button(grp_progress_dlgs, 'Open Progress...', halign='fill')
         def showprog(*_):
-            open_progress(self.shell, 'Progress Report', 'Running a long procedure...', None)
+            open_progress(self.shell, 'Progress Report', 'Running a long procedure...', target=process)
         b.on_select += showprog
         
         grp_info_dlgs = Group(parent, text='Question Dialogs')
