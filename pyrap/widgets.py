@@ -28,7 +28,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
-    TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme
+    TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme
 from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask,\
     ifnot
 from collections import OrderedDict
@@ -3012,6 +3012,118 @@ class ProgressBar(Widget):
         return self.theme.minwidth, px(15)
             
     
+class Spinner(Widget):
+    _rwt_class_name = 'rwt.widgets.Spinner'
+    _styles_ = Widget._styles_ + {}
+    _defstyle_ = Widget._defstyle_ | RWT.BORDER
+    
+    @constructor('Spinner')
+    def __init__(self, parent, vmin=0, vmax=100, digits=0, inc=1, pinc=10, sel=None, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = SpinnerTheme(self, session.runtime.mngr.theme)
+        self._vmin = vmin
+        self._vmax = vmax
+        self._digits = digits
+        self._inc = inc
+        self._pinc = pinc
+        self._sel = sel
+        self.on_modify = OnSelect(self)
     
         
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
+        self.min = self._vmin
+        self.max = self._vmax
+        self.digits = self._digits
+        self.inc = self._inc
+        self.pinc = self._pinc
+        self.selection = self._sel
+        
+    def _handle_set(self, op):
+        for key, value in op.args.iteritems():
+            if key == 'selection':
+                self._sel = value
+    
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_modify}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else: events[op.event].notify(_rwt_selection_event(op))
+        return True 
+    
+    @property
+    def min(self):
+        return self._vmin
+    
+    @min.setter
+    def min(self, val):
+        self._vmin = val
+        session.runtime << RWTSetOperation(self.id, {'minimum': self._vmin})
+        
+    @property
+    def max(self):
+        return self._vmax
+    
+    @max.setter
+    def max(self, val):
+        self._vmax = val
+        session.runtime << RWTSetOperation(self.id, {'maximum': self._vmax})
+        
+    @property
+    def digits(self):
+        return self._digits
+    
+    @digits.setter
+    def digits(self, dig):
+        self._digits = dig
+        session.runtime << RWTSetOperation(self.id, {'digits': self._digits})
+        
+    @property
+    def inc(self):
+        return self._inc
+    
+    @inc.setter
+    def inc(self, i):
+        self._inc = i
+        session.runtime << RWTSetOperation(self.id, {'increment': self._inc})
+    
+    @property
+    def pinc(self):
+        return self._pinc
+    
+    @pinc.setter
+    def pinc(self, i):
+        self._pinc = i
+        session.runtime << RWTSetOperation(self.id, {'pageIncrement': self._pinc})
+        
+    @property
+    def selection(self):
+        return self._sel
+    
+    @selection.setter
+    def selection(self, v):
+        if v is not None and (type(v) is not int or v < self._vmin or v > self._vmax):
+            raise ValueError('invalid type or value: "%s" (must be integer in [%s, %s]' % (v, self._vmin, self._vmax))
+        self._sel = v
+        session.runtime << RWTSetOperation(self.id, {'selection': self._sel}) 
+        
+    def asfloat(self, sel):
+        if sel is None: return None
+        divisor = 1 if self._digits == 0 else 10 ** self._digits
+        return float(sel) / divisor
+    
+    def compute_size(self):
+        w, h = Widget.compute_size(self)
+        w1, w2 = self.theme.button_widths
+        divisor = 1 if self._digits == 0 else 10 ** self._digits
+        tw, th = session.runtime.textsize_estimate(self.theme.font, '%.2f' % (float(self._vmax) / divisor))
+        w += max(w1, w2)
+        w += tw
+        h += th
+        return w, h
+    
+        
+
+    
     

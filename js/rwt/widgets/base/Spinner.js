@@ -152,7 +152,7 @@ rwt.qx.Class.define("rwt.widgets.base.Spinner",
     if (vValue != null) {
       this.setValue(vValue);
     }
-
+	// this.setValue(vValue);
     this._checkValue = this.__checkValue;
 
     this.initWidth();
@@ -715,7 +715,7 @@ rwt.qx.Class.define("rwt.widgets.base.Spinner",
     _onchange : function()
     {
       var vValue = this.getManager().getValue();
-      this._textfield.setValue(String(vValue));
+      this._textfield.setValue(vValue == null ? "" : String(vValue));
 
       if (vValue == this.getMin() && !this.getWrap())
       {
@@ -972,7 +972,6 @@ rwt.qx.Class.define("rwt.widgets.base.Spinner",
         }
 
         var formattedValue;
-
         formattedValue = String(fixedVal);
 
         if ((fixedVal === oldValue) && (str_val !== formattedValue)) {

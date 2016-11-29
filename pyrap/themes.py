@@ -1057,6 +1057,46 @@ class ProgressBarTheme(WidgetTheme):
     def minwidth(self):
         return self._theme.get_property('width', 'ProgressBar-Indicator', self.custom_variant(), self.styles(), self.states())
     
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'ProgressBar', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'ProgressBar', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'ProgressBar', self.custom_variant(), self.styles(), self.states())
+
+
+
+class SpinnerTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Spinner', 'Spinner-UpButton', 'Spinner-DownButton')
+        
+    @property
+    def button_widths(self):
+        upw = self._theme.get_property('width', 'Spinner-UpButton', self.custom_variant(), self.styles(), self.states())
+        downw = self._theme.get_property('width', 'Spinner-DownButton', self.custom_variant(), self.styles(), self.states())
+        return upw, downw
+    
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Spinner', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'Spinner', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Spinner', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Spinner', self.custom_variant(), self.styles(), self.states())
+
 
 class LabelTheme(WidgetTheme):
     def __init__(self, widget, theme):
