@@ -163,7 +163,7 @@ rwt.qx.Class.define( "rwt.widgets.Spinner", {
       if( this.getDigits() > 0 ) {
         this._textfield.setValue( this._format( spinnerValue ) );
       } else {
-        this._textfield.setValue( String( spinnerValue ) );
+        this._textfield.setValue( spinnerValue == null ? "" : String( spinnerValue ) );
       }
     },
 
@@ -175,6 +175,8 @@ rwt.qx.Class.define( "rwt.widgets.Spinner", {
     },
 
     _format : function( value ) {
+      if ( value == null)
+ 		return "";
       var digits = this.getDigits();
       var floatValue = value / Math.pow( 10, digits );
       var result = floatValue.toFixed( digits );
@@ -187,6 +189,8 @@ rwt.qx.Class.define( "rwt.widgets.Spinner", {
     },
 
     _limit : function( value ) {
+      if (value == null)
+        return value;
       var result = value;
       var digits = this.getDigits();
       if( digits > 0 ) {
@@ -220,7 +224,7 @@ rwt.qx.Class.define( "rwt.widgets.Spinner", {
         if( this.getDigits() > 0 ) {
           this._textfield.setValue( this._format( value ) );
         } else {
-          this._textfield.setValue( String( value ) );
+          this._textfield.setValue( value == null ? "" : String( value ) );
         }
       }
       if( value == this.getMin() && !this.getWrap() ) {
@@ -249,6 +253,9 @@ rwt.qx.Class.define( "rwt.widgets.Spinner", {
           var strValue = inputElement.value;
           var parseValue = strValue;
           var separator = this.getDecimalSeparator();
+          if ( strValue == "") {
+          	this.getManager().setValue(null);
+          }
           if( this.getDigits() > 0 && separator != "." ) {
             separator = rwt.util.Encoding.escapeRegexpChars( separator );
             parseValue = strValue.replace( new RegExp( separator ), "." );
@@ -273,7 +280,7 @@ rwt.qx.Class.define( "rwt.widgets.Spinner", {
                 && strValue !== formattedValue
                 && !this._suspendTextFieldUpdate )
             {
-              this._textfield.setValue( formattedValue );
+              this._textfield.setValue( fixedValue == null ? "" : formattedValue );
             }
             this.getManager().setValue( fixedValue );
           }

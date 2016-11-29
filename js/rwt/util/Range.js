@@ -29,7 +29,7 @@ rwt.qx.Class.define( "rwt.util.Range", {
       check : "!isNaN(value)&&value>=this.getMin()&&value<=this.getMax()",
       nullable : true,
       event : "change",
-      init : 0
+      init : null
     },
 
     /** maximum fraction digits */
@@ -73,6 +73,8 @@ rwt.qx.Class.define( "rwt.util.Range", {
      * @param old {var} Previous value
      */
     _applyMax : function( value ) {
+      if ( value == null)
+        this.setValue( value );
       this.setValue( Math.min( this.getValue(), value ) );
     },
 
@@ -84,10 +86,14 @@ rwt.qx.Class.define( "rwt.util.Range", {
      * @param old {var} Previous value
      */
     _applyMin : function( value ) {
+      if ( value == null)
+        this.setValue( value );
       this.setValue( Math.max( this.getValue(), value) );
     },
 
     limit : function( value ) {
+      if (value == null)
+      	return null;
       var precision = this.getPrecision();
       if( precision != null ) {
         var mover = Math.pow( 10, precision );
@@ -98,7 +104,6 @@ rwt.qx.Class.define( "rwt.util.Range", {
           // round to the precision'th digit
           value = Math.round( value * mover ) / mover;
         }
-
         if (value < this.getMin()) {
           return ( this.getMax() - ( this.getMin() - value ) ) + 1;
         }
