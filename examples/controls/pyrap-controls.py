@@ -7,10 +7,10 @@ Created on Oct 2, 2015
 import pyrap
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite,\
     Edit, Combo, TabFolder, TabItem, Group, ScrolledComposite, ScrollBar,\
-    Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem
+    Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem, Spinner
 import random
 from pyrap import pyraplog, locations, threads
-from pyrap.utils import out
+from pyrap.utils import out, ifnone
 from pyrap.ptypes import BoolVar, StringVar, Color, px, Image, pc
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout,\
     StackLayout
@@ -150,6 +150,13 @@ class ControlsDemo():
         self.create_dialogs_page(page)
         self.pages['Dialogs'] = page
         
+        #=======================================================================
+        # create spinner page
+        #=======================================================================
+        page  = self.create_page_template('Spinner Demo')
+        self.create_spinner_page(page)
+        self.pages['Spinner'] = page
+        
         for page in (self.pages.values()[1:]):
             page.layout.exclude = True
         self.navigation.items = self.pages
@@ -158,11 +165,62 @@ class ControlsDemo():
     def create_page_template(self, heading):
         # content area
         tab = Composite(self.content)
-        tab.layout = RowLayout(halign='fill', valign='fill', flexrows=(1, 2))
+        tab.layout = RowLayout(halign='fill', valign='fill', flexrows=(1, 2, 3))
         #heading
         header = Label(tab, text=heading, halign='left')
         header.css = 'headline'#font = header.font.modify(size='16px', bf=1)
         return tab
+    
+    
+    def create_spinner_page(self, parent):
+        body = Composite(parent)
+        body.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        # spinners
+        grp = Group(body, 'Spinners')
+        grp.layout = GridLayout(cols=2, equalheights=True)
+        Label(grp, text='Simple Spinner:', halign='left')
+        s1 = Spinner(grp)
+        Label(grp, text='Spinner with ModifyListener:', halign='left')
+        s2 = Spinner(grp)        
+        Label(grp, 'Current value:', halign='left')
+        l = Label(grp, halign='fill')
+        
+        def onchange(*_):
+            l.text = str(s2.asfloat(s2.selection))
+        
+        s2.on_modify += onchange
+        
+        # settings
+        settings = Group(body, 'Settings')
+        settings.layout = GridLayout(cols=2)
+        
+        Label(settings, 'Minimum:', halign='right')
+        min_ = Edit(settings, text=str(s1.min), halign='fill')
+
+        Label(settings, 'Maximum:', halign='right')
+        max_ = Edit(settings, text=str(s1.max), halign='fill')
+        
+        Label(settings, 'Digits:', halign='right')
+        digs = Spinner(settings, vmin=0, vmax=10, digits=0, sel=s1.digits)
+        
+        Label(settings, 'Selection', halign='right')
+        sel = Edit(settings, text=ifnone(s2.selection, '', str), halign='fill')
+        
+        Label(settings)
+        apply = Button(settings, halign='right', text='Apply')
+        
+        def apply_settings(*_):
+            s1.min = int(min_.text)
+            s2.min = int(min_.text)
+            s1.max = int(max_.text)
+            s2.max = int(max_.text)
+            s1.digits = digs.selection
+            s2.digits = digs.selection
+            s2.selection = s1.selection = None if sel.text == '' else int(sel.text)
+            
+        apply.on_select += apply_settings
+        self.shell.tabseq = (s1, s2, min_, max_, digs, sel, apply)
+            
         
     
     def create_dialogs_page(self, parent):
