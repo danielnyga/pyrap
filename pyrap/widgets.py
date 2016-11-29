@@ -381,6 +381,12 @@ class Widget(object):
             height += ifnone(margin.top, 0) + ifnone(margin.bottom, 0)
         return px(width), px(height)
 
+    def shell(self):
+        if isinstance(self.parent, Shell):
+            return self.parent
+        else:
+            return self.parent.shell()
+
     
     def compute_fringe(self):
         '''
@@ -620,8 +626,6 @@ class Shell(Widget):
         
     def compute_fringe(self):
         return self.compute_size()
-        
-        
 
 
 class Combo(Widget):
@@ -1100,7 +1104,7 @@ class Option(Widget):
         events = {'Selection': self.on_checked}
         if op.event not in events:
             return Widget._handle_notify(self, op)
-        else: events[op.event].notify()
+        else: events[op.event].notify(_rwt_event(op))
         return True 
 
     def _handle_set(self, op):
