@@ -948,6 +948,7 @@ class SessionThread(DetachedSessionThread):
         DetachedSessionThread.__init__(self, target=target, name=name,
                  args=args, kwargs=kwargs, verbose=verbose)
         self.__detached = False
+        self.__exception = None
 
     def setsuspended(self):
         InterruptableThread.setsuspended(self)
@@ -964,14 +965,16 @@ class SessionThread(DetachedSessionThread):
 
     def _run(self):
         self._DetachedSessionThread__sessionload()
-#         try:
-        InterruptableThread._run(self)
-#         except Exception as e:
-#             traceback.print_exc()
-#             raise e
-#         finally:
-        if not self.__detached:
-            pyrap.session.runtime.kapo.dec()
+        try:
+            InterruptableThread._run(self)
+        except Exception as e:
+            self.__exception = e
+            traceback.print_exc()
+            raise e
+        finally:
+            if not self.__detached:
+                pyrap.session.runtime.kapo.dec()
+
             
     def start(self):
         self.setresumed()
