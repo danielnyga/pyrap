@@ -822,6 +822,17 @@ class SVG(object):
         self._height = None
         self.namespaces = {'svg': "http://www.w3.org/2000/svg"}
 
+    def load(self, cnt):
+        self.root = ET.fromstring(cnt)
+        w, h = self.root.attrib['viewBox'].split()[-2:]
+        self._width = int(float(w))
+        self._height = int(float(h))
+        stream = BytesIO()
+        self.save(stream)
+        self._content = str(stream.getvalue())
+        stream.close()
+        return self
+
     def open(self, fpath):
         self.fpath = fpath
         self.tree = ET.parse(fpath)
@@ -881,8 +892,13 @@ class Image(object):
     def load(self):
         if self.filepath is None:
             if self._cnt is not None:
-                self._content = base64.b64decode(self._cnt)
-                self._img = PILImage.open(BytesIO(self._content))
+                try:
+                    self._content = base64.b64decode(self._cnt)
+                    self._img = PILImage.open(BytesIO(self._content))
+                except Exception:
+                    self._content = self._cnt
+                    self._img = SVG().load(self._cnt)
+                    self._mimetype = 'image/svg+xml'
                 return self
             else:
                 raise Exception('Unable to load Image without filepath or content!')
@@ -995,7 +1011,8 @@ class Image(object):
             w = h / ratio
         self.load()
         stream = BytesIO()
-        if self.fileext == 'svg':
+        out(self.fileext)
+        if 'svg' in self.fileext:
             self._img = self._img.resize(w.value, h.value)
             self._img.save(stream)
         else:
