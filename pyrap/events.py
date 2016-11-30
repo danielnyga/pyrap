@@ -219,10 +219,10 @@ class MouseEventData(EventData):
         return (self.x, self.y)
     
 def _rwt_selection_event(op):
-        return SelectionEventData(op.target, op.args.get('button'), op.args.ctrlKey, op.args.altKey, op.args.shiftKey)
+        return SelectionEventData(session.runtime.windows[op.target], op.args.get('button'), op.args.ctrlKey, op.args.altKey, op.args.shiftKey)
     
 def _rwt_mouse_event(op):
-    return MouseEventData(op.target, op.args.button, op.args.ctrlKey, op.args.altKey, op.args.shiftKey, op.args.time, op.args.x, op.args.y)
+    return MouseEventData(session.runtime.windows[op.target], op.args.button, op.args.ctrlKey, op.args.altKey, op.args.shiftKey, op.args.time, op.args.x, op.args.y)
 
 def _rwt_event(op):
-    return EventData(op.target)
+    return EventData(session.runtime.windows[op.target])
