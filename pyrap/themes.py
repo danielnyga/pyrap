@@ -1098,11 +1098,45 @@ class SpinnerTheme(WidgetTheme):
         return self._theme.get_property('margin', 'Spinner', self.custom_variant(), self.styles(), self.states())
 
 
+class SeparatorTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Label-SeparatorLine')
+    
+    def styles(self):
+        styles = WidgetTheme.styles(self)
+        if RWT.HORIZONTAL in self._widget.style:
+            styles.add('[HORIZONTAL')
+        if RWT.VERTICAL in self._widget.style:
+            styles.add('[VERTICAL')
+        if RWT.SEPARATOR in self._widget.style:
+            styles.add('[SEPARATOR')
+        return styles
+
+    @property
+    def bg(self):
+        return self._theme.get_property('background-color', 'Label-SeparatorLine', self.custom_variant(), self.styles(), self.states())
+    
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Label-SeparatorLine', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Label-SeparatorLine', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Label', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def linewidth(self):
+        return self._theme.get_property('width', 'Label-SeparatorLine', self.custom_variant(), self.styles(), self.states())
+
+
 class LabelTheme(WidgetTheme):
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'Label')
-        self.separator = None
-
+        WidgetTheme.__init__(self, widget, theme, 'Label', 'Label-SeparatorLine')
+        
     @property
     def font(self):
         if self._font is not None: return self._font
@@ -1119,7 +1153,10 @@ class LabelTheme(WidgetTheme):
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'Label', self.custom_variant(), self.styles(), self.states())
+        opacity = ifnone(self._theme.get_property('opacity', 'Label', self.custom_variant(), self.styles(), self.states()), 1.0)
+        color = self._theme.get_property('background-color', 'Label', self.custom_variant(), self.styles(), self.states())
+        color.alpha = opacity
+        return color
 
     @bg.setter
     def bg(self, color):
@@ -1137,7 +1174,7 @@ class LabelTheme(WidgetTheme):
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Label', self.custom_variant(), self.styles(), self.states())
-
+    
 
 
 class ButtonTheme(WidgetTheme):

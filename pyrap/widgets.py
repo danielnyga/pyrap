@@ -15,7 +15,7 @@ from pyrap import pyraplog, locations
 from pyrap.base import session
 from pyrap.communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
-from pyrap.constants import RWT, GCBITS
+from pyrap.constants import RWT, GCBITS, CURSOR
 from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify, FocusEventData, _rwt_event
@@ -23,12 +23,13 @@ from pyrap.exceptions import WidgetDisposedError
 from pyrap.layout import Layout, LayoutAdapter, CellLayout,\
     StackLayout
 from pyrap.ptypes import px, BitField, BoolVar, NumVar, Color,\
-    parse_value
+    parse_value, toint
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
-    TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme
+    TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme,\
+    SeparatorTheme
 from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask,\
     ifnot
 from collections import OrderedDict
@@ -108,6 +109,8 @@ class Widget(object):
         self._menu = None
         self._layer = Widget.Layer(self)
         self._badge = None
+        self._cursor = None
+        self._tooltip = None
         if self not in parent.children:
             parent.children.append(self)
         if self not in parent.children:
@@ -231,6 +234,27 @@ class Widget(object):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = map(px, bounds)
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
+    
+    @property
+    def cursor(self):
+        return self._cursor
+    
+    @cursor.setter
+    def cursor(self, c):
+        self._cursor = c
+        session.runtime << RWTSetOperation(self.id, {'cursor': CURSOR.str(c)})
+        
+    @property
+    def tooltip(self):
+        return self._tooltip
+
+    @tooltip.setter
+    @checkwidget
+    def tooltip(self, tooltip):
+        self._tooltip = tooltip
+        session.runtime << RWTSetOperation(self.id, {'toolTip': self._tooltip})
+
+
     
     @property
     def visible(self):
@@ -899,7 +923,37 @@ class Label(Widget):
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         return w, h
+    
+    
+class Separator(Widget):
+    _rwt_class_name_ = 'rwt.widgets.Separator'
+    _styles_ = Widget._styles_ + {'vertical': RWT.VERTICAL, 
+                                'horizontal': RWT.HORIZONTAL}
+    _defstyle_ = BitField(Widget._defstyle_) | RWT.SEPARATOR
+    
+    @constructor('Separator')
+    def __init__(self, parent, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = SeparatorTheme(self, session.runtime.mngr.theme)
 
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if RWT.SEPARATOR in self.style:
+            options.style.append('SEPARATOR')
+        if RWT.HORIZONTAL in self.style:
+            options.style.append('HORIZONTAL')
+        elif RWT.VERTICAL in self.style:
+            options.style.append('VERTICAL')
+        session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+
+
+    def compute_size(self):
+        line = self.theme.linewidth
+        if RWT.HORIZONTAL in self.style:
+            return 0, line
+        else: return line, 0
+        
+        
 
 class Button(Widget):
     
@@ -1182,7 +1236,7 @@ class Edit(Widget):
         events = {'Modify': self.on_modify}
         if op.event not in events:
             return Widget._handle_notify(self, op)
-        else: events[op.event].notify()
+        else: events[op.event].notify(_rwt_event(op))
         return True 
 
     def _handle_set(self, op):
@@ -1363,7 +1417,6 @@ class TabFolder(Composite):
         self._items = []
         self.on_select = OnSelect(self)
         self._selected = None
-        self._tooltip = None
         self.layout = StackLayout(halign=self.layout.halign, 
                                   valign=self.layout.valign,
                                   padding_top=self.layout.padding_top,
@@ -1416,17 +1469,7 @@ class TabFolder(Composite):
         item.selected = 1
         session.runtime << RWTSetOperation(self.id, {'selection': self._selected})
 
-    @property
-    def tooltip(self):
-        return self._tooltip
-
-    @tooltip.setter
-    @checkwidget
-    def tooltip(self, tooltip):
-        self._tooltip = tooltip
-        session.runtime << RWTSetOperation(self.id, {'toolTip': self._tooltip})
-
-
+    
     def compute_size(self):
         width, height = Composite.compute_size(self)
         # content container border
@@ -2777,7 +2820,7 @@ class GC(object):
             return ['fillStyle', [int(round(255 * self.color.red)),
                                     int(round(255 * self.color.green)),
                                     int(round(255 * self.color.blue)),
-                                    int(round(255 * self.color.alpha))]]
+                                    self.color.alpha]]
 
 
     class fill_text(Operation):
@@ -2907,6 +2950,19 @@ class GC(object):
         def json(self):
             return ['rect', self.x, self.y, self.w, self.h]
 
+    class erase(Operation):
+        '''Erases a rectangular area'''
+        def __init__(self, x, y, w, h):
+            GC.Operation.__init__(self)
+            self.x = x
+            self.y = y
+            self.w = w
+            self.h = h
+
+        def json(self):
+            return ['clearRect', self.x, self.y, self.w, self.h]
+
+
     def __init__(self, _id, parent):
         self.id = _id
         self.parent = parent
@@ -2918,7 +2974,7 @@ class GC(object):
         session.runtime << RWTCallOperation(self.id, 'init', {'width': width, 
                                                               'height': height,
                                                               'font': [['Verdana', 'Helvetica', 'sans-serif'], 14, False, False],
-                                                              'fillStyle': [0, 255, 255, 255],
+                                                              'fillStyle': [255, 255, 255, 255],
                                                               'strokeStyle': [74, 74, 74, 255]})
         
     def draw(self, operations):
@@ -2926,6 +2982,13 @@ class GC(object):
         Must be a list of :class:`pyrap.GC.Operation` objects.'''
         session.runtime << RWTCallOperation(self.id, 'draw', {'operations': [o.json() for o in operations]})
         
+    def __enter__(self):
+        self.parent.clear()
+        return self
+        
+    def __exit__(self, e, t, tb):
+        if e is not None: raise
+        self.parent.draw()
         
 
 class Canvas(Widget):
@@ -2955,8 +3018,11 @@ class Canvas(Widget):
     @Widget.bounds.setter
     def bounds(self, b):
         Widget.bounds.fset(self, b)
-        self.gc.init(b[2].value, b[3].value)
-        self.gc.draw(self.operations)
+        self.gc.init(*toint((b[2], b[3])))
+        self.draw()
+        
+    def clear(self):
+        self.operations = []
         
         
 class ProgressBar(Widget):
@@ -3099,6 +3165,8 @@ class Spinner(Widget):
     
     @selection.setter
     def selection(self, v):
+        if type(v) is float:
+            v = self.asint(v)
         if v is not None and (type(v) is not int or v < self._vmin or v > self._vmax):
             raise ValueError('invalid type or value: "%s" (must be integer in [%s, %s]' % (v, self._vmin, self._vmax))
         self._sel = v
@@ -3106,14 +3174,32 @@ class Spinner(Widget):
         
     def asfloat(self, sel):
         if sel is None: return None
-        divisor = 1 if self._digits == 0 else 10 ** self._digits
+        divisor = 10 ** self._digits
         return float(sel) / divisor
+    
+    def asint(self, val):
+        s = str(val)
+        before, behind = s.split('.')
+        before = int(before)
+        out(before, behind)
+        if self.digits:
+            behind_ = behind[:self.digits + 1]
+            if len(behind_) > self.digits:
+                behind = int(round(float(behind_) / 10))
+            else: behind = int(behind_)
+            before = before * (10 ** self.digits)
+        else:
+            behind = 0
+        out(before, behind)
+        return before + behind
     
     def compute_size(self):
         w, h = Widget.compute_size(self)
         w1, w2 = self.theme.button_widths
-        divisor = 1 if self._digits == 0 else 10 ** self._digits
-        tw, th = session.runtime.textsize_estimate(self.theme.font, '%.2f' % (float(self._vmax) / divisor))
+        text = max(str(self.min), str(self.max)) + 'XX'
+        if self.digits:
+            text += '.'
+        tw, th = session.runtime.textsize_estimate(self.theme.font, text)
         w += max(w1, w2)
         w += tw
         h += th
