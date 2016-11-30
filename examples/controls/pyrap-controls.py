@@ -23,7 +23,7 @@ from pyrap import session
 from threading import current_thread
 from pyrap.constants import DLG
 from pyrap.dialogs import ask_yesnocancel, msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, ask_okcancel,\
-    open_progress
+    open_progress, ask_color
 
 class ControlsDemo():
     
@@ -90,13 +90,13 @@ class ControlsDemo():
         self.create_pages()
         self.navigation.on_select += self.switch_page
         self.navigation.selection = self.pages['Button']
-        self.shell.onresize_shell()
         
         
     def switch_page(self, *args):
         for page in (self.pages.values()):
             page.layout.exclude = self.navigation.selection is not page
         self.content.selection = self.navigation.selection
+        self.shell.onresize_shell()
 
 
     def create_pages(self):
@@ -244,7 +244,7 @@ class ControlsDemo():
             msg_err(self.shell, title='Error Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
         b.on_select += showerr
         
-        grp_progress_dlgs = Group(parent, text='Progress Dialog')
+        grp_progress_dlgs = Group(parent, text='Other Dialogs')
         grp_progress_dlgs.layout = ColumnLayout(equalwidths=1)
         
         def process(dlg):
@@ -266,6 +266,11 @@ class ControlsDemo():
         def showprog(*_):
             open_progress(self.shell, 'Progress Report', 'Running a long procedure...', target=process)
         b.on_select += showprog
+        
+        b = Button(grp_progress_dlgs, 'Color Dialog', halign='fill')
+        def showcolor(*_):
+            out('user picked', ask_color(self.shell))
+        b.on_select += showcolor
         
         grp_info_dlgs = Group(parent, text='Question Dialogs')
         grp_info_dlgs.layout = ColumnLayout()
