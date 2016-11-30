@@ -49,6 +49,13 @@ rwt.util.Colors = {
   rgbToRgbString : function( rgb ) {
     return "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
   },
+  
+  /**
+   * Converts an RGBA array to a string of the form "rgba(r, g, b, a)".
+   */
+  rgbaToRgbaString : function( rgba ) {
+    return "rgba(" + rgba[0] + "," + rgba[1] + "," + rgba[2] + "," + rgba[3] + ")";
+  },
 
   /**
    * Converts a RGB array to a string of the form "xxxxxx".
