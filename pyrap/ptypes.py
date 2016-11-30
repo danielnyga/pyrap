@@ -668,7 +668,7 @@ class Color(object):
             if html.startswith('#'):
                 if len(html) < 5: html += html[1:] # for short notations like #ccc
                 self._r, self._g, self._b = int(html[1:3], base=16) / 255., int(html[3:5], base=16) / 255., int(html[5:7], base=16) / 255.
-                self._a = float(html[7:9]) / 255. if len(html) > 7 else 1.
+                self._a = float(int(html[7:9], base=16)) / 255. if len(html) > 7 else 1.
             else: raise Exception('Illegal color value: %s' % html)
         elif rgb is not None:
             self._r, self._g, self._b = rgb[:3]
@@ -702,10 +702,42 @@ class Color(object):
     @property
     def value(self):
         return rgb_to_hsv(*self.rgb)[2]
+    
+    @property
+    def redi(self):
+        return int(round(self._r * 255))
+    
+    @property
+    def greeni(self):
+        return int(round(self._g * 255))
+    
+    @property
+    def bluei(self):
+        return int(round(self._b * 255))
+
+    @property
+    def huei(self):
+        return int(round(rgb_to_hsv(*self.rgb)[0] * 255))
+    
+    @property
+    def saturationi(self):
+        return int(round(rgb_to_hsv(*self.rgb)[1] * 255))
+    
+    @property
+    def valuei(self):
+        return int(round(rgb_to_hsv(*self.rgb)[2] * 255))
         
     @property
     def alpha(self):
         return self._a
+    
+    @property
+    def alphai(self):
+        return int(round(self._a * 255))
+        
+    @property
+    def rgbi(self):
+        return (self.redi, self.greeni, self.bluei)
         
     @property
     def rgb(self):
@@ -757,7 +789,15 @@ def parse_value(v, default=None):
     else: 
         return v if (default is None or v is None or type(v) is default) else default(v)
     
-        
+
+def toint(v):
+    if isinstance(v, Dim): return v.value
+    elif type(v) is int: return v
+    elif type(v) is list: return [toint(e) for e in v]
+    elif type(v) is tuple: return tuple([toint(e) for e in v])
+    else: int(v)
+    
+ 
 class Font(object):
     
     def __init__(self, family='Arial', size='12px', style=FONT.NONE):
