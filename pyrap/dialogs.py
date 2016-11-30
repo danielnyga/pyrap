@@ -3,21 +3,24 @@ Created on Nov 21, 2016
 
 @author: nyga
 '''
-from pyrap.widgets import Shell, constructor, Label, Composite, Button,\
-    ProgressBar, StackedComposite, checkwidget, Checkbox, Spinner, Edit,\
+from pyrap.widgets import Spinner, Edit,\
     Separator, Canvas
-from pyrap.themes import DisplayTheme
-import pyrap
 from pyrap.constants import DLG, CURSOR
-from pyrap.layout import ColumnLayout, RowLayout, StackLayout, GridLayout,\
-    CellLayout
-from pyrap.utils import out, ifnone
-from threading import current_thread
-from pyrap.ptypes import px, BoolVar, parse_value, Color, Image
-from pyrap.threads import sleep, SessionThread, DetachedSessionThread
+from pyrap.layout import ColumnLayout, RowLayout, GridLayout, CellLayout
+from pyrap.utils import ifnone
+from pyrap.ptypes import parse_value, Color, Image
+from collections import OrderedDict
+
+import pyrap
 from pyrap.base import session
 from pyrap.engine import PushService
 import os
+from pyrap.ptypes import px, BoolVar, Font
+from pyrap.themes import DisplayTheme
+from pyrap.threads import DetachedSessionThread
+from pyrap.widgets import Shell, constructor, Label, Composite, Button,\
+    ProgressBar, StackedComposite, checkwidget, Checkbox, ScrolledComposite, \
+    Option
 
 
 def msg_box(parent, title, text, icon):
@@ -29,6 +32,12 @@ def msg_box(parent, title, text, icon):
 def ask_question(parent, title, text, buttons):
     msg = QuestionBox(parent, title, text, buttons, DLG.QUESTION)
     msg.dolayout(True)
+    msg.on_close.wait()
+    return msg.answer
+
+def options_list(parent, options):
+    msg = OptionsDialog(parent, options)
+    msg.dolayout()
     msg.on_close.wait()
     return msg.answer
 
@@ -91,7 +100,73 @@ class MessageBox(Shell):
     def create_buttons(self, buttons):
         ok = Button(buttons, text='OK', minwidth=100)
         ok.on_select += lambda *_: self.answer_and_close('ok')
-        
+
+
+class OptionsDialog(Shell):
+    '''
+    Represents a simple dialog box providing a list of options to the user.
+    '''
+
+
+    @constructor('OptionsDialog')
+    def __init__(self, parent, options):
+        Shell.__init__(self, parent, titlebar=False, border=True, resize=False, modal=True)
+        self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
+        self.answer = None
+        self._options = None
+        self._setoptions(options)
+
+    def answer_and_close(self, a):
+        self.answer = a
+        self.close()
+
+    def _setoptions(self, options):
+        if options is None:
+            options = []
+        if isinstance(options, dict):
+            if not all([type(i) is str for i in options]):
+                raise TypeError('All keys in an item dictionary must be strings.')
+            if type(options) is dict:
+                options = OrderedDict(((k, options[k]) for k in sorted(options)))
+        elif type(options) in (list, tuple):
+            options = OrderedDict(((str(i), i) for i in options))
+        else: raise TypeError('Invalid type for List items: %s' % type(options))
+        self._options = options
+
+    def create_content(self):
+        Shell.create_content(self)
+
+        # calculate and set options field size
+        maxitemwidth, _ = session.runtime.textsize_estimate(Font(family='Verdana, "Lucida Sans", Arial, Helvetica, sans-serif', size=14), sorted(self.options.keys(), key=len)[-1])
+        itemheight = 41
+        w = self.parent.width - px(40)
+        h = min(itemheight * len(self.options) + 10, self.parent.height - px(40))
+        vscroll = h == self.parent.height - px(40)
+        hscroll = maxitemwidth > self.parent.width - px(40)
+        self.bounds = self.parent.width / 2 - w / 2, self.parent.height / 2 - h / 2, w, h
+        mainarea = ScrolledComposite(self.content, padding=px(40), hscroll=hscroll, vscroll=vscroll)
+        mainarea.content.layout = CellLayout(halign='fill', valign='fill')
+
+        optionslist = Composite(mainarea.content)
+        optionslist.layout = RowLayout(halign='fill', valign='fill', equalheights=True)
+
+        self.create_options(optionslist)
+
+    def create_options(self, parent):
+        for c in parent.children:
+            c.dispose()
+        for option in self.options:
+            tmp = Option(parent, text=option, halign='left', valign='fill')
+            tmp.on_checked += lambda x: self.answer_and_close([session.runtime.windows[x.widget].text, self.options[session.runtime.windows[x.widget].text]])
+
+    @property
+    def options(self):
+        return self._options
+
+    @options.setter
+    def options(self, options):
+        self._setoptions(options)
+
 
 class QuestionBox(MessageBox):
     
