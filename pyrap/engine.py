@@ -340,10 +340,6 @@ class SessionRuntime(object):
                     if o.target == op.target:
                         o.events.update(op.events)
                         return
-                elif type(o) is RWTCallOperation and type(op) is RWTCallOperation:
-                    if o.target == op.target and o.method == op.method and o.args == op.args:
-                        return
-                        
             self.operations.append(op)
     
     
