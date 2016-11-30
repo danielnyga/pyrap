@@ -130,8 +130,8 @@ rwt.qx.Class.define( "rwt.widgets.GC", {
     },
 
     _initFields : function( font, background, foreground ) {
-      this._context.strokeStyle = rwt.util.Colors.rgbToRgbString( foreground );
-      this._context.fillStyle = rwt.util.Colors.rgbToRgbString( background );
+      this._context.strokeStyle = rwt.util.Colors.rgbaToRgbaString( foreground );
+      this._context.fillStyle = rwt.util.Colors.rgbaToRgbaString( background );
       this._context.globalAlpha = 1.0;
       this._context.lineWidth = 1;
       this._context.lineCap = "butt";
@@ -167,7 +167,7 @@ rwt.qx.Class.define( "rwt.widgets.GC", {
       if( value === "linearGradient" ) {
         value = this._linearGradient;
       } else if( property === "fillStyle" || property === "strokeStyle" ) {
-        value = rwt.util.Colors.rgbToRgbString( value );
+        value = rwt.util.Colors.rgbaToRgbaString( value );
       } else if( property === "font" ) {
         value = this._toCssFont( value );
       }
