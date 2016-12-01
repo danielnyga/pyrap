@@ -7,7 +7,7 @@ pwt.SVG = function(parent, cssid, svg) {
 
     if (svg) {
         this._parentDIV.innerHTML = svg;
-        this.svg = this._parentDIV.childNodes[0];
+        this.svg = this._parentDIV.childNodes[this._parentDIV.childNodes.length-1];
     } else {
         this.svg = document.createElementNS(svgNS, 'svg');
         this.svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
@@ -15,6 +15,9 @@ pwt.SVG = function(parent, cssid, svg) {
 
         this._parentDIV.append( this.svg );
     }
+    this.svg.setAttribute('width', "100%");
+    this.svg.setAttribute('height', "100%");
+
     if (cssid) {
         this.svg.setAttribute('id', cssid);
     }
@@ -48,7 +51,9 @@ pwt.SVG.prototype = {
 
     setSvg : function( svgcontent ) {
         this._parentDIV.innerHTML = svgcontent;
-        this.svg = this._parentDIV.childNodes[0];
+        this.svg = this._parentDIV.childNodes[this._parentDIV.childNodes.length-1];
+        this.svg.setAttribute('width', "100%");
+        this.svg.setAttribute('height', "100%");
     },
 
     elAttribute : function( args ) {
