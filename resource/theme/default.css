@@ -66,6 +66,12 @@ Widget-ToolTip-Pointer:right {
   background-image : url( img/arrows/tooltip-right.png );
 }
 
+ControlDecorator {
+  rwt-error-image: url( img/dialog/error.png );
+  rwt-information-image: url( img/dialog/information.png );
+  rwt-warning-image: url( img/dialog/warning.png );
+}
+
 Display {
   rwt-shadow-color: #a7a6aa;
   rwt-highlight-color: #ffffff;

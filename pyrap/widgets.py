@@ -58,7 +58,7 @@ def constructor(cls):
         return wrapper
     return outer
  
-
+ 
 class Widget(object):
     
     _styles_ = BiMap({'visible': RWT.VISIBLE,
@@ -111,6 +111,7 @@ class Widget(object):
         self._badge = None
         self._cursor = None
         self._tooltip = None
+        self._decorator = None
         if self not in parent.children:
             parent.children.append(self)
         if self not in parent.children:
@@ -254,7 +255,14 @@ class Widget(object):
         self._tooltip = tooltip
         session.runtime << RWTSetOperation(self.id, {'toolTip': self._tooltip})
 
-
+    @property
+    def decorator(self):
+        return self._decorator
+    
+    @decorator.setter
+    @checkwidget
+    def decorator(self, decorator):
+        
     
     @property
     def visible(self):
@@ -3209,7 +3217,16 @@ class Spinner(Widget):
         h += th
         return w, h
     
-        
 
+        
+class Decorator(Widget):
+    _rwt_class_name = 'rwt.widgets.ControlDecorator'
+    _styles_ = Widget._styles_
+    _defstyle_ = Widget._defstyle_
     
+    @constructor('Decorator')
+    def __init__(self, parent, icon, text, halign='left', valign='top', **options):
+        Widget.__init__(self, parent, **options)
+        
+        
     
