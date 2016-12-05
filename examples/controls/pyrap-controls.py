@@ -7,7 +7,7 @@ Created on Oct 2, 2015
 import pyrap
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite,\
     Edit, Combo, TabFolder, TabItem, Group, ScrolledComposite, ScrollBar,\
-    Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem, Spinner
+    Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem, Spinner, accept, info, error, warning
 import random
 from pyrap import pyraplog, locations, threads
 from pyrap.utils import out, ifnone
@@ -228,6 +228,7 @@ class ControlsDemo():
         grp_info_dlgs.layout = ColumnLayout(equalwidths=1)
         
         b = Button(grp_info_dlgs, 'Show Info', halign='fill')
+        b.decorator = info('this is a decorator description.', halign='left', valign='top')
         def showinfo(*_):
             msg_ok(self.shell, 
                    title='pyRAP Message Box', 
