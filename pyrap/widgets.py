@@ -23,13 +23,13 @@ from pyrap.exceptions import WidgetDisposedError
 from pyrap.layout import Layout, LayoutAdapter, CellLayout,\
     StackLayout
 from pyrap.ptypes import px, BitField, BoolVar, NumVar, Color,\
-    parse_value, toint
+    parse_value, toint, Image
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme,\
-    SeparatorTheme
+    SeparatorTheme, DecoratorTheme
 from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask,\
     ifnot
 from collections import OrderedDict
@@ -234,6 +234,9 @@ class Widget(object):
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = map(px, bounds)
+        if self.decorator is not None:
+            b_ = self.decorator.compute_relpos(self.bounds)
+            self.decorator.bounds = b_
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
     
     @property
@@ -255,15 +258,6 @@ class Widget(object):
         self._tooltip = tooltip
         session.runtime << RWTSetOperation(self.id, {'toolTip': self._tooltip})
 
-    @property
-    def decorator(self):
-        return self._decorator
-    
-    @decorator.setter
-    @checkwidget
-    def decorator(self, decorator):
-        
-    
     @property
     def visible(self):
         return RWT.VISIBLE in self.style
@@ -444,6 +438,20 @@ class Widget(object):
     @checkwidget
     def layer(self, layer):
         self._layer.layer = layer
+        
+    @property
+    def decorator(self):
+        return self._decorator
+    
+    @decorator.setter
+    def decorator(self, d):
+        if self._decorator is not None:
+            try: self._decorator.dispose()
+            except: pass
+        if d is None: return
+        self._decorator = Decorator(self.parent, **d)
+        self._decorator.visible = True
+        self._decorator.bounds = self._decorator.compute_relpos(self.bounds)
 
 
 class Display(Widget):
@@ -3218,6 +3226,17 @@ class Spinner(Widget):
         return w, h
     
 
+def error(text, halign=None, valign=None):
+    return {'icon': 'error', 'text': text, 'halign': halign, 'valign': valign}
+
+def warning(text, halign=None, valign=None):
+    return {'icon': 'warning', 'text': text, 'halign': halign, 'valign': valign}
+
+def info(text, halign=None, valign=None):
+    return {'icon': 'info', 'text': text, 'halign': halign, 'valign': valign}
+
+def accept(text, halign=None, valign=None   ):
+    return {'icon': 'accept', 'text': text, 'halign': halign, 'valign': valign} 
         
 class Decorator(Widget):
     _rwt_class_name = 'rwt.widgets.ControlDecorator'
@@ -3225,8 +3244,75 @@ class Decorator(Widget):
     _defstyle_ = Widget._defstyle_
     
     @constructor('Decorator')
-    def __init__(self, parent, icon, text, halign='left', valign='top', **options):
+    def __init__(self, parent, icon, text, halign=None, valign=None, **options):
         Widget.__init__(self, parent, **options)
+        self.theme = DecoratorTheme(self, session.runtime.mngr.theme)
+        if self in parent.children:
+            parent.children.remove(self)
+        self._icon = icon
+        self._text = text
+        if halign is None:
+            self.halign = self.theme.image_position[1]
+        else:
+            self.halign = halign
+        if valign is None:
+            self.valign = self.theme.image_position[0]
+        else:
+            self.valign = valign
         
+    
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if self.halign == 'right':
+            options.style.append('RIGHT')
+        elif self.halign == 'left':
+            options.style.append('LEFT')
+        else: raise ValueError('Illegal value for horizontal position of a control decorator: "%s"' % self.halign)
+        if self.valign == 'top':
+            options.style.append('TOP')
+        elif self.valign == 'bottom':
+            options.style.append('BOTTOM')
+        elif self.valign == 'center':
+            options.style.append('CENTER')
+        else: raise ValueError('Illegal value for vertical position of a control decorator: "%s"' % self.valign)
+        options.text = self._text
+        if isinstance(self._icon, Image):
+            rc = session.runtime.mngr.resources.registerc(name=None, content_type=self._icon.mimetype, content=self._icon.content)
+            self.iconwidth = self._icon.width
+            self.iconheight = self._icon.height
+            options.image = [rc.location, self._icon.width.value, self._icon.height.value]
+        else:
+            if self._icon == 'info':
+                img = self.theme.icon_information
+            elif self._icon == 'error':
+                img = self.theme.icon_error
+            elif self._icon == 'warning':
+                img = self.theme.icon_warning
+            elif self._icon == 'accept':
+                img = self.theme.icon_accept
+            else: raise ValueError('unknown icon name: "%s"' % self._icon)
+            rc = session.runtime.mngr.resources.getbycontent(img.content)
+            options.image = [rc.location, img.width.value, img.height.value]
+            self.iconwidth = img.width
+            self.iconheight = img.height
+        options.visible = True
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
         
+    
+    def compute_relpos(self, bounds):
+        x, y, w, h = bounds
+        x_, y_ = None, None
+        if self.halign == 'left':
+            x_ = x - self.theme.spacing - self.iconwidth
+        else:
+            x_ = x + w + self.theme.spacing
+        if self.valign == 'top':
+            y_ = y
+        elif self.valign == 'center':
+            y_ = y + h / 2 - self.iconheight / 2
+        elif self.valign == 'bottom':
+            y_ = y + h - self.iconheight
+        w_ = self.iconwidth
+        h_ = self.iconheight
+        return x_, y_, w_, h_ 
     

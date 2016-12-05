@@ -67,9 +67,12 @@ Widget-ToolTip-Pointer:right {
 }
 
 ControlDecorator {
-  rwt-error-image: url( img/dialog/error.png );
-  rwt-information-image: url( img/dialog/information.png );
-  rwt-warning-image: url( img/dialog/warning.png );
+  rwt-accept-image: url( img/decorator/accept.png );
+  rwt-error-image: url( img/decorator/error.png );
+  rwt-information-image: url( img/decorator/info.png );
+  rwt-warning-image: url( img/decorator/warning.png );
+  image-position: top left;
+  spacing: -8px;
 }
 
 Display {

@@ -246,7 +246,7 @@ class Theme(object):
             return name, self._build_cursor(values)
         elif name in ('font', 'rwt-fontlist'):
             return name, self._build_font(values)
-        elif name in ('image', 'background-image', 'rwt-information-image', 'rwt-error-image', 'rwt-warning-image', 'rwt-working-image', 'rwt-question-image'):
+        elif name in ('image', 'background-image', 'rwt-information-image', 'rwt-error-image', 'rwt-warning-image', 'rwt-working-image', 'rwt-question-image', 'rwt-accept-image'):
             img = self._build_image(values)
             if type(img) is not Image:
                 img = self._build_gradient(values)
@@ -946,6 +946,35 @@ class CanvasTheme(WidgetTheme):
     def margin(self):
         return self._theme.get_property('margin', 'Canvas', self.custom_variant(), self.styles(), self.states())
 
+
+class DecoratorTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'ControlDecorator')
+
+    @property
+    def icon_accept(self):
+        return self._theme.get_property('rwt-accept-image', 'ControlDecorator', self.custom_variant(), self.styles(), self.states())
+    
+    @property
+    def icon_warning(self):
+        return self._theme.get_property('rwt-warning-image', 'ControlDecorator', self.custom_variant(), self.styles(), self.states())
+    
+    @property
+    def icon_error(self):
+        return self._theme.get_property('rwt-error-image', 'ControlDecorator', self.custom_variant(), self.styles(), self.states())
+    
+    @property
+    def icon_information(self):
+        return self._theme.get_property('rwt-information-image', 'ControlDecorator', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def image_position(self):
+        return self._theme.get_property('image-position', 'ControlDecorator', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def spacing(self):
+        return px(self._theme.get_property('spacing', 'ControlDecorator', self.custom_variant(), self.styles(), self.states()))
 
 
 class ComboTheme(WidgetTheme):
@@ -2044,11 +2073,9 @@ class FontFaceRule(object):
 
 
 if __name__ == '__main__':
-    theme = Theme('default').load('../examples/controls/mytheme.css')
-    theme.write()
-    print
-    for ff in theme.fontfaces:
-        print ff.tocss()
+    theme = Theme('default').load('../resource/theme/default.css')
+    theme = theme.extract('ControlDecorator')
+    print theme.get_property('spacing', 'ControlDecorator')
 #     btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
 #     btn_theme.write()
 #     out(btn_theme.get_property('font', 'List-Item', set([]), set(['[BORDER']), set([])))
