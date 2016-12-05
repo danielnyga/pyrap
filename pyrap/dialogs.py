@@ -157,7 +157,7 @@ class OptionsDialog(Shell):
             c.dispose()
         for option in self.options:
             tmp = Option(parent, text=option, halign='left', valign='fill')
-            tmp.on_checked += lambda x: self.answer_and_close([session.runtime.windows[x.widget].text, self.options[session.runtime.windows[x.widget].text]])
+            tmp.on_checked += lambda x: self.answer_and_close([x.widget.text, self.options[x.widget.text]])
 
     @property
     def options(self):
