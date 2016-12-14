@@ -261,6 +261,23 @@ def pparti(number, proportions):
     return result + [number - sum(result)]
     
 
+def bind(**kwargs):
+    def wrap_f(function):
+        def probeFunc(frame, event, arg):
+            if event == 'call':
+                frame.f_locals.update(kwargs)
+                frame.f_globals.update(kwargs)
+            elif event == 'return':
+                for key in kwargs:
+                    kwargs[key] = frame.f_locals[key]
+                sys.settrace(None)
+            return probeFunc
+        def traced(*args, **kwargs):
+            sys.settrace(probeFunc)
+            function(*args, **kwargs)
+        return traced
+    return wrap_f
+
 if __name__ == '__main__':
     print pparti(10, [.2, .2, .1, .5])
     
