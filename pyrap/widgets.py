@@ -207,6 +207,8 @@ class Widget(object):
     @checkwidget
     def dispose(self):
         for c in self.children: c.dispose()
+        if self in self.parent.children:
+            self.parent.children.remove(self)
         self.on_dispose.notify()
         self._disposed = True
         session.runtime << RWTDestroyOperation(self.id)
