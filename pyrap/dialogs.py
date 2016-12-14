@@ -152,6 +152,7 @@ class OptionsDialog(Shell):
 
         self.create_options(optionslist)
 
+
     def create_options(self, parent):
         for c in parent.children:
             c.dispose()

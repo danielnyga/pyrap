@@ -1051,7 +1051,6 @@ class Image(object):
             w = h / ratio
         self.load()
         stream = BytesIO()
-        out(self.fileext)
         if 'svg' in self.fileext:
             self._img = self._img.resize(w.value, h.value)
             self._img.save(stream)
