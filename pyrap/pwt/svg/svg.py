@@ -24,6 +24,7 @@ class SVG(Widget):
         # size as read from the viewbox property in the svg attributes
         self._vbwidth = None
         self._vbheight = None
+        self._ratio = None
         # size as can be set by the user
         self._gwidth = None
         self._gheight = None
@@ -47,6 +48,7 @@ class SVG(Widget):
         w, h = self.root.attrib['viewBox'].split()[-2:]
         self._vbwidth = int(float(w))
         self._vbheight = int(float(h))
+        self._ratio = float(self._vbwidth) / self._vbheight
 
         # writing the stream to the content will omit leading doc infos
         stream = BytesIO()
@@ -75,7 +77,7 @@ class SVG(Widget):
     @checkwidget
     def gwidth(self, w):
         self._gwidth = w
-        session.runtime << RWTSetOperation(self.id, {'width': self.gwidth})
+        # session.runtime << RWTSetOperation(self.id, {'width': self.gwidth})
 
     @property
     def gheight(self):
@@ -85,7 +87,7 @@ class SVG(Widget):
     @checkwidget
     def gheight(self, h):
         self._gheight = h
-        session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
+        # session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
 
     def getattr(self, id, attr):
         '''
@@ -151,15 +153,15 @@ class SVG(Widget):
 
         w = self.gwidth or self._vbwidth
         h = self.gheight or self._vbheight
-        if self._vbwidth is not None and self._vbheight is not None:
-            ratio = float(self._vbwidth) / self._vbheight
-        else:
-            ratio = None
 
-        if w is None and ratio is not None and h is not None:
-                w = h * ratio
-        elif h is None and ratio is not None and w is not None:
-                h = w / ratio
+        if self.gwidth is None and self._ratio is not None and self.gheight is not None:
+            w = self.gheight * self._ratio
+        elif self.gheight is None and self._ratio is not None and self.gwidth is not None:
+            h = self.gwidth / self._ratio
+        elif w is None and self._ratio is not None and h is not None:
+            w = h * self._ratio
+        elif h is None and self._ratio is not None and w is not None:
+            h = w / self._ratio
         elif w is None and h is None:
             w, h = Widget.compute_size(self)
 
