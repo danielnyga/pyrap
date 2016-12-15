@@ -9,6 +9,7 @@ import os
 import time
 
 import re
+from Tkinter import IntVar
 
 import ptypes
 from pyrap import pyraplog, locations
@@ -1635,17 +1636,16 @@ class Scale(Widget):
 
 
     @constructor('Scale')
-    def __init__(self, parent, minimum=None, maximum=None, selection=None, inc=None, pageinc=None, orientation=RWT.HORIZONTAL, thumb=None, **options):
+    def __init__(self, parent, inc=None, pageinc=None, orientation=RWT.HORIZONTAL, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ScaleTheme(self, session.runtime.mngr.theme)
         self.style |= orientation
-        self._minimum = minimum
-        self._maximum = maximum
-        self._selection = selection
+        self._minimum = None
+        self._maximum = None
+        self._selection = None
         self._inc = inc
         self._pageinc = pageinc
         self.on_select = OnSelect(self)
-
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1670,6 +1670,19 @@ class Scale(Widget):
         session.runtime.mngr.resources.registerc(line_resource_name, line.mimetype, line.content)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_selection_event(op))
+        return True
+
+    def _handle_set(self, op):
+        for key, value in op.args.iteritems():
+            if key == 'selection':
+                self._selection = value
+
     @property
     def selection(self):
         return self._selection
@@ -1677,18 +1690,19 @@ class Scale(Widget):
     @selection.setter
     @checkwidget
     def selection(self, selection):
+        out('setting selection to ', selection)
         self._selection = selection
         session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
 
     @property
     def pageinc(self):
-        return self._pageIncrement
+        return self._pageinc
 
     @pageinc.setter
     @checkwidget
     def pageinc(self, inc):
         self._pageinc = inc
-        session.runtime << RWTSetOperation(self.id, {'pageIncrement': self.pageIncrement})
+        session.runtime << RWTSetOperation(self.id, {'pageIncrement': self.pageinc})
 
     @property
     def inc(self):
