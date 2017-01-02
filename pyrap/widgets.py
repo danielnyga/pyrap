@@ -915,8 +915,20 @@ class Label(Widget):
     @property
     def text(self):
         return self._text
-    
-    
+
+    @property
+    def color(self):
+        return self._color
+
+    @color.setter
+    @checkwidget
+    def color(self, color):
+        self._color = color
+        session.runtime << RWTSetOperation(self.id, {'foreground': [int(round(255 * self.color.red)),
+                                                                    int(round(255 * self.color.green)),
+                                                                    int(round(255 * self.color.blue)),
+                                                                    int(round(255 * self.color.alpha))]})
+
     @img.setter
     @checkwidget
     def img(self, img):
@@ -3240,7 +3252,74 @@ class Spinner(Widget):
         w += tw
         h += th
         return w, h
-    
+
+
+class FileUpload(Widget):
+    _rwt_class_name_ = 'rwt.widgets.FileUpload'
+    _defstyle_ = BitField(Widget._defstyle_)
+
+
+    @constructor('FileUpload')
+    def __init__(self, parent, text=None, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = ButtonTheme(self, session.runtime.mngr.theme)
+        self._text = text
+        self._fnames = []
+        self.on_select = OnSelect(self)
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        options.style.append('NONE')
+        if self._text:
+            options.text = self._text
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_selection_event(op))
+        return True
+
+    def _handle_set(self, op):
+        for key, value in op.args.iteritems():
+            if key == 'bounds':
+                self._bounds = map(px, value)
+            if key == 'fileNames':
+                self.filenames = value
+
+    @property
+    def text(self):
+        return self._text
+
+    @text.setter
+    @checkwidget
+    def text(self, text):
+        self._text = text
+        session.runtime << RWTSetOperation(self.id, {'text': self._text})
+
+    @property
+    def filename(self):
+        if self._fnames:
+            return self._fnames[0]
+        else:
+            return None
+
+    @filename.setter
+    @checkwidget
+    def filename(self, fname):
+        self._fnames[0] = fname
+
+    @property
+    def filenames(self):
+        return self._fnames
+
+    @filenames.setter
+    @checkwidget
+    def filenames(self, fnames):
+        self._fnames = fnames
+
 
 def error(text, halign=None, valign=None):
     return {'icon': 'error', 'text': text, 'halign': halign, 'valign': valign}
