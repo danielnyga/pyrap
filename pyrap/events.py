@@ -181,8 +181,9 @@ class OnDispose(Event):
 
 
 class EventData(object):
-    def __init__(self, widget):
+    def __init__(self, widget, *args):
         self.widget = widget
+        self.args = args
 
 class FocusEventData(EventData):
     def __init__(self, widget, gained):
@@ -225,4 +226,4 @@ def _rwt_mouse_event(op):
     return MouseEventData(session.runtime.windows[op.target], op.args.button, op.args.ctrlKey, op.args.altKey, op.args.shiftKey, op.args.time, op.args.x, op.args.y)
 
 def _rwt_event(op):
-    return EventData(session.runtime.windows[op.target])
+    return EventData(session.runtime.windows[op.target], op.args)

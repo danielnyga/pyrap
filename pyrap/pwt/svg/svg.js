@@ -107,15 +107,7 @@ pwt.SVG.prototype = {
             var that = this;
             var sel = function(event) {
                 console.log('mousedown on', event.target.id);
-                var robj = rwt.remote.Connection.getInstance().getRemoteObject( that );
-                console.log('remote object', robj);
-                // this is supposed to trigger the _handle_notify func in
-                // python SVG class, but does not trigger anything and is not
-                // visible in network traffic:
-                robj.notify( "Selection", { 'mousedown': event.target.id } );
-                // this calls 'callfromjs' method in svg python class and is
-                // visible in network traffic:
-                robj.call( "callfromjs", { 'mousedown': event.target.id } );
+                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'mousedown': event.target.id } );
             };
 
             el.addEventListener("touchstart", sel, true);
@@ -139,6 +131,6 @@ rap.registerTypeHandler( 'pwt.customs.SVG', {
 
   methods : [ 'clear', 'highlight', 'attribute', 'elAttribute'],
 
-  events: [ ]
+  events: [ 'Selection' ]
 
 } );
