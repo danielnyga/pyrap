@@ -113,7 +113,7 @@ rwt.qx.Class.define( "rwt.widgets.FileUpload", {
     _createIframeWidget : function() {
       this._iframe = new rwt.widgets.base.Iframe();
       // NOTE: The frame-content should only be changed by the form:
-      this._iframe.setSource( "http://localhost:8080/controls" );
+      this._iframe.setSource( "about:blank" );
       this._iframe.setVisibility( false );
       this._iframe.setWidth( 0 );
       this._iframe.setHeight( 0 );
