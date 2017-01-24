@@ -17,6 +17,7 @@ from pyrap.base import session
 from pyrap.communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
 from pyrap.constants import RWT, GCBITS, CURSOR
+from pyrap.handlers import FileUploadServiceHandler
 from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify, FocusEventData, _rwt_event
@@ -612,9 +613,19 @@ class Shell(Widget):
             area[2] -= padding.left + padding.right
             area[1] += padding.top
             area[3] -= padding.top + padding.bottom
-        if self.title is not None or RWT.TITLE in self.style: 
+
+        t, r, b, l = self.theme.borders
+        area[0] += ifnone(l, 0, lambda l: l.width)
+        area[1] += ifnone(t, 0, lambda t: t.width)
+        area[2] -= ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        area[2] = max(0, area[2])
+        area[3] -= ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        area[3] = max(0, area[3])
+
+        if self.title is not None or RWT.TITLE in self.style:
             area[3] -= self.theme.title_height
             area[1] += self.theme.title_height
+
         return area
     
     @checkwidget
@@ -626,6 +637,8 @@ class Shell(Widget):
         
 
     def dolayout(self, pack=False):
+        if pack:
+            self.bounds = 0, 0, 0, 0
         started = time.time()
         if self.maximized:
             self._maximize()
@@ -659,7 +672,6 @@ class Shell(Widget):
             _, _, dispw, disph = session.runtime.display.bounds
             xpos = int(round(dispw.value / 2. - w.value / 2.))
             ypos = int(round(disph.value / 2. - h.value / 2.))
-            out(xpos, ypos, w, h)
             self.bounds = xpos, ypos, w, h
             self.dolayout()
             
@@ -732,7 +744,6 @@ class Combo(Widget):
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select, 'Modify': self.on_modify}
-        out(op, op.event)
         if op.event not in events:
             return Widget._handle_notify(self, op)
         elif op.event == 'Selection':
@@ -1070,6 +1081,7 @@ class Checkbox(Widget):
         self._text = text
         self._checked = BoolVar(value=options.get('checked'))
         self._checked.on_change += lambda *x: self._rwt_set_checkmark()
+        self._boundvars = []
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1087,6 +1099,7 @@ class Checkbox(Widget):
         if not type(var) in (NumVar, BoolVar):
             raise Exception('Can only bind variables of type NumVar and BoolVar')
         self._checked.bind(var)
+        self._boundvars.append(var)
 
     @property
     def checked(self):
@@ -1113,6 +1126,12 @@ class Checkbox(Widget):
     def text(self, text):
         self._text = text
         session.runtime << RWTSetOperation(self.id, {'text': self._text})
+
+    def dispose(self):
+        for v in self._boundvars:
+            # make sure bound variable will not try to notify disposed widget
+            v.unbind()
+        Widget.dispose(self)
         
     def _handle_notify(self, op):
         events = {'Selection': self.on_checked}
@@ -1702,7 +1721,6 @@ class Scale(Widget):
     @selection.setter
     @checkwidget
     def selection(self, selection):
-        out('setting selection to ', selection)
         self._selection = selection
         session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
 
@@ -3229,7 +3247,6 @@ class Spinner(Widget):
         s = str(val)
         before, behind = s.split('.')
         before = int(before)
-        out(before, behind)
         if self.digits:
             behind_ = behind[:self.digits + 1]
             if len(behind_) > self.digits:
@@ -3238,7 +3255,6 @@ class Spinner(Widget):
             before = before * (10 ** self.digits)
         else:
             behind = 0
-        out(before, behind)
         return before + behind
     
     def compute_size(self):
@@ -3265,6 +3281,7 @@ class FileUpload(Widget):
         self.theme = ButtonTheme(self, session.runtime.mngr.theme)
         self._text = text
         self._fnames = []
+        self._files = []
         self.on_select = OnSelect(self)
 
     def _create_rwt_widget(self):
@@ -3273,6 +3290,7 @@ class FileUpload(Widget):
         if self._text:
             options.text = self._text
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+        self.on_select += self._upload
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select}
@@ -3288,6 +3306,23 @@ class FileUpload(Widget):
                 self._bounds = map(px, value)
             if key == 'fileNames':
                 self.filenames = value
+
+    def _upload(self, *_):
+        for f in self.filenames:
+            handler = session.runtime.servicehandlers.register(FileUploadServiceHandler(f))
+            url = 'http://localhost:5005/prac/pyrap?servicehandler={}&cid={}&token={}'.format(handler.name, session.session_id, handler.token)
+            session.runtime << RWTCallOperation(self.id, 'submit', { 'url': url })
+            # wait for handler to finish upload befor accessing file information
+            # handler._received.wait()
+            self._files.append((handler.ftype, handler.fname, handler.cnt))
+            out('files:', self._files)
+
+    def compute_size(self):
+        width, height = Widget.compute_size(self)
+        tw, th = session.runtime.textsize_estimate(self.theme.font, self._text)
+        width += tw
+        height += th
+        return width, height
 
     @property
     def text(self):
@@ -3319,6 +3354,10 @@ class FileUpload(Widget):
     @checkwidget
     def filenames(self, fnames):
         self._fnames = fnames
+
+    @property
+    def files(self):
+        return self._files
 
 
 def error(text, halign=None, valign=None):
