@@ -17,6 +17,8 @@ rwt.remote.HandlerRegistry.add( "rwt.client.FileUploader", {
 
   service : true,
 
-  methods : [ "submit" ]
+  methods : [ "submit" ],
+  
+  events : [ "Finished" ]
 
 } );
