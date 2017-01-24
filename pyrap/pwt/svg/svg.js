@@ -68,8 +68,6 @@ pwt.SVG.prototype = {
 
     highlight : function ( args ) {
         if (document.getElementById(args.id)) {
-            console.log('highlight', args.id);
-            console.log('highlight', args.id, document.getElementById(args.id));
             document.getElementById(args.id).style.fill = args.clear ? '#ffffff' : '#bee280';
             document.getElementById(args.id).style.fillOpacity = args.clear ? '0.05' : '1';
         }
@@ -78,8 +76,6 @@ pwt.SVG.prototype = {
     clear : function ( args ) {
         for (var i = 0; i < args.ids.length; i++) {
             if (document.getElementById(args.ids[i])) {
-                console.log('clear', args.ids[i]);
-                console.log('clear', args.ids[i], document.getElementById(args.ids[i]));
                 document.getElementById(args.ids[i]).style.fill = '#ffffff';
                 document.getElementById(args.ids[i]).style.fillOpacity = '0.05';
             }
