@@ -12,7 +12,7 @@ from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite
 import random
 from pyrap import pyraplog, locations, threads
 from pyrap.utils import out, ifnone
-from pyrap.ptypes import BoolVar, StringVar, Color, px, Image, pc
+from pyrap.ptypes import BoolVar, StringVar, Color, px, Image, pc, Font
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout,\
     StackLayout
 import os
@@ -195,11 +195,16 @@ class ControlsDemo():
         filetype = Label(cont, halign='fill')
         Label(body, text='Content:', halign='fill')
         content = Edit(body, halign='fill', valign='fill', multiline=True, wrap=True)
+        content.font = Font(family='monospace', size='11px')
         def uploaded():
             filename.text = upload.handler.fname
             filesize.text = '%d Byte' % len(upload.handler.cnt)
             filetype.text = upload.handler.ftype
-            content.text = b64encode(upload.handler.cnt)
+            if upload.handler.ftype.startswith('application'):
+                c = b64encode(upload.handler.cnt)
+            else:
+                c = str(upload.handler.cnt)
+            content.text = c
         upload.on_finished += uploaded
     
     def create_spinner_page(self, parent):
