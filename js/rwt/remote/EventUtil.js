@@ -48,6 +48,13 @@ rwt.remote.EventUtil = {
     var init = rwt.runtime.System.getInstance();
     return ( new Date().getTime() - init.getStartupTime() ) % 0x7fffffff;
   },
+  
+  notifyFinished : function( target ) {
+  	if( !self.getSuspended() && !target.isDisposed() ) {
+      var connection = rwt.remote.Connection.getInstance();
+	  connection.getRemoteObject( target ).notify( "Finished" );
+    }
+  },
 
   widgetDefaultSelected : function( event ) {
     self.notifyDefaultSelected( event.getTarget() );

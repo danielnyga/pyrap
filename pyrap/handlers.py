@@ -96,5 +96,5 @@ class FileUploadServiceHandler(ServiceHandler):
         self._ftype = parsed[1]['filename'].split('\r\n')[1].split(': ')[1]
 
         # notify all that upload is finished
-        # self._received.set()
+        self._received.set()
         return ''

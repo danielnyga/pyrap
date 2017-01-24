@@ -26,6 +26,12 @@ rwt.qx.Class.define( "rwt.widgets.FileUpload", {
     this.__onValueChange = rwt.util.Functions.bind( this._onValueChange, this );
     this.setEnableElementFocus( false );
     this._createIframeWidget();
+    // this._iframe.addEventListener('onload', function() { console.log("iframe onload"); }, this );
+    // console.log(this._iframe);
+    // console.log(this._iframe._iframeNode);
+    // console.log(this._iframe.getIframeNode());//.onload = function() { console.log("iframe onload"); };
+    // this._iframe.addEventListener('onload', function() { console.log("iframe onload"); }, this );
+    
   },
 
   destruct : function() {
@@ -36,6 +42,11 @@ rwt.qx.Class.define( "rwt.widgets.FileUpload", {
   members : {
 
     submit : function( url ) {
+      // this._iframe.getIframeNode().onload = function() { console.log("iframe onload"); };
+      that = this;
+      this._iframe.getIframeNode().addEventListener('load', function() { 
+      	  rwt.remote.EventUtil.notifyFinished( that );	
+      });
       if( typeof url !== "string" ) {
         throw new Error( "No url given!" );
       }
@@ -102,7 +113,7 @@ rwt.qx.Class.define( "rwt.widgets.FileUpload", {
     _createIframeWidget : function() {
       this._iframe = new rwt.widgets.base.Iframe();
       // NOTE: The frame-content should only be changed by the form:
-      this._iframe.setSource( "about:blank" );
+      this._iframe.setSource( "http://localhost:8080/controls" );
       this._iframe.setVisibility( false );
       this._iframe.setWidth( 0 );
       this._iframe.setHeight( 0 );

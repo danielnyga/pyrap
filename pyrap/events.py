@@ -176,8 +176,22 @@ class OnFocus(RWTEvent):
     def _notify(self, listener, focus_data): listener(focus_data)
 
 
+class OnFinished(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'Finished', widget)
+    
+    def _create_subscribe_msg(self):
+        return [RWTListenOperation(self.widget.id, {'Finished': True})]
+    
+    def _create_unsubscribe_msg(self):
+        return [RWTListenOperation(self.widget.id, {'Finished': False})]
+
+    def _notify(self, listener): listener()
+    
+
 class OnDispose(Event):
     def _notify(self, listener): listener()
+    
 
 
 class EventData(object):

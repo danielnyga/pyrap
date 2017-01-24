@@ -20,7 +20,7 @@ from pyrap.constants import RWT, GCBITS, CURSOR
 from pyrap.handlers import FileUploadServiceHandler
 from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
-    OnNavigate, OnModify, FocusEventData, _rwt_event
+    OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished
 from pyrap.exceptions import WidgetDisposedError
 from pyrap.layout import Layout, LayoutAdapter, CellLayout,\
     StackLayout
@@ -3283,6 +3283,7 @@ class FileUpload(Widget):
         self._fnames = []
         self._files = []
         self.on_select = OnSelect(self)
+        self.on_finished = OnFinished(self)
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -3291,13 +3292,16 @@ class FileUpload(Widget):
             options.text = self._text
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
         self.on_select += self._upload
+        self.on_finished += self.finished
 
     def _handle_notify(self, op):
-        events = {'Selection': self.on_select}
+        events = {'Selection': self.on_select, 'Finished': self.on_finished}
         if op.event not in events:
             return Widget._handle_notify(self, op)
-        else:
+        elif op.event == 'Selection':
             events[op.event].notify(_rwt_selection_event(op))
+        elif op.event == 'Finished':
+            events[op.event].notify()
         return True
 
     def _handle_set(self, op):
@@ -3307,13 +3311,16 @@ class FileUpload(Widget):
             if key == 'fileNames':
                 self.filenames = value
 
+    def finished(self):
+        out('RECEIVED FILE!!!')
+
     def _upload(self, *_):
         for f in self.filenames:
             handler = session.runtime.servicehandlers.register(FileUploadServiceHandler(f))
-            url = 'http://localhost:5005/prac/pyrap?servicehandler={}&cid={}&token={}'.format(handler.name, session.session_id, handler.token)
+            url = 'pyrap?servicehandler={}&cid={}&token={}'.format(handler.name, session.session_id, handler.token)
             session.runtime << RWTCallOperation(self.id, 'submit', { 'url': url })
             # wait for handler to finish upload befor accessing file information
-            # handler._received.wait()
+#             handler._received.wait()
             self._files.append((handler.ftype, handler.fname, handler.cnt))
             out('files:', self._files)
 
