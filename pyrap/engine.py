@@ -26,6 +26,7 @@ from pyrap.communication import RWTMessage, RWTNotifyOperation, RWTSetOperation,
 from pyrap.constants import APPSTATE, inf
 from pyrap.events import FocusEventData
 from pyrap.exceptions import ResourceError
+from pyrap.handlers import PushServiceHandler
 from pyrap.ptypes import Color, Image
 from pyrap.pyraplog import getlogger
 from pyrap.themes import Theme, FontMetrics
@@ -181,13 +182,15 @@ class ApplicationManager(object):
                 return str(self.startup_page % (self.config.name, self.icon.location if hasattr(self, 'icon') else '', entrypoint, str(query)))
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        # HANDLE PUSH MESSAGES
+        # HANDLE SERVICES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        if 'servicehandler' in query and query['servicehandler'] == 'org.eclipse.rap.serverpush':
-            while not session.runtime.push.wait(2): pass
-            web.header('Content-Type', 'text/html')
-            session.runtime.push.clear()
-            return ''
+        if 'servicehandler' in query:
+
+            handler = session.runtime.servicehandlers.get(query['servicehandler'])
+            if handler is not None:
+                return handler.run(content, web.ctx.environ, kwargs=query)
+            else:
+                raise notfound()
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES
@@ -275,6 +278,8 @@ class PushService(object):
     
     def start(self):
         with PushService.__lock:
+            if 'org.eclipse.rap.pushsession' not in session.runtime.servicehandlers.handlers.keys():
+                session.runtime.servicehandlers.register(PushServiceHandler())
             if not PushService.__active:
                 session.runtime.activate_push(True) 
             PushService.__active += 1
@@ -321,6 +326,7 @@ class SessionRuntime(object):
         self.default_font = None
         self.log_ = getlogger(type(self).__name__)
         self.kapo = Kapo(verbose=0)
+        self.servicehandlers = ServiceHandlerManager()
         self.push = Event()
         
         
@@ -677,4 +683,31 @@ class ResourceManager(object):
         web.header('Content-Type', resource.content_type)
         web.header('Content-Length', len(resource.content))
         return resource.content
-        
+
+
+class ServiceHandlerManager(object):
+    '''
+    This class maintains all :class:`Service Handlers` of an application.
+
+    New Service handlers can be registered and thus made available to clients.
+    '''
+
+    def __init__(self):
+        self.handlers = {}
+        self.lock = Lock()
+
+    def get(self, h):
+        return self.handlers.get(h, None)
+
+    def register(self, handler):
+        self.handlers[handler.name] = handler
+        return handler
+
+    def unregister(self, handler):
+        if handler.name in self.handlers.keys():
+            del self.handlers[handler.name]
+            return True
+        return False
+
+
+
