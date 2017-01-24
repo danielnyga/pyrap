@@ -3284,6 +3284,7 @@ class FileUpload(Widget):
         self._files = []
         self.on_select = OnSelect(self)
         self.on_finished = OnFinished(self)
+        self.handler = None
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -3292,7 +3293,7 @@ class FileUpload(Widget):
             options.text = self._text
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
         self.on_select += self._upload
-        self.on_finished += self.finished
+#         self.on_finished += self.finished
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select, 'Finished': self.on_finished}
@@ -3311,18 +3312,15 @@ class FileUpload(Widget):
             if key == 'fileNames':
                 self.filenames = value
 
-    def finished(self):
-        out('RECEIVED FILE!!!')
-
     def _upload(self, *_):
         for f in self.filenames:
-            handler = session.runtime.servicehandlers.register(FileUploadServiceHandler(f))
-            url = 'pyrap?servicehandler={}&cid={}&token={}'.format(handler.name, session.session_id, handler.token)
+            self.handler = session.runtime.servicehandlers.register(FileUploadServiceHandler(f))
+            url = 'pyrap?servicehandler={}&cid={}&token={}'.format(self.handler.name, session.session_id, self.handler.token)
             session.runtime << RWTCallOperation(self.id, 'submit', { 'url': url })
             # wait for handler to finish upload befor accessing file information
 #             handler._received.wait()
-            self._files.append((handler.ftype, handler.fname, handler.cnt))
-            out('files:', self._files)
+#             self._files.append((handler.ftype, handler.fname, handler.cnt))
+#             out('files:', self._files)
 
     def compute_size(self):
         width, height = Widget.compute_size(self)

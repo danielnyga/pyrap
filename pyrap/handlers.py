@@ -88,7 +88,7 @@ class FileUploadServiceHandler(ServiceHandler):
         s.write(cnt)
         s.seek(0)
         multipart = cgi.parse_multipart(s, pdict)
-        self._cnt = multipart.get('file')
+        self._cnt = multipart.get('file')[0]
 
         # retrieve filename and -type
         parsed = cgi.parse_header(cnt)
