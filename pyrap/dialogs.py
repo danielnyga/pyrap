@@ -35,6 +35,12 @@ def ask_question(parent, title, text, buttons):
     msg.on_close.wait()
     return msg.answer
 
+def ask_input(parent, title, multiline=False):
+    msg = InputBox(parent, title, multiline=multiline)
+    msg.dolayout(True)
+    msg.on_close.wait()
+    return msg.answer
+
 def options_list(parent, options):
     msg = OptionsDialog(parent, options)
     msg.dolayout()
@@ -43,6 +49,9 @@ def options_list(parent, options):
 
 def ask_yesnocancel(parent, title, text):
     return ask_question(parent, title, text, ['yes', 'no', 'cancel'])
+
+def ask_textinput(parent, title):
+    return ask_input(parent, title)
 
 def ask_yesno(parent, title, text):
     return ask_question(parent, title, text, ['yes', 'no'])
@@ -189,8 +198,56 @@ class QuestionBox(MessageBox):
         if 'cancel' in self.buttons:
             cancel = Button(buttons, text='Cancel', halign='fill')
             cancel.on_select += lambda *_: self.answer_and_close(None)
-            
-            
+
+
+class InputBox(Shell):
+    '''
+    Represents a simple message box containing an editfield for text input.
+    '''
+
+
+    @constructor('InputBox')
+    def __init__(self, parent, title, icon=None, multiline=False, modal=True, resize=False,
+                 btnclose=True):
+        Shell.__init__(self, parent, title=title, titlebar=True, border=True,
+                       btnclose=btnclose, resize=resize, modal=modal)
+        self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
+        self.icon = {DLG.INFORMATION: self.icontheme.icon_info,
+                     DLG.QUESTION: self.icontheme.icon_question,
+                     DLG.WARNING: self.icontheme.icon_warning,
+                     DLG.ERROR: self.icontheme.icon_error}.get(icon)
+        self.answer = None
+        self.multiline = multiline
+
+    def answer_and_close(self, a):
+        self.answer = a
+        self.close()
+
+    def create_content(self):
+        Shell.create_content(self)
+        mainarea = Composite(self.content)
+        mainarea.layout = ColumnLayout(padding=10, hspace=5)
+        img = None
+        if self.icon is not None:
+            img = Label(mainarea, img=self.icon, valign='top', halign='left')
+
+        textarea = Composite(mainarea)
+        textarea.layout = RowLayout()
+        self.inputfield = Edit(textarea, multiline=self.multiline, valign='fill', halign='fill')
+
+        buttons = Composite(textarea)
+        buttons.layout = ColumnLayout(equalwidths=True, halign='right',
+                                      valign='bottom')
+        self.create_buttons(buttons)
+
+
+    def create_buttons(self, buttons):
+        ok = Button(buttons, text='OK', minwidth=100)
+        ok.on_select += lambda *_: self.answer_and_close(self.inputfield.text)
+        cancel = Button(buttons, text='Cancel', halign='fill')
+        cancel.on_select += lambda *_: self.answer_and_close(None)
+
+
 def open_progress(parent, title, text, target, autoclose=False):
     dlg = ProgressDialog(parent, title, text, target, modal=0, autoclose=autoclose)
     dlg.dolayout(True)
