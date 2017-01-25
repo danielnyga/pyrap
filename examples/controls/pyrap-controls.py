@@ -184,7 +184,7 @@ class ControlsDemo():
     def create_upload_page(self, parent):
         body = Composite(parent)
         body.layout = RowLayout(halign='fill', valign='fill', flexrows=3)
-        upload = FileUpload(body, text='Browse...', halign='left', valign='top')
+        upload = FileUpload(body, text='Browse...', multi=True, accepted=['.txt', '.xlsx', '.pracmln'], halign='left', valign='top')
         cont = Composite(body)
         cont.layout = GridLayout(cols=2, halign='fill', flexcols=1)
         Label(cont, 'Filename:')
@@ -197,13 +197,15 @@ class ControlsDemo():
         content = Edit(body, halign='fill', valign='fill', multiline=True, wrap=True)
         content.font = Font(family='monospace', size='11px')
         def uploaded():
-            filename.text = upload.handler.fname
-            filesize.text = '%d Byte' % len(upload.handler.cnt)
-            filetype.text = upload.handler.ftype
-            if upload.handler.ftype.startswith('application'):
-                c = b64encode(upload.handler.cnt)
+            files = session.runtime.servicehandlers.fileuploadhandler.files[upload.token]
+            filename.text = ', '.join([f['filename'] for f in files])
+            fullcnt = '\n\n'.join([f['filecontent'] for f in files])
+            filesize.text = '%d Byte' % (len(fullcnt)-2)
+            filetype.text = ', '.join([f['filetype'] for f in files])
+            if filetype.text.startswith('application'):
+                c = b64encode(fullcnt)
             else:
-                c = str(upload.handler.cnt)
+                c = str(fullcnt)
             content.text = c
         upload.on_finished += uploaded
     

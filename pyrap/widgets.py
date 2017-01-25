@@ -3272,16 +3272,21 @@ class Spinner(Widget):
 
 class FileUpload(Widget):
     _rwt_class_name_ = 'rwt.widgets.FileUpload'
+    _styles_ = Widget._styles_ + {'multi': RWT.MULTI,}
     _defstyle_ = BitField(Widget._defstyle_)
 
 
     @constructor('FileUpload')
-    def __init__(self, parent, text=None, **options):
+    def __init__(self, parent, text=None, accepted=None, **options):
         Widget.__init__(self, parent, **options)
+        if accepted is None:
+            accepted = []
         self.theme = ButtonTheme(self, session.runtime.mngr.theme)
         self._text = text
+        self._accepted = accepted
         self._fnames = []
         self._files = []
+        self._token = None
         self.on_select = OnSelect(self)
         self.on_finished = OnFinished(self)
         self.handler = None
@@ -3289,8 +3294,11 @@ class FileUpload(Widget):
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.style.append('NONE')
+        if RWT.MULTI in self.style:
+            options.style.append('MULTI')
         if self._text:
             options.text = self._text
+        options.accepted = self._accepted
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
         self.on_select += self._upload
 #         self.on_finished += self.finished
@@ -3313,14 +3321,9 @@ class FileUpload(Widget):
                 self.filenames = value
 
     def _upload(self, *_):
-        for f in self.filenames:
-            self.handler = session.runtime.servicehandlers.register(FileUploadServiceHandler(f))
-            url = 'pyrap?servicehandler={}&cid={}&token={}'.format(self.handler.name, session.session_id, self.handler.token)
-            session.runtime << RWTCallOperation(self.id, 'submit', { 'url': url })
-            # wait for handler to finish upload befor accessing file information
-#             handler._received.wait()
-#             self._files.append((handler.ftype, handler.fname, handler.cnt))
-#             out('files:', self._files)
+        token, url = session.runtime.servicehandlers.fileuploadhandler.accept(self.filenames)
+        self._token = token
+        session.runtime << RWTCallOperation(self.id, 'submit', { 'url': url })
 
     def compute_size(self):
         width, height = Widget.compute_size(self)
@@ -3332,6 +3335,10 @@ class FileUpload(Widget):
     @property
     def text(self):
         return self._text
+
+    @property
+    def token(self):
+        return self._token
 
     @text.setter
     @checkwidget

@@ -2,9 +2,11 @@ import StringIO
 import cgi
 
 import web
+from django.http import HttpResponseForbidden
 
 from pyrap import session
 from pyrap.threads import Event
+from pyrap.utils import out
 
 
 class ServiceHandler(object):
@@ -37,49 +39,24 @@ class PushServiceHandler(ServiceHandler):
 
 class FileUploadServiceHandler(ServiceHandler):
 
-    def __init__(self, fname):
+    def __init__(self):
         ServiceHandler.__init__(self, 'org.eclipse.rap.fileupload')
-        self._token = hash(fname)
-        self._received = Event()
-        self._fname = None
-        self._cnt = None
-        self._ftype = None
+        self._files = {}
 
     @property
-    def token(self):
-        return self._token
+    def files(self):
+        return self._files
 
-    @token.setter
-    def token(self, token):
-        self._token = token
-
-    @property
-    def fname(self):
-        return self._fname
-
-    @fname.setter
-    def fname(self, fname):
-        self._fname = fname
-
-    @property
-    def cnt(self):
-        return self._cnt
-
-    @cnt.setter
-    def cnt(self, cnt):
-        self._cnt = cnt
-
-    @property
-    def ftype(self):
-        return self._ftype
-
-    @ftype.setter
-    def ftype(self, ftype):
-        self._ftype = ftype
+    def accept(self, fnames):
+        token = str(hash(''.join(fnames)))
+        self._files[token] = None
+        return token, 'pyrap?servicehandler={}&cid={}&token={}'.format(self.name, session.session_id, token)
 
     def run(self, *args, **kwargs):
-        if self.token != int(kwargs.get('kwargs').get('token')):
-            raise Exception('Token does not match FileuploadServiceHandler token! {} != {}'.format(self.token, int(kwargs.get('kwargs').get('token'))))
+        token = kwargs.get('kwargs').get('token')
+        if token not in self._files:
+            #httpfehler fuer access denied
+            raise Exception('Token unknown! {}. Available tokens: {}'.format(token, self._files.keys()))
 
         # retrieve file content
         ctype, pdict = cgi.parse_header(args[1].get('CONTENT_TYPE'))
@@ -88,13 +65,16 @@ class FileUploadServiceHandler(ServiceHandler):
         s.write(cnt)
         s.seek(0)
         multipart = cgi.parse_multipart(s, pdict)
-        self._cnt = multipart.get('file')[0]
+        fargs = [x for x in cnt.split(pdict['boundary']) if 'Content-Disposition' in x]
+        fcontents = multipart.get('file')
+        files = zip(fargs, fcontents)
 
-        # retrieve filename and -type
-        parsed = cgi.parse_header(cnt)
-        self._fname = parsed[1]['filename'].split('\r\n')[0][1:-1]
-        self._ftype = parsed[1]['filename'].split('\r\n')[1].split(': ')[1]
-
-        # notify all that upload is finished
-        self._received.set()
+        tfiles = []
+        for f in files:
+            # retrieve filename and -type
+            parsed = cgi.parse_header(f[0])
+            fname = parsed[1]['filename'].split('\r\n')[0][1:-1]
+            ftype = parsed[1]['filename'].split('\r\n')[1].split(': ')[1]
+            tfiles.append({'filename': fname, 'filetype': ftype, 'filecontent': f[1]})
+        self._files[token] = tfiles
         return ''

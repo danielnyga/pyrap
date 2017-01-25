@@ -13,7 +13,8 @@ rwt.remote.HandlerRegistry.add( "rwt.widgets.FileUpload", {
 
   factory : function( properties ) {
     var multi = properties.style.indexOf( "MULTI" ) !== -1 ;
-    var result = new rwt.widgets.FileUpload( multi );
+    var accepted = properties.accepted;
+    var result = new rwt.widgets.FileUpload( multi, accepted );
     rwt.remote.HandlerUtil.addStatesForStyles( result, properties.style );
     result.setUserData( "isControl", true );
     rwt.remote.HandlerUtil.setParent( result, properties.parent );

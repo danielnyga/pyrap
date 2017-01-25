@@ -26,7 +26,7 @@ from pyrap.communication import RWTMessage, RWTNotifyOperation, RWTSetOperation,
 from pyrap.constants import APPSTATE, inf
 from pyrap.events import FocusEventData
 from pyrap.exceptions import ResourceError
-from pyrap.handlers import PushServiceHandler
+from pyrap.handlers import PushServiceHandler, FileUploadServiceHandler
 from pyrap.ptypes import Color, Image
 from pyrap.pyraplog import getlogger
 from pyrap.themes import Theme, FontMetrics
@@ -533,7 +533,7 @@ class SessionRuntime(object):
 
     def download(self, path, mimetype):
         resource = session.runtime.mngr.resources.registerf(os.path.basename(path), mimetype, path)
-        self.executejs('window.open("{}", "_blank");'.format(resource.location))
+        resource.download()
 
     def create_display(self):
         self.display = Display(self.windows)
@@ -595,6 +595,9 @@ class Resource(object):
     @property
     def location(self):
         return urllib.quote('%s/%s' % (self.registry.resourcepath, self.name))
+
+    def download(self):
+        session.runtime.executejs('window.open("{}", "_blank");'.format(self.location))
 
 
 class ResourceManager(object):
@@ -695,9 +698,14 @@ class ServiceHandlerManager(object):
     def __init__(self):
         self.handlers = {}
         self.lock = Lock()
+        self.register(FileUploadServiceHandler())
 
     def get(self, h):
         return self.handlers.get(h, None)
+
+    @property
+    def fileuploadhandler(self):
+        return self.handlers.get('org.eclipse.rap.fileupload', None)
 
     def register(self, handler):
         self.handlers[handler.name] = handler
