@@ -2,11 +2,8 @@ import StringIO
 import cgi
 
 import web
-from django.http import HttpResponseForbidden
 
 from pyrap import session
-from pyrap.threads import Event
-from pyrap.utils import out
 
 
 class ServiceHandler(object):
