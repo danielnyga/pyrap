@@ -1203,7 +1203,57 @@ class LabelTheme(WidgetTheme):
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Label', self.custom_variant(), self.styles(), self.states())
-    
+
+
+class LinkTheme(WidgetTheme):
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Link', 'Link-Hyperlink')
+
+
+    @property
+    def font(self):
+        if self._font is not None: return self._font
+        return self._theme.get_property('font', 'Link', self.custom_variant(), self.styles(), self.states())
+
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Link', self.custom_variant(), self.styles(), self.states())
+
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Link', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+
+    @property
+    def bg(self):
+        if self._bg: return self._bg
+        opacity = ifnone(self._theme.get_property('opacity', 'Link', self.custom_variant(), self.styles(), self.states()), 1.0)
+        color = self._theme.get_property('background-color', 'Link', self.custom_variant(), self.styles(), self.states())
+        color.alpha = opacity
+        return color
+
+
+    @bg.setter
+    def bg(self, color):
+        self._bg = color
+
+
+    @property
+    def color(self):
+        if self._color: return self._color
+        return self._theme.get_property('color', 'Link', self.custom_variant(), self.styles(), self.states())
+
+
+    @color.setter
+    def color(self, color):
+        self._color = color
+
+
+    @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Link', self.custom_variant(), self.styles(), self.states())
 
 
 class ButtonTheme(WidgetTheme):
