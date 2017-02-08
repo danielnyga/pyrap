@@ -68,14 +68,16 @@ pwt.SVG.prototype = {
 
     highlight : function ( args ) {
         if (document.getElementById(args.id)) {
-            document.getElementById(args.id).style.fill = args.clear ? 'none' : '#bee280';
+            document.getElementById(args.id).style.fill = args.clear ? '#ffffff' : '#bee280';
+            document.getElementById(args.id).style.fillOpacity = args.clear ? '0.05' : '1';
         }
     },
 
     clear : function ( args ) {
         for (var i = 0; i < args.ids.length; i++) {
             if (document.getElementById(args.ids[i])) {
-                document.getElementById(args.ids[i]).style.fill = 'none';
+                document.getElementById(args.ids[i]).style.fill = '#ffffff';
+                document.getElementById(args.ids[i]).style.fillOpacity = '0.05';
             }
         }
     },
@@ -92,6 +94,21 @@ pwt.SVG.prototype = {
         if( element.parentNode ) {
             element.parentNode.removeChild( element );
         }
+    },
+
+    setSelectelem: function( elems ) {
+        for (var x = 0; x < elems.length; x++) {
+            var el = document.getElementById(elems[x]);
+
+            var that = this;
+            var sel = function(event) {
+                console.log('mousedown on', event.target.id);
+                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'mousedown': event.target.id } );
+            };
+
+            el.addEventListener("touchstart", sel, true);
+            el.addEventListener("mousedown",  sel, true);
+        }
     }
 
 };
@@ -106,10 +123,10 @@ rap.registerTypeHandler( 'pwt.customs.SVG', {
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'svg', 'bounds'],
+  properties: [ 'remove', 'svg', 'bounds', 'selectelem'],
 
-  methods : [ 'clear', 'highlight', 'attribute', 'elAttribute' ],
+  methods : [ 'clear', 'highlight', 'attribute', 'elAttribute'],
 
-  events: [ ]
+  events: [ 'Selection' ]
 
 } );

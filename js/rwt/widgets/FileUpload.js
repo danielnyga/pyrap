@@ -13,7 +13,7 @@ rwt.qx.Class.define( "rwt.widgets.FileUpload", {
 
   extend : rwt.widgets.Button,
 
-  construct : function( multi ) {
+  construct : function( multi, accepted ) {
     this.base( arguments, "push" );
     this.setAppearance( "file-upload" );
     this.addEventListener( "insertDom", this._layoutInputElement, this );
@@ -22,6 +22,7 @@ rwt.qx.Class.define( "rwt.widgets.FileUpload", {
     this._inputElement = null;
     this._iframe = null;
     this._multi = multi;
+    this._acceptedtypes = accepted;
     this._cursor = "";
     this.__onValueChange = rwt.util.Functions.bind( this._onValueChange, this );
     this.setEnableElementFocus( false );
@@ -36,6 +37,10 @@ rwt.qx.Class.define( "rwt.widgets.FileUpload", {
   members : {
 
     submit : function( url ) {
+      that = this;
+      this._iframe.getIframeNode().addEventListener('load', function() { 
+      	  rwt.remote.EventUtil.notifyFinished( that );	
+      });
       if( typeof url !== "string" ) {
         throw new Error( "No url given!" );
       }
@@ -92,6 +97,9 @@ rwt.qx.Class.define( "rwt.widgets.FileUpload", {
       this._inputElement.setAttribute( "size", "1" );
       if( this._multi ) {
         this._inputElement.setAttribute( "multiple", "multiple" );
+      }
+      if( this._acceptedtypes.length > 0 ) {
+        this._inputElement.setAttribute( "accept", this._acceptedtypes.join());
       }
       this._inputElement.style.cursor = this._cursor;
       this._inputElement.onchange = this.__onValueChange;

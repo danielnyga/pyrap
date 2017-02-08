@@ -42,6 +42,10 @@ class Event(object):
         if type(listeners) is not list: listeners = [listeners]
         for l in listeners: self += l
         return self
+
+    def removeall(self):
+        self._listeners = []
+        return self
             
     def notify(self, *args, **kwargs):
         with self._wait: self._wait.notify_all()
@@ -207,7 +211,10 @@ class Var(object):
         var.on_change += set_mine
         self.on_change += set_other
         self.set(var.value, self)
-    
+
+    def unbind(self):
+        self.on_change = ValueChanged().removeall()
+
     def clean(self):
         self._init = self.value
         

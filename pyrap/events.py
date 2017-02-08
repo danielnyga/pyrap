@@ -176,13 +176,28 @@ class OnFocus(RWTEvent):
     def _notify(self, listener, focus_data): listener(focus_data)
 
 
+class OnFinished(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'Finished', widget)
+    
+    def _create_subscribe_msg(self):
+        return [RWTListenOperation(self.widget.id, {'Finished': True})]
+    
+    def _create_unsubscribe_msg(self):
+        return [RWTListenOperation(self.widget.id, {'Finished': False})]
+
+    def _notify(self, listener): listener()
+    
+
 class OnDispose(Event):
     def _notify(self, listener): listener()
+    
 
 
 class EventData(object):
-    def __init__(self, widget):
+    def __init__(self, widget, *args):
         self.widget = widget
+        self.args = args
 
 class FocusEventData(EventData):
     def __init__(self, widget, gained):
@@ -225,4 +240,4 @@ def _rwt_mouse_event(op):
     return MouseEventData(session.runtime.windows[op.target], op.args.button, op.args.ctrlKey, op.args.altKey, op.args.shiftKey, op.args.time, op.args.x, op.args.y)
 
 def _rwt_event(op):
-    return EventData(session.runtime.windows[op.target])
+    return EventData(session.runtime.windows[op.target], op.args)

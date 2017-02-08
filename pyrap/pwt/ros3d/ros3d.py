@@ -2,7 +2,8 @@ import os
 
 from pyrap import locations
 from pyrap import session
-from pyrap.communication import RWTCreateOperation, RWTSetOperation
+from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
+    RWTCallOperation
 from pyrap.themes import WidgetTheme
 from pyrap.utils import ifnone
 from pyrap.widgets import Widget, constructor, checkwidget
@@ -14,11 +15,14 @@ class ROS3D(Widget):
     _defstyle_ = Widget._defstyle_
 
     @constructor('ROS3D')
-    def __init__(self, parent, cssid=None, requiredjs=[], url=None, port=None, **options):
+    def __init__(self, parent, cssid=None, requiredjs=None, url=None, port=None, urdfdata=None, **options):
         Widget.__init__(self, parent, **options)
+        if requiredjs is None:
+            requiredjs = []
         self._cssid = cssid
         self._url = url
         self._port = port
+        self._urdfdata = urdfdata
         rwt_loc = os.path.join(locations.pwt_loc, 'ros3d', 'robotwebtools')
         self._requiredjs = [os.path.join(rwt_loc, 'three.js'),
                             os.path.join(rwt_loc, 'ColladaLoader.js'),
@@ -41,24 +45,9 @@ class ROS3D(Widget):
             options.url = self._url
         if self._port:
             options.port = self._port
+        if self._urdfdata:
+            options.urdfdata = self._urdfdata
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
-
-    def compute_size(self):
-        w = 800
-        h = 600
-
-        padding = self.theme.padding
-        if padding:
-            w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
-            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
-        margin = self.theme.margin
-        if margin:
-            w += ifnone(margin.left, 0) + ifnone(margin.right, 0)
-            h += ifnone(margin.top, 0) + ifnone(margin.bottom, 0)
-        t, r, b, l = self.theme.borders
-        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        return w, h
 
     @property
     def cssid(self):
@@ -87,6 +76,15 @@ class ROS3D(Widget):
         session.runtime << RWTSetOperation(self.id, {'port': self.port})
 
     @property
+    def urdfdata(self):
+        return self._urdfdata
+
+    @urdfdata.setter
+    def urdfdata(self, urdfdata):
+        self._urdfdata = urdfdata
+        session.runtime << RWTSetOperation(self.id, {'urdfdata': self.urdfdata})
+
+    @property
     def gwidth(self):
         return self._gwidth
 
@@ -105,6 +103,9 @@ class ROS3D(Widget):
     def gheight(self, h):
         self._gheight = h
         session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
+
+    def startviz(self):
+        session.runtime << RWTCallOperation(self.id, 'visualize', {})
 
 
 class ROS3DTheme(WidgetTheme):

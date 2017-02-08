@@ -7,11 +7,12 @@ Created on Oct 2, 2015
 import pyrap
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite,\
     Edit, Combo, TabFolder, TabItem, Group, ScrolledComposite, ScrollBar,\
-    Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem, Spinner, accept, info, error, warning
+    Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem, Spinner, accept, info, error, warning,\
+    FileUpload
 import random
 from pyrap import pyraplog, locations, threads
 from pyrap.utils import out, ifnone
-from pyrap.ptypes import BoolVar, StringVar, Color, px, Image, pc
+from pyrap.ptypes import BoolVar, StringVar, Color, px, Image, pc, Font
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout,\
     StackLayout
 import os
@@ -24,6 +25,7 @@ from threading import current_thread
 from pyrap.constants import DLG
 from pyrap.dialogs import ask_yesnocancel, msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, ask_okcancel,\
     open_progress, ask_color
+from base64 import b64encode
 
 class ControlsDemo():
     
@@ -157,6 +159,14 @@ class ControlsDemo():
         self.create_spinner_page(page)
         self.pages['Spinner'] = page
         
+        #=======================================================================
+        # create fileupload
+        #=======================================================================
+        page  = self.create_page_template('File Upload Demo')
+        self.create_upload_page(page)
+        self.pages['FileUpload'] = page
+        
+        
         for page in (self.pages.values()[1:]):
             page.layout.exclude = True
         self.navigation.items = self.pages
@@ -171,6 +181,33 @@ class ControlsDemo():
         header.css = 'headline'#font = header.font.modify(size='16px', bf=1)
         return tab
     
+    def create_upload_page(self, parent):
+        body = Composite(parent)
+        body.layout = RowLayout(halign='fill', valign='fill', flexrows=3)
+        upload = FileUpload(body, text='Browse...', multi=True, accepted=['.txt', '.xlsx', '.pracmln'], halign='left', valign='top')
+        cont = Composite(body)
+        cont.layout = GridLayout(cols=2, halign='fill', flexcols=1)
+        Label(cont, 'Filename:')
+        filename = Label(cont, halign='fill')
+        Label(cont, 'File size:')
+        filesize = Label(cont, halign='fill')
+        Label(cont, 'File Type:')
+        filetype = Label(cont, halign='fill')
+        Label(body, text='Content:', halign='fill')
+        content = Edit(body, halign='fill', valign='fill', multiline=True, wrap=True)
+        content.font = Font(family='monospace', size='11px')
+        def uploaded():
+            files = session.runtime.servicehandlers.fileuploadhandler.files[upload.token]
+            filename.text = ', '.join([f['filename'] for f in files])
+            fullcnt = '\n\n'.join([f['filecontent'] for f in files])
+            filesize.text = '%d Byte' % (len(fullcnt)-2)
+            filetype.text = ', '.join([f['filetype'] for f in files])
+            if filetype.text.startswith('application'):
+                c = b64encode(fullcnt)
+            else:
+                c = str(fullcnt)
+            content.text = c
+        upload.on_finished += uploaded
     
     def create_spinner_page(self, parent):
         body = Composite(parent)

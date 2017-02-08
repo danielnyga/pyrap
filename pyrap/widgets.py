@@ -17,9 +17,10 @@ from pyrap.base import session
 from pyrap.communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
 from pyrap.constants import RWT, GCBITS, CURSOR
+from pyrap.handlers import FileUploadServiceHandler
 from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
-    OnNavigate, OnModify, FocusEventData, _rwt_event
+    OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished
 from pyrap.exceptions import WidgetDisposedError
 from pyrap.layout import Layout, LayoutAdapter, CellLayout,\
     StackLayout
@@ -30,7 +31,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme,\
-    SeparatorTheme, DecoratorTheme
+    SeparatorTheme, DecoratorTheme, LinkTheme
 from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask,\
     ifnot
 from collections import OrderedDict
@@ -612,9 +613,19 @@ class Shell(Widget):
             area[2] -= padding.left + padding.right
             area[1] += padding.top
             area[3] -= padding.top + padding.bottom
-        if self.title is not None or RWT.TITLE in self.style: 
+
+        t, r, b, l = self.theme.borders
+        area[0] += ifnone(l, 0, lambda l: l.width)
+        area[1] += ifnone(t, 0, lambda t: t.width)
+        area[2] -= ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        area[2] = max(0, area[2])
+        area[3] -= ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        area[3] = max(0, area[3])
+
+        if self.title is not None or RWT.TITLE in self.style:
             area[3] -= self.theme.title_height
             area[1] += self.theme.title_height
+
         return area
     
     @checkwidget
@@ -626,6 +637,8 @@ class Shell(Widget):
         
 
     def dolayout(self, pack=False):
+        if pack:
+            self.bounds = 0, 0, 0, 0
         started = time.time()
         if self.maximized:
             self._maximize()
@@ -659,7 +672,6 @@ class Shell(Widget):
             _, _, dispw, disph = session.runtime.display.bounds
             xpos = int(round(dispw.value / 2. - w.value / 2.))
             ypos = int(round(disph.value / 2. - h.value / 2.))
-            out(xpos, ypos, w, h)
             self.bounds = xpos, ypos, w, h
             self.dolayout()
             
@@ -732,7 +744,6 @@ class Combo(Widget):
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select, 'Modify': self.on_modify}
-        out(op, op.event)
         if op.event not in events:
             return Widget._handle_notify(self, op)
         elif op.event == 'Selection':
@@ -958,8 +969,132 @@ class Label(Widget):
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         return w, h
-    
-    
+
+
+class Link(Widget):
+    _rwt_class_name_ = 'rwt.widgets.Link'
+    _styles_ = Widget._styles_ + {'wrap': RWT.WRAP}
+    _defstyle_ = BitField(Widget._defstyle_)
+
+
+    @constructor('Link')
+    def __init__(self, parent, text='', img=None, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = LinkTheme(self, session.runtime.mngr.theme)
+        self.on_select = OnSelect(self)
+        self._origtext = text
+        self._img = img
+        self._txtids = []
+        self._links = []
+        self._parse(text)
+        self._displaytext = ''.join([x[0] for x in self._txtids])
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        options.text = self._txtids
+        options.style.append('NONE')
+        session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+        # if the user has specified a href in any of the link tags of the text,
+        # we will try to open it (either in he given target, or in _blank.
+        # For any other link tags, the user has to specify their own listener
+        # function. Note that the user can differ which of the link tags has
+        # been clicked by the index value in the args of the event that has
+        # been triggered (see open()).
+        if any([l.get('href', None) is not None for l in self._links]):
+            self.on_select += self._open
+
+    def _get_rwt_img(self, img):
+        if img is not None:
+            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
+            img = [res.location, img.width.value, img.height.value]
+        else:
+            img = None
+        return img
+
+    def _parse(self, text):
+        sidx = 0
+        for i, x in enumerate(re.finditer('(<a(\s*href=(?:\"|\')(?P<href>.*?)(?:\'|\"))?(\s*target=(?:\"|\')(?P<target>.*)(?:\"|\'))?>(?P<txt>.*?)</a>)', text)):
+            self._txtids.append([text[sidx:x.start()], None])
+            self._txtids.append([x.groupdict().get('txt'), i])
+            self._links.append(x.groupdict())
+            sidx = x.end()
+        self._txtids.append([text[sidx:], None])
+
+    def _handle_set(self, op):
+        out('handleset')
+        Widget._handle_set(self, op)
+        for key, value in op.args.iteritems():
+            if key == 'selectionIndex':
+                self._selidx = value
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_event(op))
+        return True
+
+    def _open(self, ev):
+        lset = self._links[ev.args[0].get('index')]
+        if lset.get('href') is not None:
+            session.runtime.executejs('window.open("{}", "{}");'.format(ifnone(lset.get('href'), ''), ifnone(lset.get('target'), '_blank')))
+
+    @property
+    def img(self):
+        return self._img
+
+    @property
+    def text(self):
+        return self._text
+
+    @property
+    def color(self):
+        return self._color
+
+    @color.setter
+    @checkwidget
+    def color(self, color):
+        self._color = color
+        session.runtime << RWTSetOperation(self.id, {
+            'foreground': [int(round(255 * self.color.red)),
+                           int(round(255 * self.color.green)),
+                           int(round(255 * self.color.blue)),
+                           int(round(255 * self.color.alpha))]})
+
+    @img.setter
+    @checkwidget
+    def img(self, img):
+        self._img = img
+        session.runtime << RWTSetOperation(self.id, {
+            'image': self._get_rwt_img(self.img)})
+
+    @text.setter
+    @checkwidget
+    def text(self, text):
+        self._text = text
+        session.runtime << RWTSetOperation(self.id, {'text': self._text})
+
+    def compute_size(self):
+        if self.img is not None:
+            w, h = self.img.size
+        else:
+            lines = self._displaytext.split('\n')
+            w = max(
+                [session.runtime.textsize_estimate(self.theme.font, l)[0] for l
+                 in lines])
+            _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
+            h *= len(lines)
+        padding = self.theme.padding
+        if padding:
+            w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
+            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+        t, r, b, l = self.theme.borders
+        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
+        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        return w, h
+
+
 class Separator(Widget):
     _rwt_class_name_ = 'rwt.widgets.Separator'
     _styles_ = Widget._styles_ + {'vertical': RWT.VERTICAL, 
@@ -1070,6 +1205,7 @@ class Checkbox(Widget):
         self._text = text
         self._checked = BoolVar(value=options.get('checked'))
         self._checked.on_change += lambda *x: self._rwt_set_checkmark()
+        self._boundvars = []
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1087,6 +1223,7 @@ class Checkbox(Widget):
         if not type(var) in (NumVar, BoolVar):
             raise Exception('Can only bind variables of type NumVar and BoolVar')
         self._checked.bind(var)
+        self._boundvars.append(var)
 
     @property
     def checked(self):
@@ -1113,6 +1250,12 @@ class Checkbox(Widget):
     def text(self, text):
         self._text = text
         session.runtime << RWTSetOperation(self.id, {'text': self._text})
+
+    def dispose(self):
+        for v in self._boundvars:
+            # make sure bound variable will not try to notify disposed widget
+            v.unbind()
+        Widget.dispose(self)
         
     def _handle_notify(self, op):
         events = {'Selection': self.on_checked}
@@ -1702,7 +1845,6 @@ class Scale(Widget):
     @selection.setter
     @checkwidget
     def selection(self, selection):
-        out('setting selection to ', selection)
         self._selection = selection
         session.runtime << RWTSetOperation(self.id, {'selection': self.selection})
 
@@ -3229,7 +3371,6 @@ class Spinner(Widget):
         s = str(val)
         before, behind = s.split('.')
         before = int(before)
-        out(before, behind)
         if self.digits:
             behind_ = behind[:self.digits + 1]
             if len(behind_) > self.digits:
@@ -3238,7 +3379,6 @@ class Spinner(Widget):
             before = before * (10 ** self.digits)
         else:
             behind = 0
-        out(before, behind)
         return before + behind
     
     def compute_size(self):
@@ -3256,30 +3396,45 @@ class Spinner(Widget):
 
 class FileUpload(Widget):
     _rwt_class_name_ = 'rwt.widgets.FileUpload'
+    _styles_ = Widget._styles_ + {'multi': RWT.MULTI,}
     _defstyle_ = BitField(Widget._defstyle_)
 
 
     @constructor('FileUpload')
-    def __init__(self, parent, text=None, **options):
+    def __init__(self, parent, text=None, accepted=None, **options):
         Widget.__init__(self, parent, **options)
+        if accepted is None:
+            accepted = []
         self.theme = ButtonTheme(self, session.runtime.mngr.theme)
         self._text = text
+        self._accepted = accepted
         self._fnames = []
+        self._files = []
+        self._token = None
         self.on_select = OnSelect(self)
+        self.on_finished = OnFinished(self)
+        self.handler = None
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.style.append('NONE')
+        if RWT.MULTI in self.style:
+            options.style.append('MULTI')
         if self._text:
             options.text = self._text
+        options.accepted = self._accepted
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+        self.on_select += self._upload
+#         self.on_finished += self.finished
 
     def _handle_notify(self, op):
-        events = {'Selection': self.on_select}
+        events = {'Selection': self.on_select, 'Finished': self.on_finished}
         if op.event not in events:
             return Widget._handle_notify(self, op)
-        else:
+        elif op.event == 'Selection':
             events[op.event].notify(_rwt_selection_event(op))
+        elif op.event == 'Finished':
+            events[op.event].notify()
         return True
 
     def _handle_set(self, op):
@@ -3289,9 +3444,25 @@ class FileUpload(Widget):
             if key == 'fileNames':
                 self.filenames = value
 
+    def _upload(self, *_):
+        token, url = session.runtime.servicehandlers.fileuploadhandler.accept(self.filenames)
+        self._token = token
+        session.runtime << RWTCallOperation(self.id, 'submit', { 'url': url })
+
+    def compute_size(self):
+        width, height = Widget.compute_size(self)
+        tw, th = session.runtime.textsize_estimate(self.theme.font, self._text)
+        width += tw
+        height += th
+        return width, height
+
     @property
     def text(self):
         return self._text
+
+    @property
+    def token(self):
+        return self._token
 
     @text.setter
     @checkwidget
@@ -3319,6 +3490,10 @@ class FileUpload(Widget):
     @checkwidget
     def filenames(self, fnames):
         self._fnames = fnames
+
+    @property
+    def files(self):
+        return self._files
 
 
 def error(text, halign=None, valign=None):

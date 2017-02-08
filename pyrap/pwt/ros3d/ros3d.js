@@ -1,6 +1,6 @@
 pwt_ros3d = {};
 
-pwt_ros3d.Simulation = function(parent, cssid, url, port) {
+pwt_ros3d.Simulation = function(parent, cssid, url, port, data) {
     this._urdfnodeDiv = this.createElement(parent);
     this._w = 800;
     this._h = 600;
@@ -8,19 +8,9 @@ pwt_ros3d.Simulation = function(parent, cssid, url, port) {
     this._urdfnodeDiv.setAttribute('id', cssid ? cssid : 'urdf');
     this._rosliburl = url ? url : 'ws://prac.open-ease.org';
     this._roslibport = port ? port : '9090';
+    this._urdfdata = data ? data : [];
 
-    this._needsLayout = true;
-    this._needsRender = true;
     var that = this;
-    rap.on( "render", function() {
-        if( that._needsRender ) {
-            if( that._needsLayout ) {
-                that.init( that );
-                that._needsLayout = false;
-            }
-            that._needsRender = false;
-        }
-    } );
     parent.addListener( 'Resize', function() {
         that.setBounds( parent.getClientArea() );
     } );
@@ -71,7 +61,7 @@ pwt_ros3d.Simulation.prototype = {
         this._simulation_viewer.style.height = height;
     },
 
-    setURL: function( url ) {
+    setUrl: function( url ) {
         this._rosliburl = url;
     },
 
@@ -79,7 +69,13 @@ pwt_ros3d.Simulation.prototype = {
         this._roslibport = port;
     },
 
-    init: function() {
+    setUrdfdata: function( data ) {
+        this._urdfdata = data;
+    },
+
+    visualize: function() {
+
+        console.log('Starting visualization on', this._rosliburl + ':' + this._roslibport, this._urdfdata);
 
         // remove all content from earlier simulations
         while (this._urdfnodeDiv.firstChild) {
@@ -97,7 +93,7 @@ pwt_ros3d.Simulation.prototype = {
           width : this._w,
           height : this._h,
           antialias : true,
-          cameraPose : new THREE.Vector3(-3, 3, 3)
+          cameraPose : {x : -3, y : 3, z : 3}//new THREE.Vector3(-3, 3, 3)//
         });
 
         // Add a grid.
@@ -122,63 +118,29 @@ pwt_ros3d.Simulation.prototype = {
         });
 
         // Setup the URDF client.
-        var urdfClient = new ROS3D.UrdfClient({
-          ros : ros,
-          tfClient : tfClient,
-          param : 'robot_description_nocol',
-          path : 'http://svn.ai.uni-bremen.de/svn/sim_models/',
-          rootObject : this._simulation_viewer.scene,
-          loader : ROS3D.COLLADA_LOADER
-        });
-
-        var urdfClient2 = new ROS3D.UrdfClient({
-          ros : ros,
-          tfClient : tfClient,
-          param : 'kitchen_description',
-          tfPrefix : 'iai_kitchen',
-          path : 'http://svn.ai.uni-bremen.de/svn/sim_models/',
-          rootObject : this._simulation_viewer.scene,
-          loader : ROS3D.COLLADA_LOADER
-        });
-
-    /**/
-        var urdfClient3 = new ROS3D.UrdfClient({
-          ros : ros,
-          tfClient : tfClient,
-          param : 'pizza_description',
-          path : 'http://svn.ai.uni-bremen.de/svn/sim_models/',
-          rootObject : this._simulation_viewer.scene,
-          loader : ROS3D.COLLADA_LOADER
-        });
-
-        var urdfClient4 = new ROS3D.UrdfClient({
-          ros : ros,
-          tfClient : tfClient,
-          param : 'cutter_description',
-          path : 'http://svn.ai.uni-bremen.de/svn/sim_models/',
-          rootObject : this._simulation_viewer.scene,
-          loader : ROS3D.COLLADA_LOADER
-        });
-
-        var urdfClient5 = new ROS3D.UrdfClient({
-          ros : ros,
-          tfClient : tfClient,
-          param : 'bread_description',
-          path : 'http://svn.ai.uni-bremen.de/svn/sim_models/',
-          rootObject : this._simulation_viewer.scene,
-          loader : ROS3D.COLLADA_LOADER
-        });
-
-        var urdfClient6 = new ROS3D.UrdfClient({
-          ros : ros,
-          tfClient : tfClient,
-          param : 'knife_description',
-          path : 'http://svn.ai.uni-bremen.de/svn/sim_models/',
-          rootObject : this._simulation_viewer.scene,
-          loader : ROS3D.COLLADA_LOADER
-        });
+        var urdfClients = [];
+        for (urdfData in this._urdfdata) {
+            if('' == this._urdfdata[urdfData][1])
+                urdfClients.push(new ROS3D.UrdfClient({
+                                                      ros : ros,
+                                                      tfClient : tfClient,
+                                                      param : this._urdfdata[urdfData][0],
+                                                      path : this._urdfdata[urdfData][2],
+                                                      rootObject : this._simulation_viewer.scene,
+                                                      loader : ROS3D.COLLADA_LOADER
+                                                  }));
+            else
+                urdfClients.push(new ROS3D.UrdfClient({
+                                                      ros : ros,
+                                                      tfClient : tfClient,
+                                                      param : this._urdfdata[urdfData][0],
+                                                      tfPrefix : this._urdfdata[urdfData][1],
+                                                      path : this._urdfdata[urdfData][2],
+                                                      rootObject : this._simulation_viewer.scene,
+                                                      loader : ROS3D.COLLADA_LOADER
+                                                  }));
+        }
     }
-
 };
 
 // Type handler
@@ -186,14 +148,14 @@ rap.registerTypeHandler( 'pwt.customs.ROS3D', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    return new pwt_ros3d.Simulation( parent, properties.cssid, properties.url, properties.port);
+    return new pwt_ros3d.Simulation( parent, properties.cssid, properties.url, properties.port, properties.urdfdata);
   },
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'bounds', 'port', 'url', 'width', 'height'],
+  properties: [ 'remove', 'bounds', 'port', 'url', 'urdfdata', 'width', 'height'],
 
-  methods : [ ],
+  methods : [ 'visualize' ],
 
   events: [ ]
 

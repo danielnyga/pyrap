@@ -4,6 +4,7 @@ from io import BytesIO
 from pyrap import session
 from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
+from pyrap.events import OnSelect, _rwt_selection_event, _rwt_event
 from pyrap.themes import WidgetTheme
 from pyrap.utils import out, ifnone
 from pyrap.widgets import Widget, constructor, checkwidget
@@ -28,6 +29,7 @@ class SVG(Widget):
         # size as can be set by the user
         self._gwidth = None
         self._gheight = None
+        self.on_select = OnSelect(self)
         self.theme = SVGTheme(self, session.runtime.mngr.theme)
 
     def _create_rwt_widget(self):
@@ -58,6 +60,31 @@ class SVG(Widget):
 
         return self._content
 
+    def _handle_set(self, op):
+        for key, value in op.args.iteritems():
+            if key == 'selection':
+                self._selection = value
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        elif op.event == 'Selection':
+            if 'mousedown' in op.args:
+                events[op.event].notify(_rwt_event(op))
+            else:
+                events[op.event].notify(_rwt_selection_event(op))
+        else:
+            events[op.event].notify(_rwt_event(op))
+        return True
+
+    def _handle_call(self, op):
+        pass
+
+    def setlisteners(self, elems, func):
+        self.on_select += func
+        session.runtime << RWTSetOperation(self.id, {'selectelem': elems})
+
     @property
     def svg(self):
         return self._content
@@ -77,7 +104,6 @@ class SVG(Widget):
     @checkwidget
     def gwidth(self, w):
         self._gwidth = w
-        # session.runtime << RWTSetOperation(self.id, {'width': self.gwidth})
 
     @property
     def gheight(self):
@@ -87,7 +113,6 @@ class SVG(Widget):
     @checkwidget
     def gheight(self, h):
         self._gheight = h
-        # session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
 
     def getattr(self, id, attr):
         '''
@@ -150,7 +175,6 @@ class SVG(Widget):
     def compute_size(self):
         # prefer user given size, otherwise try to obtain size from svg content
         # if still not successful, use parent size
-
         w = self.gwidth or self._vbwidth
         h = self.gheight or self._vbheight
 
