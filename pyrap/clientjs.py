@@ -290,4 +290,4 @@ def gen_clientjs():
 
 
 if __name__ == '__main__':
-    print gen_clientjs()    
+    print(gen_clientjs())    

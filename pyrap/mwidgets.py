@@ -40,7 +40,7 @@ class ComboMobile(Composite):
     @checkwidget
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
-        self._bounds = map(px, bounds)
+        self._bounds = list(map(px, bounds))
         session.runtime << RWTSetOperation(self.id, { 'bounds': [b.value for b in self.bounds]})
         session.runtime << RWTSetOperation(self.id, { 'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
 

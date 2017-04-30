@@ -146,7 +146,7 @@ class OptionsDialog(Shell):
         Shell.create_content(self)
 
         # calculate and set options field size
-        maxitemwidth, _ = session.runtime.textsize_estimate(Font(family='Verdana, "Lucida Sans", Arial, Helvetica, sans-serif', size=14), sorted(self.options.keys(), key=len)[-1])
+        maxitemwidth, _ = session.runtime.textsize_estimate(Font(family='Verdana, "Lucida Sans", Arial, Helvetica, sans-serif', size=14), sorted(list(self.options.keys()), key=len)[-1])
         itemheight = 41
         w = self.parent.width - px(40)
         h = min(itemheight * len(self.options) + 10, self.parent.height - px(40))
@@ -471,7 +471,7 @@ class ColorDialog(Shell):
         palette.layout = GridLayout(rows=2, equalwidths=True, equalheights=True)
         
         colors_ = set()
-        for name, val in ColorDialog.PALETTE.iteritems():
+        for name, val in ColorDialog.PALETTE.items():
             if val not in colors_:
                 colors_.add(val)
             else: continue

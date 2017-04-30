@@ -8,7 +8,7 @@ import threading
 import time
 from web.utils import Storage
 from copy import deepcopy
-import urlparse
+import urllib.parse
 from web import utils
 from pyrap.ptypes import Event
 from pyrap.utils import RStorage
@@ -45,7 +45,7 @@ class Session(web.session.Session):
             self.useragent.mobile = 'mobile' in self.useragent.str.lower()
         self.request = Storage()
         self.request.method = web.ctx.method
-        self.request.query = dict([(str(k), str(v)) for k, v in urlparse.parse_qsl(web.ctx.query[1:], keep_blank_values=True)])
+        self.request.query = dict([(str(k), str(v)) for k, v in urllib.parse.parse_qsl(web.ctx.query[1:], keep_blank_values=True)])
         self.session_id = self.request.query.get('cid', None)
         self.load()
         try:
@@ -129,7 +129,7 @@ class DictStore(web.session.Store):
 
     def cleanup(self, timeout):
         now = time.time()
-        for session_id, content in dict(self._dict).iteritems():
+        for session_id, content in dict(self._dict).items():
             if 'creation_time' not in content or (now - content['creation_time']) > timeout:
                 if 'on_kill' in content:
                     content['on_kill'].notify(RStorage(content))

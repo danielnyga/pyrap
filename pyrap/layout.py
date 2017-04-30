@@ -115,10 +115,10 @@ class LayoutAdapter(object):
             ok = True
         if not ok:
             indent = '-->' + indent[3:]
-        print indent, '%s [%s]  (x: %s y: %s) width: [%s ; %s ; %s] height: [%s ; %s ; %s]' % (repr(self.widget), ','.join([w.widget.id for w in self.children]), 
+        print(indent, '%s [%s]  (x: %s y: %s) width: [%s ; %s ; %s] height: [%s ; %s ; %s]' % (repr(self.widget), ','.join([w.widget.id for w in self.children]), 
                                                                                                    str(self.data.cellhpos), str(self.data.cellvpos), 
                                                                                                    str(self.data.cellwidth.min), str(self.data.cellwidth.value), str(self.data.cellwidth.max),
-                                                                                                   str(self.data.cellheight.min), str(self.data.cellheight.value), str(self.data.cellheight.max))
+                                                                                                   str(self.data.cellheight.min), str(self.data.cellheight.value), str(self.data.cellheight.max)))
         for c in self.children:
             c.write(level+1, check=check)
             
@@ -190,9 +190,9 @@ class GridLayoutAdapter(LayoutAdapter):
         return self.children[i::self.colcount()]
         
     def visualize_grid(self, indent):
-        print indent, self.rowcount(), 'x', self.colcount()
+        print(indent, self.rowcount(), 'x', self.colcount())
         for cells in self.iterrows():
-            print indent, ';'.join(c.widget.id for c in cells)
+            print(indent, ';'.join(c.widget.id for c in cells))
             
     def write(self, level=0, check=False):
         self.visualize_grid('  ' * (level+1))
@@ -227,7 +227,7 @@ class GridLayoutAdapter(LayoutAdapter):
         # over the remaining free space.
         #=======================================================================
         fixcols = [i for i in range(self.colcount())  if i not in layout.flexcols]
-        flexcols = {f: v for f, v in layout.flexcols.iteritems() if f < self.colcount()}
+        flexcols = {f: v for f, v in layout.flexcols.items() if f < self.colcount()}
         if my.width.value is not None and layout.halign == 'fill':# and not RWT.HSCROLL in widget.style:
             if layout.equalwidths:
                 if fixcols and flexcols:
@@ -249,7 +249,7 @@ class GridLayoutAdapter(LayoutAdapter):
         # over the remaining free space.
         #=======================================================================
         fixrows = [i for i in range(self.rowcount())  if i not in layout.flexrows]
-        flexrows = {f: v for f, v in layout.flexrows.iteritems() if f < self.rowcount()}
+        flexrows = {f: v for f, v in layout.flexrows.items() if f < self.rowcount()}
         if my.height.value is not None and layout.valign == 'fill':# and not RWT.VSCROLL in widget.style:
             if layout.equalheights:
                 if fixrows and flexrows:
@@ -377,7 +377,7 @@ class StackLayoutAdapter(GridLayoutAdapter):
         # over the remaining free space.
         #=======================================================================
         fixcols = [i for i in range(self.colcount())  if i not in layout.flexcols]
-        flexcols = {f: v for f, v in layout.flexcols.iteritems() if f < self.colcount()}
+        flexcols = {f: v for f, v in layout.flexcols.items() if f < self.colcount()}
         if my.width.value is not None and layout.halign == 'fill':
             if layout.equalwidths:
                 if fixcols and flexcols:
@@ -395,7 +395,7 @@ class StackLayoutAdapter(GridLayoutAdapter):
         # over the remaining free space.
         #=======================================================================
         fixrows = [i for i in range(self.rowcount())  if i not in layout.flexrows]
-        flexrows = {f: v for f, v in layout.flexrows.iteritems() if f < self.rowcount()}
+        flexrows = {f: v for f, v in layout.flexrows.items() if f < self.rowcount()}
         if my.height.value is not None and layout.valign == 'fill':
             if layout.equalheights:
                 if fixrows and flexrows:
@@ -512,7 +512,7 @@ class CellLayoutAdapter(GridLayoutAdapter):
     def __init__(self, widget, parent):
         GridLayoutAdapter.__init__(self, widget, parent)
         if len(widget.children) > 1:
-            raise Exception('A cell cannot contain more than one element! (%s, children: %s)' % (repr(widget), map(repr, widget.children)))
+            raise Exception('A cell cannot contain more than one element! (%s, children: %s)' % (repr(widget), list(map(repr, widget.children))))
     
 
 class TerminalLayoutAdapter(LayoutAdapter): 

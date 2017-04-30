@@ -9,9 +9,9 @@ import os
 import time
 
 import re
-from Tkinter import IntVar
+from tkinter import IntVar
 
-import ptypes
+from . import ptypes
 from pyrap import pyraplog, locations
 from pyrap.base import session
 from pyrap.communication import RWTSetOperation,\
@@ -35,6 +35,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
 from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask,\
     ifnot
 from collections import OrderedDict
+import collections
 
 
 def checkwidget(f, *args):
@@ -129,7 +130,7 @@ class Widget(object):
         self.on_focus = OnFocus(self)
         self.on_dispose = OnDispose()
         self.style = BitField(type(self)._defstyle_)
-        for k, v in options.iteritems():
+        for k, v in options.items():
             if k in type(self)._styles_: self.style.setbit(type(self)._styles_[k:], v)
         # save meta information about where in the code the object
         # has been create for better debugging
@@ -189,9 +190,9 @@ class Widget(object):
         return True 
         
     def _handle_set(self, op):
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'bounds':
-                self._bounds = map(px, value)
+                self._bounds = list(map(px, value))
 
 
     def _handle_call(self, op):
@@ -237,7 +238,7 @@ class Widget(object):
     @checkwidget
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
-        self._bounds = map(px, bounds)
+        self._bounds = list(map(px, bounds))
         if self.decorator is not None:
             b_ = self.decorator.compute_relpos(self.bounds)
             self.decorator.bounds = b_
@@ -469,9 +470,9 @@ class Display(Widget):
         
         
     def _handle_set(self, op):
-        for k, v in op.args.iteritems():
+        for k, v in op.args.items():
             if k not in ('cursorLocation', ): Widget._handle_set(self, op) 
-            if k == 'cursorLocation': self._cursor_loc = map(px, v)
+            if k == 'cursorLocation': self._cursor_loc = list(map(px, v))
             if k == 'focusControl':
                 if v in session.runtime.windows:
                     session.runtime.windows._set_focus(session.runtime.windows[v])
@@ -702,7 +703,7 @@ class Combo(Widget):
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        options.items = map(str, self._items)
+        options.items = list(map(str, self._items))
         options.style.append("DROP_DOWN")
         options.editable = self._editable
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
@@ -735,7 +736,7 @@ class Combo(Widget):
 
     def _handle_set(self, op):
         Widget._handle_set(self, op)
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selectionIndex':
                 self._selidx = value
             if key == 'text':
@@ -767,13 +768,13 @@ class Combo(Widget):
 
     @property
     def selection(self):
-        return self.items[self.items.keys()[self._selidx]]
+        return self.items[list(self.items.keys())[self._selidx]]
 
     @selection.setter
     def selection(self, sel):
-        sel = self._items.values().index(sel) if sel is not None else None
+        sel = list(self._items.values()).index(sel) if sel is not None else None
         self._selidx = sel
-        session.runtime << RWTSetOperation(self.id, {'selectionIndex': sel, 'text': self.items.keys()[sel]})
+        session.runtime << RWTSetOperation(self.id, {'selectionIndex': sel, 'text': list(self.items.keys())[sel]})
 
     @property
     def selidx(self):
@@ -786,7 +787,7 @@ class Combo(Widget):
     @items.setter
     def items(self, items):
         self._setitems(items)
-        session.runtime << RWTSetOperation(self.id, {'items': self.items.keys()})
+        session.runtime << RWTSetOperation(self.id, {'items': list(self.items.keys())})
 
 
 class DropDown(Widget):
@@ -870,7 +871,7 @@ class DropDown(Widget):
 
     def _handle_set(self, op):
         Widget._handle_set(self, op)
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selectionIndex':
                 self._selidx = value
 
@@ -1023,7 +1024,7 @@ class Link(Widget):
     def _handle_set(self, op):
         out('handleset')
         Widget._handle_set(self, op)
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selectionIndex':
                 self._selidx = value
 
@@ -1265,7 +1266,7 @@ class Checkbox(Widget):
         return True 
 
     def _handle_set(self, op):
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selection':
                 self._checked.set(value)
     
@@ -1294,12 +1295,12 @@ class Option(Widget):
         Widget.__init__(self, parent, **options)
         self.theme = OptionTheme(self, session.runtime.mngr.theme)    
         self.on_checked = OnSelect(self)
-        self._text = str(text()) if callable(text) else str(text)
+        self._text = str(text()) if isinstance(text, collections.Callable) else str(text)
         self._checked = BoolVar(options.get('checked', False))
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        options.text = str(self._text()) if callable(self._text) else str(self._text)
+        options.text = str(self._text()) if isinstance(self._text, collections.Callable) else str(self._text)
         options.style.append('RADIO')
         options.tabIndex = 1
         options.selection = self.checked()
@@ -1336,7 +1337,7 @@ class Option(Widget):
         return True 
 
     def _handle_set(self, op):
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selection':
                 self._checked.set(value)
 
@@ -1418,7 +1419,7 @@ class Edit(Widget):
         return True 
 
     def _handle_set(self, op):
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selection':
                 self._selection = value
             if key == 'text':
@@ -1444,7 +1445,7 @@ class Composite(Widget):
     @checkwidget
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
-        self._bounds = map(px, bounds)
+        self._bounds = list(map(px, bounds))
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
         session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
         
@@ -1611,7 +1612,7 @@ class TabFolder(Composite):
     @checkwidget
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
-        self._bounds = map(px, bounds)
+        self._bounds = list(map(px, bounds))
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
         session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
 
@@ -1719,7 +1720,7 @@ class TabItem(Widget):
     @checkwidget
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
-        self._bounds = map(px, bounds)
+        self._bounds = list(map(px, bounds))
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
         session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
 
@@ -1834,7 +1835,7 @@ class Scale(Widget):
         return True
 
     def _handle_set(self, op):
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selection':
                 self._selection = value
 
@@ -2065,7 +2066,7 @@ class Group(Composite):
     @checkwidget
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
-        self._bounds = map(px, bounds)
+        self._bounds = list(map(px, bounds))
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
         
     def compute_size(self):
@@ -2393,7 +2394,7 @@ class List(Widget):
         else:
             options.style.append('SINGLE')
         options.markupEnabled = self._markup
-        options.items = map(str, self._items)
+        options.items = list(map(str, self._items))
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
         
     def _handle_notify(self, op):
@@ -2405,7 +2406,7 @@ class List(Widget):
     
     def _handle_set(self, op):
         Widget._handle_set(self, op)
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selection':
                 self._selidx = value
     
@@ -2480,12 +2481,12 @@ class List(Widget):
     @items.setter
     def items(self, items):
         self._setitems(items)
-        session.runtime << RWTSetOperation(self.id, {'items': self.items.keys()})
+        session.runtime << RWTSetOperation(self.id, {'items': list(self.items.keys())})
         self.setitemheight()
 
     @property
     def selection(self):
-        sel = [self.items[self.items.keys()[i]] for i in self._selidx]
+        sel = [self.items[list(self.items.keys())[i]] for i in self._selidx]
         if RWT.MULTI not in self.style: 
             if not sel: return None
             sel = sel[0]
@@ -2496,9 +2497,9 @@ class List(Widget):
         if RWT.MULTI in self.style:
             if type(sel) is list:
                 raise TypeError('Expected list, got %s' % type(sel))
-            sel = [self._items.values().index(s) for s in sel]
+            sel = [list(self._items.values()).index(s) for s in sel]
         else:
-            sel = self._items.values().index(sel) if sel is not None else None
+            sel = list(self._items.values()).index(sel) if sel is not None else None
         self.selidx = sel
         
     @property
@@ -3028,7 +3029,7 @@ class GC(object):
             self.x = x
             self.y = y
             self.style = BitField(type(self)._defstyle_)
-            for k, v in options.iteritems():
+            for k, v in options.items():
                 if k in type(self)._styles_: self.style.setbit( type(self)._styles_[k:], v)
 
         def json(self):
@@ -3054,7 +3055,7 @@ class GC(object):
             self.x = x
             self.y = y
             self.style = BitField(type(self)._defstyle_)
-            for k, v in options.iteritems():
+            for k, v in options.items():
                 if k in type(self)._styles_: self.style.setbit( type(self)._styles_[k:], v)
 
         def json(self):
@@ -3115,7 +3116,7 @@ class GC(object):
             self.font = font.split(',') # needs to be a list with fallback options
             self.fontsize = fontsize
             self.style = BitField(type(self)._defstyle_)
-            for k, v in options.iteritems():
+            for k, v in options.items():
                 if k in type(self)._styles_: self.style.setbit(type(self)._styles_[k:], v)
 
         def json(self):
@@ -3293,7 +3294,7 @@ class Spinner(Widget):
         self.selection = self._sel
         
     def _handle_set(self, op):
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selection':
                 self._sel = value
     
@@ -3438,9 +3439,9 @@ class FileUpload(Widget):
         return True
 
     def _handle_set(self, op):
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'bounds':
-                self._bounds = map(px, value)
+                self._bounds = list(map(px, value))
             if key == 'fileNames':
                 self.filenames = value
 

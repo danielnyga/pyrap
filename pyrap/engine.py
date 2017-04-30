@@ -8,7 +8,7 @@ import md5
 import mimetypes
 import os
 import traceback
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from threading import Lock, Event
 
 import web
@@ -34,6 +34,7 @@ from pyrap.utils import ifnone, out, trace
 from pyrap.widgets import Display, Shell
 import rfc822
 from pyrap.threads import Kapo, RLock
+import collections
 
 
 mimetypes.init()
@@ -171,7 +172,7 @@ class ApplicationManager(object):
             else:
                 if not args[0]: # no entrypoint is specified, so use the deafult one
                     default = self.config.default
-                    if callable(default): entrypoint = default()
+                    if isinstance(default, collections.Callable): entrypoint = default()
                     elif default: entrypoint = str(default)
                     else: raise Exception('No entrypoint specified')
                 else:
@@ -278,7 +279,7 @@ class PushService(object):
     
     def start(self):
         with PushService.__lock:
-            if 'org.eclipse.rap.pushsession' not in session.runtime.servicehandlers.handlers.keys():
+            if 'org.eclipse.rap.pushsession' not in list(session.runtime.servicehandlers.handlers.keys()):
                 session.runtime.servicehandlers.register(PushServiceHandler())
             if not PushService.__active:
                 session.runtime.activate_push(True) 
@@ -459,7 +460,7 @@ class SessionRuntime(object):
     def _handle_call(self, op):
         if op.target == 'rwt.client.TextSizeMeasurement':
             if op.method == 'storeMeasurements':
-                for id_, dims in op.args.results.iteritems():
+                for id_, dims in op.args.results.items():
                     self.fontmetrics[id_].dimensions = dims
                     if self.default_font is None: 
                         self.default_font = self.fontmetrics[id_]
@@ -594,7 +595,7 @@ class Resource(object):
 
     @property
     def location(self):
-        return urllib.quote('%s/%s' % (self.registry.resourcepath, self.name))
+        return urllib.parse.quote('%s/%s' % (self.registry.resourcepath, self.name))
 
     def download(self):
         session.runtime.executejs('window.open("{}", "_blank");'.format(self.location))
@@ -662,7 +663,7 @@ class ResourceManager(object):
         
 
     def unregister(self, rc):
-        if isinstance(rc, basestring):
+        if isinstance(rc, str):
             rc = self.get(rc)
         del self.resources[rc.name]
     
@@ -712,7 +713,7 @@ class ServiceHandlerManager(object):
         return handler
 
     def unregister(self, handler):
-        if handler.name in self.handlers.keys():
+        if handler.name in list(self.handlers.keys()):
             del self.handlers[handler.name]
             return True
         return False

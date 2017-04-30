@@ -169,7 +169,7 @@ class Theme(object):
             selectors, properties = self._convert_css_rule(cssrule)
             for typ, clazz, attrs, pcs in selectors:
                 rule = self.get_rule_exact(typ, clazz, attrs, pcs)
-                for name, value in properties.iteritems():
+                for name, value in properties.items():
                     if name == 'border':
                         for name in ('border-left', 'border-top', 'border-right', 'border-bottom'):
                             rule.properties[name] = copy(value)
@@ -265,7 +265,7 @@ class Theme(object):
             if i.type == 'FUNCTION':
                 fct.name = i.value[:-1] # function name
             elif i.type in ('CHAR'):
-                if (i.value == u',' or i.value == u')') and curarg:
+                if (i.value == ',' or i.value == ')') and curarg:
                     fct.args.append(curarg if len(curarg) > 1 else curarg[0])
                     curarg = []
             elif i.type.endswith('Value'):
@@ -428,7 +428,7 @@ class Theme(object):
         val = values[0]
         fct = self._convert_fct(val)
         grad = self._build_gradient_rec(fct)
-        return Theme.Gradient(grad['percents'], map(parse_value, grad['colors']), grad['orientation'])
+        return Theme.Gradient(grad['percents'], list(map(parse_value, grad['colors'])), grad['orientation'])
 
     def _build_gradient_rec(self, fct, gradient=None):
         if fct.name == 'gradient':
@@ -729,7 +729,7 @@ class Theme(object):
             elif isinstance(value, Font):
                 valdict = Theme.ValueMap._font2json(value)
                 category = 'fonts'
-            elif isinstance(value, Color) or isinstance(value, basestring) and value in ('inherit', 'transparent'):
+            elif isinstance(value, Color) or isinstance(value, str) and value in ('inherit', 'transparent'):
                 valdict = Theme.ValueMap._color2json(value)
                 category = 'colors'
             elif isinstance(value, Theme.Border):
@@ -812,11 +812,11 @@ class Theme(object):
 
         @property
         def images(self):
-            for h, o in self._hash2objects['images'].iteritems(): yield h, o
+            for h, o in self._hash2objects['images'].items(): yield h, o
 
         @property
         def fonts(self):
-            for h, o in self._hash2objects['fonts'].iteritems(): yield h, o
+            for h, o in self._hash2objects['fonts'].items(): yield h, o
 
         @property
         def values(self):
@@ -825,12 +825,12 @@ class Theme(object):
     def compile(self):
         valuereg = Theme.ValueMap()
         theme = {}
-        for typ in self.rules.keys():
+        for typ in list(self.rules.keys()):
             rules = self.rules[typ]
             properties = defaultdict(list)
             for rule in sorted(rules, key=lambda r: len(r.clazz) + len(r.attrs) + len(r.pcs), reverse=True):
                 selectors = sorted(list(rule.clazz)) + sorted(list(rule.pcs)) + sorted(list(rule.attrs))
-                for name, value in rule.properties.iteritems():
+                for name, value in rule.properties.items():
                     values = properties[name]
                     valuetuple = []
                     valuetuple.append(selectors)
@@ -851,9 +851,9 @@ class Theme(object):
 
     def iterfonts(self):
         f = set()
-        for rules in self.rules.values():
+        for rules in list(self.rules.values()):
             for rule in rules:
-                for propvalue in rule.properties.values():
+                for propvalue in list(rule.properties.values()):
                     if type(propvalue) is Font and str(propvalue) not in f:
                         f.add(str(propvalue))
                         yield propvalue
@@ -2033,7 +2033,7 @@ class ThemeRule(object):
 
     def write(self, stream=sys.stdout):
         stream.write('<ThemeRule type=%s class={%s}, attributes={%s}, pseudoclasses={%s}>\n' % (self.type, ','.join(self.clazz), ','.join(self.attrs), ','.join(self.pcs)))
-        for name, value in self.properties.iteritems():
+        for name, value in self.properties.items():
             stream.write('    %s = \t%s\n' % (name, repr(value)))
 
     def __deepcopy__(self, memo):
@@ -2125,7 +2125,7 @@ class FontFaceRule(object):
 if __name__ == '__main__':
     theme = Theme('default').load('../resource/theme/default.css')
     theme = theme.extract('ControlDecorator')
-    print theme.get_property('spacing', 'ControlDecorator')
+    print(theme.get_property('spacing', 'ControlDecorator'))
 #     btn_theme = theme.extract('List', 'List-Item')#'Button', 'Button-CheckIcon', 'Button-RadioIcon', 'Button-ArrowIcon', 'Button-FocusIndicator')
 #     btn_theme.write()
 #     out(btn_theme.get_property('font', 'List-Item', set([]), set(['[BORDER']), set([])))

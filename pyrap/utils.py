@@ -41,17 +41,17 @@ def caller(tb=1):
 
 def out(*args, **kwargs):
     rv = caller(kwargs.get('tb', 1))
-    print '%s: l.%d: %s' % (os.path.basename(rv[0]), rv[1], ' '.join(map(str, args)))
+    print('%s: l.%d: %s' % (os.path.basename(rv[0]), rv[1], ' '.join(map(str, args))))
 
 
 def stop(*args, **kwargs):
     out(*args, **edict(kwargs) + {'tb': kwargs.get('tb', 1) + 1})
     sys.stdout.write('<press enter to continue>\r')
-    raw_input()
+    input()
     
 
 def trace(*args, **kwargs):
-    print '=== STACK TRACE ==='
+    print('=== STACK TRACE ===')
     sys.stdout.flush()
     traceback.print_stack(file=sys.stdout)
     out(*args, **edict(kwargs) + {'tb': kwargs.get('tb', 1) + 1})
@@ -120,10 +120,10 @@ class edict(dict):
         return self
     
     def __add__(self, d):
-        return type(self)({k: v for k, v in (self.items() + d.items())})
+        return type(self)({k: v for k, v in (list(self.items()) + list(d.items()))})
     
     def __sub__(self, d):
-        return type(self)({k: v for k, v in self.iteritems() if k not in d})
+        return type(self)({k: v for k, v in self.items() if k not in d})
     
     
 class eset(set):
@@ -142,7 +142,7 @@ class RStorage(edict, object):
     def __init__(self, d=None, utf8=False):
         self._utf8 = utf8
         if d is not None:
-            for k, v in d.iteritems(): self[k] = v
+            for k, v in d.items(): self[k] = v
     
     def __setattr__(self, key, value):
         if key in self.__slots__:
@@ -151,7 +151,7 @@ class RStorage(edict, object):
             self[key] = value
             
     def __setitem__(self, key, value):
-        if self._utf8 and isinstance(key, basestring): key = key.encode('utf8')
+        if self._utf8 and isinstance(key, str): key = key.encode('utf8')
         dict.__setitem__(self, key, rstorify(value, utf8=self._utf8))
             
     def __getattr__(self, key):
@@ -160,14 +160,14 @@ class RStorage(edict, object):
         else:
             try:
                 return self[key]
-            except KeyError, k:
-                raise AttributeError, k
+            except KeyError as k:
+                raise AttributeError(k)
             
     def __delattr__(self, key):
         try:
             del self[key]
-        except KeyError, k:
-            raise AttributeError, k
+        except KeyError as k:
+            raise AttributeError(k)
             
     def __repr__(self):     
         return ('<%s ' % type(self).__name__) + dict.__repr__(self) + '>'
@@ -176,7 +176,7 @@ class RStorage(edict, object):
 def rstorify(e, utf8=False):
     if type(e) is dict:
         return RStorage(d=e, utf8=utf8)
-    elif isinstance(e, basestring) and utf8:
+    elif isinstance(e, str) and utf8:
         return e.encode('utf8')
     elif type(e) in (list, tuple):
         return [rstorify(i, utf8) for i in e]
@@ -186,10 +186,10 @@ def jsonify(o):
     if hasattr(o, 'json'): 
         return o.json
     elif isinstance(o, dict):
-        return {str(k): jsonify(v) for k, v in o.iteritems()}
+        return {str(k): jsonify(v) for k, v in o.items()}
     elif type(o) in (list, tuple):
         return [jsonify(e) for e in o]
-    elif isinstance(o, (int, float, bool, basestring, type(None))):
+    elif isinstance(o, (int, float, bool, str, type(None))):
         return o
     else:
         raise TypeError('object of type "%s" is not jsonifiable: %s' % (type(o), repr(o)))
@@ -213,7 +213,7 @@ class BiMap():
         if type(values) in (list, tuple):
             for f, b in values: self[f:b]
         elif isinstance(values, (dict, BiMap)):
-            for f, b in values.iteritems():
+            for f, b in values.items():
                 self[f:b]
         return self
     
@@ -233,7 +233,7 @@ class BiMap():
         else: return self._fwd[s]
         
     def __str__(self):
-        return ';'.join([str(e) for e in self._fwd.iteritems()])
+        return ';'.join([str(e) for e in self._fwd.items()])
         
 
 class BitMask(BiMap):
@@ -279,6 +279,6 @@ def bind(**kwargs):
     return wrap_f
 
 if __name__ == '__main__':
-    print pparti(10, [.2, .2, .1, .5])
+    print(pparti(10, [.2, .2, .1, .5]))
     
     

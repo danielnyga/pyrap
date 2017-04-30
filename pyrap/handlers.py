@@ -1,4 +1,4 @@
-import StringIO
+import io
 import cgi
 
 import web
@@ -53,18 +53,18 @@ class FileUploadServiceHandler(ServiceHandler):
         token = kwargs.get('kwargs').get('token')
         if token not in self._files:
             #httpfehler fuer access denied
-            raise Exception('Token unknown! {}. Available tokens: {}'.format(token, self._files.keys()))
+            raise Exception('Token unknown! {}. Available tokens: {}'.format(token, list(self._files.keys())))
 
         # retrieve file content
         ctype, pdict = cgi.parse_header(args[1].get('CONTENT_TYPE'))
         cnt = args[0]
-        s = StringIO.StringIO()
+        s = io.StringIO()
         s.write(cnt)
         s.seek(0)
         multipart = cgi.parse_multipart(s, pdict)
         fargs = [x for x in cnt.split(pdict['boundary']) if 'Content-Disposition' in x]
         fcontents = multipart.get('file')
-        files = zip(fargs, fcontents)
+        files = list(zip(fargs, fcontents))
 
         tfiles = []
         for f in files:

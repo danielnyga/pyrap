@@ -61,7 +61,7 @@ class SVG(Widget):
         return self._content
 
     def _handle_set(self, op):
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selection':
                 self._selection = value
 

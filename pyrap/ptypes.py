@@ -17,6 +17,7 @@ from PIL import Image as PILImage
 from pyrap.constants import FONT
 from pyrap.utils import out, BitMask, ifnone
 from pyrap import threads
+from functools import reduce
 
 
 class Event(object):
@@ -113,7 +114,7 @@ class Var(object):
         self.on_dirty = DirtyState().addall(on_dirty)
         self._init = self.value
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.value)
     
     
@@ -238,7 +239,7 @@ class BitField(Var):
         def __init__(self, v):
             self._v = v
         
-        def next(self):
+        def __next__(self):
             if not self._v: raise StopIteration()
             b = self._v & (~self._v+1)
             self._v ^= b
@@ -555,7 +556,7 @@ class Pixels(Dim):
     '''
     
     def __init__(self, v):
-        if isinstance(v, basestring):
+        if isinstance(v, str):
             v = v.strip()
             if v.endswith('px'):
                 Dim.__init__(self, int(v[:-2]))
@@ -603,7 +604,7 @@ class Percent(Dim):
     '''Represents an abstract percentage value.'''
     
     def __init__(self, v):
-        if isinstance(v, basestring):
+        if isinstance(v, str):
             v = v.strip()
             if v.endswith('%'):
                 Dim.__init__(self, float(v[:-1]))
@@ -617,7 +618,7 @@ class Percent(Dim):
             return self.value * v / 100.
         if type(v) is int:
             return int(round(self.value * v / 100.))
-        if isinstance(v, basestring):
+        if isinstance(v, str):
             v = parse_value(v)
         if isinstance(v, Pixels):
             return Pixels(int(round((v.value * self._value / 100.))))
@@ -773,7 +774,7 @@ class Color(object):
         return '<Color[%s] at 0x%x>' % (str(self), hash(self))
     
     def __eq__(self, o):
-        if isinstance(o, basestring):
+        if isinstance(o, str):
             o = Color(html=o)
         return self.htmla == o.htmla
         
@@ -789,7 +790,7 @@ class Color(object):
         return Color(hsv=(hsv[0], hsv[1] - hsv[1] * scale, hsv[2] + (1 - hsv[2]) * scale), alpha=self.alpha)
     
 def parse_value(v, default=None):
-    if isinstance(v, basestring):
+    if isinstance(v, str):
         if v.endswith('px'): return Pixels(v)
         elif v.endswith('%'): return Percent(v)
         elif v.startswith('#') or (default is Color and v in Color.names): return Color(v)
@@ -1041,9 +1042,9 @@ class Image(object):
         if type(height) is int:
             height = px(height)
         # if either of them is string, parse the value
-        if isinstance(width, basestring):
+        if isinstance(width, str):
             width = parse_value(width)
-        if isinstance(height, basestring):
+        if isinstance(height, str):
             height = parse_value(height)
         if isinstance(width, Percent):
             w = width.of(w)
@@ -1074,7 +1075,7 @@ class Image(object):
 
 if __name__ == '__main__':
     
-    print Color('#0000ff')
+    print(Color('#0000ff'))
     
     exit(0)
     
@@ -1084,46 +1085,46 @@ if __name__ == '__main__':
     v1.bind(v2)
     v3.bind(v2)
     v3.bind(v2)
-    print v1, v2, v3
+    print(v1, v2, v3)
     v1.set(5)
-    print v1, v2, v3
+    print(v1, v2, v3)
     v2.set(10)
-    print v1, v2, v3
+    print(v1, v2, v3)
     b = BoolVar(False)
     b2 = BoolVar(True)
-    print not b 
+    print(not b) 
     
     FONT = BitMask('IT', 'BF', "STRIKETHROUGH")
 
     bits = BitField(FONT.IT | FONT.BF)
     for b in bits: 
         out(FONT[b]) 
-    print '|'.join([FONT[b] for b in bits])
+    print('|'.join([FONT[b] for b in bits]))
     
-    print bits.readable(FONT)
+    print(bits.readable(FONT))
     exit(0)
     
-    print Font(style=FONT.IT | FONT.BF, family=['Arial', 'Nimbus Sans', 'sans-serif'], size=13)
+    print(Font(style=FONT.IT | FONT.BF, family=['Arial', 'Nimbus Sans', 'sans-serif'], size=13))
     
     def getdirty(v, d, c):
-        print repr(v), 'is now', {True:'dirty', False:'clean'}[d], 'by', c
+        print(repr(v), 'is now', {True:'dirty', False:'clean'}[d], 'by', c)
     
     s = StringVar('hello', on_change=lambda v, c: out(repr(v), 'was modified by', c))
     s += ', world!'
-    print s
+    print(s)
     
     
     n1 = NumVar(1, history=True, on_dirty=getdirty)
     n2 = NumVar(7)
-    print n1 + 2 * n2
+    print(n1 + 2 * n2)
     n1 += 5.
     n1 /= 10
-    print n1
-    print n1.undo()
-    print n1
-    print n1.redo()
-    print n1
-    print n1._values
+    print(n1)
+    print(n1.undo())
+    print(n1)
+    print(n1.redo())
+    print(n1)
+    print(n1._values)
     
     
     

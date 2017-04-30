@@ -18,7 +18,7 @@ class ThreadInterrupt(Exception): pass
 def iteractive():
     '''Returns a generator of tuples of thread ids and respective thread objects
     of threads that are currently active.'''
-    for tid, tobj in threading._active.iteritems():
+    for tid, tobj in threading._active.items():
         yield tid, tobj
 
 
@@ -405,7 +405,7 @@ class _Condition(_Verbose):
         if not self._is_owned():
             raise RuntimeError("cannot notify on un-acquired lock")
         __waiters = self.__waiters
-        waiters = __waiters.keys()[:n]
+        waiters = list(__waiters.keys())[:n]
         if not waiters:
             if __debug__:
                 self._note("%s.notify(): no waiters", self)
@@ -834,8 +834,7 @@ class InterruptableThread(threading.Thread):
                     self._note("%s.__bootstrap(): raised SystemExit", self)
             except ThreadInterrupt:
                 if sys and sys.stderr is not None:
-                    print>>sys.stderr, ("Interrupt in thread %s:\n%s" %
-                                         (self.name, traceback.format_exc()))
+                    print("Interrupt in thread {}:\n{}".format(self.name, traceback.format_exc()), file=sys.stderr)
                 
             except Exception:
                 if __debug__:
@@ -845,27 +844,27 @@ class InterruptableThread(threading.Thread):
                 # _sys) in case sys.stderr was redefined since the creation of
                 # self.
                 if sys and sys.stderr is not None:
-                    print>>sys.stderr, ("Exception in thread %s:\n%s" %
-                                         (self.name, traceback.format_exc()))
+                    print(("Exception in thread %s:\n%s" %
+                                         (self.name, traceback.format_exc())), file=sys.stderr)
                 elif self._Thread__stderr is not None:
                     # Do the best job possible w/o a huge amt. of code to
                     # approximate a traceback (code ideas from
                     # Lib/traceback.py)
                     exc_type, exc_value, exc_tb = self._Thread__exc_info()
                     try:
-                        print>>self._Thread__stderr, (
+                        print((
                             "Exception in thread " + self.name +
-                            " (most likely raised during interpreter shutdown):")
-                        print>>self._Thread__stderr, (
-                            "Traceback (most recent call last):")
+                            " (most likely raised during interpreter shutdown):"), file=self._Thread__stderr)
+                        print((
+                            "Traceback (most recent call last):"), file=self._Thread__stderr)
                         while exc_tb:
-                            print>>self._Thread__stderr, (
+                            print((
                                 '  File "%s", line %s, in %s' %
                                 (exc_tb.tb_frame.f_code.co_filename,
                                     exc_tb.tb_lineno,
-                                    exc_tb.tb_frame.f_code.co_name))
+                                    exc_tb.tb_frame.f_code.co_name)), file=self._Thread__stderr)
                             exc_tb = exc_tb.tb_next
-                        print>>self._Thread__stderr, ("%s: %s" % (exc_type, exc_value))
+                        print(("%s: %s" % (exc_type, exc_value)), file=self._Thread__stderr)
                     # Make sure that exc_tb gets deleted since it is a memory
                     # hog; deleting everything else is just for thoroughness
                     finally:

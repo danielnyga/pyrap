@@ -95,7 +95,7 @@ class ControlsDemo():
         
         
     def switch_page(self, *args):
-        for page in (self.pages.values()):
+        for page in (list(self.pages.values())):
             page.layout.exclude = self.navigation.selection is not page
         self.content.selection = self.navigation.selection
         self.shell.onresize_shell()
@@ -167,7 +167,7 @@ class ControlsDemo():
         self.pages['FileUpload'] = page
         
         
-        for page in (self.pages.values()[1:]):
+        for page in (list(self.pages.values())[1:]):
             page.layout.exclude = True
         self.navigation.items = self.pages
         

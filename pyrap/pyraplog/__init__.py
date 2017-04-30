@@ -1,6 +1,6 @@
 import logging
 from logging import *
-from logformat import RainbowLoggingHandler
+from .logformat import RainbowLoggingHandler
 import sys
 
 from logging import DEBUG as debug

@@ -1,13 +1,13 @@
-'''
+"""
 Created on Aug 1, 2015
 
 @author: nyga
-'''
+"""
 
 import web
 from web.webapi import notfound
 from pyrap import threads, pyraplog
-import urlparse 
+import urllib.parse 
 from pyrap.sessions import Session
 from pyrap.utils import RStorage, out
 
@@ -32,14 +32,14 @@ class PyRAPServer(web.application):
         try:
             func = self.wsgifunc(*middleware)
             web.httpserver.runbasic(func, ('0.0.0.0', port))
-        except (KeyboardInterrupt, SystemExit), e:
-            for _, t in dict(list(threads.iteractive())).items():
+        except (KeyboardInterrupt, SystemExit) as e:
+            for _, t in list(dict(list(threads.iteractive())).items()):
                 if isinstance(t, threads.SessionThread): t.kill()
         logger.error('goodbye.')
     
 
 class ApplicationRegistry(object):
-    '''
+    """
     Store for all PyRAP application managers.
     
     Every app that is being registered gets an :class:`ApplicationManager` 
@@ -47,12 +47,12 @@ class ApplicationRegistry(object):
     The :class:`ApplicationManager` instance unique for every application
     context, i.e. if you try to register two PyRap apps under the same
     path, PyRAP will raise an Exception.
-    '''
+    """
     def __init__(self):
         self.apps = {}
         
     def register(self, config):
-        from engine import ApplicationManager
+        from .engine import ApplicationManager
         if config.path in self.apps:
             raise Exception('An application with the name "%s" is already running in context path "%s"' % (self.apps[config.path].name, config.path))
         mngr = ApplicationManager(config)
@@ -70,7 +70,7 @@ _registry = ApplicationRegistry()
 
 
 def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme=None, icon=None, requirejs=None, requirecss=None, rcpath='rwt-resources'):
-    '''
+    """
     Register a new PyRAP app.
     
     :param clazz:        the main class of the application of which a new instance
@@ -98,7 +98,7 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
 
     :param icon:         image path under which the application's icon can
                          be found.
-    '''
+    """
     config = RStorage({'clazz': clazz,
                       'path': path,
                       'name': name,
@@ -118,23 +118,23 @@ def run(port=8080):
 
 
 class RequestDispatcher(object):
-    '''
+    """
     The low-level component and interface to the webpy server dispatching
     every HTTP request to the application-specific request handlers. 
     
     Parses every request for its path, query and payload and is then dispatched
     to the respective application runtime.
-    '''
+    """
     def GET(self, *args, **kwargs):
         return self.POST(*args, **kwargs)
     
     def POST(self, *args, **kwargs):
         # the query of the request
-        query = dict([(str(k), str(v)) for k, v in urlparse.parse_qsl(web.ctx.query[1:], keep_blank_values=True)])
+        query = dict([(str(k), str(v)) for k, v in urllib.parse.parse_qsl(web.ctx.query[1:], keep_blank_values=True)])
         # the payload
         content = web.data()
         # the path
-        args = map(str, args)
+        args = list(map(str, args))
         # there must be a path, otherwise report a 404 error
         if not args: raise notfound()
         if len(args) > 1: 
