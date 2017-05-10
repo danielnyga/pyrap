@@ -53,12 +53,18 @@ pwt_ros3d.Simulation.prototype = {
 
     setWidth: function( width ) {
         this._w = width;
-        this._simulation_viewer.style.width = width;
+        this._urdfnodeDiv.style.width = width + 'px';
+        if (typeof this._simulation_viewer != 'undefined') {
+            this._simulation_viewer.style.width = width;
+        }
     },
 
     setHeight: function( height ) {
         this._h = height;
-        this._simulation_viewer.style.height = height;
+        this._urdfnodeDiv.style.height = height + 'px';
+        if (typeof this._simulation_viewer != 'undefined') {
+            this._simulation_viewer.style.height = height;
+        }
     },
 
     setUrl: function( url ) {
