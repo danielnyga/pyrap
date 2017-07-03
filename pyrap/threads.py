@@ -926,7 +926,7 @@ class DetachedSessionThread(InterruptableThread):
                  args=args, kwargs=kwargs, verbose=verbose)
         self._session = pyrap.session
         self._session_id = pyrap.session.session_id
-    
+
     def _run(self):
         self.__sessionload()
         InterruptableThread._run(self)
