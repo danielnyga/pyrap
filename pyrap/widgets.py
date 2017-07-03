@@ -11,8 +11,11 @@ import time
 import re
 from Tkinter import IntVar
 
+import dnlog
 import ptypes
-from pyrap import pyraplog, locations
+from dnutils.debug import _caller
+from dnutils.tools import ifnone
+from pyrap import locations
 from pyrap.base import session
 from pyrap.communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
@@ -32,8 +35,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme,\
     SeparatorTheme, DecoratorTheme, LinkTheme
-from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask,\
-    ifnot
+from pyrap.utils import RStorage, BiMap, BitMask
 from collections import OrderedDict
 
 
@@ -133,7 +135,7 @@ class Widget(object):
             if k in type(self)._styles_: self.style.setbit(type(self)._styles_[k:], v)
         # save meta information about where in the code the object
         # has been create for better debugging
-        self._created = caller(3)
+        self._created = _caller(3)
         
 
             
@@ -499,7 +501,7 @@ class Shell(Widget):
                                    'modal':     RWT.MODAL}
     _defstyle_ = Widget._defstyle_ | RWT.VISIBLE | RWT.ACTIVE
 
-    _logger = pyraplog.getlogger(__name__, level=pyraplog.DEBUG)
+    _logger = dnlog.getlogger(__name__, level=dnlog.DEBUG)
     
     @constructor('Shell')
     def __init__(self, parent, **options):

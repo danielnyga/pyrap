@@ -6,7 +6,6 @@ Created on Nov 23, 2015
 from pyrap.ptypes import Event
 from pyrap.communication import RWTListenOperation
 from pyrap.base import session
-from pyrap.utils import out
 
 
 class RWTEvent(Event):

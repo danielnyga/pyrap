@@ -5,13 +5,15 @@ Created on Oct 2, 2015
 '''
 
 import pyrap
+from dnutils import out
+from dnutils.tools import ifnone
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite,\
     Edit, Combo, TabFolder, TabItem, Group, ScrolledComposite, ScrollBar,\
     Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem, Spinner, accept, info, error, warning,\
     FileUpload
 import random
-from pyrap import pyraplog, locations, threads
-from pyrap.utils import out, ifnone
+from pyrap import  threads
+import dnutils
 from pyrap.ptypes import BoolVar, StringVar, Color, px, Image, pc, Font
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout,\
     StackLayout
@@ -26,6 +28,7 @@ from pyrap.constants import DLG
 from pyrap.dialogs import ask_yesnocancel, msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, ask_okcancel,\
     open_progress, ask_color
 from base64 import b64encode
+
 
 class ControlsDemo():
     

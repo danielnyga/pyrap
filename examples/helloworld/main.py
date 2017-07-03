@@ -17,6 +17,7 @@ class HelloWorld(object):
         self.shell.on_resize += self.shell.dolayout
         self.shell.dolayout(True)
 
+
 if __name__ == '__main__':
     pyrap.register_app(clazz=HelloWorld, 
                        entrypoints={'hello': HelloWorld.main},

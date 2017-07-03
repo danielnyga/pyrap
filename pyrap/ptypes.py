@@ -14,8 +14,10 @@ from xml.dom import minidom
 
 from PIL import Image as PILImage
 
+from dnutils import out
+from dnutils.tools import ifnone
 from pyrap.constants import FONT
-from pyrap.utils import out, BitMask, ifnone
+from pyrap.utils import BitMask
 from pyrap import threads
 
 
