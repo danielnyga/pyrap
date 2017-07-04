@@ -3,133 +3,9 @@ Created on Nov 10, 2015
 
 @author: nyga
 '''
-from collections import defaultdict
-import traceback
 import sys
-import os
 
-
-def currentframe():
-    """Return the frame object for the caller's stack frame."""
-    try:
-        raise Exception()
-    except:
-        traceback.print_exc()
-        return sys.exc_info()[2].tb_frame
-
-if hasattr(sys, '_getframe'): currentframe = lambda: sys._getframe(2)
-
-
-def caller(tb=1):
-    """
-    Find the stack frame of the caller so that we can note the source
-    file name, line number and function name.
-    """
-    f = currentframe()
-    #On some versions of IronPython, currentframe() returns None if
-    #IronPython isn't run with -X:Frames.
-    rv = "(unknown file)", 0, "(unknown function)"
-    d = 0
-    while hasattr(f, "f_code"):
-        co = f.f_code
-        rv = (co.co_filename, f.f_lineno, co.co_name)
-        if d >= tb: break
-        d += 1
-        f = f.f_back
-    return rv
-
-
-def out(*args, **kwargs):
-    rv = caller(kwargs.get('tb', 1))
-    print '%s: l.%d: %s' % (os.path.basename(rv[0]), rv[1], ' '.join(map(str, args)))
-
-
-def stop(*args, **kwargs):
-    out(*args, **edict(kwargs) + {'tb': kwargs.get('tb', 1) + 1})
-    sys.stdout.write('<press enter to continue>\r')
-    raw_input()
-    
-
-def trace(*args, **kwargs):
-    print '=== STACK TRACE ==='
-    sys.stdout.flush()
-    traceback.print_stack(file=sys.stdout)
-    out(*args, **edict(kwargs) + {'tb': kwargs.get('tb', 1) + 1})
-    sys.stdout.flush()
-    
-    
-def stoptrace(*args, **kwargs):
-    trace(**edict(kwargs) + {'tb': kwargs.get('tb', 1) + 1})
-    stop(*args, **edict(kwargs) + {'tb': kwargs.get('tb', 1) + 1})
-
-def ifnone(if_, else_, transform=None):
-    '''
-    Returns the condition if_ iff it is not None, or if a transformation is
-    specified, transform(if_). Returns else_ if the condition is None.
-    '''
-    if if_ is None:
-        return else_
-    else:
-        if transform is not None: return transform(if_)
-        else: return if_
-
-def ifnot(if_, else_, transform=None):
-    '''
-    Returns the condition if_ iff it evaluates to False, or if a transformation is
-    specified, transform(if_). Returns else_ if the condition is None.
-    '''
-    if not bool(if_):
-        return else_
-    else:
-        if transform is not None: return transform(if_)
-        else: return if_
-
-        
-def allnone(it):
-    return not ([1 for e in it if e is not None])
-
-
-class edict(dict):
-    '''
-    Enhanced dict with some convenience methods such as dict addition and
-    subtraction.
-    
-    :Example:
-    
-    >>> s = edict({'a':{'b': 1}, 'c': [1,2,3]})
-    >>> r = edict({'x': 'z', 'c': 5})
-    >>> print s
-    {'a': {'b': 1}, 'c': [1, 2, 3]}
-    >>> print r
-    {'x': 'z', 'c': 5}
-    >>> print s + r
-    {'a': {'b': 1}, 'x': 'z', 'c': 5}
-    >>> print s - r
-    {'a': {'b': 1}}
-    >>> print r
-    {'x': 'z', 'c': 5}
-    '''
-    
-    def __iadd__(self, d):
-        self.update(d)
-        return self
-    
-    def __isub__(self, d):
-        for k in d: 
-            if k in self: del self[k]
-        return self
-    
-    def __add__(self, d):
-        return type(self)({k: v for k, v in (self.items() + d.items())})
-    
-    def __sub__(self, d):
-        return type(self)({k: v for k, v in self.iteritems() if k not in d})
-    
-    
-class eset(set):
-    
-    def __add__(self, s):
-        return set(self).union(s)
+from dnutils.tools import edict
 
 
 class RStorage(edict, object):
@@ -181,6 +57,7 @@ def rstorify(e, utf8=False):
     elif type(e) in (list, tuple):
         return [rstorify(i, utf8) for i in e]
     else: return e
+
         
 def jsonify(o):
     if hasattr(o, 'json'): 
@@ -280,5 +157,3 @@ def bind(**kwargs):
 
 if __name__ == '__main__':
     print pparti(10, [.2, .2, .1, .5])
-    
-    

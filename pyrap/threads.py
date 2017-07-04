@@ -4,7 +4,6 @@ import pyrap
 import ctypes
 import inspect
 import time
-from pyrap.utils import out, ifnone
 from threading import _active_limbo_lock, _active, _limbo,\
     _trace_hook, _profile_hook, _get_ident, Lock, _allocate_lock, \
     _start_new_thread, _Verbose

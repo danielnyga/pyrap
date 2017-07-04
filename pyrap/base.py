@@ -6,10 +6,12 @@ Created on Aug 1, 2015
 
 import web
 from web.webapi import notfound
-from pyrap import threads, pyraplog
+
+import dnlog
+from pyrap import threads
 import urlparse 
 from pyrap.sessions import Session
-from pyrap.utils import RStorage, out
+from pyrap.utils import RStorage
 
 routes = (
     '/test', 'Test',
@@ -28,7 +30,7 @@ class Test():
 class PyRAPServer(web.application):
 
     def run(self, port=8080, *middleware):
-        logger = pyraplog.getlogger(__name__) 
+        logger = dnlog.getlogger(__name__)
         try:
             func = self.wsgifunc(*middleware)
             web.httpserver.runbasic(func, ('0.0.0.0', port))

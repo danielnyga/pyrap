@@ -3,6 +3,7 @@ Created on Oct 10, 2015
 
 @author: nyga
 '''
+from dnutils.tools import ifnot, ifnone
 from pyrap.locations import pyrap_path
 from cssutils import parseFile
 import os
@@ -12,8 +13,7 @@ from cssutils.css.value import Value, ColorValue, DimensionValue, URIValue,\
     CSSFunction
 import uuid
 import json
-from pyrap import pyraplog
-from logging import DEBUG
+import dnlog
 from pyrap.ptypes import Color, Pixels, parse_value, Dim,\
     Font, Image, pc, Percent, px
 from pyrap.ptypes import BitField
@@ -22,12 +22,10 @@ from copy import copy, deepcopy
 import re
 from pyrap.constants import BORDER, GRADIENT, ANIMATION, FONT, SHADOW, CURSOR,\
     RWT
-from pyrap.utils import out, stop, ifnone, ifnot
 import math
 from cssutils.css.cssfontfacerule import CSSFontFaceRule
 from pyparsing import Literal, alphanums, alphas, Word, ZeroOrMore, quotedString,\
     removeQuotes
-from cssutils.css import value
 
 TYPE = 'type-selector'
 CLASS = 'class'
@@ -35,7 +33,7 @@ PSEUDOCLASS = 'pseudo-class'
 ATTRIBUTE = 'attribute-selector'
 UNIVERSAL = 'universal'
 
-logger = pyraplog.getlogger(__name__)
+logger = dnlog.getlogger(__name__)
 
 
 def isnone(cssval):
@@ -82,7 +80,7 @@ class Theme(object):
         self.rules = defaultdict(list)
         self.rcpath = None
         self.fontfaces = []
-        self.logger = pyraplog.getlogger(type(self).__name__, level=pyraplog.INFO)
+        self.logger = dnlog.getlogger(type(self).__name__, level=dnlog.INFO)
 
     def extract(self, *types):
         if '*' not in types: types = types + ('*',)

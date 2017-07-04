@@ -4,3 +4,7 @@
 [submodule "tools/android"]
 	path = tools/android
 	url = git@spritinio.de:pyrap2apk-dev
+[submodule "3rdparty/dnutils"]
+	path = 3rdparty/dnutils
+	url = git@github.com:danielnyga/dnutils
+	branch = python2.7

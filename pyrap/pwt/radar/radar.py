@@ -1,11 +1,11 @@
 import os
 
+from dnutils.tools import ifnone
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
     RWTSetOperation
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.utils import ifnone
 from pyrap.widgets import Widget, constructor, checkwidget
 
 
@@ -18,7 +18,7 @@ class RadarChart(Widget):
     def __init__(self, parent, cssid=None, opts=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = RadarTheme(self, session.runtime.mngr.theme)
-        self._requiredjs = [os.path.join(locations.thirdparty, 'd3', 'd3.v3.min.js')]
+        self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         session.runtime.ensurejsresources(self._requiredjs)
         self._gwidth = None
         self._gheight = None
