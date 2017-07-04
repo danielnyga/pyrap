@@ -5,6 +5,7 @@ Created on Oct 2, 2015
 '''
 
 import pyrap
+from pyrap.pwt.radar.radar import RadarChart
 from dnutils import out
 from dnutils.tools import ifnone
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite,\
@@ -168,6 +169,13 @@ class ControlsDemo():
         page  = self.create_page_template('File Upload Demo')
         self.create_upload_page(page)
         self.pages['FileUpload'] = page
+
+        #=======================================================================
+        # create radar chart
+        #=======================================================================
+        page  = self.create_page_template('Radar Chart Demo')
+        self.create_radar_page(page)
+        self.pages['Radar'] = page
         
         
         for page in (self.pages.values()[1:]):
@@ -434,14 +442,102 @@ class ControlsDemo():
         browser = Button(grp, text='Open Browser')
         browser.on_select += self.open_browser
 
-        
+
+    def create_radar_page(self, parent):
+        grp = Group(parent, text='Radar')
+        grp.layout = CellLayout(halign='fill', valign='fill')
+        comp_pracgraph = Composite(grp)
+        comp_pracgraph.layout = CellLayout(halign='fill', valign='fill')
+        comp_pracgraph.bg = Color('white')
+
+        # the datapoints to be drawn as polygons
+        d = [
+            [
+                {'axis': "Fatigue Strength", 'value': 180},
+                {'axis': "Corrosion", 'value': 1},
+                {'axis': "Hardness", 'value': 130},
+                {'axis': "E-Modulus", 'value': 210},
+                {'axis': "Tensile Strength", 'value': 310},
+                {'axis': "Grindability", 'value': 0.14},
+                {'axis': "Fracture Toughness", 'value': 15},
+                {'axis': "Formability", 'value': 0.05},
+            ], [
+                {'axis': "Fatigue Strength", 'value': 150},
+                {'axis': "Corrosion", 'value': -1},
+                {'axis': "Hardness", 'value': 110},
+                {'axis': "E-Modulus", 'value': 230},
+                {'axis': "Tensile Strength", 'value': 400},
+                {'axis': "Grindability", 'value': 0.29},
+                {'axis': "Fracture Toughness", 'value': 10},
+                {'axis': "Formability", 'value': 0.14},
+            ]
+        ]
+
+        # user-defined configuration of the number of radar levels, min and max
+        # values of the respective axes, intervals (can be understood as 'acceptable range of
+        # values' the respective datapoint should take), and the units of the
+        # axes. If no units are given, all values are assumed to be percentages,
+        # so make sure the values of the datapoints as well as min/max/interval
+        # values are in [0,1]
+        mycfg = {
+                   'w': 500,
+                   'h': 500,
+                   'levels': 6,
+                   'ExtraWidthX': 300,
+                    'minValues': {'E-Modulus': 150,
+                                'Fatigue Strength': 120,
+                                'Corrosion': -2,
+                                'Formability': .0,
+                                'Fracture Toughness': 0,
+                                'Grindability': 0.1,
+                                'Tensile Strength': 300,
+                                'Hardness': 100,
+                                },
+                    'maxValues': {'E-Modulus': 250,
+                                'Fatigue Strength': 200,
+                                'Corrosion': 2,
+                                'Formability': .9,
+                                'Fracture Toughness': 20,
+                                'Grindability': 0.7,
+                                'Tensile Strength': 400,
+                                'Hardness': 150,
+                                },
+                    'intervals': {'E-Modulus': [200, 220],
+                                'Fatigue Strength': [130, 180],
+                                'Corrosion': [-1, 1],
+                                'Formability': [.2, .3],
+                                'Fracture Toughness': [0, 15],
+                                'Grindability': [.20, .70],
+                                'Tensile Strength': [320, 390],
+                                'Hardness': [120, 150],
+                                },
+        'units': {'E-Modulus': 'GPa',
+                'Fatigue Strength': 'MPa',
+                'Corrosion': '',
+                'Formability': '%',
+                'Fracture Toughness': 'FTa',
+                'Grindability': '%',
+                'Tensile Strength': 'MPa',
+                'Hardness': 'HV',
+                }
+        }
+
+        radar = RadarChart(comp_pracgraph, cssid='radarid', opts=mycfg)
+
+        # the legend title and names of the data groups (in the same order as
+        # the data points are given)
+        radar.legend('The material properties in relation to the property intervals of the requirement profile',
+                     ['17Cr3', '100Cr6'])
+        radar.updatedata(d)
+
+
     def open_browser(self, data):
-        dlg = Shell(self.mainwnd, title='pyRAP Browser', border=True, 
+        dlg = Shell(self.mainwnd, title='pyRAP Browser', border=True,
                     btnclose=True, btnmax=True, resize=True, modal=False, titlebar=True)
         dlg.bounds = self.mainwnd.width / 2 - 150, self.mainwnd.height / 2 - 100, 500, 300
         content = Composite(dlg.content)
         content.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
-        
+
         address_bar = Composite(content)
         address_bar.layout = ColumnLayout(halign='fill', valign='fill', flexcols=1)
         Label(address_bar, text='URL:')
@@ -479,7 +575,7 @@ if __name__ == '__main__':
                        name='pyRAP Controls Demo', 
                        entrypoints={'desktop': ControlsDemo.desktop,
                                     'mobile': ControlsDemo.mobile},
-                       theme='mytheme.css', 
+                       theme='mytheme.css',
                        setup=ControlsDemo.setup, default=lambda: 'mobile' if pyrap.session.useragent.mobile else 'desktop')
     pyrap.run()
 
