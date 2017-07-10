@@ -1,5 +1,5 @@
 
-Button[CHECK] {
+/*Button[CHECK] {
 	cursor: pointer;
 }
 
@@ -26,7 +26,7 @@ Button-CheckIcon:selected:grayed {
 
 Button-CheckIcon:selected:grayed:hover {
   background-image: url( img/button/checkbox-greyed-hover.png );
-}
+}*/
 
 Composite.header {
   box-shadow: 0px 0px 20px #333333;
