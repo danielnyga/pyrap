@@ -6,6 +6,7 @@ Created on Oct 2, 2015
 import json
 import md5
 import mimetypes
+
 import os
 import traceback
 import urllib
@@ -37,6 +38,11 @@ from pyrap.threads import Kapo, RLock
 
 mimetypes.init()
 
+
+mimetypes.types_map.update({
+    '.otf': 'application/font-sfnt',
+    '.ttf': 'application/font-sfnt'
+})
 
 class ApplicationManager(object):
     '''
@@ -76,6 +82,7 @@ class ApplicationManager(object):
         for ff in theme.fontfaces:
             if not ff.src.islocal: continue
             fileext = os.path.splitext(ff.src.url)[-1]
+            out(fileext, mimetypes.types_map[fileext])
             r = self.resources.registerc('themes/fonts/%s%s' % (md5.new(ff.content).hexdigest(), fileext),
                                          mimetypes.types_map[fileext], ff.content)
             ff.src.url = r.location

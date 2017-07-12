@@ -1,3 +1,4 @@
+pyparsing
 Pillow==3.3.1
 web.py
 cssutils

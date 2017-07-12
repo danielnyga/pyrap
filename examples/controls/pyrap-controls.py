@@ -65,7 +65,7 @@ class ControlsDemo():
         navbar = Composite(outer, minheight=px(30), halign='fill', valign='fill', padding=0, padding_bottom=15)
         navbar.css = 'navbar'
         
-        self.beny_logo = Image('images/beny_logo.png')
+        self.beny_logo = Image('images/pyrap-logo.png').resize(height='75px')
         logo = Label(header, img=self.beny_logo, valign='center', halign='fill')
         logo.bg = 'transp'    
         welcome = Label(header, text='pyRAP - Controls Demo', halign='center', valign='center')
@@ -195,7 +195,7 @@ class ControlsDemo():
     def create_upload_page(self, parent):
         body = Composite(parent)
         body.layout = RowLayout(halign='fill', valign='fill', flexrows=3)
-        upload = FileUpload(body, text='Browse...', multi=True, accepted=['.txt', '.xlsx', '.pracmln'], halign='left', valign='top')
+        upload = FileUpload(body, text='Browse...', multi=True, halign='left', valign='top')
         cont = Composite(body)
         cont.layout = GridLayout(cols=2, halign='fill', flexcols=1)
         Label(cont, 'Filename:')
@@ -356,7 +356,7 @@ class ControlsDemo():
         label = Label(grp_ctxmenu, text='Right-click in this label\nto open the context menu', halign='fill', valign='fill')
         label.font = label.font.modify(family='Debby', size=48)
         menu = Menu(label, popup=True)
-        item1 = MenuItem(menu, index=0, push=True, text='MenuItem 1', img=self.beny_logo)
+        item1 = MenuItem(menu, index=0, push=True, text='MenuItem 1', img=Image('images/pyrap-logo.png').resize(height='32px'))
         
         def ask(*_):
             resp = ask_yesnocancel(self.shell, title='pyRAP Message Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
