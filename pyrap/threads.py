@@ -202,7 +202,7 @@ class _RLock(_Verbose):
         There is no return value.
 
         """
-        if self.__owner != _get_ident():
+        if self.__owner != get_ident():
             raise RuntimeError("cannot release un-acquired lock")
         self.__count = count = self.__count - 1
         if not count:
@@ -713,7 +713,7 @@ class Kapo(_Verbose):
 
 
     def wait(self):
-        if _get_ident() not in self.__mutex._Semaphore__owners:
+        if get_ident() not in self.__mutex._Semaphore__owners:
             raise RuntimeError('a thread must have acquired the kapo in order to wait for it.')
         if __debug__:
             self._note('%s.wait(): thread %s is waiting with kapo until all jobs are done.' % (self, thisthread()))
@@ -885,7 +885,7 @@ class InterruptableThread(threading.Thread):
                 try:
                     # We don't call self.__delete() because it also
                     # grabs _active_limbo_lock.
-                    del _active[_get_ident()]
+                    del _active[get_ident()]
                 except:
                     pass
                 
