@@ -295,7 +295,25 @@ pwt_radar.RadarChart.prototype = {
                         .domain([that._cfg.minValues[d],that._cfg.maxValues[d]])
                         .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
                     return linearScale(that._cfg.intervals[d][1])-linearScale(that._cfg.intervals[d][0]);
-                });
+                })
+                .on('mouseover', function (d){
+                    var coordinates = [0, 0];
+                    coordinates = d3.event;
+                    var x = coordinates.layerX;
+                    var y = coordinates.layerY;
+                    tooltip
+                        .attr('x', x-70)
+                        .attr('y', y-20)
+                        .text("[" + that._cfg.intervals[d][0] + ', ' + that._cfg.intervals[d][1] +']')
+                        .transition(200)
+                        .style('opacity', 1);
+                })
+                .on('mouseout', function(){
+                    tooltip
+                        .transition(200)
+                        .style('opacity', 0);
+                })
+                ;
         }
 
         axis.exit().remove();
