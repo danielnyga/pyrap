@@ -6,7 +6,7 @@ import inspect
 import time
 from pyrap.utils import out, ifnone
 from threading import _active_limbo_lock, _active, _limbo,\
-    _trace_hook, _profile_hook, _get_ident, Lock, _allocate_lock, \
+    _trace_hook, _profile_hook, get_ident, Lock, _allocate_lock, \
     _start_new_thread, _Verbose
 import sys
 import traceback
@@ -167,7 +167,7 @@ class _RLock(_Verbose):
         return true.
 
         """
-        me = _get_ident()
+        me = get_ident()
         if self.__owner == me:
             self.__count = self.__count + 1
             if __debug__:
