@@ -115,7 +115,7 @@ class LayoutAdapter(object):
             ok = True
         if not ok:
             indent = '-->' + indent[3:]
-        print(indent, '%s [%s]  (x: %s y: %s) width: [%s ; %s ; %s] height: [%s ; %s ; %s]' % (repr(self.widget), ','.join([w.widget.id for w in self.children]), 
+        print(indent, '%s [%s]  (x: %s y: %s) width: [%s ; %s ; %s] height: [%s ; %s ; %s]' % (repr(self.widget), ','.join([w.widget.id for w in self.children]),
                                                                                                    str(self.data.cellhpos), str(self.data.cellvpos), 
                                                                                                    str(self.data.cellwidth.min), str(self.data.cellwidth.value), str(self.data.cellwidth.max),
                                                                                                    str(self.data.cellheight.min), str(self.data.cellheight.value), str(self.data.cellheight.max)))

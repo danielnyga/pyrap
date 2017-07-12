@@ -47,7 +47,7 @@ def out(*args, **kwargs):
 def stop(*args, **kwargs):
     out(*args, **edict(kwargs) + {'tb': kwargs.get('tb', 1) + 1})
     sys.stdout.write('<press enter to continue>\r')
-    input()
+    eval(input())
     
 
 def trace(*args, **kwargs):
@@ -120,7 +120,7 @@ class edict(dict):
         return self
     
     def __add__(self, d):
-        return type(self)({k: v for k, v in (list(self.items()) + list(d.items()))})
+        return type(self)({k: v for k, v in (self.items() + d.items())})
     
     def __sub__(self, d):
         return type(self)({k: v for k, v in self.items() if k not in d})
@@ -233,8 +233,8 @@ class BiMap():
         else: return self._fwd[s]
         
     def __str__(self):
-        return ';'.join([str(e) for e in self._fwd.items()])
-        
+        return ';'.join([str(e) for e in list(self._fwd.items())])
+
 
 class BitMask(BiMap):
     def __init__(self, *values):
@@ -280,5 +280,3 @@ def bind(**kwargs):
 
 if __name__ == '__main__':
     print(pparti(10, [.2, .2, .1, .5]))
-    
-    

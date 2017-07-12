@@ -1092,7 +1092,7 @@ if __name__ == '__main__':
     print(v1, v2, v3)
     b = BoolVar(False)
     b2 = BoolVar(True)
-    print(not b) 
+    print((not b)) 
     
     FONT = BitMask('IT', 'BF', "STRIKETHROUGH")
 
@@ -1107,7 +1107,7 @@ if __name__ == '__main__':
     print(Font(style=FONT.IT | FONT.BF, family=['Arial', 'Nimbus Sans', 'sans-serif'], size=13))
     
     def getdirty(v, d, c):
-        print(repr(v), 'is now', {True:'dirty', False:'clean'}[d], 'by', c)
+        print((repr(v), 'is now', {True:'dirty', False:'clean'}[d], 'by', c))
     
     s = StringVar('hello', on_change=lambda v, c: out(repr(v), 'was modified by', c))
     s += ', world!'
@@ -1125,7 +1125,3 @@ if __name__ == '__main__':
     print(n1.redo())
     print(n1)
     print(n1._values)
-    
-    
-    
-    
