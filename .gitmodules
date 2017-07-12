@@ -6,4 +6,4 @@
 	url = git@spritinio.de:pyrap2apk-dev
 [submodule "3rdparty/dnutils"]
 	path = 3rdparty/dnutils
-	url = git@github.com:danielnyga/dnutils
+	url = https://github.com/danielnyga/dnutils.git
