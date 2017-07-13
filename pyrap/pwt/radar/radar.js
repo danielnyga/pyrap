@@ -51,7 +51,6 @@ pwt_radar.RadarChart = function( parent, cssid, options) {
     }
     this._svgContainer = this._svg.select('g.radar');
 
-
     this._needsLayout = true;
     this._needsRender = true;
     var that = this;
@@ -131,6 +130,86 @@ pwt_radar.RadarChart.prototype = {
         });
     },
 
+    dragmove : function( d, i, _this, that ) {
+		var dragTarget = d3.select(_this);
+
+	    // endpoint axis
+	    var x0 = that._cfg.w/2*(1-that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+	    var y0 = that._cfg.h/2*(1-that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+
+	    // directional vector axis
+	    var dx0 = x0 - that._cfg.w/2;
+	    var dy0 = y0 - that._cfg.h/2;
+
+	    // x/y coords of mousepointer
+	    coordinates = d3.mouse(_this);
+		var mx = that._cfg.w/2 + (that._cfg.w/2 - coordinates[0]);
+		var my = that._cfg.h/2 + (that._cfg.h/2 - coordinates[1]);
+
+	    // insert straight line into plane equation and solve for lambda
+	    var lambda = (dx0 * mx + dy0 * my - dx0 * that._cfg.w/2 - dy0 * that._cfg.h/2)/(Math.pow(dx0, 2) + Math.pow(dy0, 2));
+	    lambda = Math.max(Math.min(0, lambda), -1)
+
+	    // insert lambda into linear equation to get intersection point of plane with line
+	    var px = lambda * -dx0 + that._cfg.w/2;
+	    var py = lambda * -dy0 + that._cfg.h/2;
+
+	    var linearScale = d3.scale.linear()
+	        .domain([0, Math.sqrt(Math.pow(x0 - that._cfg.w/2, 2) + Math.pow(y0 - that._cfg.h/2, 2))])
+            .range([that._cfg.minValues[d.axis], that._cfg.maxValues[d.axis]]);
+
+		// determine new value for by calculating length from center to (px,py)
+	    var len = Math.sqrt(Math.pow(px - that._cfg.w/2, 2) + Math.pow(py - that._cfg.h/2, 2));
+	    var newValue = linearScale(len);
+
+		//Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+		dragTarget
+			.attr("cx", function(){return px;})
+			.attr("cy", function(){return py;});
+
+		//Updating the data set with the new value
+		(dragTarget.data()[0]).value = newValue;
+
+        var d = that._data.splice(0,that._data.length);
+        that.clear();
+        that._data = d;
+        that.update();
+//        that.updatepoly(d, i, that);
+	},
+
+	dragend : function( ) {
+		d3.select(this)
+			.attr('opacity', 1);
+	},
+
+	// update the polygon
+	updatepoly : function( d, i, that ) {
+	    that._data.forEach(function(y, idx){
+			dataValues = [];
+			that._svgContainer.selectAll(".nodes")
+				.data(y, function(j, i){
+					var linearScale = d3.scale.linear()
+									.domain([that._cfg.minValues[j.axis], that._cfg.maxValues[j.axis]])
+									.range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+					dataValues.push([
+						that._cfg.w/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)),
+						that._cfg.h/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total))
+					]);
+				});
+
+			that._svgContainer.selectAll(".radar-chart-serie"+idx)
+				.data([dataValues])
+				.attr("points",function(d) {
+					var str="";
+					for(var pti=0;pti<d.length;pti++){
+						str=str+d[pti][0]+","+d[pti][1]+" ";
+					}
+					return str;
+				});
+		});
+
+	},
+
     createElement: function( parent ) {
         var clientarea = parent.getClientArea();
         var element = document.createElement( "div" );
@@ -161,7 +240,7 @@ pwt_radar.RadarChart.prototype = {
      * removes data points from chart
      */
     clear : function () {
-        this._data = [];
+        this._data.splice(0,this._data.length);
         this.update();
     },
 
@@ -320,8 +399,9 @@ pwt_radar.RadarChart.prototype = {
 
         // calculate positions of data points
         series = 0;
+        var dataValues = []
         this._data.forEach(function(y, x){
-            dataValues = [];
+            dataValues.splice(0, dataValues.length);
             that._svgContainer.selectAll(".nodes")
                 .data(y, function(j, i){
                     var linearScale = d3.scale.linear()
@@ -334,9 +414,10 @@ pwt_radar.RadarChart.prototype = {
                 });
             dataValues.push(dataValues[0]); // close polygon
 
+            console.log('datavalues for polygons', dataValues);
             // draw polygons
             var polygons = that._svgContainer.selectAll(".polygon-radar-chart-serie"+series).data([dataValues]);
-
+            console.log('polygons', polygons);
             polygons
                 .enter()
                 .append("polygon")
@@ -369,6 +450,8 @@ pwt_radar.RadarChart.prototype = {
             series++;
             polygons.exit().remove();
         });
+
+
 
         // draw circles at data point positions
         series=0;
@@ -425,8 +508,14 @@ pwt_radar.RadarChart.prototype = {
                         .transition(200)
                         .style("fill-opacity", that._cfg.opacityArea);
                 })
-                .append("svg:title")
-                .text(function(j){return j.value});
+                .call(d3.behavior.drag()
+                                .origin(Object)
+                                .on("drag", function(d, i) {
+                                    var _this = this;
+                                    that.dragmove(d, i, _this, that);
+                                })
+                                .on('dragend', that.dragend));
+
 
             series++;
             datapoints.exit().remove();
