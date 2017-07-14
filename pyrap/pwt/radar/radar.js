@@ -169,45 +169,12 @@ pwt_radar.RadarChart.prototype = {
 
 		//Updating the data set with the new value
 		(dragTarget.data()[0]).value = newValue;
-
-        var d = that._data.splice(0,that._data.length);
-        that.clear();
-        that._data = d;
         that.update();
-//        that.updatepoly(d, i, that);
 	},
 
 	dragend : function( ) {
 		d3.select(this)
 			.attr('opacity', 1);
-	},
-
-	// update the polygon
-	updatepoly : function( d, i, that ) {
-	    that._data.forEach(function(y, idx){
-			dataValues = [];
-			that._svgContainer.selectAll(".nodes")
-				.data(y, function(j, i){
-					var linearScale = d3.scale.linear()
-									.domain([that._cfg.minValues[j.axis], that._cfg.maxValues[j.axis]])
-									.range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-					dataValues.push([
-						that._cfg.w/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)),
-						that._cfg.h/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total))
-					]);
-				});
-
-			that._svgContainer.selectAll(".radar-chart-serie"+idx)
-				.data([dataValues])
-				.attr("points",function(d) {
-					var str="";
-					for(var pti=0;pti<d.length;pti++){
-						str=str+d[pti][0]+","+d[pti][1]+" ";
-					}
-					return str;
-				});
-		});
-
 	},
 
     createElement: function( parent ) {
@@ -398,7 +365,6 @@ pwt_radar.RadarChart.prototype = {
         axis.exit().remove();
 
         // calculate positions of data points
-        series = 0;
         var dataValues = []
         this._data.forEach(function(y, x){
             dataValues.splice(0, dataValues.length);
@@ -414,16 +380,14 @@ pwt_radar.RadarChart.prototype = {
                 });
             dataValues.push(dataValues[0]); // close polygon
 
-            console.log('datavalues for polygons', dataValues);
             // draw polygons
-            var polygons = that._svgContainer.selectAll(".polygon-radar-chart-serie"+series).data([dataValues]);
-            console.log('polygons', polygons);
+            var polygons = that._svgContainer.selectAll(".polygon-radar-chart-serie"+x).data([dataValues]);
             polygons
                 .enter()
                 .append("polygon")
-                .attr("class", "polygon-radar-chart-serie"+series)
+                .attr("class", "polygon-radar-chart-serie"+x)
                 .style("stroke-width", "2px")
-                .style("stroke", that._cfg.color(series))
+                .style("stroke", that._cfg.color(x))
                 .attr("points",function(d) {
                     var str="";
                     for(var pti=0;pti<d.length;pti++){
@@ -431,7 +395,7 @@ pwt_radar.RadarChart.prototype = {
                     }
                     return str;
                 })
-                .style("fill", function(j, i){return that._cfg.color(series)})
+                .style("fill", function(j, i){return that._cfg.color(x)})
                 .style("fill-opacity", that._cfg.opacityArea)
                 .on('mouseover', function (d){
                     z = "polygon."+d3.select(this).attr("class");
@@ -447,20 +411,27 @@ pwt_radar.RadarChart.prototype = {
                         .transition(200)
                         .style("fill-opacity", that._cfg.opacityArea);
                 });
-            series++;
+
+            polygons
+                .attr("points",function(d) {
+                    var str="";
+                    for(var pti=0;pti<d.length;pti++){
+                        str=str+d[pti][0]+","+d[pti][1]+" ";
+                    }
+                    return str;
+                })
             polygons.exit().remove();
         });
 
 
 
         // draw circles at data point positions
-        series=0;
         this._data.forEach(function(y, x){
-            var datapoints = that._svgContainer.selectAll(".circle-radar-chart-serie"+series).data(y);
+            var datapoints = that._svgContainer.selectAll(".circle-radar-chart-serie"+x).data(y);
 
             datapoints.enter()
                 .append("svg:circle")
-                .attr("class", "circle-radar-chart-serie"+series)
+                .attr("class", "circle-radar-chart-serie"+x)
                 .attr('r', that._cfg.radius)
                 .attr("alt", function(j){return Math.max(j.value, 0)})
                 .attr("cx", function(j, i){
@@ -480,7 +451,7 @@ pwt_radar.RadarChart.prototype = {
                     return that._cfg.h/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
                 })
                 .attr("data-id", function(j){return j.axis})
-                .style("fill", that._cfg.color(series)).style("fill-opacity", .9)
+                .style("fill", that._cfg.color(x)).style("fill-opacity", .9)
                 .on('mouseover', function (d){
                     newX =  parseFloat(d3.select(this).attr('cx')) - 10;
                     newY =  parseFloat(d3.select(this).attr('cy')) - 5;
@@ -515,9 +486,6 @@ pwt_radar.RadarChart.prototype = {
                                     that.dragmove(d, i, _this, that);
                                 })
                                 .on('dragend', that.dragend));
-
-
-            series++;
             datapoints.exit().remove();
         });
 
