@@ -451,10 +451,11 @@ pwt_radar.RadarChart.prototype = {
                                     var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
 
                                     //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                    var maxy = d3.select(".maxinterval-"+d.split(' ').join('_')).attr('y');
                                     var dragTarget = d3.select(this);
                                     dragTarget
                                         .attr("y", function(d, i){
-                                            return that._cfg.h/2 + l;
+                                            return Math.min(that._cfg.h/2 + l, maxy);
                                         });
 
                                     // update actual interval
@@ -463,7 +464,6 @@ pwt_radar.RadarChart.prototype = {
                                             return that._cfg.h/2 + l;
                                         })
                                         .attr("height", function(d, i){
-                                            var maxy = d3.select(".maxinterval-"+d.split(' ').join('_')).attr('y');
                                             return maxy - (that._cfg.h/2 + l);
                                         });
                                 })
@@ -508,16 +508,17 @@ pwt_radar.RadarChart.prototype = {
                                     var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
 
                                     //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                    var miny = d3.select(".mininterval-"+d.split(' ').join('_')).attr('y')
                                     var dragTarget = d3.select(this);
                                     dragTarget
                                         .attr("y", function(d, i){
-                                            return that._cfg.h/2 + l;
+                                            return Math.max(miny, that._cfg.h/2 + l);
                                         });
 
                                     // update actual interval
                                     d3.select(".interval-"+d.split(' ').join('_'))
                                         .attr("height", function(d, i){
-                                            return (that._cfg.h/2 + l) - d3.select(".mininterval-"+d.split(' ').join('_')).attr('y');
+                                            return (that._cfg.h/2 + l) - miny;
                                         });
                                 })
                                 .on('dragend', function(d, i) {
