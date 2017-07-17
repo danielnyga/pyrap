@@ -435,10 +435,10 @@ pwt_radar.RadarChart.prototype = {
                 .attr("width", 2*that._cfg.intWidth)
                 .attr("height", 5)
                 .on('mouseover', function(d) {
-                    d3.select(this).style("cursor", "pointer"); /*semicolon here*/
+                    d3.select(this).style("cursor", "pointer");
                 })
                 .on('mouseout', function(d) {
-                    d3.select(this).style("cursor", "default"); /*semicolon here*/
+                    d3.select(this).style("cursor", "default");
                 })
                 .call(d3.behavior.drag()
                                 .origin(Object)
@@ -492,10 +492,10 @@ pwt_radar.RadarChart.prototype = {
                 .attr("width", 2*that._cfg.intWidth)
                 .attr("height", 5)
                 .on('mouseover', function(d) {
-                    d3.select(this).style("cursor", "pointer"); /*semicolon here*/
+                    d3.select(this).style("cursor", "pointer");
                 })
                 .on('mouseout', function(d) {
-                    d3.select(this).style("cursor", "default"); /*semicolon here*/
+                    d3.select(this).style("cursor", "default");
                 })
                 .call(d3.behavior.drag()
                                 .origin(Object)
@@ -629,6 +629,7 @@ pwt_radar.RadarChart.prototype = {
                 .attr("data-id", function(j){return j.axis})
                 .style("fill", that._cfg.color(x)).style("fill-opacity", .9)
                 .on('mouseover', function (d){
+                    d3.select(this).style("cursor", "pointer");
                     newX =  parseFloat(d3.select(this).attr('cx')) - 10;
                     newY =  parseFloat(d3.select(this).attr('cy')) - 5;
 
@@ -648,6 +649,7 @@ pwt_radar.RadarChart.prototype = {
                         .style("fill-opacity", .7);
                 })
                 .on('mouseout', function(){
+                    d3.select(this).style("cursor", "default");
                     tooltip
                         .transition(200)
                         .style('opacity', 0);
