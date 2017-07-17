@@ -34,6 +34,8 @@ pwt_radar.RadarChart = function( parent, cssid, options) {
     this._allAxis = [];
     this._total = this._allAxis.length;
     this._radius = this._cfg.factor*Math.min(this._cfg.w/2, this._cfg.h/2);
+    this._legendopts = [];
+
 
 
     // update default options with user defined settings
@@ -96,6 +98,9 @@ pwt_radar.RadarChart.prototype = {
 		}
     },
 
+    /**
+     * split long legend text into multiple lines
+     */
     wraptext : function(text, width) {
         text.each(function() {
             var text = d3.select(this),
@@ -130,51 +135,101 @@ pwt_radar.RadarChart.prototype = {
         });
     },
 
-    dragmove : function( d, i, _this, that ) {
-		var dragTarget = d3.select(_this);
+    /**
+     * recalculate datapoint positions on drag event
+     */
+    dragmove : function( d, i ) {
+
+        if (typeof d.axis === 'undefined') {
+            var axis = d;
+        } else {
+            var axis = d.axis;
+        }
 
 	    // endpoint axis
-	    var x0 = that._cfg.w/2*(1-that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
-	    var y0 = that._cfg.h/2*(1-that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+	    var x0 = this._cfg.w/2*(1-this._cfg.factor*Math.sin(i*this._cfg.radians/this._total));
+	    var y0 = this._cfg.h/2*(1-this._cfg.factor*Math.cos(i*this._cfg.radians/this._total));
 
 	    // directional vector axis
-	    var dx0 = x0 - that._cfg.w/2;
-	    var dy0 = y0 - that._cfg.h/2;
+	    var dx0 = x0 - this._cfg.w/2;
+	    var dy0 = y0 - this._cfg.h/2;
 
 	    // x/y coords of mousepointer
-	    coordinates = d3.mouse(_this);
-		var mx = that._cfg.w/2 + (that._cfg.w/2 - coordinates[0]);
-		var my = that._cfg.h/2 + (that._cfg.h/2 - coordinates[1]);
+	    coordinates = d3.mouse(this._svgContainer.node());
+		var mx = this._cfg.w/2 + (this._cfg.w/2 - coordinates[0]);
+		var my = this._cfg.h/2 + (this._cfg.h/2 - coordinates[1]);
 
 	    // insert straight line into plane equation and solve for lambda
-	    var lambda = (dx0 * mx + dy0 * my - dx0 * that._cfg.w/2 - dy0 * that._cfg.h/2)/(Math.pow(dx0, 2) + Math.pow(dy0, 2));
+	    var lambda = (dx0 * mx + dy0 * my - dx0 * this._cfg.w/2 - dy0 * this._cfg.h/2)/(Math.pow(dx0, 2) + Math.pow(dy0, 2));
 	    lambda = Math.max(Math.min(0, lambda), -1)
 
 	    // insert lambda into linear equation to get intersection point of plane with line
-	    var px = lambda * -dx0 + that._cfg.w/2;
-	    var py = lambda * -dy0 + that._cfg.h/2;
+	    var px = lambda * -dx0 + this._cfg.w/2;
+	    var py = lambda * -dy0 + this._cfg.h/2;
 
 	    var linearScale = d3.scale.linear()
-	        .domain([0, Math.sqrt(Math.pow(x0 - that._cfg.w/2, 2) + Math.pow(y0 - that._cfg.h/2, 2))])
-            .range([that._cfg.minValues[d.axis], that._cfg.maxValues[d.axis]]);
+	        .domain([0, Math.sqrt(Math.pow(x0 - this._cfg.w/2, 2) + Math.pow(y0 - this._cfg.h/2, 2))])
+	        .range([this._cfg.minValues[axis], this._cfg.maxValues[axis]]);
 
 		// determine new value for by calculating length from center to (px,py)
-	    var len = Math.sqrt(Math.pow(px - that._cfg.w/2, 2) + Math.pow(py - that._cfg.h/2, 2));
+	    var len = Math.sqrt(Math.pow(px - this._cfg.w/2, 2) + Math.pow(py - this._cfg.h/2, 2));
 	    var newValue = linearScale(len);
 
-		//Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-		dragTarget
-			.attr("cx", function(){return px;})
-			.attr("cy", function(){return py;});
+	    return [px, py, newValue];
 
-		//Updating the data set with the new value
-		(dragTarget.data()[0]).value = newValue;
-        that.update();
 	},
 
-	dragend : function( ) {
-		d3.select(this)
+    /**
+     * set recently dragged datapoint to foreground
+     */
+	dragend : function( d, i, _this, that ) {
+
+	    if (typeof d.axis === 'undefined') {
+            var axis = d;
+        } else {
+            var axis = d.axis;
+        }
+
+        var dragtarget = d3.select(_this);
+
+		dragtarget
 			.attr('opacity', 1);
+
+	    var targetclass = dragtarget.attr('class');
+
+	    var tclass = targetclass.split('-')[0];
+
+        switch(tclass) {
+            case 'circle':
+	            var selectiontype = 'circle';
+                var dataset = targetclass.split(selectiontype+'-')[1];
+                var v = (dragtarget.data()[0]).value;
+                var newdata = dragtarget.data()[0];
+                break;
+            case 'mininterval':
+            case 'maxinterval':
+                // endpoint axis
+                var x0 = this._cfg.w/2*(1-this._cfg.factor*Math.sin(i*this._cfg.radians/this._total));
+                var y0 = this._cfg.h/2*(1-this._cfg.factor*Math.cos(i*this._cfg.radians/this._total));
+
+                // new coords
+                var px0 = dragtarget.attr('x');
+                var py0 = dragtarget.attr('y');
+
+                var linearScale = d3.scale.linear()
+                    .domain([0, Math.sqrt(Math.pow(x0 - this._cfg.w/2, 2) + Math.pow(y0 - this._cfg.h/2, 2))])
+                    .range([this._cfg.minValues[axis], this._cfg.maxValues[axis]]);
+
+                // get length of vector to new position
+                var lenx = px0 - that._cfg.w/2;
+                var leny = py0 - that._cfg.h/2;
+                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+
+	            var selectiontype = tclass;
+                var dataset = d;
+                var newdata = linearScale(l);
+        }
+		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'type': selectiontype, 'dataset': dataset, 'data': newdata } );
 	},
 
     createElement: function( parent ) {
@@ -207,12 +262,12 @@ pwt_radar.RadarChart.prototype = {
      * removes data points from chart
      */
     clear : function () {
-        this._data.splice(0,this._data.length);
+        this._data.splice(0, this._data.length);
         this.update();
     },
 
     /**
-     * updates data and legend options
+     * updates data options
      */
     updateData : function ( data ) {
         // determine min and max values for each axis
@@ -232,7 +287,7 @@ pwt_radar.RadarChart.prototype = {
     },
 
     /**
-     * redraws the graph with the updated nodes and links
+     * redraws the radar chart with the updated datapoints and polygons
      */
     update : function () {
         var that = this;
@@ -322,6 +377,7 @@ pwt_radar.RadarChart.prototype = {
         // draw intervals (only if required)
         if('undefined' !== typeof this._cfg.intervals) {
             axisenter.append("rect")
+                .attr("class", function(d, i) { return "interval-"+d.split(' ').join('_'); } )
                 .attr("x", function(d, i){return that._cfg.w/2;})
                 .attr("y", function(d, i){
                     var linearScale = d3.scale.linear()
@@ -358,9 +414,120 @@ pwt_radar.RadarChart.prototype = {
                     tooltip
                         .transition(200)
                         .style('opacity', 0);
+                });
+
+            // draw endpoints of intervals to be dragged
+            axisenter.append("rect")
+                .attr("class", function(d, i) { return "mininterval-"+d.split(' ').join('_'); } )
+                .attr("x", function(d, i){return that._cfg.w/2;})
+                .attr("y", function(d, i){
+                    var linearScale = d3.scale.linear()
+                        .domain([that._cfg.minValues[d],that._cfg.maxValues[d]])
+                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                    return that._cfg.h/2 + linearScale(that._cfg.intervals[d][0]);
                 })
-                ;
-        }
+                .attr("transform", function(d, i){
+                    var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                    return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
+                })
+                .attr("fill", 'grey')
+                .style("fill-opacity", 1)
+                .attr("width", 2*that._cfg.intWidth)
+                .attr("height", 5)
+                .on('mouseover', function(d) {
+                    d3.select(this).style("cursor", "pointer"); /*semicolon here*/
+                })
+                .on('mouseout', function(d) {
+                    d3.select(this).style("cursor", "default"); /*semicolon here*/
+                })
+                .call(d3.behavior.drag()
+                                .origin(Object)
+                                .on("drag", function(d, i) {
+                                    var data = that.dragmove(d, i);
+
+                                    var lenx = data[0] - that._cfg.w/2;
+                                    var leny = data[1] - that._cfg.h/2;
+
+                                    var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+
+                                    //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                    var dragTarget = d3.select(this);
+                                    dragTarget
+                                        .attr("y", function(d, i){
+                                            return that._cfg.h/2 + l;
+                                        });
+
+                                    // update actual interval
+                                    d3.select(".interval-"+d.split(' ').join('_'))
+                                        .attr("y", function(d, i){
+                                            return that._cfg.h/2 + l;
+                                        })
+                                        .attr("height", function(d, i){
+                                            var maxy = d3.select(".maxinterval-"+d.split(' ').join('_')).attr('y');
+                                            return maxy - (that._cfg.h/2 + l);
+                                        });
+                                })
+                                .on('dragend', function(d, i) {
+
+                                    var _this = this;
+                                    that.dragend(d, i, _this, that);
+                                })
+                );
+
+            axisenter.append("rect")
+                .attr("class", function(d, i) { return "maxinterval-"+d.split(' ').join('_'); } )
+                .attr("x", function(d, i){ return that._cfg.w/2; } )
+                .attr("y", function(d, i){
+                    var linearScale = d3.scale.linear()
+                        .domain([that._cfg.minValues[d],that._cfg.maxValues[d]])
+                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                    return that._cfg.h/2 + linearScale(that._cfg.intervals[d][1]);
+                })
+                .attr("transform", function(d, i){
+                    var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                    return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
+                })
+                .attr("fill", 'grey')
+                .style("fill-opacity", 1)
+                .attr("width", 2*that._cfg.intWidth)
+                .attr("height", 5)
+                .on('mouseover', function(d) {
+                    d3.select(this).style("cursor", "pointer"); /*semicolon here*/
+                })
+                .on('mouseout', function(d) {
+                    d3.select(this).style("cursor", "default"); /*semicolon here*/
+                })
+                .call(d3.behavior.drag()
+                                .origin(Object)
+                                .on("drag", function(d, i) {
+                                    var data = that.dragmove(d, i);
+
+                                    var lenx = data[0] - that._cfg.w/2;
+                                    var leny = data[1] - that._cfg.h/2;
+
+                                    var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+
+                                    //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                    var dragTarget = d3.select(this);
+                                    dragTarget
+                                        .attr("y", function(d, i){
+                                            return that._cfg.h/2 + l;
+                                        });
+
+                                    // update actual interval
+                                    d3.select(".interval-"+d.split(' ').join('_'))
+                                        .attr("height", function(d, i){
+                                            return (that._cfg.h/2 + l) - d3.select(".mininterval-"+d.split(' ').join('_')).attr('y');
+                                        });
+                                })
+                                .on('dragend', function(d, i) {
+                                    var _this = this;
+                                    that.dragend(d, i, _this, that);
+                                })
+                );
+
+
+        }// end if intervals
 
         axis.exit().remove();
 
@@ -381,11 +548,23 @@ pwt_radar.RadarChart.prototype = {
             dataValues.push(dataValues[0]); // close polygon
 
             // draw polygons
-            var polygons = that._svgContainer.selectAll(".polygon-radar-chart-serie"+x).data([dataValues]);
+            var polygons = that._svgContainer.selectAll(".polygon-"+that._legendopts[x]).data([dataValues]);
+
+            // update polygons
+            polygons
+                .attr("points",function(d) {
+                    var str="";
+                    for(var pti=0;pti<d.length;pti++){
+                        str=str+d[pti][0]+","+d[pti][1]+" ";
+                    }
+                    return str;
+                })
+
+            // create polygons
             polygons
                 .enter()
                 .append("polygon")
-                .attr("class", "polygon-radar-chart-serie"+x)
+                .attr("class", "polygon-"+that._legendopts[x])
                 .style("stroke-width", "2px")
                 .style("stroke", that._cfg.color(x))
                 .attr("points",function(d) {
@@ -412,14 +591,7 @@ pwt_radar.RadarChart.prototype = {
                         .style("fill-opacity", that._cfg.opacityArea);
                 });
 
-            polygons
-                .attr("points",function(d) {
-                    var str="";
-                    for(var pti=0;pti<d.length;pti++){
-                        str=str+d[pti][0]+","+d[pti][1]+" ";
-                    }
-                    return str;
-                })
+            // remove old polygons
             polygons.exit().remove();
         });
 
@@ -427,11 +599,14 @@ pwt_radar.RadarChart.prototype = {
 
         // draw circles at data point positions
         this._data.forEach(function(y, x){
-            var datapoints = that._svgContainer.selectAll(".circle-radar-chart-serie"+x).data(y);
+            var datapoints = that._svgContainer.selectAll(".circle-"+that._legendopts[x]).data(y);
 
+            // update datapoints
+
+            // create datapoints
             datapoints.enter()
                 .append("svg:circle")
-                .attr("class", "circle-radar-chart-serie"+x)
+                .attr("class", "circle-"+that._legendopts[x])
                 .attr('r', that._cfg.radius)
                 .attr("alt", function(j){return Math.max(j.value, 0)})
                 .attr("cx", function(j, i){
@@ -482,15 +657,32 @@ pwt_radar.RadarChart.prototype = {
                 .call(d3.behavior.drag()
                                 .origin(Object)
                                 .on("drag", function(d, i) {
-                                    var _this = this;
-                                    that.dragmove(d, i, _this, that);
+                                    var data = that.dragmove(d, i);
+
+                                    //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                    var dragTarget = d3.select(this);
+                                    dragTarget
+                                        .attr("cx", function() { return data[0]; })
+                                        .attr("cy", function() { return data[1]; });
+
+                                    //Updating the data of the circle with the new value
+                                    (dragTarget.data()[0]).value = data[2];
+                                    that.update();
                                 })
-                                .on('dragend', that.dragend));
+                                .on('dragend', function(d, i) {
+                                    var _this = this;
+                                    that.dragend(d, i, _this, that);
+                                })
+                );
+
+            // remove datapoints
             datapoints.exit().remove();
         });
 
         // tooltip
         tooltip = this._svgContainer.selectAll(".tooltip").data([1]);
+
+        // create tooltip
         tooltip
             .enter()
             .append('text')
@@ -506,7 +698,7 @@ pwt_radar.RadarChart.prototype = {
      * update Legend
      */
     updateLegend : function ( legend ) {
-        var opts = legend.opts || [];
+        this._legendopts = legend.opts || [];
         var txt = legend.txt || '';
 
         if (typeof  legend.opts !== 'undefined'){
@@ -546,7 +738,7 @@ pwt_radar.RadarChart.prototype = {
                 .attr('transform', 'translate(90, 40)');
 
             //Create colour squares
-            var legendrect = this._legendsvg.select('g').selectAll('rect').data(opts);
+            var legendrect = this._legendsvg.select('g').selectAll('rect').data(this._legendopts);
             legendrect
                 .enter()
                 .append("rect")
@@ -559,7 +751,7 @@ pwt_radar.RadarChart.prototype = {
             legendrect.exit().remove();
 
             //Create text next to squares
-            var legendtext = this._legendsvg.select('g').selectAll('text').data(opts);
+            var legendtext = this._legendsvg.select('g').selectAll('text').data(this._legendopts);
             legendtext
                 .enter()
                 .append("text")
@@ -588,6 +780,6 @@ rap.registerTypeHandler( 'pwt.customs.RadarChart', {
 
   methods : [ 'updateData', 'updateLegend' ],
 
-  events: [ ]
+  events: [ 'Selection' ]
 
 } );

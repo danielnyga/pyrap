@@ -4,6 +4,7 @@ from dnutils.tools import ifnone
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
     RWTSetOperation
+from pyrap.events import OnSelect, _rwt_selection_event, _rwt_event
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor, checkwidget
@@ -26,6 +27,7 @@ class RadarChart(Widget):
         self._cssid = cssid
         self._opts = opts
         self._legend = None
+        self.on_select = OnSelect(self)
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -56,6 +58,13 @@ class RadarChart(Widget):
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
 
         return w, h
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else: events[op.event].notify(_rwt_event(op))
+        return True
 
     @property
     def gwidth(self):
