@@ -16,18 +16,19 @@ class RadarChart(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('RadarChart')
-    def __init__(self, parent, cssid=None, opts=None, **options):
+    def __init__(self, parent, legendtext=None, cssid=None, opts=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = RadarTheme(self, session.runtime.mngr.theme)
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         session.runtime.ensurejsresources(self._requiredjs)
-        self._gwidth = None
-        self._gheight = None
-        self._data = []
+        self._axes = []
+        self._data = {}
         self._cssid = cssid
         self._opts = opts
-        self._legend = None
+        self._legendtext = legendtext
         self.on_select = OnSelect(self)
+        self._gwidth = None
+        self._gheight = None
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -35,7 +36,7 @@ class RadarChart(Widget):
             options.cssid = self._cssid
         if self._opts:
             options.options = self._opts
-        print self._opts
+        options.legendtext = ifnone(self._legendtext, '')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
@@ -86,13 +87,89 @@ class RadarChart(Widget):
         self._gheight = h
         session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
 
+    def addaxis(self, name, minval=None, maxval=None, unit='%', intervalmin=None, intervalmax=None):
+        r = RadarAxis(name, minval=minval, maxval=maxval, unit=unit, intervalmin=intervalmin, intervalmax=intervalmax)
+        self._axes.append(r)
+        session.runtime << RWTCallOperation(self.id, 'addAxis', {'name': name,
+                                                                 'limits': [minval, maxval],
+                                                                 'unit': unit,
+                                                                 'interval': [intervalmin, intervalmax]})
+        return r
 
-    def legend(self, text=None, entries=None):
-        # self._legend = RadarLegend(text=text, entries=entries)
-        session.runtime << RWTCallOperation(self.id, 'updateLegend', {'txt': text, 'opts': entries})
+    def interval(self, axis, minval=None, maxval=None):
+        if minval is not None:
+            axis.intervalmin = minval
+        if maxval is not None:
+            axis.intervalmax = maxval
+        session.runtime << RWTCallOperation(self.id, 'updateAxis',{'axis': axis })
 
-    def updatedata(self, data):
+    def limits(self, axis, minval=None, maxval=None):
+        if minval is not None:
+            axis.minval = minval
+        if maxval is not None:
+            axis.maxval = maxval
+        session.runtime << RWTCallOperation(self.id, 'updateAxis',{'axis': axis })
+
+    def unit(self, axis, unit):
+        axis.unit = unit
+        session.runtime << RWTCallOperation(self.id, 'updateAxis',{'axis': axis })
+
+    def setdata(self, data):
+        self._data = data
         session.runtime << RWTCallOperation(self.id, 'updateData', data)
+
+
+class RadarAxis(object):
+    def __init__(self, name, minval=0, maxval=100, unit='%', intervalmin=None, intervalmax=None):
+        self._name = name
+        self._minval = minval
+        self._maxval = maxval
+        self._unit = unit
+        self._intervalmin = intervalmin
+        self._intervalmax = intervalmax
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, n):
+        self._name = n
+
+    @property
+    def minval(self):
+        return self._minval
+
+    @minval.setter
+    def minval(self, m):
+        self._minval = m
+
+    @property
+    def maxval(self):
+        return self._maxval
+
+    @maxval.setter
+    def maxval(self, m):
+        self._maxval = m
+
+    @property
+    def intervalmin(self):
+        return self._intervalmin
+
+    @intervalmin.setter
+    def intervalmin(self, m):
+        self._intervalmin = m
+
+    @property
+    def intervalmax(self):
+        return self._intervalmax
+
+    @intervalmax.setter
+    def intervalmax(self, m):
+        self._intervalmax = m
+
+    def intervals(self):
+        return self.intervalmin, self.intervalmax
 
 
 class RadarTheme(WidgetTheme):

@@ -3,7 +3,7 @@
 // for extra information
 pwt_radar = {};
 
-pwt_radar.RadarChart = function( parent, cssid, options) {
+pwt_radar.RadarChart = function( parent, cssid, legendtext, radaroptions) {
 
     this._cfg = {
          radius: 5,
@@ -33,16 +33,16 @@ pwt_radar.RadarChart = function( parent, cssid, options) {
     this._data = [];
     this._allAxis = [];
     this._total = this._allAxis.length;
-    this._radius = this._cfg.factor*Math.min(this._cfg.w/2, this._cfg.h/2);
     this._legendopts = [];
+    this._legendtext = legendtext;
 
 
 
     // update default options with user defined settings
-	if(options){
-	  for(var i in options){
-		if('undefined' !== typeof options[i]){
-		  this._cfg[i] = options[i];
+	if(radaroptions){
+	  for(var i in radaroptions){
+		if('undefined' !== typeof radaroptions[i]){
+		  this._cfg[i] = radaroptions[i];
 		}
 	  }
 	}
@@ -51,16 +51,17 @@ pwt_radar.RadarChart = function( parent, cssid, options) {
     if (cssid) {
         this._svg.attr('id', cssid);
     }
+
     this._svgContainer = this._svg.select('g.radar');
 
-    this._needsLayout = true;
+    this._initialized = false;
     this._needsRender = true;
     var that = this;
     rap.on( "render", function() {
         if( that._needsRender ) {
-            if( that._needsLayout ) {
+            if( !that._initialized) {
                 that.initialize( that );
-                that._needsLayout = false;
+                that._initialized = true;
             }
             that.update();
             that._needsRender = false;
@@ -141,7 +142,7 @@ pwt_radar.RadarChart.prototype = {
     dragmove : function( d, i ) {
 
         if (typeof d.axis === 'undefined') {
-            var axis = d;
+            var axis = this._allAxis[i];
         } else {
             var axis = d.axis;
         }
@@ -169,12 +170,11 @@ pwt_radar.RadarChart.prototype = {
 
 	    var linearScale = d3.scale.linear()
 	        .domain([0, Math.sqrt(Math.pow(x0 - this._cfg.w/2, 2) + Math.pow(y0 - this._cfg.h/2, 2))])
-	        .range([this._cfg.minValues[axis], this._cfg.maxValues[axis]]);
+	        .range([this._cfg.minValues[axis.name], this._cfg.maxValues[axis.name]]);
 
 		// determine new value for by calculating length from center to (px,py)
 	    var len = Math.sqrt(Math.pow(px - this._cfg.w/2, 2) + Math.pow(py - this._cfg.h/2, 2));
 	    var newValue = linearScale(len);
-
 	    return [px, py, newValue];
 
 	},
@@ -184,8 +184,8 @@ pwt_radar.RadarChart.prototype = {
      */
 	dragend : function( d, i, _this, that ) {
 
-	    if (typeof d.axis === 'undefined') {
-            var axis = d;
+        if (typeof d.axis === 'undefined') {
+            var axis = this._allAxis[i];
         } else {
             var axis = d.axis;
         }
@@ -218,7 +218,7 @@ pwt_radar.RadarChart.prototype = {
 
                 var linearScale = d3.scale.linear()
                     .domain([0, Math.sqrt(Math.pow(x0 - this._cfg.w/2, 2) + Math.pow(y0 - this._cfg.h/2, 2))])
-                    .range([this._cfg.minValues[axis], this._cfg.maxValues[axis]]);
+                    .range([this._cfg.minValues[axis.name], this._cfg.maxValues[axis.name]]);
 
                 // get length of vector to new position
                 var lenx = px0 - that._cfg.w/2;
@@ -258,6 +258,18 @@ pwt_radar.RadarChart.prototype = {
         this.update();
     },
 
+    setWidth: function( width ) {
+        this._parentDIV.style.width = width + "px";
+        this._w = width;
+        this.update();
+    },
+
+    setHeight: function( height ) {
+        this._parentDIV.style.height = height + "px";
+        this._h = height;
+        this.update();
+    },
+
     /**
      * removes data points from chart
      */
@@ -267,22 +279,38 @@ pwt_radar.RadarChart.prototype = {
     },
 
     /**
+     * updates an axis of the radar chart
+     */
+    updateAxis : function ( data ) {
+        console.log('updateAxis');
+
+    },
+
+    /**
+     * adds an axis to the radar chart
+     */
+    addAxis : function ( axis ) {
+        this._allAxis.push(axis);
+        this._total = this._allAxis.length;
+    },
+
+    /**
      * updates data options
      */
     updateData : function ( data ) {
         // determine min and max values for each axis
-        for (var x = 0; x < data.length; x++) {
+        this._legendopts.splice(0, this._legendopts.length);
+        for (var x in data) {
+            this._legendopts.push(x);
             for (var y = 0; y < data[x].length; y++) {
-                this._cfg.minValues[data[x][y].axis] = typeof this._cfg.minValues[data[x][y].axis] !== 'undefined' ? Math.min(this._cfg.minValues[data[x][y].axis], data[x][y].value) : data[x][y].value;
-                this._cfg.maxValues[data[x][y].axis] = typeof this._cfg.maxValues[data[x][y].axis] !== 'undefined' ? Math.max(this._cfg.maxValues[data[x][y].axis], data[x][y].value) : data[x][y].value;
+                this._cfg.minValues[this._allAxis[y].name] = typeof this._cfg.minValues[this._allAxis[y].name] !== 'undefined' ? Math.min(this._allAxis[y].limits[0], this._cfg.minValues[this._allAxis[y].name], data[x][y]) : data[x][y];
+                this._cfg.maxValues[this._allAxis[y].name] = typeof this._cfg.maxValues[this._allAxis[y].name] !== 'undefined' ? Math.max(this._allAxis[y].limits[1], this._cfg.maxValues[this._allAxis[y].name], data[x][y]) : data[x][y];
             }
 	    }
 
-        this._allAxis = (data[0].map(function(i, j){return i.axis}));
-        this._total = this._allAxis.length;
-        this._radius = this._cfg.factor*Math.min(this._cfg.w/2, this._cfg.h/2);
         this._data = data;
 
+        this.updateLegend();
         this.update();
     },
 
@@ -290,6 +318,9 @@ pwt_radar.RadarChart.prototype = {
      * redraws the radar chart with the updated datapoints and polygons
      */
     update : function () {
+        // no update before graph has been initialized
+        if (!this._initialized) { return; }
+
         var that = this;
 
         // prepare dataset such that levellines and leveltexts can be drawn
@@ -297,10 +328,10 @@ pwt_radar.RadarChart.prototype = {
         var newaxis = [];
         for(var j = 0; j < this._cfg.levels; j++) {
             for (var x = 0; x < this._allAxis.length; x++){
-                var levelFactorLine = this._cfg.factor*this._radius*((j+1)/this._cfg.levels);
-                var levelFactorText = this._cfg.factor*this._radius*((j)/this._cfg.levels);
-                var value = (j)*(this._cfg.maxValues[this._allAxis[x]]-this._cfg.minValues[this._allAxis[x]])/this._cfg.levels + this._cfg.minValues[this._allAxis[x]];
-                newaxis.push([this._allAxis[x], levelFactorLine, levelFactorText, value]);
+                var levelFactorLine = this._cfg.factor*this._cfg.w/2*((j+1)/this._cfg.levels);
+                var levelFactorText = this._cfg.factor*this._cfg.h/2*((j)/this._cfg.levels);
+                var value = (j)*(this._cfg.maxValues[this._allAxis[x].name]-this._cfg.minValues[this._allAxis[x].name])/this._cfg.levels + this._cfg.minValues[this._allAxis[x].name];
+                newaxis.push([levelFactorLine, levelFactorText, value]);
             }
         }
 
@@ -308,16 +339,16 @@ pwt_radar.RadarChart.prototype = {
         var levellines = this._svgContainer.selectAll(".levelline").data(newaxis);
         levellines.enter()
             .append("svg:line")
-            .attr("x1", function(d, i){return d[1]*(1-that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));})
-            .attr("y1", function(d, i){return d[1]*(1-that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));})
-            .attr("x2", function(d, i){return d[1]*(1-that._cfg.factor*Math.sin((i+1)*that._cfg.radians/that._total));})
-            .attr("y2", function(d, i){return d[1]*(1-that._cfg.factor*Math.cos((i+1)*that._cfg.radians/that._total));})
+            .attr("x1", function(d, i){return d[0]*(1-that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));})
+            .attr("y1", function(d, i){return d[0]*(1-that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));})
+            .attr("x2", function(d, i){return d[0]*(1-that._cfg.factor*Math.sin((i+1)*that._cfg.radians/that._total));})
+            .attr("y2", function(d, i){return d[0]*(1-that._cfg.factor*Math.cos((i+1)*that._cfg.radians/that._total));})
             .attr("class", "levelline")
             .style("stroke", "grey")
             .style("stroke-opacity", "0.75")
             .style("stroke-width", "0.3px")
             .attr("transform", function(d, i){
-                return "translate(" + (that._cfg.w/2-d[1]) + ", " + (that._cfg.h/2-d[1]) + ")";
+                return "translate(" + (that._cfg.w/2-d[0]) + ", " + (that._cfg.h/2-d[0]) + ")";
             });
 
         levellines.exit().remove();
@@ -326,21 +357,17 @@ pwt_radar.RadarChart.prototype = {
         var leveltext = this._svgContainer.selectAll(".leveltext").data(newaxis);
         leveltext.enter()
             .append("svg:text")
-            .attr("x", function(d, i){return d[2]*(1-that._cfg.factor*Math.sin((i)*that._cfg.radians/that._total));})
-            .attr("y", function(d, i){return d[2]*(1-that._cfg.factor*Math.cos((i)*that._cfg.radians/that._total));})
+            .attr("x", function(d, i){return d[1]*(1-that._cfg.factor*Math.sin((i)*that._cfg.radians/that._total));})
+            .attr("y", function(d, i){return d[1]*(1-that._cfg.factor*Math.cos((i)*that._cfg.radians/that._total));})
             .attr("class", "leveltext")
             .style("font-family", "sans-serif")
             .style("font-size", "8px")
             .attr("transform", function(d, i){
-                return "translate(" + (that._cfg.w/2-d[2] + that._cfg.ToRight) + ", " + (that._cfg.h/2-d[2]) + ")";
+                return "translate(" + (that._cfg.w/2-d[1] + that._cfg.ToRight) + ", " + (that._cfg.h/2-d[1]) + ")";
             })
             .attr("fill", "#737373")
             .text(function(d, i) {
-                if (that._cfg.units == null){
-                    return that.Format('%', d[3]);
-                } else {
-                    return that.Format(that._cfg.units[d[0]], d[3]);
-                }
+                return that.Format(that._allAxis[i%that._allAxis.length].unit, d[2]);
             });
 
         leveltext.exit().remove();
@@ -365,7 +392,7 @@ pwt_radar.RadarChart.prototype = {
 
         axisenter.append("text")
             .attr("class", "legend")
-            .text(function(d){return d})
+            .text(function(d){ return d.name; })
             .style("font-family", "sans-serif")
             .style("font-size", "11px")
             .attr("text-anchor", "middle")
@@ -375,15 +402,15 @@ pwt_radar.RadarChart.prototype = {
             .attr("y", function(d, i){return that._cfg.h/2*(1-Math.cos(i*that._cfg.radians/that._total))-20*Math.cos(i*that._cfg.radians/that._total);});
 
         // draw intervals (only if required)
-        if('undefined' !== typeof this._cfg.intervals) {
+//        if('undefined' !== typeof this._cfg.intervals) {
             axisenter.append("rect")
-                .attr("class", function(d, i) { return "interval-"+d.split(' ').join('_'); } )
+                .attr("class", function(d, i) { return "interval-"+d.name.split(' ').join('_'); } )
                 .attr("x", function(d, i){return that._cfg.w/2;})
                 .attr("y", function(d, i){
                     var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d],that._cfg.maxValues[d]])
+                        .domain([d.limits[0], d.limits[1]])
                         .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2 + linearScale(that._cfg.intervals[d][0]);
+                    return that._cfg.h/2 + linearScale(d.interval[0]);
                 })
                 .attr("transform", function(d, i){
                     var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
@@ -394,9 +421,9 @@ pwt_radar.RadarChart.prototype = {
                 .attr("width", that._cfg.intWidth)
                 .attr("height", function(d, i) {
                     var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d],that._cfg.maxValues[d]])
+                        .domain([d.limits[0], d.limits[1]])
                         .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return linearScale(that._cfg.intervals[d][1])-linearScale(that._cfg.intervals[d][0]);
+                    return linearScale(d.interval[1])-linearScale(d.interval[0]);
                 })
                 .on('mouseover', function (d){
                     var coordinates = [0, 0];
@@ -406,7 +433,7 @@ pwt_radar.RadarChart.prototype = {
                     tooltip
                         .attr('x', x-70)
                         .attr('y', y-20)
-                        .text("[" + that._cfg.intervals[d][0] + ', ' + that._cfg.intervals[d][1] +']')
+                        .text("[" + d.interval[0] + ', ' + d.interval[1] +']')
                         .transition(200)
                         .style('opacity', 1);
                 })
@@ -418,13 +445,13 @@ pwt_radar.RadarChart.prototype = {
 
             // draw endpoints of intervals to be dragged
             axisenter.append("rect")
-                .attr("class", function(d, i) { return "mininterval-"+d.split(' ').join('_'); } )
+                .attr("class", function(d, i) { return "mininterval-"+d.name.split(' ').join('_'); } )
                 .attr("x", function(d, i){return that._cfg.w/2;})
                 .attr("y", function(d, i){
                     var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d],that._cfg.maxValues[d]])
+                        .domain([d.limits[0], d.limits[1]])
                         .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2 + linearScale(that._cfg.intervals[d][0]);
+                    return that._cfg.h/2 + linearScale(d.interval[0]);
                 })
                 .attr("transform", function(d, i){
                     var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
@@ -451,7 +478,7 @@ pwt_radar.RadarChart.prototype = {
                                     var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
 
                                     //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                                    var maxy = d3.select(".maxinterval-"+d.split(' ').join('_')).attr('y');
+                                    var maxy = d3.select(".maxinterval-"+d.name.split(' ').join('_')).attr('y');
                                     var dragTarget = d3.select(this);
                                     dragTarget
                                         .attr("y", function(d, i){
@@ -459,7 +486,7 @@ pwt_radar.RadarChart.prototype = {
                                         });
 
                                     // update actual interval
-                                    d3.select(".interval-"+d.split(' ').join('_'))
+                                    d3.select(".interval-"+d.name.split(' ').join('_'))
                                         .attr("y", function(d, i){
                                             return that._cfg.h/2 + l;
                                         })
@@ -475,13 +502,13 @@ pwt_radar.RadarChart.prototype = {
                 );
 
             axisenter.append("rect")
-                .attr("class", function(d, i) { return "maxinterval-"+d.split(' ').join('_'); } )
+                .attr("class", function(d, i) { return "maxinterval-"+d.name.split(' ').join('_'); } )
                 .attr("x", function(d, i){ return that._cfg.w/2; } )
                 .attr("y", function(d, i){
                     var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d],that._cfg.maxValues[d]])
+                        .domain([d.limits[0], d.limits[1]])
                         .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2 + linearScale(that._cfg.intervals[d][1]);
+                    return that._cfg.h/2 + linearScale(d.interval[1]);
                 })
                 .attr("transform", function(d, i){
                     var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
@@ -508,7 +535,7 @@ pwt_radar.RadarChart.prototype = {
                                     var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
 
                                     //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                                    var miny = d3.select(".mininterval-"+d.split(' ').join('_')).attr('y')
+                                    var miny = d3.select(".mininterval-"+d.name.split(' ').join('_')).attr('y')
                                     var dragTarget = d3.select(this);
                                     dragTarget
                                         .attr("y", function(d, i){
@@ -516,7 +543,7 @@ pwt_radar.RadarChart.prototype = {
                                         });
 
                                     // update actual interval
-                                    d3.select(".interval-"+d.split(' ').join('_'))
+                                    d3.select(".interval-"+d.name.split(' ').join('_'))
                                         .attr("height", function(d, i){
                                             return (that._cfg.h/2 + l) - miny;
                                         });
@@ -528,28 +555,29 @@ pwt_radar.RadarChart.prototype = {
                 );
 
 
-        }// end if intervals
+//        }// end if intervals
 
         axis.exit().remove();
 
         // calculate positions of data points
         var dataValues = []
-        this._data.forEach(function(y, x){
+//        this._data.forEach(function(y, x){
+        Object.keys(this._data).forEach(function(key, idx) {
             dataValues.splice(0, dataValues.length);
             that._svgContainer.selectAll(".nodes")
-                .data(y, function(j, i){
+                .data(this[key], function(val, i){
                     var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[j.axis],that._cfg.maxValues[j.axis]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                        .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
+                        .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
                     dataValues.push([
-                        that._cfg.w/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)),
-                        that._cfg.h/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total))
+                        that._cfg.w/2*(1-(parseFloat(linearScale(val))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)),
+                        that._cfg.h/2*(1-(parseFloat(linearScale(val))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total))
                     ]);
                 });
             dataValues.push(dataValues[0]); // close polygon
 
             // draw polygons
-            var polygons = that._svgContainer.selectAll(".polygon-"+that._legendopts[x]).data([dataValues]);
+            var polygons = that._svgContainer.selectAll(".polygon-"+that._legendopts[idx]).data([dataValues]);
 
             // update polygons
             polygons
@@ -565,9 +593,9 @@ pwt_radar.RadarChart.prototype = {
             polygons
                 .enter()
                 .append("polygon")
-                .attr("class", "polygon-"+that._legendopts[x])
+                .attr("class", "polygon-"+that._legendopts[idx])
                 .style("stroke-width", "2px")
-                .style("stroke", that._cfg.color(x))
+                .style("stroke", that._cfg.color(idx))
                 .attr("points",function(d) {
                     var str="";
                     for(var pti=0;pti<d.length;pti++){
@@ -575,7 +603,7 @@ pwt_radar.RadarChart.prototype = {
                     }
                     return str;
                 })
-                .style("fill", function(j, i){return that._cfg.color(x)})
+                .style("fill", function(j, i){return that._cfg.color(idx)})
                 .style("fill-opacity", that._cfg.opacityArea)
                 .on('mouseover', function (d){
                     z = "polygon."+d3.select(this).attr("class");
@@ -594,41 +622,42 @@ pwt_radar.RadarChart.prototype = {
 
             // remove old polygons
             polygons.exit().remove();
-        });
+        }, this._data);
 
 
 
         // draw circles at data point positions
-        this._data.forEach(function(y, x){
-            var datapoints = that._svgContainer.selectAll(".circle-"+that._legendopts[x]).data(y);
+        Object.keys(this._data).forEach(function(key, idx) {
+            var datapoints = that._svgContainer.selectAll(".circle-"+that._legendopts[idx]).data(this[key]);
+            var cdata = this[key];
 
             // update datapoints
 
             // create datapoints
             datapoints.enter()
                 .append("svg:circle")
-                .attr("class", "circle-"+that._legendopts[x])
+                .attr("class", "circle-"+that._legendopts[idx])
                 .attr('r', that._cfg.radius)
-                .attr("alt", function(j){return Math.max(j.value, 0)})
-                .attr("cx", function(j, i){
+                .attr("alt", function(j){return Math.max(j, 0)})
+                .attr("cx", function(cval, i){
                     var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[j.axis],that._cfg.maxValues[j.axis]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                        .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
+                        .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
                     dataValues.push([
-                        that._cfg.w/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)),
-                        that._cfg.h/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total))
+                        that._cfg.w/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)),
+                        that._cfg.h/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total))
                     ]);
-                    return that._cfg.w/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    return that._cfg.w/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
                 })
-                .attr("cy", function(j, i){
+                .attr("cy", function(cval, i){
                     var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[j.axis],that._cfg.maxValues[j.axis]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2*(1-(parseFloat(linearScale(j.value))/linearScale(that._cfg.maxValues[j.axis]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                        .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
+                        .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                    return that._cfg.h/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
                 })
-                .attr("data-id", function(j){return j.axis})
-                .style("fill", that._cfg.color(x)).style("fill-opacity", .9)
-                .on('mouseover', function (d){
+                .attr("data-id", function(j){return key})
+                .style("fill", that._cfg.color(idx)).style("fill-opacity", .9)
+                .on('mouseover', function (d,i){
                     d3.select(this).style("cursor", "pointer");
                     newX =  parseFloat(d3.select(this).attr('cx')) - 10;
                     newY =  parseFloat(d3.select(this).attr('cy')) - 5;
@@ -636,7 +665,7 @@ pwt_radar.RadarChart.prototype = {
                     tooltip
                         .attr('x', newX)
                         .attr('y', newY)
-                        .text(that._cfg.units == null ? that.Format('%', d.value) : that.Format(that._cfg.units[d.axis], d.value))
+                        .text(that.Format(that._allAxis[i].unit, d))
                         .transition(200)
                         .style('opacity', 1);
 
@@ -669,7 +698,7 @@ pwt_radar.RadarChart.prototype = {
                                         .attr("cy", function() { return data[1]; });
 
                                     //Updating the data of the circle with the new value
-                                    (dragTarget.data()[0]).value = data[2];
+                                    cdata[i] = data[2];
                                     that.update();
                                 })
                                 .on('dragend', function(d, i) {
@@ -680,7 +709,7 @@ pwt_radar.RadarChart.prototype = {
 
             // remove datapoints
             datapoints.exit().remove();
-        });
+        }, this._data);
 
         // tooltip
         tooltip = this._svgContainer.selectAll(".tooltip").data([1]);
@@ -700,21 +729,17 @@ pwt_radar.RadarChart.prototype = {
     /**
      * update Legend
      */
-    updateLegend : function ( legend ) {
-        this._legendopts = legend.opts || [];
-        var txt = legend.txt || '';
+    updateLegend : function () {
 
-        if (typeof  legend.opts !== 'undefined'){
+        if (typeof this._legendopts !== 'undefined'){
 
-            var w = 500;
-            var h = 500;
             var that = this;
 
             this._svg
                 .append('svg')
                 .attr('id', 'radarlegend')
-                .attr("width", w + 300)
-                .attr("height", h);
+                .attr("width", "100%")
+                .attr("height", "100%");
 
             this._legendsvg = this._svg.selectAll('#radarlegend');
 
@@ -725,19 +750,17 @@ pwt_radar.RadarChart.prototype = {
                 .append("text")
                 .attr("class", "legendtitle")
                 .attr('transform', 'translate(90,0)')
-                .attr("x", w - 70)
-                .attr("y", 10)
+                .attr("x", 500)
+                .attr("y", 15)
                 .attr("font-size", "12px")
                 .attr("fill", "#404040")
-                .text(txt)
+                .text(this._legendtext)
                 .call(that.wraptext, 300);
 
             legendtitle.exit().remove();
 
             //Initiate Legend
             this._legendsvg.append("g")
-                .attr("height", 100)
-                .attr("width", 200)
                 .attr('transform', 'translate(90, 40)');
 
             //Create colour squares
@@ -745,7 +768,7 @@ pwt_radar.RadarChart.prototype = {
             legendrect
                 .enter()
                 .append("rect")
-                .attr("x", w - 65)
+                .attr("x", 510)
                 .attr("y", function(d, i){ return i * 20;})
                 .attr("width", 10)
                 .attr("height", 10)
@@ -758,7 +781,7 @@ pwt_radar.RadarChart.prototype = {
             legendtext
                 .enter()
                 .append("text")
-                .attr("x", w - 52)
+                .attr("x", 525)
                 .attr("y", function(d, i){ return i * 20 + 9;})
                 .attr("font-size", "11px")
                 .attr("fill", "#737373")
@@ -774,14 +797,14 @@ rap.registerTypeHandler( 'pwt.customs.RadarChart', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    return new pwt_radar.RadarChart( parent, properties.cssid, properties.options);
+    return new pwt_radar.RadarChart( parent, properties.cssid, properties.legendtext, properties.options);
   },
 
   destructor: 'destroy',
 
   properties: [ 'remove', 'width', 'height'],
 
-  methods : [ 'updateData', 'updateLegend' ],
+  methods : [ 'updateData', 'updateLegend', 'addAxis', ],
 
   events: [ 'Selection' ]
 
