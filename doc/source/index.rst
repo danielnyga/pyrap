@@ -13,7 +13,16 @@ lightweight, easy-to-use yet powerful library that makes development of
 `SaaS applications <https://de.wikipedia.org/wiki/Software_as_a_Service>`_
 as easy and fast as possible.
 
+Showroom
+--------
 
+The showroom contains a couple of demo applications showcasing the possibilities
+that the pyRAP framework offers.
+
+pyRAP Controls Demo
+~~~~~~~~~~~~~~~~~~~
+
+<https://www.pyrap.org/showroom/controls>
 
 
 Contents:

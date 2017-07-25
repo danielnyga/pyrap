@@ -1,13 +1,10 @@
 import threading
-# from pyrap import session
 import pyrap
-import ctypes
-import inspect
 import time
 from pyrap.utils import out, ifnone
 from threading import _active_limbo_lock, _active, _limbo,\
     _trace_hook, _profile_hook, get_ident, Lock, _allocate_lock, \
-    _start_new_thread, _Verbose
+    _start_new_thread
 import sys
 import traceback
 import random
@@ -44,15 +41,11 @@ def sleep(sec):
 
 thisthread = threading.current_thread
 
-def ILock(verbose=None):
-    return _ILock(verbose=verbose)
 
-
-class _ILock(_Verbose):
+class ILock:
     '''A reimplementation of a lock that is interruptable.'''
     
-    def __init__(self, verbose=None):
-        _Verbose.__init__(self, verbose)
+    def __init__(self):
         self.__lock = threading.Lock()
         self.__owner = None
         self.__cancel = False
@@ -122,7 +115,7 @@ def RLock(*args, **kwargs):
     return _RLock(*args, **kwargs)
 
 
-class _RLock(_Verbose):
+class _RLock:
     """A reentrant lock must be released by the thread that acquired it. Once a
        thread has acquired a reentrant lock, the same thread may acquire it
        again without blocking; the thread must release it once for each time it
@@ -130,7 +123,6 @@ class _RLock(_Verbose):
     """
 
     def __init__(self, verbose=None):
-        _Verbose.__init__(self, verbose)
         self.__block = Lock()
         self.__count = 0
         self.__owner = None
@@ -238,7 +230,7 @@ class _RLock(_Verbose):
         return (count, owner)
 
     def _is_owned(self):
-        return self.__owner == _get_ident()
+        return self.__owner == get_ident()
     
     
     
@@ -256,12 +248,11 @@ def Condition(*args, **kwargs):
     return _Condition(*args, **kwargs)
 
 
-class _Condition(_Verbose):
+class _Condition:
     """Condition variables allow one or more threads to wait until they are
        notified by another thread.
     """
     def __init__(self, lock=None, verbose=None):
-        _Verbose.__init__(self, verbose)
         if lock is None:
             lock = RLock()
         self.__lock = lock
@@ -454,19 +445,19 @@ class _Condition(_Verbose):
         
     notify_all = notifyAll
         
-def Semaphore(*args, **kwargs):
-    """A factory function that returns a new semaphore.
+# def Semaphore(*args, **kwargs):
+#     """A factory function that returns a new semaphore.
+#
+#     Semaphores manage a counter representing the number of release() calls minus
+#     the number of acquire() calls, plus an initial value. The acquire() method
+#     blocks if necessary until it can return without making the counter
+#     negative. If not given, value defaults to 1.
+#
+#     """
+#     return _Semaphore(*args, **kwargs)
 
-    Semaphores manage a counter representing the number of release() calls minus
-    the number of acquire() calls, plus an initial value. The acquire() method
-    blocks if necessary until it can return without making the counter
-    negative. If not given, value defaults to 1.
 
-    """
-    return _Semaphore(*args, **kwargs)
-
-
-class _Semaphore(threading._Semaphore):
+class Semaphore(threading.Semaphore):
     """Semaphores manage a counter representing the number of release() calls
        minus the number of acquire() calls, plus an initial value. The acquire()
        method blocks if necessary until it can return without making the counter
@@ -474,10 +465,8 @@ class _Semaphore(threading._Semaphore):
 
     """
 
-    # After Tim Peters' semaphore class, but not quite the same (no maximum)
-
     def __init__(self, value=1, verbose=None):
-        threading._Semaphore.__init__(self, value, verbose)
+        threading.Semaphore.__init__(self, value, verbose)
         self.__cond = Condition(Lock())
         self.__owners = set()
 
@@ -508,18 +497,13 @@ class _Semaphore(threading._Semaphore):
         """
         rc = False
         with self.__cond:
-            while self._Semaphore__value == 0:
+            while self._value == 0:
                 if not blocking:
                     break
-                if __debug__:
-                    self._note("%s.acquire(%s): blocked waiting, value=%s",
-                            self, blocking, self._Semaphore__value)
                 self.__cond.wait()
             else:
-                self.__value = self._Semaphore__value - 1
+                self._value = self._value - 1
                 self.__owners.add(threading.current_thread().ident)
-                if __debug__:
-                    self._note("%s.acquire: success, value=%s", self, self._Semaphore__value)
                 rc = True
         return rc
 
@@ -546,33 +530,33 @@ class _Semaphore(threading._Semaphore):
         self.release()
 
 
-def BoundedSemaphore(*args, **kwargs):
-    """A factory function that returns a new bounded semaphore.
+# def BoundedSemaphore(*args, **kwargs):
+#     """A factory function that returns a new bounded semaphore.
+#
+#     A bounded semaphore checks to make sure its current value doesn't exceed its
+#     initial value. If it does, ValueError is raised. In most situations
+#     semaphores are used to guard resources with limited capacity.
+#
+#     If the semaphore is released too many times it's a sign of a bug. If not
+#     given, value defaults to 1.
+#
+#     Like regular semaphores, bounded semaphores manage a counter representing
+#     the number of release() calls minus the number of acquire() calls, plus an
+#     initial value. The acquire() method blocks if necessary until it can return
+#     without making the counter negative. If not given, value defaults to 1.
+#
+#     """
+#     return _BoundedSemaphore(*args, **kwargs)
 
-    A bounded semaphore checks to make sure its current value doesn't exceed its
-    initial value. If it does, ValueError is raised. In most situations
-    semaphores are used to guard resources with limited capacity.
 
-    If the semaphore is released too many times it's a sign of a bug. If not
-    given, value defaults to 1.
-
-    Like regular semaphores, bounded semaphores manage a counter representing
-    the number of release() calls minus the number of acquire() calls, plus an
-    initial value. The acquire() method blocks if necessary until it can return
-    without making the counter negative. If not given, value defaults to 1.
-
-    """
-    return _BoundedSemaphore(*args, **kwargs)
-
-
-class _BoundedSemaphore(_Semaphore):
+class BoundedSemaphore(Semaphore):
     """A bounded semaphore checks to make sure its current value doesn't exceed
        its initial value. If it does, ValueError is raised. In most situations
        semaphores are used to guard resources with limited capacity.
     """
 
     def __init__(self, value=1, verbose=None):
-        _Semaphore.__init__(self, value, verbose)
+        Semaphore.__init__(self, value, verbose)
         self._initial_value = value
 
     def release(self):
@@ -671,7 +655,7 @@ class _Event(threading._Event):
             return self.__flag        
 
 
-class Kapo(_Verbose):
+class Kapo:
     '''
     More complex synchronization data structure implementing a Kapo (german 'foreman').
     
@@ -681,7 +665,6 @@ class Kapo(_Verbose):
     the kapo at a time.
     '''
     def __init__(self, tasks=0, verbose=None):
-        _Verbose.__init__(self, verbose)
         self.__mutex = Semaphore(value=1)
         self.__lock = RLock()
         self.__tasks = 0
@@ -990,33 +973,5 @@ class SessionThread(DetachedSessionThread):
 
 
 if __name__ == '__main__':
-    s = Semaphore(value=1, verbose=1)
-    c = Condition()
-    kapo = Kapo(verbose=1)
-    
-    def worker():
-        kapo.inc()
-        sleep(random.random())
-#         out(threading.current_thread(), 'trying to acquire semaphore')
-#         with s:
-#             out(threading.current_thread(), 'has semaphore') 
-#             sleep(random.random() * 2)
-        kapo.dec()
-        
-    thrs = []
-    
-    with kapo:
-        for i in range(10):
-            out('Iter #%s' % (i+1))
-            t = InterruptableThread(target=worker, verbose=0)
-            thrs.append(t)
-            t.start()
-        kapo.wait()
-
-#     for t in thrs:
-#         out('killing', t)
-#         t.interrupt()
-#         t.join()
-    out('goodbye')
-    
+    pass
 
