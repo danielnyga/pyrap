@@ -7,3 +7,4 @@
 [submodule "3rdparty/dnutils"]
 	path = 3rdparty/dnutils
 	url = https://github.com/danielnyga/dnutils.git
+	branch = master
