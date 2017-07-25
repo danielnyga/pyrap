@@ -75,6 +75,21 @@ pwt_radar.RadarChart = function( parent, cssid, legendtext, radaroptions) {
 pwt_radar.RadarChart.prototype = {
 
     initialize: function() {
+
+        d3.selection.prototype.moveToFront = function() {
+          return this.each(function(){
+            this.parentNode.appendChild(this);
+          });
+        };
+        d3.selection.prototype.moveToBack = function() {
+            return this.each(function() {
+                var firstChild = this.parentNode.firstChild;
+                if (firstChild) {
+                    this.parentNode.insertBefore(this, firstChild);
+                }
+            });
+        };
+
         this._svg
             .append('svg')
             .attr('class', 'radarlegend')
@@ -354,6 +369,7 @@ pwt_radar.RadarChart.prototype = {
      * redraws the radar chart with the updated datapoints and polygons
      */
     update : function () {
+
         // no update before graph has been initialized
         if (!this._initialized) { return; }
 
@@ -681,22 +697,6 @@ pwt_radar.RadarChart.prototype = {
                     }
                     return str;
                 })
-
-
-            d3.selection.prototype.moveToFront = function() {
-              return this.each(function(){
-                this.parentNode.appendChild(this);
-              });
-            };
-            d3.selection.prototype.moveToBack = function() {
-                return this.each(function() {
-                    var firstChild = this.parentNode.firstChild;
-                    if (firstChild) {
-                        this.parentNode.insertBefore(this, firstChild);
-                    }
-                });
-            };
-
 
             // create polygons
             polygons
