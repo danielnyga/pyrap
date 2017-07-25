@@ -14,9 +14,9 @@ from xml.dom import minidom
 
 from PIL import Image as PILImage
 
+from dnutils import Condition
 from pyrap.constants import FONT
 from pyrap.utils import out, BitMask, ifnone
-from pyrap import threads
 from functools import reduce
 
 
@@ -24,7 +24,7 @@ class Event(object):
     
     def __init__(self):
         self._listeners = []
-        self._wait = threads.Condition()
+        self._wait = Condition()
         
     def __iadd__(self, l):
         if l not in self._listeners:
@@ -339,7 +339,7 @@ class NumVar(Var):
     def __rsub__(self, o):
         return self - o
      
-    def __div__(self, o):
+    def __truediv__(self, o):
         return float(self.value) / self._getval(o)
     
     def __floordiv__(self, o):
@@ -567,7 +567,7 @@ class Pixels(Dim):
         else:
             Dim.__init__(self, v)
 
-    def __div__(self, d):
+    def __truediv__(self, d):
         s = parse_value(d)
         return px(int(round(self.value / (s.value if type(d) == Pixels else d))))
     
@@ -955,7 +955,8 @@ class Image(object):
             with open(self.filepath) as f: self._content = f.read()
         else:
             self._img = PILImage.open(self._filepath)
-            with open(self.filepath) as f: self._content = f.read()
+            with open(self.filepath, 'rb') as f:
+                self._content = f.read()
         return self
         
     def close(self):
@@ -970,7 +971,7 @@ class Image(object):
     def content(self):
         if hasattr(self._img, '_content'):
             return self._img._content
-        return str(self._content)
+        return self._content
 
     @property
     def filename(self):
@@ -1066,7 +1067,7 @@ class Image(object):
             self._img = self._img.resize((w.value, h.value), PILImage.LANCZOS)
             self._img.save(stream, format=self.fileext)
 
-        self._content = str(stream.getvalue())
+        self._content = stream.getvalue()
         stream.close()
         return self
 

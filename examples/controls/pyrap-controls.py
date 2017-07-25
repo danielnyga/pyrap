@@ -170,15 +170,15 @@ class ControlsDemo():
         self.create_upload_page(page)
         self.pages['FileUpload'] = page
 
-        #=======================================================================
-        # create radar chart
-        #=======================================================================
-        page  = self.create_page_template('Radar Chart Demo')
-        self.create_radar_page(page)
-        self.pages['Radar'] = page
+        # #=======================================================================
+        # # create radar chart
+        # #=======================================================================
+        # page  = self.create_page_template('Radar Chart Demo')
+        # self.create_radar_page(page)
+        # self.pages['Radar'] = page
         
         
-        for page in (self.pages.values()[1:]):
+        for page in (list(self.pages.values())[1:]):
             page.layout.exclude = True
         self.navigation.items = self.pages
         

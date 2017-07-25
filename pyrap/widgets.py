@@ -9,10 +9,9 @@ import os
 import time
 
 import re
-from tkinter import IntVar
 
-from . import ptypes
-from pyrap import pyraplog, locations
+import dnutils
+from pyrap import locations
 from pyrap.base import session
 from pyrap.communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
@@ -500,7 +499,7 @@ class Shell(Widget):
                                    'modal':     RWT.MODAL}
     _defstyle_ = Widget._defstyle_ | RWT.VISIBLE | RWT.ACTIVE
 
-    _logger = pyraplog.getlogger(__name__, level=pyraplog.DEBUG)
+    _logger = dnutils.getlogger(__name__, level=dnutils.DEBUG)
     
     @constructor('Shell')
     def __init__(self, parent, **options):
@@ -910,15 +909,12 @@ class Label(Widget):
             options.customVariant = 'variant_markup'
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
         
-        
     def _get_rwt_img(self, img):
         if img is not None:
             res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         return img
-
-
 
     @property
     def img(self):
@@ -1427,7 +1423,8 @@ class Edit(Widget):
 
 
 class Composite(Widget):
-    
+
+    _styles_ = Widget._styles_ + BiMap({})
     _rwt_class_name_ = 'rwt.widgets.Composite'
     _defstyle_ = BitField(Widget._defstyle_)
     
@@ -1508,6 +1505,7 @@ class ScrolledComposite(Composite):
 
     @constructor('ScrolledComposite')
     def __init__(self, parent,**options):
+        out(ScrolledComposite._styles_)
         Widget.__init__(self, parent, **options)
         self.theme = ScrolledCompositeTheme(self, session.runtime.mngr.theme)
         self._content = None

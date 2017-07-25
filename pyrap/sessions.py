@@ -6,6 +6,8 @@ Created on Oct 27, 2015
 import web
 import threading
 import time
+
+from dnutils import out
 from web.utils import Storage
 from copy import deepcopy
 import urllib.parse
@@ -41,7 +43,7 @@ class Session(web.session.Session):
         useragent = web.ctx.env.get('HTTP_USER_AGENT')
         if useragent:
             self.useragent = Storage()
-            self.useragent.str = useragent.encode('utf8')
+            self.useragent.str = useragent
             self.useragent.mobile = 'mobile' in self.useragent.str.lower()
         self.request = Storage()
         self.request.method = web.ctx.method

@@ -3,8 +3,9 @@ Created on Oct 2, 2015
 
 @author: nyga
 '''
+import email
 import json
-import md5
+from hashlib import md5
 import mimetypes
 
 import os
@@ -19,7 +20,7 @@ from web.utils import storify, Storage
 from web.webapi import notfound, badrequest, seeother, notmodified
 
 import pyrap
-from dnutils import out
+from dnutils import out, Relay, getlogger, RLock, stop
 from pyrap import locations, threads
 from pyrap.base import session
 from pyrap.clientjs import gen_clientjs
@@ -30,11 +31,8 @@ from pyrap.events import FocusEventData
 from pyrap.exceptions import ResourceError
 from pyrap.handlers import PushServiceHandler, FileUploadServiceHandler
 from pyrap.ptypes import Image
-import dnlog
 from pyrap.themes import Theme, FontMetrics
 from pyrap.widgets import Display
-import rfc822
-from pyrap.threads import Kapo, RLock
 import collections
 
 mimetypes.init()
@@ -69,7 +67,7 @@ class ApplicationManager(object):
         self.startup_page = None
         with open(os.path.join(locations.html_loc, 'pyrap.html')) as f:
             self.startup_page = f.read()
-        self.log_ = dnlog.getlogger(self.__class__.__name__)
+        self.log_ = getlogger(self.__class__.__name__)
 
     def _install_theme(self, name, theme):
         '''
@@ -84,11 +82,11 @@ class ApplicationManager(object):
             if not ff.src.islocal: continue
             fileext = os.path.splitext(ff.src.url)[-1]
             out(fileext, mimetypes.types_map[fileext])
-            r = self.resources.registerc('themes/fonts/%s%s' % (md5.new(ff.content).hexdigest(), fileext),
+            r = self.resources.registerc('themes/fonts/%s%s' % (md5(ff.content).hexdigest(), fileext),
                                          mimetypes.types_map[fileext], ff.content)
             ff.src.url = r.location
         if not name.endswith('.json'): name += '.json'
-        self.resources.registerc(name=name, content_type='application/json', content=json.dumps(compiled))
+        self.resources.registerc(name=name, content_type='application/json', content=json.dumps(compiled).encode('utf8'))
 
     def _setup(self):
         '''
@@ -100,9 +98,10 @@ class ApplicationManager(object):
         an app should happen, which is independent of any instantiation of the app.
         For example, loading static resources that should be server later can be loaded here.
         '''
-        self.resources.registerc('rap-client.js', 'application/javascript', gen_clientjs())
-        self.resources.registerf('resource/static/image/blank.gif', 'image/gif',
-                                 os.path.join(locations.rc_loc, 'static', 'image', 'blank.gif'))
+        self.resources.registerc('rap-client.js', 'application/javascript', gen_clientjs().encode('utf8'))
+        with open(os.path.join(locations.rc_loc, 'static', 'image', 'blank.gif'), 'rb') as f:
+            self.resources.registerf('resource/static/image/blank.gif', 'image/gif', f)
+
         if self.config.icon:
             if isinstance(self.config.icon, Image):
                 self.icon = self.resources.registerc('resource/static/favicon.ico',
@@ -161,7 +160,6 @@ class ApplicationManager(object):
         if session.expired:  # session id has expired
             self.log_.debug('session %s has expired' % session.session_id)
             raise rwterror(RWTError.SESSION_EXPIRED)
-
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # SERVE RESOURCES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -212,23 +210,25 @@ class ApplicationManager(object):
             if args and args[0] == 'pyrap':  # this is a pyrap message (modify this in pyrap.html)
                 if sid is None:
                     self._create_session()
-                msg = parse_msg(content)
+                msg = parse_msg(content.decode('utf8'))
                 self.log_.debug('>>> ' + str(msg))
-                with session.runtime.kapo:
-                    session.runtime.kapo.inc()
-                    # dispatch the event to the respective session
-                    session.runtime.handle_msg(msg)
-                    session.runtime.kapo.dec()
-                    session.runtime.kapo.wait()
-                    r = session.runtime.compose_msg()
-                    smsg = json.dumps(r.json)
-                    web.header('Content-Type', 'application/json')
-                    return smsg
+                session.runtime.relay.acquire()
+                # session.runtime.relay.inc()
+                # dispatch the event to the respective session
+                session.runtime.handle_msg(msg)
+                # session.runtime.relay.dec()
+                # session.runtime.relay.wait()
+                r = session.runtime.compose_msg()
+                smsg = json.dumps(r.json)
+                web.header('Content-Type', 'application/json')
+                return smsg
         except SessionExpired:
             raise rwterror(RWTError.SESSION_EXPIRED)
         except:
             traceback.print_exc()
             raise rwterror(RWTError.SERVER_ERROR)
+        finally:
+            session.runtime.relay.release()
         # we should never get here
         raise rwterror(RWTError.SERVER_ERROR)
 
@@ -339,8 +339,8 @@ class SessionRuntime(object):
         self.entrypoint_args = None
         self.fontmetrics = {}
         self.default_font = None
-        self.log_ = dnlog.getlogger(type(self).__name__)
-        self.kapo = Kapo(verbose=0)
+        self.log_ = getlogger(type(self).__name__)
+        self.relay = Relay()
         self.servicehandlers = ServiceHandlerManager()
         self.push = Event()
 
@@ -421,7 +421,9 @@ class SessionRuntime(object):
                 if wnd is None: continue
                 # start a new session thread for processing the notify messages
                 t = threads.SessionThread(target=wnd._handle_notify, args=(o,)).start()
+                out('waiting for thread to be suspended')
                 t.suspended.wait()
+                out('thread suspended')
                 # wnd._handle_notify(o)
             elif isinstance(o, RWTSetOperation):
                 wnd = self.windows[o.target]
@@ -520,19 +522,21 @@ class SessionRuntime(object):
                 files = jsfiles
             for p in files:
                 if os.path.isfile(p):
-                    self.requirejs(p)
+                    with open(p, encoding='utf8') as fi:
+                        self.requirejs(fi)
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
-                        self.requirejs(f)
+                        with open(f, encoding='utf8') as fi:
+                            self.requirejs(fi)
                 else:
                     raise Exception('Could not load file', p)
 
     def requirejs(self, f):
-        resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/javascript', f)
+        resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/javascript', f)
         self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
 
     def requirecss(self, f):
-        resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/css', f)
+        resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/css', f)
         self << RWTCallOperation('rwt.client.CSSLoader', 'linkCss', {'files': [resource.location]})
 
     def loadstyle(self, style):
@@ -592,7 +596,7 @@ class Resource(object):
         self.content_type = content_type
         self.content = content
         self.registry = registry
-        self.md5 = md5.new(content).hexdigest()
+        self.md5 = md5(content).hexdigest()
         if name is None:
             self.name = self.md5 + mimetypes.guess_extension(content_type)
         self.last_change = datetime.now()
@@ -632,22 +636,24 @@ class ResourceManager(object):
     def __getitem__(self, name):
         return self.get(name)
 
-    def registerf(self, name, content_type, filepath, force=False, limit=inf):
+    def registerf(self, name, content_type, stream, force=False, limit=inf):
         '''
         Make a file available for download under the given path.
         
         :param name:            the name of the resource under which it will be availble
                                 for download to the outside.
         :param content_type:    the MIME type of the resource
-        :param filepath:        the local file path where the resource is located.
+        :param stream:          a file-like object that supports read(). Represents the content of the resource.
         :param force:           whether or not an already registered resource
                                 under the same name shall be replaced.
         :param limit:           limit the number of downloads to the specified amount.
                                 the resource will be unregistered after the
                                 specified number of downloads has been reached.
         '''
-        with open(filepath) as f:
-            return self.registerc(name, content_type, f.read(), force=force, limit=limit)
+        c = stream.read()
+        if type(c) is str:
+            c = c.encode('utf8')
+        return self.registerc(name, content_type, c, force=force, limit=limit)
 
     def registerc(self, name, content_type, content, force=False, limit=inf):
         '''
@@ -681,8 +687,8 @@ class ResourceManager(object):
         cache_date = web.ctx.env.get('HTTP_IF_MODIFIED_SINCE', 0)
         if cache_date:
             # check if the requested resource is younger than in the client's cache
-            ttuple = rfc822.parsedate_tz(cache_date)
-            cache_date = datetime.utcfromtimestamp(rfc822.mktime_tz(ttuple))
+            ttuple = email.utils.parsedate_tz(cache_date)
+            cache_date = datetime.utcfromtimestamp(email.utils.mktime_tz(ttuple))
             if cache_date > resource.last_change:
                 raise notmodified()
         web.modified(resource.last_change)

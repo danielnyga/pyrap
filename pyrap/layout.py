@@ -3,13 +3,13 @@ Created on Dec 2, 2015
 
 @author: nyga
 '''
+import dnutils
 from pyrap.ptypes import pc, BoundedDim, Var, VarCompound, px, parse_value
 from pyrap.utils import out, ifnone, pparti, stop
 from pyrap.constants import inf, RWT
 from pyrap.exceptions import LayoutError
 import math
 import time
-from pyrap import pyraplog
 
 
 class LayoutData(object):
@@ -50,7 +50,7 @@ class LayoutData(object):
 class LayoutAdapter(object): 
 
     def __init__(self, widget, parent):
-        self.logger = pyraplog.getlogger(type(self).__name__, level=pyraplog.INFO)
+        self.logger = dnutils.getlogger(type(self).__name__, level=dnutils.INFO)
         self.widget = widget
         self.layout = widget.layout
         self.data = LayoutData(self.layout)

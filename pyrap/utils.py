@@ -126,21 +126,14 @@ class edict(dict):
         return type(self)({k: v for k, v in self.items() if k not in d})
     
     
-class eset(set):
-    
-    def __add__(self, s):
-        return set(self).union(s)
-
-
-class RStorage(edict, object):
+class RStorage(edict):
     '''
     Recursive extension of web.util.Storage that applies the Storage constructor
     recursively to all value elements that are dicts.
     '''
-    __slots__ = ['_utf8']
-    
-    def __init__(self, d=None, utf8=False):
-        self._utf8 = utf8
+    __slots__ = []
+
+    def __init__(self, d=None):
         if d is not None:
             for k, v in d.items(): self[k] = v
     
@@ -151,8 +144,7 @@ class RStorage(edict, object):
             self[key] = value
             
     def __setitem__(self, key, value):
-        if self._utf8 and isinstance(key, str): key = key.encode('utf8')
-        dict.__setitem__(self, key, rstorify(value, utf8=self._utf8))
+        dict.__setitem__(self, key, rstorify(value))
             
     def __getattr__(self, key):
         if key in type(self).__slots__: 
@@ -173,13 +165,11 @@ class RStorage(edict, object):
         return ('<%s ' % type(self).__name__) + dict.__repr__(self) + '>'
         
         
-def rstorify(e, utf8=False):
+def rstorify(e):
     if type(e) is dict:
-        return RStorage(d=e, utf8=utf8)
-    elif isinstance(e, str) and utf8:
-        return e.encode('utf8')
+        return RStorage(d=e)
     elif type(e) in (list, tuple):
-        return [rstorify(i, utf8) for i in e]
+        return [rstorify(i) for i in e]
     else: return e
         
 def jsonify(o):
@@ -195,7 +185,7 @@ def jsonify(o):
         raise TypeError('object of type "%s" is not jsonifiable: %s' % (type(o), repr(o)))
     
         
-class BiMap():
+class BiMap:
     '''
     Bi-directional mapping.
     '''
@@ -205,7 +195,7 @@ class BiMap():
         self._bwd = {}
         self += values
         self.__iter__ = self._fwd.__iter__
-        self.iteritems = self._fwd.iteritems
+        self.items = self._fwd.items
         self.keys = self._fwd.keys
         self.values = self._fwd.values
         
@@ -231,7 +221,10 @@ class BiMap():
                 self._bwd[s.stop] = s.start
             else: raise AttributeError('Slice argument for BiMap cannot be empty')
         else: return self._fwd[s]
-        
+
+    def __contains__(self, e):
+        return e in self._fwd or e in self._bwd
+
     def __str__(self):
         return ';'.join([str(e) for e in list(self._fwd.items())])
 

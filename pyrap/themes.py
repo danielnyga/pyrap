@@ -3,6 +3,7 @@ Created on Oct 10, 2015
 
 @author: nyga
 '''
+import dnutils
 from pyrap.locations import pyrap_path
 from cssutils import parseFile
 import os
@@ -12,7 +13,6 @@ from cssutils.css.value import Value, ColorValue, DimensionValue, URIValue,\
     CSSFunction
 import uuid
 import json
-from pyrap import pyraplog
 from logging import DEBUG
 from pyrap.ptypes import Color, Pixels, parse_value, Dim,\
     Font, Image, pc, Percent, px
@@ -35,7 +35,7 @@ PSEUDOCLASS = 'pseudo-class'
 ATTRIBUTE = 'attribute-selector'
 UNIVERSAL = 'universal'
 
-logger = pyraplog.getlogger(__name__)
+logger = dnutils.getlogger(__name__)
 
 
 def isnone(cssval):
@@ -55,7 +55,7 @@ def none_or_value(values):
         elif isinstance(v, Value) and v.cssText == 'none':
             ret.append('none')
         else:
-            ret.append(str(v.cssText.encode('utf8')))
+            ret.append(str(v.cssText))
     if len(ret) == 1:return ret[0]
     else: return ret
 
@@ -82,7 +82,7 @@ class Theme(object):
         self.rules = defaultdict(list)
         self.rcpath = None
         self.fontfaces = []
-        self.logger = pyraplog.getlogger(type(self).__name__, level=pyraplog.INFO)
+        self.logger = dnutils.getlogger(type(self).__name__, level=dnutils.INFO)
 
     def extract(self, *types):
         if '*' not in types: types = types + ('*',)
@@ -162,7 +162,7 @@ class Theme(object):
                                   weight=ifnot(style['font-weight'], None), 
                                   urange=ifnot(style['unicode-range'], None))
                 if ff.src.islocal:
-                    with open(os.path.join(self.rcpath, ff.src.url)) as f:
+                    with open(os.path.join(self.rcpath, ff.src.url), 'rb') as f:
                         ff.content = f.read() 
                 self.fontfaces.append(ff)
                 continue
