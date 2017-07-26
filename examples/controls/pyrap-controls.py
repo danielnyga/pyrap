@@ -549,7 +549,7 @@ class ControlsDemo():
             browser.url = address.text
         btngo.on_select += load
         dlg.dolayout()
-        current_thread().setsuspended()
+        # current_thread().setsuspended()
         dlg.on_close.wait()
         out('browser window closed')
         

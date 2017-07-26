@@ -1505,7 +1505,6 @@ class ScrolledComposite(Composite):
 
     @constructor('ScrolledComposite')
     def __init__(self, parent,**options):
-        out(ScrolledComposite._styles_)
         Widget.__init__(self, parent, **options)
         self.theme = ScrolledCompositeTheme(self, session.runtime.mngr.theme)
         self._content = None
@@ -2184,7 +2183,8 @@ class Browser(Widget):
             else:
                 raise Exception('URL "{}" is not a valid url or existing local file!'.format(url))
         else:
-            res = session.runtime.mngr.resources.registerf('_blank.html', 'text/html', os.path.join(locations.rc_loc, 'static', 'html', 'blank.html'))
+            with open(os.path.join(locations.rc_loc, 'static', 'html', 'blank.html'), encoding='utf8') as f:
+                res = session.runtime.mngr.resources.registerf('_blank.html', 'text/html', f)
             return res.location
 
     @property

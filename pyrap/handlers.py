@@ -58,10 +58,10 @@ class FileUploadServiceHandler(ServiceHandler):
         # retrieve file content
         ctype, pdict = cgi.parse_header(args[1].get('CONTENT_TYPE'))
         cnt = args[0]
-        s = io.StringIO()
-        s.write(cnt)
-        s.seek(0)
-        multipart = cgi.parse_multipart(s, pdict)
+        # s = io.StringIO()
+        # s.write(cnt.decode('utf8'))
+        # s.seek(0)
+        multipart = cgi.parse_multipart(cnt, pdict)
         fargs = [x for x in cnt.split(pdict['boundary']) if 'Content-Disposition' in x]
         fcontents = multipart.get('file')
         files = list(zip(fargs, fcontents))

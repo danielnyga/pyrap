@@ -13,6 +13,7 @@ import traceback
 import urllib.request, urllib.parse, urllib.error
 from threading import Lock, Event
 
+import dnutils
 import web
 from datetime import datetime
 from web.session import SessionExpired
@@ -38,10 +39,10 @@ import collections
 mimetypes.init()
 
 
-mimetypes.types_map.update({
-    '.otf': 'application/font-sfnt',
-    '.ttf': 'application/font-sfnt'
-})
+# mimetypes.types_map.update({
+#     '.otf': 'application/font-sfnt',
+#     '.ttf': 'application/font-sfnt'
+# })
 
 class ApplicationManager(object):
     '''
@@ -81,7 +82,6 @@ class ApplicationManager(object):
         for ff in theme.fontfaces:
             if not ff.src.islocal: continue
             fileext = os.path.splitext(ff.src.url)[-1]
-            out(fileext, mimetypes.types_map[fileext])
             r = self.resources.registerc('themes/fonts/%s%s' % (md5(ff.content).hexdigest(), fileext),
                                          mimetypes.types_map[fileext], ff.content)
             ff.src.url = r.location
@@ -210,14 +210,14 @@ class ApplicationManager(object):
             if args and args[0] == 'pyrap':  # this is a pyrap message (modify this in pyrap.html)
                 if sid is None:
                     self._create_session()
+                session.runtime.relay.acquire()
                 msg = parse_msg(content.decode('utf8'))
                 self.log_.debug('>>> ' + str(msg))
-                session.runtime.relay.acquire()
-                # session.runtime.relay.inc()
+                session.runtime.relay.inc()
                 # dispatch the event to the respective session
                 session.runtime.handle_msg(msg)
-                # session.runtime.relay.dec()
-                # session.runtime.relay.wait()
+                session.runtime.relay.dec()
+                session.runtime.relay.wait()
                 r = session.runtime.compose_msg()
                 smsg = json.dumps(r.json)
                 web.header('Content-Type', 'application/json')
@@ -420,10 +420,14 @@ class SessionRuntime(object):
                 wnd = self.windows[o.target]
                 if wnd is None: continue
                 # start a new session thread for processing the notify messages
-                t = threads.SessionThread(target=wnd._handle_notify, args=(o,)).start()
-                out('waiting for thread to be suspended')
-                t.suspended.wait()
-                out('thread suspended')
+                t = threads.SessionThread(target=wnd._handle_notify, args=(o,))
+                block = Event()
+                t.add_handler(dnutils.threads.SUSPEND, block.set)
+                t.add_handler(dnutils.threads.TERM, block.set)
+                t.start()
+                # out('waiting for thread', t.name)
+                block.wait()
+                # out(t.name, 'returned')
                 # wnd._handle_notify(o)
             elif isinstance(o, RWTSetOperation):
                 wnd = self.windows[o.target]
