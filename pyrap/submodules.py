@@ -3,7 +3,7 @@ import sys
 
 from pyrap import locations
 
-trdparty_modules = ['dnutils']
+trdparty_modules = ['dnutils', 'webpy']
 
 for mod in trdparty_modules:
     if mod not in sys.path:
