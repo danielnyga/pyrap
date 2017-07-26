@@ -5,6 +5,7 @@ Created on Aug 1, 2015
 """
 import dnutils
 import web
+from dnutils import Thread
 from web.webapi import notfound
 from pyrap import threads
 import urllib.parse 
@@ -29,12 +30,11 @@ class PyRAPServer(web.application):
 
     def run(self, port=8080, *middleware):
         logger = dnutils.getlogger(__name__)
-        try:
-            func = self.wsgifunc(*middleware)
-            web.httpserver.runbasic(func, ('0.0.0.0', port))
-        except (KeyboardInterrupt, SystemExit) as e:
-            for _, t in list(dict(list(threads.iteractive())).items()):
-                if isinstance(t, threads.SessionThread): t.kill()
+        def terminate(*_):
+            Thread(target=web.httpserver.server.shutdown).start()
+        dnutils.add_handler(dnutils.signals.SIGINT, terminate)
+        func = self.wsgifunc(*middleware)
+        web.httpserver.runbasic(func, ('0.0.0.0', port))
         logger.error('goodbye.')
     
 
