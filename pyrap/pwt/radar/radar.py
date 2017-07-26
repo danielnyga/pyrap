@@ -96,6 +96,15 @@ class RadarChart(Widget):
                                                                  'interval': [intervalmin, intervalmax]})
         return r
 
+    def remaxis(self, axis):
+        self._axes.remove(axis)
+        session.runtime << RWTCallOperation(self.id, 'remAxis', { 'axis': axis })
+        return True
+
+    def removeallaxes(self):
+        self._axes = []
+        session.runtime << RWTCallOperation(self.id, 'remAllAxes', { })
+
     def interval(self, axis, minval=None, maxval=None):
         if minval is not None:
             axis.intervalmin = minval

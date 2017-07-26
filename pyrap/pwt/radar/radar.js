@@ -339,6 +339,29 @@ pwt_radar.RadarChart.prototype = {
     },
 
     /**
+     * removes an axis from the radar chart
+     */
+    remAxis : function ( axis ) {
+        function findaxis(a) { return a.name == axis.axis.name; }
+        var remaxes = this._allAxis.filter(findaxis);
+        for (var x = 0; x<remaxes.length; x++) {
+            var idx = this._allAxis.indexOf(remaxes[x])
+            if (idx > -1) {
+                this._allAxis.splice(idx, 1);
+            }
+        }
+        this._total = this._allAxis.length;
+    },
+
+    /**
+     * removes all axes from the radar chart
+     */
+    remAllAxes : function ( ) {
+        this._allAxis.splice(0, this._allAxis.length);
+        this._total = this._allAxis.length;
+    },
+
+    /**
      * updates data options
      */
     updateData : function ( data ) {
@@ -851,7 +874,7 @@ rap.registerTypeHandler( 'pwt.customs.RadarChart', {
 
   properties: [ 'remove', 'width', 'height'],
 
-  methods : [ 'updateData', 'addAxis', ],
+  methods : [ 'updateData', 'addAxis', 'remAxis' ],
 
   events: [ 'Selection' ]
 
