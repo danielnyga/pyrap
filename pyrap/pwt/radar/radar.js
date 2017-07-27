@@ -309,18 +309,10 @@ pwt_radar.RadarChart.prototype = {
 
 	            var selectiontype = tclass;
                 var dataset = d;
-                var newdata = linearScale(l);
+                var newdata = Math.round(linearScale(l) * 100) / 100;
         }
 		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'type': selectiontype, 'dataset': dataset, 'data': newdata } );
 	},
-
-    /**
-     * removes data points from chart
-     */
-    clear : function () {
-        this._data.splice(0, this._data.length);
-        this.update();
-    },
 
     /**
      * updates an axis of the radar chart
@@ -351,14 +343,16 @@ pwt_radar.RadarChart.prototype = {
             }
         }
         this._total = this._allAxis.length;
+        this.update();
     },
 
     /**
      * removes all axes from the radar chart
      */
-    remAllAxes : function ( ) {
+    clear : function ( ) {
         this._allAxis.splice(0, this._allAxis.length);
         this._total = this._allAxis.length;
+        this.updateData({});
     },
 
     /**
@@ -373,7 +367,6 @@ pwt_radar.RadarChart.prototype = {
             this._svgContainer.selectAll(".polygon-"+key).remove();
             this._svgContainer.selectAll(".circle-"+key).remove();
         }, this);
-        this.update();
 
         // determine min and max values for each axis
         for (var x in data) {
@@ -383,6 +376,7 @@ pwt_radar.RadarChart.prototype = {
                 this._cfg.maxValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[1] !== 'undefined') ? this._allAxis[y].limits[1] : (typeof this._cfg.maxValues[this._allAxis[y].name] !== 'undefined') ? Math.max(this._cfg.maxValues[this._allAxis[y].name], data[x][y]) : data[x][y];
             }
 	    }
+        this.update();
 
         this._data = data;
         this.update();
@@ -449,7 +443,7 @@ pwt_radar.RadarChart.prototype = {
 
 
         ////////////////////////////////////////////////////////////////////////
-        ///                       UPDATE RADAR CHART                         ///
+        ///                       UPDATE LEVELS                              ///
         ////////////////////////////////////////////////////////////////////////
 
         // prepare dataset such that levellines and leveltexts can be drawn
@@ -496,12 +490,14 @@ pwt_radar.RadarChart.prototype = {
             })
             .attr("fill", "#737373")
             .text(function(d, i) {
-                return that.Format(that._allAxis[i%that._allAxis.length].unit, d[2]);
+                return that.Format(that._allAxis[i%that._allAxis.length].unit, isNaN(d[2]) ? 0 : d[2]);
             });
 
         leveltext.exit().remove();
 
-        // draw axes
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE AXES                                ///
+        ////////////////////////////////////////////////////////////////////////
         var axis = that._svgContainer.selectAll(".axis")
             .data(this._allAxis);
 
@@ -530,167 +526,169 @@ pwt_radar.RadarChart.prototype = {
             .attr("x", function(d, i){return that._cfg.w/2*(1-that._cfg.factorLegend*Math.sin(i*that._cfg.radians/that._total))-60*Math.sin(i*that._cfg.radians/that._total);})
             .attr("y", function(d, i){return that._cfg.h/2*(1-Math.cos(i*that._cfg.radians/that._total))-20*Math.cos(i*that._cfg.radians/that._total);});
 
-        // draw intervals (only if required)
-//        if('undefined' !== typeof this._cfg.intervals) {
-            axisenter.append("rect")
-                .attr("class", function(d, i) { return "interval-"+d.name.split(' ').join('_'); } )
-                .attr("x", function(d, i){return that._cfg.w/2;})
-                .attr("y", function(d, i){
-                    var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2 + linearScale(d.interval[0]);
-                })
-                .attr("transform", function(d, i){
-                    var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
-                    return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth/2 + ", 0)";
-                })
-                .attr("fill", that._cfg.intCol)
-                .style("fill-opacity", that._cfg.opacityArea)
-                .attr("width", that._cfg.intWidth)
-                .attr("height", function(d, i) {
-                    var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return linearScale(d.interval[1])-linearScale(d.interval[0]);
-                })
-                .on('mouseover', function (d){
-                    var coordinates = [0, 0];
-                    coordinates = d3.event;
-                    var x = coordinates.layerX;
-                    var y = coordinates.layerY;
-                    tooltip
-                        .attr('x', x-70)
-                        .attr('y', y-20)
-                        .text("[" + d.interval[0] + ', ' + d.interval[1] +']')
-                        .transition(200)
-                        .style('opacity', 1);
-                })
-                .on('mouseout', function(){
-                    tooltip
-                        .transition(200)
-                        .style('opacity', 0);
-                });
 
-            // draw endpoints of intervals to be dragged
-            axisenter.append("rect")
-                .attr("class", function(d, i) { return "mininterval-"+d.name.split(' ').join('_'); } )
-                .attr("x", function(d, i){return that._cfg.w/2;})
-                .attr("y", function(d, i){
-                    var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2 + linearScale(d.interval[0]);
-                })
-                .attr("transform", function(d, i){
-                    var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
-                    return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
-                })
-                .attr("fill", 'grey')
-                .style("fill-opacity", 1)
-                .attr("width", 2*that._cfg.intWidth)
-                .attr("height", 5)
-                .on('mouseover', function(d) {
-                    d3.select(this).style("cursor", "pointer");
-                })
-                .on('mouseout', function(d) {
-                    d3.select(this).style("cursor", "default");
-                })
-                .call(d3.behavior.drag()
-                                .origin(Object)
-                                .on("drag", function(d, i) {
-                                    var data = that.dragmove(d, i);
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE INTERVALS                           ///
+        ////////////////////////////////////////////////////////////////////////
+        // TODO: check if interval given
+        axisenter.append("rect")
+            .attr("class", function(d, i) { return "interval-"+d.name.split(' ').join('_'); } )
+            .attr("x", function(d, i){return that._cfg.w/2;})
+            .attr("y", function(d, i){
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return that._cfg.h/2 + linearScale(d.interval[0]);
+            })
+            .attr("transform", function(d, i){
+                var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth/2 + ", 0)";
+            })
+            .attr("fill", that._cfg.intCol)
+            .style("fill-opacity", that._cfg.opacityArea)
+            .attr("width", that._cfg.intWidth)
+            .attr("height", function(d, i) {
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return linearScale(d.interval[1])-linearScale(d.interval[0]);
+            })
+            .on('mouseover', function (d){
+                var coordinates = [0, 0];
+                coordinates = d3.event;
+                var x = coordinates.layerX;
+                var y = coordinates.layerY;
+                tooltip
+                    .attr('x', x-70)
+                    .attr('y', y-20)
+                    .text("[" + d.interval[0] + ', ' + d.interval[1] +']')
+                    .transition(200)
+                    .style('opacity', 1);
+            })
+            .on('mouseout', function(){
+                tooltip
+                    .transition(200)
+                    .style('opacity', 0);
+            });
 
-                                    var lenx = data[0] - that._cfg.w/2;
-                                    var leny = data[1] - that._cfg.h/2;
+        // draw endpoints of intervals to be dragged
+        axisenter.append("rect")
+            .attr("class", function(d, i) { return "mininterval-"+d.name.split(' ').join('_'); } )
+            .attr("x", function(d, i){return that._cfg.w/2;})
+            .attr("y", function(d, i){
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return that._cfg.h/2 + linearScale(d.interval[0]);
+            })
+            .attr("transform", function(d, i){
+                var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
+            })
+            .attr("fill", 'grey')
+            .style("fill-opacity", 1)
+            .attr("width", 2*that._cfg.intWidth)
+            .attr("height", 5)
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+            })
+            .on('mouseout', function(d) {
+                d3.select(this).style("cursor", "default");
+            })
+            .call(d3.behavior.drag()
+                            .origin(Object)
+                            .on("drag", function(d, i) {
+                                var data = that.dragmove(d, i);
 
-                                    var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+                                var lenx = data[0] - that._cfg.w/2;
+                                var leny = data[1] - that._cfg.h/2;
 
-                                    //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                                    var maxy = d3.select(".maxinterval-"+d.name.split(' ').join('_')).attr('y');
-                                    var dragTarget = d3.select(this);
-                                    dragTarget
-                                        .attr("y", function(d, i){
-                                            return Math.min(that._cfg.h/2 + l, maxy);
-                                        });
+                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
 
-                                    // update actual interval
-                                    d3.select(".interval-"+d.name.split(' ').join('_'))
-                                        .attr("y", function(d, i){
-                                            return that._cfg.h/2 + l;
-                                        })
-                                        .attr("height", function(d, i){
-                                            return maxy - (that._cfg.h/2 + l);
-                                        });
-                                    d.interval[0] = Math.round(data[2] * 100) / 100;
-                                })
-                                .on('dragend', function(d, i) {
+                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                var maxy = d3.select(".maxinterval-"+d.name.split(' ').join('_')).attr('y');
+                                var dragTarget = d3.select(this);
+                                dragTarget
+                                    .attr("y", function(d, i){
+                                        return Math.min(that._cfg.h/2 + l, maxy);
+                                    });
 
-                                    var _this = this;
-                                    that.dragend(d, i, _this, that);
-                                })
-                );
+                                // update actual interval
+                                d3.select(".interval-"+d.name.split(' ').join('_'))
+                                    .attr("y", function(d, i){
+                                        return that._cfg.h/2 + l;
+                                    })
+                                    .attr("height", function(d, i){
+                                        return maxy - (that._cfg.h/2 + l);
+                                    });
+                                d.interval[0] = Math.round(data[2] * 100) / 100;
+                            })
+                            .on('dragend', function(d, i) {
 
-            axisenter.append("rect")
-                .attr("class", function(d, i) { return "maxinterval-"+d.name.split(' ').join('_'); } )
-                .attr("x", function(d, i){ return that._cfg.w/2; } )
-                .attr("y", function(d, i){
-                    var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2 + linearScale(d.interval[1]);
-                })
-                .attr("transform", function(d, i){
-                    var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
-                    return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
-                })
-                .attr("fill", 'grey')
-                .style("fill-opacity", 1)
-                .attr("width", 2*that._cfg.intWidth)
-                .attr("height", 5)
-                .on('mouseover', function(d) {
-                    d3.select(this).style("cursor", "pointer");
-                })
-                .on('mouseout', function(d) {
-                    d3.select(this).style("cursor", "default");
-                })
-                .call(d3.behavior.drag()
-                                .origin(Object)
-                                .on("drag", function(d, i) {
-                                    var data = that.dragmove(d, i);
+                                var _this = this;
+                                that.dragend(d, i, _this, that);
+                            })
+            );
 
-                                    var lenx = data[0] - that._cfg.w/2;
-                                    var leny = data[1] - that._cfg.h/2;
+        axisenter.append("rect")
+            .attr("class", function(d, i) { return "maxinterval-"+d.name.split(' ').join('_'); } )
+            .attr("x", function(d, i){ return that._cfg.w/2; } )
+            .attr("y", function(d, i){
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return that._cfg.h/2 + linearScale(d.interval[1]);
+            })
+            .attr("transform", function(d, i){
+                var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
+            })
+            .attr("fill", 'grey')
+            .style("fill-opacity", 1)
+            .attr("width", 2*that._cfg.intWidth)
+            .attr("height", 5)
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+            })
+            .on('mouseout', function(d) {
+                d3.select(this).style("cursor", "default");
+            })
+            .call(d3.behavior.drag()
+                            .origin(Object)
+                            .on("drag", function(d, i) {
+                                var data = that.dragmove(d, i);
 
-                                    var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+                                var lenx = data[0] - that._cfg.w/2;
+                                var leny = data[1] - that._cfg.h/2;
 
-                                    //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                                    var miny = d3.select(".mininterval-"+d.name.split(' ').join('_')).attr('y')
-                                    var dragTarget = d3.select(this);
-                                    dragTarget
-                                        .attr("y", function(d, i){
-                                            return Math.max(miny, that._cfg.h/2 + l);
-                                        });
+                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
 
-                                    // update actual interval
-                                    d3.select(".interval-"+d.name.split(' ').join('_'))
-                                        .attr("height", function(d, i){
-                                            return (that._cfg.h/2 + l) - miny;
-                                        });
-                                    d.interval[1] = Math.round(data[2] * 100) / 100;
-                                })
-                                .on('dragend', function(d, i) {
-                                    var _this = this;
-                                    that.dragend(d, i, _this, that);
-                                })
-                );
+                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                var miny = d3.select(".mininterval-"+d.name.split(' ').join('_')).attr('y')
+                                var dragTarget = d3.select(this);
+                                dragTarget
+                                    .attr("y", function(d, i){
+                                        return Math.max(miny, that._cfg.h/2 + l);
+                                    });
 
-
-//        }// end if intervals
+                                // update actual interval
+                                d3.select(".interval-"+d.name.split(' ').join('_'))
+                                    .attr("height", function(d, i){
+                                        return (that._cfg.h/2 + l) - miny;
+                                    });
+                                d.interval[1] = Math.round(data[2] * 100) / 100;
+                            })
+                            .on('dragend', function(d, i) {
+                                var _this = this;
+                                that.dragend(d, i, _this, that);
+                            })
+            );
 
         axis.exit().remove();
 
-        // calculate positions of data points
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE POLYGONS                            ///
+        ////////////////////////////////////////////////////////////////////////
         var dataValues = []
         Object.keys(this._data).forEach(function(key, idx) {
             dataValues.splice(0, dataValues.length);
@@ -699,16 +697,19 @@ pwt_radar.RadarChart.prototype = {
                     var linearScale = d3.scale.linear()
                         .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
                         .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                    var x = that._cfg.w/2*(1-(parseFloat(linearScale(val))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    var y = that._cfg.h/2*(1-(parseFloat(linearScale(val))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    // if values are NaN, set to center of axis
                     dataValues.push([
-                        that._cfg.w/2*(1-(parseFloat(linearScale(val))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)),
-                        that._cfg.h/2*(1-(parseFloat(linearScale(val))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total))
+                        isNaN(x) ? that._cfg.w/2*(1-(parseFloat(linearScale(val))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)): x,
+                        isNaN(y) ? that._cfg.h/2*(1-(parseFloat(linearScale(val))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total)): y
                     ]);
                 });
             if (typeof dataValues[0] !== 'undefined') {
                 dataValues.push(dataValues[0]); // close polygon
             }
 
-            // draw polygons
+            // select polygons
             var polygons = that._svgContainer.selectAll(".polygon-"+that._legendopts[idx]).data([dataValues]);
 
             // update polygons
@@ -761,8 +762,11 @@ pwt_radar.RadarChart.prototype = {
 
 
 
-        // draw circles at data point positions
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE CIRCLES                             ///
+        ////////////////////////////////////////////////////////////////////////
         Object.keys(this._data).forEach(function(key, idx) {
+            // select datapoints
             var datapoints = that._svgContainer.selectAll(".circle-"+that._legendopts[idx]).data(this[key]);
             var cdata = this[key];
 
@@ -778,17 +782,21 @@ pwt_radar.RadarChart.prototype = {
                     var linearScale = d3.scale.linear()
                         .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
                         .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    dataValues.push([
-                        that._cfg.w/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)),
-                        that._cfg.h/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total))
-                    ]);
-                    return that._cfg.w/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    var cx = that._cfg.w/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    if (isNaN(cx)) {
+                        cx = that._cfg.w/2*(1-(parseFloat(linearScale(cval))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    }
+                    return cx;
                 })
                 .attr("cy", function(cval, i){
                     var linearScale = d3.scale.linear()
                         .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
                         .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    var cy = that._cfg.h/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    if (isNaN(cy)) {
+                        cy = that._cfg.h/2*(1-(parseFloat(linearScale(cval))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    }
+                    return cy;
                 })
                 .attr("data-id", function(j){return key})
                 .style("fill", that._cfg.color(idx)).style("fill-opacity", .9)
@@ -874,7 +882,7 @@ rap.registerTypeHandler( 'pwt.customs.RadarChart', {
 
   properties: [ 'remove', 'width', 'height'],
 
-  methods : [ 'updateData', 'addAxis', 'remAxis' ],
+  methods : [ 'updateData', 'addAxis', 'remAxis', 'clear'],
 
   events: [ 'Selection' ]
 

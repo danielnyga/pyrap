@@ -1,4 +1,5 @@
 import os
+from time import sleep
 
 from dnutils.tools import ifnone
 from pyrap import session, locations
@@ -101,9 +102,10 @@ class RadarChart(Widget):
         session.runtime << RWTCallOperation(self.id, 'remAxis', { 'axis': axis })
         return True
 
-    def removeallaxes(self):
+    def clear(self):
         self._axes = []
-        session.runtime << RWTCallOperation(self.id, 'remAllAxes', { })
+        session.runtime << RWTCallOperation(self.id, 'clear', { })
+        sleep(1)
 
     def interval(self, axis, minval=None, maxval=None):
         if minval is not None:
