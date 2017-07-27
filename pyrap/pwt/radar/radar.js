@@ -311,7 +311,7 @@ pwt_radar.RadarChart.prototype = {
                 var dataset = d;
                 var newdata = Math.round(linearScale(l) * 100) / 100;
         }
-		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'type': selectiontype, 'dataset': dataset, 'data': newdata } );
+		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'func': 'dragend', 'type': selectiontype, 'dataset': dataset, 'data': newdata } );
 	},
 
     /**
@@ -334,16 +334,27 @@ pwt_radar.RadarChart.prototype = {
      * removes an axis from the radar chart
      */
     remAxis : function ( axis ) {
-        function findaxis(a) { return a.name == axis.axis.name; }
-        var remaxes = this._allAxis.filter(findaxis);
+        // TODO: move this to python
+        var tmpdata = this._data;
+        var tmpaxes = this._allAxis.slice();
+        this.clear();
+
+        function findaxis(a) { return a.name == axis.name; }
+
+        var remaxes = tmpaxes.filter(findaxis);
         for (var x = 0; x<remaxes.length; x++) {
-            var idx = this._allAxis.indexOf(remaxes[x])
+            var idx = tmpaxes.indexOf(remaxes[x])
             if (idx > -1) {
-                this._allAxis.splice(idx, 1);
+                tmpaxes.splice(idx, 1);
+                Object.keys(tmpdata).forEach(function(key, i) {
+                   tmpdata[key].splice(idx, 1);
+                }, this);
             }
         }
+        this._allAxis = tmpaxes;
         this._total = this._allAxis.length;
-        this.update();
+        this.setData(tmpdata);
+        rwt.remote.Connection.getInstance().getRemoteObject( this ).notify( "Selection", { 'type': 'remaxis', 'dataset': axis, 'data': this._data } );
     },
 
     /**
@@ -352,33 +363,39 @@ pwt_radar.RadarChart.prototype = {
     clear : function ( ) {
         this._allAxis.splice(0, this._allAxis.length);
         this._total = this._allAxis.length;
-        this.updateData({});
+        this.setData({});
     },
+
 
     /**
      * updates data options
      */
-    updateData : function ( data ) {
+    setData : function ( data ) {
+        this._data = data;
+        this.updateData();
+    },
+
+
+    /**
+     * updates data options
+     */
+    updateData : function ( ) {
 
         // clear old data
         this._legendopts.splice(0, this._legendopts.length);
         Object.keys(this._data).forEach(function(key, idx) {
-            this._data[key] = [];
             this._svgContainer.selectAll(".polygon-"+key).remove();
             this._svgContainer.selectAll(".circle-"+key).remove();
         }, this);
 
         // determine min and max values for each axis
-        for (var x in data) {
+        for (var x in this._data) {
             this._legendopts.push(x);
-            for (var y = 0; y < data[x].length; y++) {
-                this._cfg.minValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[0] !== 'undefined') ? this._allAxis[y].limits[0] : (typeof this._cfg.minValues[this._allAxis[y].name] !== 'undefined') ? Math.min(this._cfg.minValues[this._allAxis[y].name], data[x][y]) : data[x][y];
-                this._cfg.maxValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[1] !== 'undefined') ? this._allAxis[y].limits[1] : (typeof this._cfg.maxValues[this._allAxis[y].name] !== 'undefined') ? Math.max(this._cfg.maxValues[this._allAxis[y].name], data[x][y]) : data[x][y];
+            for (var y = 0; y < this._data[x].length; y++) {
+                this._cfg.minValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[0] !== 'undefined') ? this._allAxis[y].limits[0] : (typeof this._cfg.minValues[this._allAxis[y].name] !== 'undefined') ? Math.min(this._cfg.minValues[this._allAxis[y].name], this._data[x][y]) : this._data[x][y];
+                this._cfg.maxValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[1] !== 'undefined') ? this._allAxis[y].limits[1] : (typeof this._cfg.maxValues[this._allAxis[y].name] !== 'undefined') ? Math.max(this._cfg.maxValues[this._allAxis[y].name], this._data[x][y]) : this._data[x][y];
             }
 	    }
-        this.update();
-
-        this._data = data;
         this.update();
     },
 
@@ -524,7 +541,31 @@ pwt_radar.RadarChart.prototype = {
             .attr("dy", "1.5em")
             .attr("transform", function(d, i){return "translate(0, -10)"})
             .attr("x", function(d, i){return that._cfg.w/2*(1-that._cfg.factorLegend*Math.sin(i*that._cfg.radians/that._total))-60*Math.sin(i*that._cfg.radians/that._total);})
-            .attr("y", function(d, i){return that._cfg.h/2*(1-Math.cos(i*that._cfg.radians/that._total))-20*Math.cos(i*that._cfg.radians/that._total);});
+            .attr("y", function(d, i){return that._cfg.h/2*(1-Math.cos(i*that._cfg.radians/that._total))-20*Math.cos(i*that._cfg.radians/that._total);})
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+                var coordinates = [0, 0];
+                coordinates = d3.event;
+                var x = coordinates.layerX;
+                var y = coordinates.layerY;
+                tooltip
+                    .attr('x', x-70)
+                    .attr('y', y-20)
+                    .text('Click to remove axis')
+                    .transition(200)
+                    .style('opacity', 1);
+            })
+            .on('mouseout', function(){
+                tooltip
+                    .transition(200)
+                    .style('opacity', 0);
+            })
+            .on('click', function(d) {
+                tooltip
+                    .transition(200)
+                    .style('opacity', 0);
+                that.remAxis({ 'name': d3.select(this).text() });
+            });
 
 
         ////////////////////////////////////////////////////////////////////////
@@ -880,7 +921,7 @@ rap.registerTypeHandler( 'pwt.customs.RadarChart', {
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'width', 'height'],
+  properties: [ 'remove', 'width', 'height', 'data'],
 
   methods : [ 'updateData', 'addAxis', 'remAxis', 'clear'],
 
