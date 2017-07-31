@@ -361,6 +361,11 @@ pwt_radar.RadarChart.prototype = {
      * removes all axes from the radar chart
      */
     clear : function ( ) {
+        this._legendopts.splice(0, this._legendopts.length);
+        Object.keys(this._data).forEach(function(key, idx) {
+            this._svgContainer.selectAll(".polygon-"+key).remove();
+            this._svgContainer.selectAll(".circle-"+key).remove();
+        }, this);
         this._allAxis.splice(0, this._allAxis.length);
         this._total = this._allAxis.length;
         this.setData({});
@@ -371,6 +376,12 @@ pwt_radar.RadarChart.prototype = {
      * updates data options
      */
     setData : function ( data ) {
+        // clear old data
+        this._legendopts.splice(0, this._legendopts.length);
+        Object.keys(this._data).forEach(function(key, idx) {
+            this._svgContainer.selectAll(".polygon-"+key).remove();
+            this._svgContainer.selectAll(".circle-"+key).remove();
+        }, this);
         this._data = data;
         this.updateData();
     },
@@ -380,13 +391,6 @@ pwt_radar.RadarChart.prototype = {
      * updates data options
      */
     updateData : function ( ) {
-
-        // clear old data
-        this._legendopts.splice(0, this._legendopts.length);
-        Object.keys(this._data).forEach(function(key, idx) {
-            this._svgContainer.selectAll(".polygon-"+key).remove();
-            this._svgContainer.selectAll(".circle-"+key).remove();
-        }, this);
 
         // determine min and max values for each axis
         for (var x in this._data) {
