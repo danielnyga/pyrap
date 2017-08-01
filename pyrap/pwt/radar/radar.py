@@ -1,4 +1,5 @@
 import os
+from time import sleep
 
 from dnutils.tools import ifnone
 from pyrap import session, locations
@@ -64,7 +65,12 @@ class RadarChart(Widget):
         events = {'Selection': self.on_select}
         if op.event not in events:
             return Widget._handle_notify(self, op)
-        else: events[op.event].notify(_rwt_event(op))
+        else:
+            if op.args['type'] == 'remaxis':  # TODO: find a pretty solution for this
+                idx = next(index for (index, d) in enumerate(self._axes) if d.name == op.args['dataset']['name'])
+                self._axes.pop(idx)
+                self._data = op.args['data']
+            events[op.event].notify(_rwt_event(op))
         return True
 
     @property
@@ -96,6 +102,22 @@ class RadarChart(Widget):
                                                                  'interval': [intervalmin, intervalmax]})
         return r
 
+    def remaxis(self, axis):
+        self._axes.remove(axis)
+        session.runtime << RWTCallOperation(self.id, 'remAxis', axis)
+        return True
+
+        # idx = next(index for (index, d) in enumerate(self._axes) if d.name == axis)
+        # self._axes.pop(idx)
+        # for d in self._data:
+        #     self._data[d].pop(idx)
+        #
+        # self.setdata(self._data)
+
+    def clear(self):
+        self._axes = []
+        session.runtime << RWTCallOperation(self.id, 'clear', { })
+
     def interval(self, axis, minval=None, maxval=None):
         if minval is not None:
             axis.intervalmin = minval
@@ -116,7 +138,7 @@ class RadarChart(Widget):
 
     def setdata(self, data):
         self._data = data
-        session.runtime << RWTCallOperation(self.id, 'updateData', data)
+        session.runtime << RWTSetOperation(self.id, {'data': data})
 
 
 class RadarAxis(object):
