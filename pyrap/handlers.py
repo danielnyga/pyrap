@@ -1,7 +1,12 @@
 import io
-import cgi
+from io import BytesIO
+
+import multipart
+from multipart.multipart import parse_options_header
+from requests.structures import CaseInsensitiveDict
 
 import web
+from dnutils import out
 
 from pyrap import session
 
@@ -49,29 +54,57 @@ class FileUploadServiceHandler(ServiceHandler):
         self._files[token] = None
         return token, 'pyrap?servicehandler={}&cid={}&token={}'.format(self.name, session.session_id, token)
 
-    def run(self, *args, **kwargs):
-        token = kwargs.get('kwargs').get('token')
+    def run(self, headers, content, **kwargs):
+        token = kwargs.get('token')
         if token not in self._files:
             #httpfehler fuer access denied
             raise Exception('Token unknown! {}. Available tokens: {}'.format(token, list(self._files.keys())))
-
         # retrieve file content
-        ctype, pdict = cgi.parse_header(args[1].get('CONTENT_TYPE'))
-        cnt = args[0]
-        # s = io.StringIO()
-        # s.write(cnt.decode('utf8'))
-        # s.seek(0)
-        multipart = cgi.parse_multipart(cnt, pdict)
-        fargs = [x for x in cnt.split(pdict['boundary']) if 'Content-Disposition' in x]
-        fcontents = multipart.get('file')
-        files = list(zip(fargs, fcontents))
+        class PseudoFile:
+            def __init__(self):
+                self._header = b''
+                self.content = b''
+                self.name = None
+                self.type = None
+        f = None
+        files = []
+        def on_part_begin():
+            nonlocal f
+            f = PseudoFile()
 
-        tfiles = []
-        for f in files:
-            # retrieve filename and -type
-            parsed = cgi.parse_header(f[0])
-            fname = parsed[1]['filename'].split('\r\n')[0][1:-1]
-            ftype = parsed[1]['filename'].split('\r\n')[1].split(': ')[1]
-            tfiles.append({'filename': fname, 'filetype': ftype, 'filecontent': f[1]})
-        self._files[token] = tfiles
+        def on_part_data(data, start, end):
+            f._header += data[:start]
+            f.content +=data[start:end]
+
+        def on_part_end():
+            tokens = f._header.split(b'\r\n')
+            b = tokens[0]
+            opts = CaseInsensitiveDict({k.strip(): v.strip() for k, v in [t.split(b':') for t in tokens[1:] if len(t.split(b':')) == 2]})
+            del opts[b'content-disposition']
+            _, o = parse_options_header(f._header)
+            if o:
+                o = CaseInsensitiveDict(o)
+                opts['content-disposition'] = o
+                f.name = o[b'filename'].decode()
+            f.type = opts[b'content-type'].decode()
+            files.append(f)
+
+        callbacks = {
+            'on_part_begin': on_part_begin,
+            'on_part_data': on_part_data,
+            'on_part_end': on_part_end,
+        }
+        ctype, pdict = parse_options_header(headers.get('CONTENT_TYPE'))
+        stream = BytesIO(content)
+        parser = multipart.MultipartParser(pdict[b'boundary'], callbacks=callbacks)
+        size = headers.get('content-length')
+        while 1:
+            to_read = min(size, 1024 * 1024) if size is not None else 1024
+            chunk = stream.read(to_read)
+            if size is not None:
+                size -= len(chunk)
+            parser.write(chunk)
+            if len(chunk) != to_read: break
+        stream.close()
+        self._files[token] = [{'filename': f.name, 'filetype': f.type, 'filecontent': f.content} for f in files]
         return ''

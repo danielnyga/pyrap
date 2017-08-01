@@ -40,8 +40,7 @@ class SessionThread(DetachedSessionThread):
     from the parent thread. It may be attached to a request/response cycle in the pyRAP client/server model.
     In case it is attached, the HTTP server answering a request will block until it terminates. It has the
     '''
-    def __init__(self, group=None, target=None, name=None,
-                 args=(), kwargs=None):
+    def __init__(self, group=None, target=None, name=None, args=(), kwargs=None):
         DetachedSessionThread.__init__(self, target=target, name=name, args=args, kwargs=kwargs)
         self.__detached = False
 
@@ -64,7 +63,6 @@ class SessionThread(DetachedSessionThread):
                 pyrap.session.runtime.relay.dec()
 
     def start(self):
-        # self.setresumed()
         if not self.__detached:
             pyrap.session.runtime.relay.inc()
         return SuspendableThread.start(self)
