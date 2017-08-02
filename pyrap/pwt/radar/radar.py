@@ -116,6 +116,8 @@ class RadarChart(Widget):
 
     def clear(self):
         self._axes = []
+        self._data = {}
+        self._opts = []
         session.runtime << RWTCallOperation(self.id, 'clear', { })
 
     def interval(self, axis, minval=None, maxval=None):
