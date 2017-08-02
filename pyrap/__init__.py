@@ -5,7 +5,7 @@ from . import locations
 from . import submodules
 
 import mimetypes
-mimetypes.init(['etc/mime.types'] + mimetypes.knownfiles)
+mimetypes.init([os.path.join(os.path.dirname(__file__), '..', 'etc', 'mime.types')] + mimetypes.knownfiles)
 
 from .base import register_app
 from .base import run
