@@ -3,10 +3,12 @@ Created on Oct 2, 2015
 
 @author: nyga
 '''
+import base64
 
 import pyrap
+from dnutils.threads import sleep
 from pyrap.pwt.radar.radar import RadarChart
-from dnutils import out
+from dnutils import out, Event
 from dnutils.tools import ifnone
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite,\
     Edit, Combo, TabFolder, TabItem, Group, ScrolledComposite, ScrollBar,\
@@ -210,14 +212,17 @@ class ControlsDemo():
         def uploaded():
             files = session.runtime.servicehandlers.fileuploadhandler.files[upload.token]
             filename.text = ', '.join([f['filename'] for f in files])
-            fullcnt = '\n\n'.join([f['filecontent'] for f in files])
+            fullcnt = ''
+            for f in files:
+                try:
+                    if filetype.text.startswith('application'): raise UnicodeDecodeError()
+                    fullcnt += f['filecontent'].decode('utf8')
+                except UnicodeDecodeError:
+                    fullcnt += base64.b64encode(f['filecontent']).decode()
+                fullcnt += '\n\n'
             filesize.text = '%d Byte' % (len(fullcnt)-2)
             filetype.text = ', '.join([f['filetype'] for f in files])
-            if filetype.text.startswith('application'):
-                c = b64encode(fullcnt)
-            else:
-                c = str(fullcnt)
-            content.text = c
+            content.text = fullcnt
         upload.on_finished += uploaded
     
     def create_spinner_page(self, parent):
@@ -278,9 +283,10 @@ class ControlsDemo():
         b = Button(grp_info_dlgs, 'Show Info', halign='fill')
         b.decorator = info('this is a decorator description.', halign='left', valign='top')
         def showinfo(*_):
-            msg_ok(self.shell, 
+            ret = msg_ok(self.shell,
                    title='pyRAP Message Box', 
                    text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+            out('message box returned', ret)
         b.on_select += showinfo
         
         b = Button(grp_info_dlgs, 'Show Warning', halign='fill')
@@ -295,22 +301,23 @@ class ControlsDemo():
         
         grp_progress_dlgs = Group(parent, text='Other Dialogs')
         grp_progress_dlgs.layout = ColumnLayout(equalwidths=1)
-        
+
         def process(dlg):
             dlg.status = 'Preparing a time-consuming task...'
             dlg.setloop(1)
-            threads.sleep(1)
+            sleep(2.5)
             dlg.setloop(0)
             dlg.max = 100
             for i in range(100):
                 dlg.status = 'Step %d completed' % (i+1)
                 dlg.inc()
+                if dlg.cancel: return
                 dlg.push.flush()
-                threads.sleep(.1)
+                sleep(.1)
             dlg.status = 'Done. All tasks completed.'
             dlg.setfinished()
             dlg.push.flush()
-        
+
         b = Button(grp_progress_dlgs, 'Open Progress...', halign='fill')
         def showprog(*_):
             open_progress(self.shell, 'Progress Report', 'Running a long procedure...', target=process)

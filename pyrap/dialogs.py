@@ -3,6 +3,8 @@ Created on Nov 21, 2016
 
 @author: nyga
 '''
+from dnutils import out
+from dnutils.threads import current_thread
 from pyrap.widgets import Spinner, Edit,\
     Separator, Canvas
 from pyrap.constants import DLG, CURSOR
@@ -262,10 +264,8 @@ class ProgressDialog(MessageBox):
         self._secondary = None
         self._bars = None
         self._max = 100
-        if isinstance(target, DetachedSessionThread):
-            self._target = target
-        else:
-            self._target = DetachedSessionThread(target=target, args=(self,))
+        self._target = DetachedSessionThread(target=target, args=(self,))
+        self.cancel = False
         self.push = PushService()
         self.autoclose = BoolVar(autoclose)
         
@@ -307,7 +307,7 @@ class ProgressDialog(MessageBox):
     def terminate_and_close(self, *_):
         self.setloop(1)
         self.status = 'Terminating...'
-        self._target.interrupt()
+        self.cancel = True
         self._target.join()
         self.close()
         

@@ -196,10 +196,9 @@ class ApplicationManager(object):
         # HANDLE SERVICES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         if 'servicehandler' in query:
-
             handler = session.runtime.servicehandlers.get(query['servicehandler'])
             if handler is not None:
-                return handler.run(content, web.ctx.environ, kwargs=query)
+                return handler.run(web.ctx.environ, content, **query)
             else:
                 raise notfound()
 
@@ -229,6 +228,7 @@ class ApplicationManager(object):
             raise rwterror(RWTError.SERVER_ERROR)
         finally:
             session.runtime.relay.release()
+            session.runtime.relay.reset()
         # we should never get here
         raise rwterror(RWTError.SERVER_ERROR)
 
@@ -425,9 +425,9 @@ class SessionRuntime(object):
                 t.add_handler(dnutils.threads.SUSPEND, block.set)
                 t.add_handler(dnutils.threads.TERM, block.set)
                 t.start()
-                # out('waiting for thread', t.name)
                 block.wait()
-                # out(t.name, 'returned')
+                t.rm_handler(dnutils.threads.TERM, block.set)
+                t.rm_handler(dnutils.threads.SUSPEND, block.set)
                 # wnd._handle_notify(o)
             elif isinstance(o, RWTSetOperation):
                 wnd = self.windows[o.target]

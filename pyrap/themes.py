@@ -1084,7 +1084,7 @@ class ProgressBarTheme(WidgetTheme):
     
     @property
     def minwidth(self):
-        return self._theme.get_property('width', 'ProgressBar-Indicator', self.custom_variant(), self.styles(), self.states())
+        return ifnone(self._theme.get_property('width', 'ProgressBar-Indicator', self.custom_variant(), self.styles(), self.states()), px(0))
     
     @property
     def borders(self):

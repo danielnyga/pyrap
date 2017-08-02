@@ -3,17 +3,21 @@ Created on Nov 23, 2015
 
 @author: nyga
 '''
+import dnutils
+from dnutils import out
+from dnutils.threads import current_thread, SuspendableThread, CLock, RLock, sleep
 from pyrap.ptypes import Event
 from pyrap.communication import RWTListenOperation
 from pyrap.base import session
-from pyrap.utils import out
 
 
 class RWTEvent(Event):
     
     def __init__(self, event, widget):
         Event.__init__(self)
+        self._lock = RLock()
         self._listeners = []
+        self._waiters = []
         self._widget = widget
         self.event = event
     
@@ -26,20 +30,50 @@ class RWTEvent(Event):
         self._widget = w
     
     def __iadd__(self, l):
-        if not self._listeners:
-            # register the listener
-            session.runtime << self._create_subscribe_msg()
-        if l not in self._listeners:
-            self._listeners.append(l)
-        return self
+        with self._lock:
+            if not self._listeners:
+                # register the listener
+                session.runtime << self._create_subscribe_msg()
+            if l not in self._listeners:
+                self._listeners.append(l)
+            return self
             
     def __isub__(self, l):
-        if l in self._listeners:
-            self._listeners.remove(l)
-        if not self._listeners:
-            # unregister the listener
-            session.runtime << self._create_unsubscribe_msg()
-        return self
+        with self._lock:
+            if l in self._listeners:
+                self._listeners.remove(l)
+            if not self._listeners:
+                # unregister the listener
+                session.runtime << self._create_unsubscribe_msg()
+            return self
+
+    def wait(self):
+        # override the wait protocol for RWT events to suspend the
+        # the waiting thread. By notifying the event, the waiting
+        # thread will be awoken.
+        t = current_thread()
+        if isinstance(t, SuspendableThread):
+            with self._lock:
+                if t not in self._waiters:
+                    self._waiters.append(t)
+            t.suspend()
+        else:
+            Event.wait(self)
+
+    def notify(self, *args, **kwargs):
+        # with self._wait:
+        for w in self._waiters:
+            # with self._lock:
+            block = dnutils.Event()
+            # w.add_handler(dnutils.threads.TERM, lambda: out('terminate'))
+            w.add_handler(dnutils.threads.TERM, block.set)
+            w.add_handler(dnutils.threads.SUSPEND, block.set)
+            w.resume()
+            block.wait()
+            w.rm_handler(dnutils.threads.TERM, block.set)
+            w.rm_handler(dnutils.threads.SUSPEND, block.set)
+            self._waiters.remove(w)
+        Event.notify(self, *args, **kwargs)
             
 
 class OnResize(RWTEvent):
