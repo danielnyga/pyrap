@@ -1,3 +1,4 @@
 Pillow==3.3.1
 cssutils
 python-multipart
+colored
