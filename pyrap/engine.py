@@ -36,13 +36,6 @@ from pyrap.themes import Theme, FontMetrics
 from pyrap.widgets import Display
 import collections
 
-mimetypes.init()
-
-
-# mimetypes.types_map.update({
-#     '.otf': 'application/font-sfnt',
-#     '.ttf': 'application/font-sfnt'
-# })
 
 class ApplicationManager(object):
     '''
