@@ -1,3 +1,5 @@
 Pillow==3.3.1
-web.py
 cssutils
+python-multipart
+colored
+pyparsing
