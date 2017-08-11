@@ -4,17 +4,17 @@ Created on Oct 27, 2015
 @author: nyga
 '''
 import web
-import threading
 import time
 
-from dnutils import out
+from dnutils import Lock
+import dnutils
+from pyrap import threads
 from web.utils import Storage
 from copy import deepcopy
 import urllib.parse
 from web import utils
 from pyrap.ptypes import Event
 from pyrap.utils import RStorage
-from pyrap import threads
 
 
 class SessionKilled(Event):
@@ -111,7 +111,7 @@ class DictStore(web.session.Store):
 
     def __init__(self):
         self._dict = {}
-        self._lock = threading.Lock()
+        self._lock = Lock()
 
     def __contains__(self, key):
         with self._lock:
@@ -138,7 +138,7 @@ class DictStore(web.session.Store):
                 if session_id in self:
                     del self[session_id]
                 # clean up the SessionThreads belonging to this session
-                for _, t in threads.iteractive():
+                for _, t in dnutils.threads.iteractive():
                     if isinstance(t, threads.SessionThread) and t._session_id == session_id:
                         t.interrupt()
                         
