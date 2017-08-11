@@ -100,8 +100,8 @@ class ApplicationManager(object):
                 self.icon = self.resources.registerc('resource/static/favicon.ico',
                                                      'image/%s' % self.config.icon.fileext, self.config.icon.content)
             else:
-                self.icon = self.resources.registerf('resource/static/favicon.ico', 'image/vnd.microsoft.icon',
-                                                     self.config.icon)
+                with open(self.config.icon, 'rb') as f:
+                    self.icon = self.resources.registerf('resource/static/favicon.ico', 'image/vnd.microsoft.icon', f)
         # =======================================================================
         # load the theme
         # =======================================================================
