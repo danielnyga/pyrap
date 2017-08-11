@@ -102,17 +102,22 @@ class RadarChart(Widget):
                                                                  'interval': [intervalmin, intervalmax]})
         return r
 
+
+    @property
+    def axes(self):
+        return self._axes
+
+
+    @property
+    def data(self):
+        return self._data
+
+
     def remaxis(self, axis):
         self._axes.remove(axis)
         session.runtime << RWTCallOperation(self.id, 'remAxis', axis)
         return True
 
-        # idx = next(index for (index, d) in enumerate(self._axes) if d.name == axis)
-        # self._axes.pop(idx)
-        # for d in self._data:
-        #     self._data[d].pop(idx)
-        #
-        # self.setdata(self._data)
 
     def clear(self):
         self._axes = []
@@ -140,6 +145,7 @@ class RadarChart(Widget):
 
     def setdata(self, data):
         self._data = data
+        print('set data', data)
         session.runtime << RWTSetOperation(self.id, {'data': data})
 
 
@@ -194,6 +200,12 @@ class RadarAxis(object):
 
     def intervals(self):
         return self.intervalmin, self.intervalmax
+
+    def __str__(self):
+        return 'Axis [name={}, unit={}, limits=[{},{}], intervals=[{},{}]]'.format(self.name, self.unit, self.minval, self.maxval, self.intervalmin, self.intervalmin)
+
+    def __repr__(self):
+        return '<Axis name={} at 0x{}>'.format(self.name, hash(self))
 
 
 class RadarTheme(WidgetTheme):
