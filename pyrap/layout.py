@@ -524,7 +524,6 @@ class TerminalLayoutAdapter(LayoutAdapter):
         layout = self.layout
 #         out(indent, 'computing layout for', widget.id)
         w, h = widget.compute_size()
-        out(widget, w, h)
         my.width.value = max(ifnone(my.width.min, 0), w)
         my.height.value = max(ifnone(my.height.min, 0), h)
         my.cellwidth.min = my.width.value + layout.padding_left + layout.padding_right 
