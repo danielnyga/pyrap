@@ -17,14 +17,13 @@ class RadarChart(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('RadarChart')
-    def __init__(self, parent, legendtext=None, cssid=None, opts=None, **options):
+    def __init__(self, parent, legendtext=None, opts=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = RadarTheme(self, session.runtime.mngr.theme)
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         session.runtime.ensurejsresources(self._requiredjs)
         self._axes = []
         self._data = {}
-        self._cssid = cssid
         self._opts = opts
         self._legendtext = legendtext
         self.on_select = OnSelect(self)
@@ -33,8 +32,6 @@ class RadarChart(Widget):
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        if self._cssid:
-            options.cssid = self._cssid
         if self._opts:
             options.options = self._opts
         options.legendtext = ifnone(self._legendtext, '')
@@ -58,6 +55,7 @@ class RadarChart(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        print('radarsize', w,h)
 
         return w, h
 

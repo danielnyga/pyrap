@@ -48,7 +48,7 @@ class Cluster(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-
+        print('clustersize', w,h)
         return w, h
 
     def _handle_notify(self, op):

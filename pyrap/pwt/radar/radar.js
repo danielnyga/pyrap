@@ -3,9 +3,7 @@
 // for extra information
 pwt_radar = {};
 
-pwt_radar.RadarChart = function( parent, cssid, legendtext, radaroptions) {
-
-    console.log('parent', parent, parent.html);
+pwt_radar.RadarChart = function( parent, legendtext, radaroptions) {
 
     this._cfg = {
          radius: 5,
@@ -50,9 +48,6 @@ pwt_radar.RadarChart = function( parent, cssid, legendtext, radaroptions) {
 	}
 
     this._svg = d3.select(this._parentDIV).append("svg");
-    if (cssid) {
-        this._svg.attr('id', cssid);
-    }
 
     this._svgContainer = this._svg.select('g.radar');
 
@@ -97,7 +92,7 @@ pwt_radar.RadarChart.prototype = {
             .attr('class', 'radarlegend')
             .attr('width', "300px")
             .attr('height', "300px")
-            .attr('transform', 'translate('+ this._cfg.w +',0)')
+            .attr('transform', 'translate('+ this._cfg.w +',0)')// move legend svg to the top right corner
             .append("text")
             .attr("class", "legendtitle")
             .attr("x", 0)
@@ -106,10 +101,6 @@ pwt_radar.RadarChart.prototype = {
             .attr("fill", "#404040")
             .text(this._legendtext)
             .call(this.wraptext, 300);
-
-        this._svg.select('svg')
-            .append("svg:g")
-            .attr('transform', 'translate(0, 40)');
 
         if (this._svgContainer.empty()) {
             this._svg
@@ -132,26 +123,16 @@ pwt_radar.RadarChart.prototype = {
         element.style.top = clientarea[1];
         element.style.width = clientarea[2];
         element.style.height = clientarea[3];
-        this._cfg.w = Math.min(clientarea[2],clientarea[3]);
-        this._cfg.h = this._cfg.w;
         parent.append( element );
         return element;
     },
 
     setBounds: function( args ) {
+
         this._parentDIV.style.left = args[0] + "px";
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
-        this._cfg.w = Math.min(args[2],args[3]) - 100;
-        this._cfg.h = this._cfg.w;
-        this._svg.select('svg')
-            .attr('transform', 'translate('+ this._cfg.w +',0)');
-//        var tmpaxis = this._allAxis.pop();
-//        this._allAxis.push(tmpaxis);
-        this.update();
-        console.log(this._allAxis);
-
         this.update();
     },
 
@@ -637,6 +618,7 @@ pwt_radar.RadarChart.prototype = {
                 d3.select(this).style("cursor", "pointer");
                 var coordinates = [0, 0];
                 coordinates = d3.event;
+                console.log('coordinates', coordinates);
                 var x = coordinates.layerX;
                 var y = coordinates.layerY;
                 tooltip
@@ -1163,12 +1145,12 @@ rap.registerTypeHandler( 'pwt.customs.RadarChart', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    return new pwt_radar.RadarChart( parent, properties.cssid, properties.legendtext, properties.options);
+    return new pwt_radar.RadarChart( parent, properties.legendtext, properties.options);
   },
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'width', 'height', 'data'],
+  properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
 
   methods : [ 'updateData', 'addAxis', 'remAxis', 'clear'],
 
