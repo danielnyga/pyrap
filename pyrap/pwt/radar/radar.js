@@ -7,8 +7,8 @@ pwt_radar.RadarChart = function( parent, cssid, legendtext, radaroptions) {
 
     this._cfg = {
          radius: 5,
-         w: 600,
-         h: 600,
+         w: 300,
+         h: 300,
          factor: 1,
          factorLegend: .85,
          levels: 6,
@@ -93,12 +93,12 @@ pwt_radar.RadarChart.prototype = {
         this._svg
             .append('svg')
             .attr('class', 'radarlegend')
-            .attr("width", "100%")
-            .attr("height", "100%")
+            .attr('width', "300px")
+            .attr('height', "300px")
+            .attr('transform', 'translate('+ this._cfg.w +',0)')
             .append("text")
             .attr("class", "legendtitle")
-            .attr('transform', 'translate(90,0)')
-            .attr("x", 500)
+            .attr("x", 0)
             .attr("y", 15)
             .attr("font-size", "12px")
             .attr("fill", "#404040")
@@ -107,7 +107,7 @@ pwt_radar.RadarChart.prototype = {
 
         this._svg.select('svg')
             .append("svg:g")
-            .attr('transform', 'translate(90, 40)');
+            .attr('transform', 'translate(0, 40)');
 
         if (this._svgContainer.empty()) {
             this._svg
@@ -130,8 +130,8 @@ pwt_radar.RadarChart.prototype = {
         element.style.top = clientarea[1];
         element.style.width = clientarea[2];
         element.style.height = clientarea[3];
-        this._cfg.w = clientarea[2];
-        this._cfg.h = clientarea[3];
+        this._cfg.w = Math.min(clientarea[2],clientarea[3]);
+        this._cfg.h = this._cfg.w;
         parent.append( element );
         return element;
     },
@@ -141,8 +141,15 @@ pwt_radar.RadarChart.prototype = {
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
-//        this._cfg.w = args[2];
-//        this._cfg.h = args[3];
+        this._cfg.w = Math.min(args[2],args[3]) - 100;
+        this._cfg.h = this._cfg.w;
+        this._svg.select('svg')
+            .attr('transform', 'translate('+ this._cfg.w +',0)');
+//        var tmpaxis = this._allAxis.pop();
+//        this._allAxis.push(tmpaxis);
+        this.update();
+        console.log(this._allAxis);
+
         this.update();
     },
 
@@ -459,6 +466,9 @@ pwt_radar.RadarChart.prototype = {
             var that = this;
             legendsvg = this._svg.select('svg.radarlegend');
 
+            legendsvg
+                .attr('transform', 'translate('+ this._cfg.w +',0)')
+
             // initialize legendtitle
             var legendtitle = legendsvg.select('legendtitle');
             legendtitle
@@ -473,7 +483,7 @@ pwt_radar.RadarChart.prototype = {
             legendrect
                 .enter()
                 .append("rect")
-                .attr("x", 510)
+                .attr("x", 10)
                 .attr("y", function(d, i){ return i * 20;})
                 .attr("width", 10)
                 .attr("height", 10)
@@ -491,7 +501,7 @@ pwt_radar.RadarChart.prototype = {
             legendtext
                 .enter()
                 .append("text")
-                .attr("x", 525)
+                .attr("x", 25)
                 .attr("y", function(d, i){ return i * 20 + 9;})
                 .attr("font-size", "11px")
                 .attr("fill", "#737373")
@@ -655,6 +665,7 @@ pwt_radar.RadarChart.prototype = {
         // update interval rectangles
         axis.select(".interval")
             .attr("id", function(d, i) { return "interval-"+d.name.split(' ').join('_'); })
+            .attr("x", function(d, i){return that._cfg.w/2;})
             .attr("y", function(d,i){
                 var linearScale = d3.scale.linear()
                     .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
@@ -730,6 +741,7 @@ pwt_radar.RadarChart.prototype = {
         // update mininterval rectangles
         axis.select(".mininterval")
             .attr("id", function(d, i) { return "mininterval-"+d.name.split(' ').join('_'); } )
+            .attr("x", function(d, i){return that._cfg.w/2;})
             .attr("y", function(d, i){
                 var linearScale = d3.scale.linear()
                     .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
@@ -838,6 +850,7 @@ pwt_radar.RadarChart.prototype = {
         // update maxinterval rectangles
         axis.select(".maxinterval")
             .attr("id", function(d, i) { return "maxinterval-"+d.name.split(' ').join('_'); } )
+            .attr("x", function(d, i){ return that._cfg.w/2; } )
             .attr("y", function(d, i){
                 var linearScale = d3.scale.linear()
                     .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
@@ -1023,6 +1036,27 @@ pwt_radar.RadarChart.prototype = {
             var cdata = this[key];
 
             // update datapoints
+            datapoints
+                .attr("cx", function(cval, i){
+                    var linearScale = d3.scale.linear()
+                        .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
+                        .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                    var cx = that._cfg.w/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    if (isNaN(cx)) {
+                        cx = that._cfg.w/2*(1-(parseFloat(linearScale(cval))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    }
+                    return cx;
+                })
+                .attr("cy", function(cval, i){
+                    var linearScale = d3.scale.linear()
+                        .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
+                        .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                    var cy = that._cfg.h/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    if (isNaN(cy)) {
+                        cy = that._cfg.h/2*(1-(parseFloat(linearScale(cval))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    }
+                    return cy;
+                })
 
             // create datapoints
             datapoints.enter()
