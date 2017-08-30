@@ -6,6 +6,7 @@ pwt_cluster = {};
 pwt_cluster.Cluster = function( parent, opts) {
 
     this._parentDIV = this.createElement(parent);
+    this._p = parent;
     this._data = {};
 
     this._wwidth = window.innerWidth;
@@ -99,6 +100,8 @@ pwt_cluster.Cluster.prototype = {
     },
 
     setBounds: function( args ) {
+        console.log('this id', this._rwtId);
+
         this._parentDIV.style.left = args[0] + "px";
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";

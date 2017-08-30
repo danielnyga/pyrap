@@ -5,6 +5,8 @@ pwt_radar = {};
 
 pwt_radar.RadarChart = function( parent, cssid, legendtext, radaroptions) {
 
+    console.log('parent', parent, parent.html);
+
     this._cfg = {
          radius: 5,
          w: 300,

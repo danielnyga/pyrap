@@ -32,6 +32,7 @@ class Cluster(Widget):
         if self._opts:
             options.options = self._opts
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
+        print('clusterid', self.id)
 
     def compute_size(self):
         w, h = Widget.compute_size(self.parent)

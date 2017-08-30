@@ -4,9 +4,11 @@ Created on Oct 2, 2015
 @author: nyga
 '''
 import base64
+import json
 
 import pyrap
 from dnutils.threads import sleep
+from pyrap.pwt.cluster.cluster import Cluster
 from pyrap.pwt.radar.radar import RadarChart
 from dnutils import out, Event
 from dnutils.tools import ifnone
@@ -172,12 +174,19 @@ class ControlsDemo():
         self.create_upload_page(page)
         self.pages['FileUpload'] = page
 
-        # #=======================================================================
-        # # create radar chart
-        # #=======================================================================
-        # page  = self.create_page_template('Radar Chart Demo')
-        # self.create_radar_page(page)
-        # self.pages['Radar'] = page
+        #=======================================================================
+        # create radar chart
+        #=======================================================================
+        page  = self.create_page_template('Radar Chart Demo')
+        self.create_radar_page(page)
+        self.pages['Radar'] = page
+
+        #=======================================================================
+        # create D3 cluster chart
+        #=======================================================================
+        page = self.create_page_template('D3 Cluster')
+        self.create_cluster_page(page)
+        self.pages['Cluster'] = page
         
         
         for page in (list(self.pages.values())[1:]):
@@ -457,29 +466,6 @@ class ControlsDemo():
         comp_pracgraph.layout = CellLayout(halign='fill', valign='fill')
         comp_pracgraph.bg = Color('white')
 
-        # the datapoints to be drawn as polygons
-        d = [
-            [
-                {'axis': "Fatigue Strength", 'value': 180},
-                {'axis': "Corrosion", 'value': 1},
-                {'axis': "Hardness", 'value': 130},
-                {'axis': "E-Modulus", 'value': 210},
-                {'axis': "Tensile Strength", 'value': 310},
-                {'axis': "Grindability", 'value': 0.14},
-                {'axis': "Fracture Toughness", 'value': 15},
-                {'axis': "Formability", 'value': 0.05},
-            ], [
-                {'axis': "Fatigue Strength", 'value': 150},
-                {'axis': "Corrosion", 'value': -1},
-                {'axis': "Hardness", 'value': 110},
-                {'axis': "E-Modulus", 'value': 230},
-                {'axis': "Tensile Strength", 'value': 400},
-                {'axis': "Grindability", 'value': 0.29},
-                {'axis': "Fracture Toughness", 'value': 10},
-                {'axis': "Formability", 'value': 0.14},
-            ]
-        ]
-
         # user-defined configuration of the number of radar levels, min and max
         # values of the respective axes, intervals (can be understood as 'acceptable range of
         # values' the respective datapoint should take), and the units of the
@@ -487,56 +473,77 @@ class ControlsDemo():
         # so make sure the values of the datapoints as well as min/max/interval
         # values are in [0,1]
         mycfg = {
-                   'w': 500,
-                   'h': 500,
-                   'levels': 6,
-                   'ExtraWidthX': 300,
-                    'minValues': {'E-Modulus': 150,
-                                'Fatigue Strength': 120,
-                                'Corrosion': -2,
-                                'Formability': .0,
-                                'Fracture Toughness': 0,
-                                'Grindability': 0.1,
-                                'Tensile Strength': 300,
-                                'Hardness': 100,
-                                },
-                    'maxValues': {'E-Modulus': 250,
-                                'Fatigue Strength': 200,
-                                'Corrosion': 2,
-                                'Formability': .9,
-                                'Fracture Toughness': 20,
-                                'Grindability': 0.7,
-                                'Tensile Strength': 400,
-                                'Hardness': 150,
-                                },
-                    'intervals': {'E-Modulus': [200, 220],
-                                'Fatigue Strength': [130, 180],
-                                'Corrosion': [-1, 1],
-                                'Formability': [.2, .3],
-                                'Fracture Toughness': [0, 15],
-                                'Grindability': [.20, .70],
-                                'Tensile Strength': [320, 390],
-                                'Hardness': [120, 150],
-                                },
-        'units': {'E-Modulus': 'GPa',
-                'Fatigue Strength': 'MPa',
-                'Corrosion': '',
-                'Formability': '%',
-                'Fracture Toughness': 'FTa',
-                'Grindability': '%',
-                'Tensile Strength': 'MPa',
-                'Hardness': 'HV',
-                }
+            'w': 500,
+            'h': 500,
+            'levels': 6,
+            'ExtraWidthX': 300
         }
 
-        radar = RadarChart(comp_pracgraph, cssid='radarid', opts=mycfg)
+        radar = RadarChart(comp_pracgraph, legendtext='The material properties', opts=mycfg)
 
-        # the legend title and names of the data groups (in the same order as
-        # the data points are given)
-        radar.legend('The material properties in relation to the property intervals of the requirement profile',
-                     ['17Cr3', '100Cr6'])
-        radar.updatedata(d)
+        # the legend title and names of the data sets (in the same order as
+        # the data point lists are given)
+        radar.addaxis('ElasticModulus', minval=150, maxval=250, unit='GPa', intervalmin=200, intervalmax=220)
+        radar.addaxis('YieldStrength', minval=220, maxval=2500, unit='MPa', intervalmin=500, intervalmax=900)
+        radar.addaxis('TensileStrength', minval=300, maxval=2500, unit='MPa', intervalmin=700, intervalmax=2200)
+        radar.addaxis('CorrosionBehavior', minval=-2, maxval=2, unit='', intervalmin=-1, intervalmax=1)
+        radar.addaxis('Hardness', minval=100, maxval=1000, unit='HV', intervalmin=200, intervalmax=700)
+        radar.addaxis('FatigueStrength', minval=150, maxval=1000, unit='MPa', intervalmin=200, intervalmax=500)
+        radar.addaxis('ElongationAtBreak', minval=0., maxval=1., unit='%', intervalmin=.1, intervalmax=.2)
+        radar.addaxis('NotchImpactEnergy', minval=5, maxval=45, unit='J', intervalmin=15, intervalmax=30)
 
+        # intervals = {
+        #     'ElasticModulus': {'min': 200, 'max': 220},
+        #     'YieldStrength': {'min': 500, 'max': 900},
+        #     'TensileStrength': {'min': 700, 'max': 2200},
+        #     'CorrosionBehavior': {'min': -1, 'max': 1},
+        #     'Hardness': {'min': 200, 'max': 700},
+        #     'FatigueStrength': {'min': 200, 'max': 500},
+        #     'ElongationAtBreak': {'min': .1, 'max': .2},
+        #     'NotchImpactEnergy': {'min': 15, 'max': 30},
+        #     'FlexuralAlternateStrength': {'min': 300, 'max': 950}
+        # }
+        #
+        # limits = {
+        #     'ElasticModulus': {'min': 150, 'max': 250},
+        #     'YieldStrength': {'min': 220, 'max': 2500},
+        #     'TensileStrength': {'min': 300, 'max': 2500},
+        #     'CorrosionBehavior': {'min': -2, 'max': 2},
+        #     'Hardness': {'min': 100, 'max': 1000},
+        #     'FatigueStrength': {'min': 150, 'max': 1000},
+        #     'ElongationAtBreak': {'min': 0., 'max': 1.},
+        #     'NotchImpactEnergy': {'min': 5, 'max': 45},
+        #     'FlexuralAlternateStrength': {'min': 150, 'max': 1000}
+        # }
+        radar.setdata({'Material X': [210.0, 1000.0, 2000.0, -1, 700.0, 900.0, .5, 15.0]})
+
+
+    def create_cluster_page(self, parent):
+        grp = Group(parent, text='Radar')
+        grp.layout = CellLayout(halign='fill', valign='fill')
+
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+
+        # comp_cluster = Composite(comp_body)
+        # comp_cluster.layout = CellLayout(halign='fill', valign='fill')
+        # comp_cluster.bg = Color('black')
+
+        cluster = Cluster(comp_body, halign='fill', valign='fill')
+        cluster.bg = Color('black')
+
+        with open('resources/materials.json') as f:
+            data = json.load(f)
+            cluster.setdata(data)
+
+        txt = Edit(comp_body, text='28Mn6', halign='fill', valign='fill')
+        btn = Button(comp_body, text='Highlight', halign='fill', valign='fill')
+
+        def highlight(*_):
+            cluster.highlight(txt.text)
+
+
+        btn.on_select += highlight
 
     def open_browser(self, data):
         dlg = Shell(self.mainwnd, title='pyRAP Browser', border=True,
