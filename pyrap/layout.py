@@ -50,14 +50,13 @@ class LayoutData(object):
 class LayoutAdapter(object): 
 
     def __init__(self, widget, parent):
-        self.logger = dnutils.getlogger(type(self).__name__, level=dnutils.INFO)
+        self.logger = dnutils.getlogger(type(self).__name__, level=dnutils.ERROR)
         self.widget = widget
         self.layout = widget.layout
         self.data = LayoutData(self.layout)
         self.children = []
         self.parent = parent
-#         self.write()
-    
+
     def prepare(self): pass
     
     @staticmethod
@@ -65,7 +64,7 @@ class LayoutAdapter(object):
         layout = widget.layout
         if layout.exclude:
             raise Exception('Cannot create a LayoutAdapter for a Widget that is excluded from layouting.')
-        if type(layout) in (GridLayout, RowLayout, ColumnLayout, CellLayout, StackLayout) and widget.children:
+        if type(layout) in (GridLayout, RowLayout, ColumnLayout, CellLayout, StackLayout):
             if type(layout) is GridLayout:
                 layout = GridLayoutAdapter(widget, parent)
             elif type(layout) is RowLayout:
@@ -78,7 +77,7 @@ class LayoutAdapter(object):
                 layout = StackLayoutAdapter(widget, parent)
             # if the "exclude" flag is set, do not consider the respective 
             # in the layout computations.
-            layout.children.extend([layout.create(w, layout) for w in widget.children if not w.layout.exclude])
+            layout.children.extend([LayoutAdapter.create(w, layout) for w in widget.children if not w.layout.exclude])
         else:
             layout = TerminalLayoutAdapter(widget, parent)
         layout.prepare()
@@ -93,35 +92,117 @@ class LayoutAdapter(object):
         for c in self.children: 
             if c.changed: return True
         return self.data.changed
-    
-    def compute(self): 
+
+    def compute_dependency_graph(self, pack):
+        import networkx as nx
+        # traverse the whole widget hierarchy and build up a tree
+        # of widgets that depend on the sizes of one another
+        hdeps = nx.DiGraph()
+        vdeps = nx.DiGraph()
+        fringe = list(self.children)
+        while len(fringe):
+            adapter = fringe.pop(0)
+            #####################################################################
+            # horizontal
+            if adapter.layout.halign == 'fill':
+                from_node, from_adapt = adapter.widget.id, adapter
+                to_node, to_adapt = adapter.widget.parent.id, adapter.parent
+            else:
+                from_node, from_adapt = adapter.widget.parent.id, adapter.parent
+                to_node, to_adapt = adapter.widget.id, adapter
+            # add "from" node if not existent
+            if from_adapt is not None and from_node not in hdeps.nodes():
+                hdeps.add_node(from_node, adapter=from_adapt)
+            # add "to" node if not existent
+            if to_adapt is not None and to_node not in hdeps.nodes():
+                hdeps.add_node(to_node, adapter=to_adapt)
+            # add dependency edge
+            if (from_adapt, to_adapt) != (None, None):
+                hdeps.add_edge(from_node, to_node)
+            #####################################################################
+            # vertical
+            if adapter.layout.valign == 'fill':
+                from_node, from_adapt = adapter.widget.id, adapter
+                to_node, to_adapt = adapter.widget.parent.id, adapter.parent
+            else:
+                from_node, from_adapt = adapter.widget.parent.id, adapter.parent
+                to_node, to_adapt = adapter.widget.id, adapter
+            if to_adapt and to_node not in vdeps.nodes():
+                vdeps.add_node(to_node, adapter=to_adapt)
+            if from_adapt and from_node not in vdeps.nodes():
+                vdeps.add_node(from_node, adapter=from_adapt)
+            if (from_adapt, to_adapt) != (None, None):
+                vdeps.add_edge(from_node, to_node)
+            fringe.extend(adapter.children)
+        # out('all nodes:', vdeps.nodes())
+        # out('vertical deps:')
+        # for e in vdeps.edges():
+        #     out(e)
+        # out('horizontal edges:')
+        # for e in hdeps.edges():
+        #     out(e)
+        return hdeps, vdeps
+
+
+    def _compute_verticals(self):
+        raise NotImplementedError()
+
+    def _compute_horizontals(self):
+        raise NotImplementedError()
+
+    def compute_verticals(self, vdeps):
+        fringe = [n for n in vdeps.nodes() if not vdeps.successors(n)] # all nodes without parents
+        adapters = set()
+        processed = set()
+        while fringe:
+            node = fringe.pop(0)
+            if node in processed:
+                continue
+            processed.add(node)
+            adapter = vdeps.node[node]['adapter']
+            adapter._compute_verticals()
+            self.logger.info('computing vertical dimensions for', adapter.widget, adapter.data.height)
+            fringe.extend(vdeps.predecessors(node))
+        return adapters
+
+    def compute_horizontals(self, hdeps):
+        fringe = [n for n in hdeps.nodes() if not hdeps.successors(n)] # all nodes without parents
+        adapters = set()
+        processed = set()
+        while fringe:
+            node = fringe.pop(0)
+            if node in processed:
+                continue
+            processed.add(node)
+            adapter = hdeps.node[node]['adapter']
+            adapters.add(adapter)
+            adapter._compute_horizontals()
+            self.logger.info('computing horizontal dimensions for', adapter.widget, adapter.data.width)
+            fringe.extend(hdeps.predecessors(node))
+        return adapters
+
+    def compute(self, pack=False):
         start = time.time()
-        while True:
-            self.clean()
-            self._compute_cells()
-            if not self.changed: break
+        #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
+        # compute dependencies among widgets
+        if not pack:
+            self.data.width.value = self.widget.width
+            self.data.height.value = self.widget.height
+            out(self.widget, 'bounds:', list(map(str, self.widget.bounds)))
+        hdeps, vdeps = self.compute_dependency_graph(pack)
+        # compute the vertical components
+        adapters = set()
+        adapters.update(self.compute_horizontals(hdeps))
+        adapters.update(self.compute_verticals(vdeps))
+        #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
         self.logger.info('layout computation took %s sec' % (time.time() - start))
+        self.logger.info('apply layout...')
         self._compute_widget()
+        self.logger.info('layout application done.')
     
     def _compute(self):
         raise Exception('Not implemented.')
-    
-    
-    def write(self, level=0, check=False):
-        indent = '   ' * (level + 1)
-        if check:
-            ok = all([self.data.cellwidth(), self.data.cellheight(), self.data.cellhpos(), self.data.cellvpos()]) 
-        else:
-            ok = True
-        if not ok:
-            indent = '-->' + indent[3:]
-        print(indent, '%s [%s]  (x: %s y: %s) width: [%s ; %s ; %s] height: [%s ; %s ; %s]' % (repr(self.widget), ','.join([w.widget.id for w in self.children]),
-                                                                                                   str(self.data.cellhpos), str(self.data.cellvpos), 
-                                                                                                   str(self.data.cellwidth.min), str(self.data.cellwidth.value), str(self.data.cellwidth.max),
-                                                                                                   str(self.data.cellheight.min), str(self.data.cellheight.value), str(self.data.cellheight.max)))
-        for c in self.children:
-            c.write(level+1, check=check)
-            
+
     def _compute_widget(self):
         x, y, width, height = None, None, None, None
         # horizontal position
@@ -132,6 +213,7 @@ class LayoutAdapter(object):
             x = self.data.cellhpos() + self.layout.padding_left
             width = self.data.width.value
         elif self.layout.halign == 'right':
+            out(self.widget, self.data.cellhpos.value, self.data.cellwidth.value, self.data.width.value, self.layout.padding_right)
             x = self.data.cellhpos.value + self.data.cellwidth.value - self.data.width.value - self.layout.padding_right
             width = self.data.width.value
         elif self.layout.halign == 'center':
@@ -148,6 +230,7 @@ class LayoutAdapter(object):
             y = self.data.cellvpos() + self.data.cellheight.value - self.data.height.value - self.layout.padding_bottom
             height = self.data.height.value
         elif self.layout.valign == 'center':
+            out(self.widget, self.data.cellvpos.value, self.data.cellheight.value, self.data.height.value)
             y = self.data.cellvpos() + pc(50).of(self.data.cellheight.value) - pc(50).of(self.data.height.value)
             height = self.data.height.value
 #         out(self.widget, ':', x, y, width, height)
@@ -157,7 +240,208 @@ class LayoutAdapter(object):
     
 
 class GridLayoutAdapter(LayoutAdapter): 
-    
+
+    def _compute_horizontals(self):
+        my = self.data
+        widget = self.widget
+        layout = self.layout
+        # indent = '   ' * level
+        self.logger.debug('computing horizontal layout for', widget.id, repr(widget), 'cell:', self.data.cellwidth,
+                          self.data.cellheight, 'widget', self.data.width, self.data.height)
+
+        # if (layout.halign == 'fill' and layout.valign == 'fill'):
+        #     self._compute_children(level)
+
+        fringe_width, _ = widget.compute_fringe()
+        fixcols = [i for i in range(self.colcount()) if i not in layout.flexcols]
+        flexcols = {f: v for f, v in layout.flexcols.items() if f < self.colcount()}
+        # ======================================
+        # make all cells of a column equal width
+        # ======================================
+        wmaxt = px(0)
+        wmaxg = px(0)
+        for i in range(self.colcount()):
+            wmax = px(0)
+            for c in self.col(i):
+                wmax = max(wmax, c.data.cellwidth.min)
+                wmaxg = max(wmax, wmaxg)
+            for c in self.col(i):
+                c.data.cellwidth.min = wmax
+                if i not in flexcols or not layout.halign == 'fill':
+                    c.data.cellwidth.value = wmax
+            wmaxt += wmax
+        if layout.equalwidths:
+            wmaxt = wmaxg * self.colcount()
+            for cells in self.itercols():
+                for c in cells:
+                    # if i not in flexcols or not layout.halign == 'fill':
+                    c.data.cellwidth.value = wmaxg
+        # if layout.squared:
+        #     m = max(hmaxg, wmaxg)
+        #     hmaxt = m * self.rowcount()
+        #     wmaxt = m * self.colcount()
+        #     for cells in self.itercols():
+        #         for c in cells:
+        #             if i not in flexrows or not layout.valign == 'fill':
+        #                 c.data.cellheight.value = c.data.cellwidth.value = m
+        # =======================================================================
+        # if this widget already has a width specified, distribute the flexcols
+        # over the remaining free space.
+        # =======================================================================
+        if my.width.value is not None and layout.halign == 'fill':  # and not RWT.HSCROLL in widget.style:
+            if layout.equalwidths:
+                if fixcols and flexcols:
+                    raise LayoutError('Layout is inconsistent: I was told to make columns in %s '
+                                      'equal length, but you have manually specified flexcols. '
+                                      'Remove them or set all columns be flexible.' % repr(self.widget))
+                fixcols = []
+                flexcols = {i: 1 for i in range(self.colcount())}
+            if not flexcols:
+                raise Exception('Layout is underdetermined: I was told to fill %s '
+                                'horizontally, but I do not have any flexcols. '
+                                '(created at %s)' % (repr(self.widget), self.widget._created))
+            if all([c.data.cellwidth.value is not None for i in fixcols for c in self.col(i)]):
+                self.logger.debug('distributing over all flexcols')
+                occ = sum([self.col(i)[0].data.cellwidth.value for i in fixcols if self.col(i)])
+                occ += sum([self.col(i)[0].data.cellwidth.min for i in flexcols if self.col(i)])
+                free = px(my.width.value - occ - layout.hspace * (
+                self.colcount() - 1) - layout.padding_left - layout.padding_right - fringe_width)
+                flexwidths = pparti(free.value, [flexcols[i] for i in sorted(flexcols)])
+                for fci, flexwidth in zip(flexcols, flexwidths):
+                    for c in self.col(fci):
+                        c.data.cellwidth.value = px(flexwidth + c.data.cellwidth.min)
+
+        mywidth, _ = widget.compute_fringe()
+
+        children_width = max(my.width.min,
+                             wmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_left + layout.padding_right)
+        # =======================================================================
+        # if the width of the cell is specified, adjust the width of the
+        # widget in case that halign = 'fill'
+        # =======================================================================
+        if layout.halign == 'fill':
+            my.width.value = my.cellwidth.value
+            my.cellwidth.min = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0)
+        else:
+            my.width.value = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0)
+            my.cellwidth.min = my.width.value
+
+        # if not (layout.halign == 'fill' and layout.valign == 'fill'):
+        #     self._compute_children(level)
+        # =======================================================================
+        # compute the cell positions if we know our width
+        # the width/height of all our children
+        # =======================================================================
+        xoffset, _ = widget.viewport()
+        if my.width.value is not None and all([c[0].data.cellwidth.value is not None for c in self.itercols()]):
+            cum = layout.padding_left + xoffset
+            for cells in self.itercols():
+                for c in cells:
+                    c.data.cellhpos.set(cum)
+                cum += c.data.cellwidth.value + layout.hspace
+
+
+    def _compute_verticals(self):
+        my = self.data
+        widget = self.widget
+        layout = self.layout
+        # indent = '   ' * level
+        self.logger.debug('computing vertical dimensions for', widget.id, repr(widget), 'cell:', self.data.cellwidth,
+                          self.data.cellheight, 'widget', self.data.width, self.data.height)
+        _, fringe_height = widget.compute_fringe()
+        fixrows = [i for i in range(self.rowcount()) if i not in layout.flexrows]
+        flexrows = {f: v for f, v in layout.flexrows.items() if f < self.rowcount()}
+        # =======================================================================
+        # make cells of a row equal height
+        # =======================================================================
+        hmaxt = px(0)
+        hmaxg = px(0)
+        for i in range(self.rowcount()):
+            hmax = px(0)
+            for c in self.row(i):
+                hmax = max(hmax, c.data.cellheight.min)
+                hmaxg = max(hmax, hmaxg)
+            for c in self.row(i):
+                c.data.cellheight.min = hmax
+                if i not in flexrows or not layout.valign == 'fill':
+                    c.data.cellheight.value = hmax
+            hmaxt += hmax
+        if layout.equalheights:
+            hmaxt = hmaxg * self.rowcount()
+            for cells in self.iterrows():
+                for c in cells:
+                    if i not in flexrows or not layout.valign == 'fill':
+                        c.data.cellheight.value = hmaxg
+        # if layout.squared:
+        #     m = max(hmaxg, wmaxg)
+        #     hmaxt = m * self.rowcount()
+        #     wmaxt = m * self.colcount()
+        #     for cells in self.itercols():
+        #         for c in cells:
+        #             if i not in flexrows or not layout.valign == 'fill':
+        # =======================================================================
+        # if this widget already has a height specified, distribute the flexrows
+        # over the remaining free space.
+        # =======================================================================
+        if my.height.value is not None and layout.valign == 'fill':  # and not RWT.VSCROLL in widget.style:
+            if layout.equalheights:
+                if fixrows and flexrows:
+                    raise LayoutError('Layout is inconsistent: I was told to make columns in %s equal height, '
+                                      'but you have manually specified flexrows. Remove them or set all rows be flexible.' % repr(self.widget))
+                fixrows = []
+                flexrows = {i: 1 for i in range(self.rowcount())}
+            if not flexrows:
+                raise LayoutError(
+                    'Layout is underdetermined: I was told to fill %s vertically, but I do not have any flexrows. (created at %s)' % (
+                    repr(self.widget), self.widget._created))
+            if all([c.data.cellheight.value is not None for i in fixrows for c in self.row(i)]):
+                occ = sum([self.row(i)[0].data.cellheight.value for i in fixrows if self.row(i)])
+                occ += sum([self.row(i)[0].data.cellheight.min for i in flexrows if self.row(i)])
+                free = px(my.height.value - occ - layout.vspace * (
+                self.rowcount() - 1) - layout.padding_top - layout.padding_bottom - fringe_height)
+                flexheights = pparti(free.value, [flexrows[i] for i in sorted(flexrows)])
+                for fci, flexheight in zip(flexrows, flexheights):
+                    for c in self.row(fci):
+                        c.data.cellheight.value = px(flexheight + c.data.cellheight.min)
+
+        #                 c.data.cellheight.value = c.data.cellwidth.value = m
+
+        _, myheight = widget.compute_fringe()
+
+        children_height = max(my.height.min, hmaxt + layout.vspace * (self.rowcount() - 1) + layout.padding_top + layout.padding_bottom)
+        # =======================================================================
+        # if the height of the cell is specified, adjust the height of the
+        # widget in case that valign='fill'
+        # =======================================================================
+        if layout.valign == 'fill':
+            my.height.value = my.cellheight.value
+            my.cellheight.min = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
+        else:
+            my.height.value = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
+            my.cellheight.min = my.height.value
+
+        # order is is now handled by the dependency graph:
+        # if not (layout.halign == 'fill' and layout.valign == 'fill'):
+        #     self._compute_children(level)
+        # =======================================================================
+        # compute the cell positions if we know our width/height
+        # the width/height of all our children
+        # =======================================================================
+        _, yoffset = widget.viewport()
+        # if my.width.value is not None and all([c[0].data.cellwidth.value is not None for c in self.itercols()]):
+        #     cum = layout.padding_left + xoffset
+        #     for cells in self.itercols():
+        #         for c in cells:
+        #             c.data.cellhpos.set(cum)
+        #         cum += c.data.cellwidth.value + layout.hspace
+        if my.height.value is not None and all([c[0].data.cellheight.value is not None for c in self.iterrows()]):
+            cum = layout.padding_top + yoffset
+            for cells in self.iterrows():
+                for c in cells:
+                    c.data.cellvpos.set(cum)
+                cum += c.data.cellheight.value + layout.vspace
+
+
     def __init__(self, widget, parent):
         LayoutAdapter.__init__(self, widget, parent)
     
@@ -166,12 +450,12 @@ class GridLayoutAdapter(LayoutAdapter):
     def rowcount(self):
         if hasattr(self.layout, 'rows'):
             return self.layout.rows
-        return int(math.ceil(len(self.children) / float(self.colcount())))
+        return math.ceil(len(self.children) / self.colcount())
     
     def colcount(self):
         if hasattr(self.layout, 'cols'):
             return self.layout.cols
-        return int(math.ceil(len(self.children) / float(self.rowcount())))
+        return math.ceil(len(self.children) / self.rowcount())
     
     def iterrows(self):
         for i in range(self.rowcount()):
@@ -199,228 +483,118 @@ class GridLayoutAdapter(LayoutAdapter):
         LayoutAdapter.write(self, level, check)
         
         
-    def _compute_children(self, level):
-        indent = '   ' * level
-        while True:
-            changed = False
-            for c in [c for c in self.children if not hasattr(c, '_done')]: 
-                c.clean()
-                c._compute_cells(level+1)
-                changed |= c.changed
-            if not changed: break
-        
-        
-    def _compute_cells(self, level=0):
+class RowLayoutAdapter(GridLayoutAdapter): pass
+    
+class ColumnLayoutAdapter(GridLayoutAdapter): pass 
+
+class CellLayoutAdapter(GridLayoutAdapter):
+    
+    def __init__(self, widget, parent):
+        GridLayoutAdapter.__init__(self, widget, parent)
+        if len(widget.children) > 1:
+            raise Exception('A cell cannot contain more than one element! (%s, children: %s)' % (repr(widget), list(map(repr, widget.children))))
+    
+
+class TerminalLayoutAdapter(LayoutAdapter): 
+    
+    def _compute_verticals(self):
         my = self.data
         widget = self.widget
         layout = self.layout
-        indent = '   ' * level
-        self.logger.debug(indent, 'computing layout for', widget.id, repr(widget), 'cell:', self.data.cellwidth, 
-            self.data.cellheight, 'widget', self.data.width, self.data.height)
-        
-        if (layout.halign == 'fill' and layout.valign == 'fill'): 
-            self._compute_children(level)
-        
-        fringe_width, fringe_height = widget.compute_fringe()
-        #=======================================================================
-        # if this widget already has a width specified, distribute the flexcols
-        # over the remaining free space.
-        #=======================================================================
-        fixcols = [i for i in range(self.colcount())  if i not in layout.flexcols]
-        flexcols = {f: v for f, v in layout.flexcols.items() if f < self.colcount()}
-        if my.width.value is not None and layout.halign == 'fill':# and not RWT.HSCROLL in widget.style:
-            if layout.equalwidths:
-                if fixcols and flexcols:
-                    raise LayoutError('Layout is inconsistent: I was told to make columns in %s equal length, but you have manually specified flexcols. Remove them or set all columns be flexible.' % repr(self.widget))
-                fixcols = []
-                flexcols = {i: 1 for i in range(self.colcount())}
-            if not flexcols:
-                raise Exception('Layout is underdetermined: I was told to fill %s horizontally, but I do not have any flexcols. (created at %s)' % (repr(self.widget), self.widget._created))
-            if all([c.data.cellwidth.value is not None for i in fixcols for c in self.col(i)]):
-                occ = sum([self.col(i)[0].data.cellwidth.value for i in fixcols if self.col(i)])
-                occ += sum([self.col(i)[0].data.cellwidth.min for i in flexcols if self.col(i)])
-                free = px(my.width.value - occ - layout.hspace * (self.colcount() - 1) - layout.padding_left - layout.padding_right - fringe_width)
-                flexwidths = pparti(free.value, [flexcols[i] for i in sorted(flexcols)])
-                for fci, flexwidth in zip(flexcols, flexwidths):
-                    for c in self.col(fci):
-                        c.data.cellwidth.value = px(flexwidth + c.data.cellwidth.min)
-        #=======================================================================
-        # if this widget already has a height specified, distribute the flexrows
-        # over the remaining free space.
-        #=======================================================================
-        fixrows = [i for i in range(self.rowcount())  if i not in layout.flexrows]
-        flexrows = {f: v for f, v in layout.flexrows.items() if f < self.rowcount()}
-        if my.height.value is not None and layout.valign == 'fill':# and not RWT.VSCROLL in widget.style:
-            if layout.equalheights:
-                if fixrows and flexrows:
-                    raise LayoutError('Layout is inconsistent: I was told to make columns in %s equal height, but you have manually specified flexrows. Remove them or set all rows be flexible.' % repr(self.widget))
-                fixrows = []
-                flexrows = {i: 1 for i in range(self.rowcount())}
-            if not flexrows:
-                raise LayoutError('Layout is underdetermined: I was told to fill %s vertically, but I do not have any flexrows. (created at %s)' % (repr(self.widget), self.widget._created))
-            if all([c.data.cellheight.value is not None for i in fixrows for c in self.row(i)]):
-                occ = sum([self.row(i)[0].data.cellheight.value for i in fixrows if self.row(i)])
-                occ += sum([self.row(i)[0].data.cellheight.min for i in flexrows if self.row(i)])
-                free = px(my.height.value - occ - layout.vspace * (self.rowcount() - 1) - layout.padding_top - layout.padding_bottom - fringe_height)
-                flexheights = pparti(free.value, [flexrows[i] for i in sorted(flexrows)])
-                for fci, flexheight in zip(flexrows, flexheights):
-                    for c in self.row(fci):
-                        c.data.cellheight.value = px(flexheight + c.data.cellheight.min)
-        #=======================================================================
-        # make all cells of a column equal width and all cells of a row equal height
-        #=======================================================================
-        wmaxt = px(0)
-        wmaxg = px(0)
-        for i in range(self.colcount()):
-            wmax = px(0)
-            for c in self.col(i):
-                wmax = max(wmax, c.data.cellwidth.min)
-                wmaxg = max(wmax, wmaxg)
-            for c in self.col(i): 
-                c.data.cellwidth.min = wmax 
-                if i not in flexcols  or not layout.halign == 'fill':
-                    c.data.cellwidth.value = wmax
-            wmaxt += wmax
-        if layout.equalwidths:
-            wmaxt = wmaxg * self.colcount()
-            for cells in self.itercols():
-                for c in cells:
-#                     if i not in flexcols or not layout.halign == 'fill':
-                    c.data.cellwidth.value = wmaxg
-        hmaxt = px(0)
-        hmaxg = px(0)
-        for i in range(self.rowcount()):
-            hmax = px(0)
-            for c in self.row(i): 
-                hmax = max(hmax, c.data.cellheight.min)
-                hmaxg = max(hmax, hmaxg)
-            for c in self.row(i): 
-                c.data.cellheight.min = hmax
-                if i not in flexrows or not layout.valign == 'fill': 
-                    c.data.cellheight.value = hmax
-            hmaxt += hmax
-        if layout.equalheights:
-            hmaxt = hmaxg * self.rowcount()
-            for cells in self.iterrows():
-                for c in cells:
-                    if i not in flexrows or not layout.valign == 'fill':
-                        c.data.cellheight.value = hmaxg
-        if layout.squared:
-            m = max(hmaxg, wmaxg)
-            hmaxt = m * self.rowcount()
-            wmaxt = m * self.colcount()
-            for cells in self.itercols():
-                for c in cells:
-                    if i not in flexrows or not layout.valign == 'fill':
-                        c.data.cellheight.value = c.data.cellwidth.value = m
-        
-        mywidth, myheight = widget.compute_fringe()
-        
-        children_width = max(my.width.min, wmaxt + layout.hspace * (self.colcount() - 1) + layout.padding_left + layout.padding_right)
-        children_height = max(my.height.min, hmaxt + layout.vspace * (self.rowcount() - 1) + layout.padding_top + layout.padding_bottom)
-        #=======================================================================
-        # if the width/height of the cell is specified, adjust the width/height of the
-        # widget in case that halign/valign='fill'
-        #=======================================================================
-        if layout.halign == 'fill':
-            my.width.value = my.cellwidth.value 
-            my.cellwidth.min = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0)
-        else:
-            my.width.value = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0)
-            my.cellwidth.min = my.width.value
-        if layout.valign == 'fill':
-            my.height.value = my.cellheight.value
-            my.cellheight.min = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
-        else:
-            my.height.value = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
-            my.cellheight.min = my.height.value
-            
-        if not (layout.halign == 'fill' and layout.valign == 'fill'): 
-            self._compute_children(level)
-        #=======================================================================
-        # compute the cell positions if we know our width/height 
-        # the width/height of all our children
-        #=======================================================================
-        xoffset, yoffset = widget.viewport()
-        if my.width.value is not None and all([c[0].data.cellwidth.value is not None for c in self.itercols()]):
-            cum = layout.padding_left + xoffset
-            for cells in self.itercols():
-                for c in cells: 
-                    c.data.cellhpos.set(cum)
-                cum += c.data.cellwidth.value + layout.hspace
-        if my.height.value is not None and all([c[0].data.cellheight.value is not None for c in self.iterrows()]):
-            cum = layout.padding_top + yoffset
-            for cells in self.iterrows():
-                for c in cells:
-                    c.data.cellvpos.set(cum)
-                cum += c.data.cellheight.value + layout.vspace
-    
-        
+#         out(indent, 'computing layout for', widget.id)
+        w, h = widget.compute_size()
+        # my.width.value = max(ifnone(my.width.min, 0), w)
+        my.height.value = max(ifnone(my.height.min, 0), h)
+        # my.cellwidth.min = my.width.value + layout.padding_left + layout.padding_right
+        my.cellheight.min = my.height.value + layout.padding_top + layout.padding_bottom
+        # self._done = True
+
+    def _compute_horizontals(self):
+        my = self.data
+        widget = self.widget
+        layout = self.layout
+        #         out(indent, 'computing layout for', widget.id)
+        w, h = widget.compute_size()
+        my.width.value = max(ifnone(my.width.min, 0), w)
+        # my.height.value = max(ifnone(my.height.min, 0), h)
+        my.cellwidth.min = my.width.value + layout.padding_left + layout.padding_right
+        # my.cellheight.min = my.height.value + layout.padding_top + layout.padding_bottom
+
+
 class StackLayoutAdapter(GridLayoutAdapter):
-    
     def _compute_cells(self, level=0):
         my = self.data
         widget = self.widget
         layout = self.layout
         indent = '   ' * level
-        self.logger.debug(indent, 'computing layout for', widget.id, repr(widget), 'cell:', self.data.cellwidth, 
-            self.data.cellheight, 'widget', self.data.width, self.data.height)
-        
-        if not (layout.halign == 'fill' and layout.valign == 'fill'): 
+        self.logger.debug(indent, 'computing layout for', widget.id, repr(widget), 'cell:', self.data.cellwidth,
+                          self.data.cellheight, 'widget', self.data.width, self.data.height)
+
+        if not (layout.halign == 'fill' and layout.valign == 'fill'):
             self._compute_children(level)
-        
-#         my.cellwidth.min = max(my.width.min, mywidth)
-#         my.cellheight.min = max(my.height.min, myheight)
+
+        # my.cellwidth.min = max(my.width.min, mywidth)
+        #         my.cellheight.min = max(my.height.min, myheight)
         fringe_width, fringe_height = widget.compute_fringe()
-        #=======================================================================
+        # =======================================================================
         # if this widget already has a width specified, distribute the flexcols
         # over the remaining free space.
-        #=======================================================================
-        fixcols = [i for i in range(self.colcount())  if i not in layout.flexcols]
+        # =======================================================================
+        fixcols = [i for i in range(self.colcount()) if i not in layout.flexcols]
         flexcols = {f: v for f, v in layout.flexcols.items() if f < self.colcount()}
         if my.width.value is not None and layout.halign == 'fill':
             if layout.equalwidths:
                 if fixcols and flexcols:
-                    raise LayoutError('Layout is inconsistent: I was told to make columns in %s equal length, but you have manually specified flexcols. Remove them or set all columns be flexible.' % repr(self.widget))
+                    raise LayoutError(
+                        'Layout is inconsistent: I was told to make columns in %s equal length, but you have manually specified flexcols. Remove them or set all columns be flexible.' % repr(
+                            self.widget))
                 fixcols = []
                 flexcols = {i: 1 for i in range(self.colcount())}
             if not flexcols:
-                raise Exception('Layout is underdetermined: I was told to fill %s horizontally, but I do not have any flexcols. (created at %s)' % (repr(self.widget), self.widget._created))
+                raise Exception(
+                    'Layout is underdetermined: I was told to fill %s horizontally, but I do not have any flexcols. (created at %s)' % (
+                    repr(self.widget), self.widget._created))
             if all([c.data.cellwidth.value is not None for i in fixcols for c in self.col(i)]):
                 for fci in flexcols:
                     for c in self.col(fci):
-                        c.data.cellwidth.value = px(my.cellwidth.value - layout.padding_left - layout.padding_right - fringe_width)
-        #=======================================================================
+                        c.data.cellwidth.value = px(
+                            my.cellwidth.value - layout.padding_left - layout.padding_right - fringe_width)
+        # =======================================================================
         # if this widget already has a height specified, distribute the flexrows
         # over the remaining free space.
-        #=======================================================================
-        fixrows = [i for i in range(self.rowcount())  if i not in layout.flexrows]
+        # =======================================================================
+        fixrows = [i for i in range(self.rowcount()) if i not in layout.flexrows]
         flexrows = {f: v for f, v in layout.flexrows.items() if f < self.rowcount()}
         if my.height.value is not None and layout.valign == 'fill':
             if layout.equalheights:
                 if fixrows and flexrows:
-                    raise LayoutError('Layout is inconsistent: I was told to make columns in %s equal height, but you have manually specified flexrows. Remove them or set all rows be flexible.' % repr(self.widget))
+                    raise LayoutError(
+                        'Layout is inconsistent: I was told to make columns in %s equal height, but you have manually specified flexrows. Remove them or set all rows be flexible.' % repr(
+                            self.widget))
                 fixrows = []
                 flexrows = {i: 1 for i in range(self.rowcount())}
             if not flexrows:
-                raise Exception('Layout is underdetermined: I was told to fill %s vertically, but I do not have any flexrows. (created at %s)' % (repr(self.widget), self.widget._created))
+                raise Exception(
+                    'Layout is underdetermined: I was told to fill %s vertically, but I do not have any flexrows. (created at %s)' % (
+                    repr(self.widget), self.widget._created))
             if all([c.data.cellheight.value is not None for i in fixrows for c in self.row(i)]):
                 for fci in flexrows:
                     for c in self.row(fci):
-                        c.data.cellheight.value = px(my.cellheight.value - layout.padding_top - layout.padding_bottom - fringe_height)
-        #=======================================================================
+                        c.data.cellheight.value = px(
+                            my.cellheight.value - layout.padding_top - layout.padding_bottom - fringe_height)
+        # =======================================================================
         # make all cells of a column equal width and all cells of a row equal height
-        #=======================================================================
+        # =======================================================================
         wmaxt = px(0)
         wmaxg = px(0)
         for i in range(self.colcount()):
             wmax = px(0)
             for c in self.col(i):
-#                 if RWT.HSCROLL in c.widget.style: continue 
+                #                 if RWT.HSCROLL in c.widget.style: continue
                 wmax = max(wmax, c.data.cellwidth.min)
                 wmaxg = max(wmax, wmaxg)
-            for c in self.col(i): 
-                c.data.cellwidth.min = wmax 
+            for c in self.col(i):
+                c.data.cellwidth.min = wmax
                 if i not in flexcols or not layout.halign == 'fill':
                     c.data.cellwidth.value = wmax
             wmaxt += wmax
@@ -435,10 +609,10 @@ class StackLayoutAdapter(GridLayoutAdapter):
         for i in range(self.rowcount()):
             hmax = px(0)
             for c in self.row(i):
-#                 if RWT.VSCROLL in c.widget.style: continue
+                #                 if RWT.VSCROLL in c.widget.style: continue
                 hmax = max(hmax, c.data.cellheight.min)
                 hmaxg = max(hmax, hmaxg)
-            for c in self.row(i): 
+            for c in self.row(i):
                 c.data.cellheight.min = hmax
                 if i not in flexrows or not layout.valign == 'fill':
                     c.data.cellheight.value = hmax
@@ -458,17 +632,17 @@ class StackLayoutAdapter(GridLayoutAdapter):
                     if i not in flexrows or not layout.valign == 'fill':
                         c.data.cellheight.value = c.data.cellwidth.value = m
                         c._done = True
-        
+
         mywidth, myheight = widget.compute_fringe()
-        
-        children_width = max(my.width.min, wmaxg  + layout.padding_left + layout.padding_right)
-        children_height = max(my.height.min, hmaxg  + layout.padding_top + layout.padding_bottom)
-        #=======================================================================
+
+        children_width = max(my.width.min, wmaxg + layout.padding_left + layout.padding_right)
+        children_height = max(my.height.min, hmaxg + layout.padding_top + layout.padding_bottom)
+        # =======================================================================
         # if the width/height of the cell is specified, adjust the width/height of the
         # widget in case that halign/valign='fill'
-        #=======================================================================
+        # =======================================================================
         if layout.halign == 'fill':
-            my.width.value = my.cellwidth.value 
+            my.width.value = my.cellwidth.value
             my.cellwidth.min = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0)
         else:
             my.width.value = mywidth + (children_width if not RWT.HSCROLL in widget.style else 0)
@@ -479,59 +653,30 @@ class StackLayoutAdapter(GridLayoutAdapter):
         else:
             my.height.value = myheight + (children_height if not RWT.VSCROLL in widget.style else 0)
             my.cellheight.min = my.height.value
-        
-        if (layout.halign == 'fill' and layout.valign == 'fill'): 
+
+        if (layout.halign == 'fill' and layout.valign == 'fill'):
             self._compute_children(level)
-        
-        # compute the cell positions if we know our width/height 
+
+        # compute the cell positions if we know our width/height
         # the width/height of all our children
         xoffset, yoffset = widget.viewport()
         if my.width.value is not None and all([c[0].data.cellwidth.value is not None for c in self.itercols()]):
             cum = layout.padding_left + xoffset
             for cells in self.itercols():
-                for c in cells: 
+                for c in cells:
                     c.data.cellhpos.set(cum)
-#                 cum += c.data.cellwidth.value + layout.hspace
+                    #                 cum += c.data.cellwidth.value + layout.hspace
         if my.height.value is not None and all([c[0].data.cellheight.value is not None for c in self.iterrows()]):
             cum = layout.padding_top + yoffset
             for cells in self.iterrows():
                 for c in cells:
                     c.data.cellvpos.set(cum)
-#                 cum += c.data.cellheight.value + layout.vspace
+
+
+# cum += c.data.cellheight.value + layout.vspace
 #         if my.width.value is not None and my.height.value is not None and\
 #              (layout.halign != 'fill' and layout.valign != 'fill' or my.height.value is not None and my.width.value is not None):
 #             self._done = True
-
-    
-class RowLayoutAdapter(GridLayoutAdapter): pass
-    
-class ColumnLayoutAdapter(GridLayoutAdapter): pass 
-
-class CellLayoutAdapter(GridLayoutAdapter):
-    
-    def __init__(self, widget, parent):
-        GridLayoutAdapter.__init__(self, widget, parent)
-        if len(widget.children) > 1:
-            raise Exception('A cell cannot contain more than one element! (%s, children: %s)' % (repr(widget), list(map(repr, widget.children))))
-    
-
-class TerminalLayoutAdapter(LayoutAdapter): 
-    
-    def _compute_cells(self, level=0):
-        indent = '   ' * level
-        my = self.data
-        widget = self.widget
-        layout = self.layout
-#         out(indent, 'computing layout for', widget.id)
-        w, h = widget.compute_size()
-        my.width.value = max(ifnone(my.width.min, 0), w)
-        my.height.value = max(ifnone(my.height.min, 0), h)
-        my.cellwidth.min = my.width.value + layout.padding_left + layout.padding_right 
-        my.cellheight.min = my.height.value + layout.padding_top + layout.padding_bottom
-        
-        self._done = True
-        
-
 
 class Layout(object):
     
@@ -627,7 +772,7 @@ class GridLayout(Layout):
                  cell_maxheight=None, vspace=None, hspace=None, equalheights=None,
                  equalwidths=None, squared=None, padding_top=None, padding_bottom=None,
                  padding_left=None, padding_right=None, padding=None):
-        Layout.__init__(self, minwidth=minwidth, maxwidth=maxwidth, minheight=minheight, 
+        Layout.__init__(self, minwidth=minwidth, maxwidth=maxwidth, minheight=minheight,
                         maxheight=maxheight, valign=valign, halign=halign,
                         cell_minwidth=cell_minwidth, cell_maxwidth=cell_maxwidth,
                         cell_minheight=cell_minheight, cell_maxheight=cell_maxheight,

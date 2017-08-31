@@ -613,7 +613,6 @@ class Shell(Widget):
             area[2] -= padding.left + padding.right
             area[1] += padding.top
             area[3] -= padding.top + padding.bottom
-
         t, r, b, l = self.theme.borders
         area[0] += ifnone(l, 0, lambda l: l.width)
         area[1] += ifnone(t, 0, lambda t: t.width)
@@ -621,11 +620,9 @@ class Shell(Widget):
         area[2] = max(0, area[2])
         area[3] -= ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         area[3] = max(0, area[3])
-
         if self.title is not None or RWT.TITLE in self.style:
             area[3] -= self.theme.title_height
             area[1] += self.theme.title_height
-
         return area
     
     @checkwidget
@@ -637,43 +634,48 @@ class Shell(Widget):
         
 
     def dolayout(self, pack=False):
-        if pack:
-            self.bounds = 0, 0, 0, 0
+        # if pack:
+        #     self.bounds = 0, 0, 0, 0
         started = time.time()
         if self.maximized:
             self._maximize()
         x, y, w, h = self.client_rect
-        self.content.layout.cell_minwidth = w
-        self.content.layout.cell_maxwidth = w
-        self.content.layout.cell_minheight = h
-        self.content.layout.cell_maxheight = h
-        self.content.layout.maxheight = h
-        self.content.layout.minheight = h
-        self.content.layout.maxwidth = w
-        self.content.layout.minwidth = w
-        self.content.bounds = x, y, w, h
+        if not pack:  # adjust the content area to fit the clientrect
+            self.content.layout.cell_minwidth = w
+            self.content.layout.cell_maxwidth = w
+            self.content.layout.cell_minheight = h
+            self.content.layout.cell_maxheight = h
+            self.content.layout.maxheight = h
+            self.content.layout.minheight = h
+            self.content.layout.maxwidth = w
+            self.content.layout.minwidth = w
+            self.content.bounds = x, y, w, h
         layout = LayoutAdapter.create(self.content, None)
+        # if pack:
+        #     layout.layout.halign = 'center'
+        #     layout.layout.valign = 'center'
         layout.data.cellhpos.set(x)
         layout.data.cellvpos.set(y)
-        layout.compute()
-        if pack: self.pack()
+        out(layout.children)
+        layout.compute(pack)
+        # if pack: self.pack()
         end = time.time()
         self._logger.debug('layout computations took %s sec' % (end - started))
 
 
-    def pack(self):
-        if not self.maximized:
-            w, h = self.compute_size()
-            if self.title is not None or RWT.TITLE in self.style: 
-                h += self.theme.title_height
-            _, _, wmin, hmin = self.content.children[0].bounds
-            w += wmin
-            h += hmin
-            _, _, dispw, disph = session.runtime.display.bounds
-            xpos = int(round(dispw.value / 2. - w.value / 2.))
-            ypos = int(round(disph.value / 2. - h.value / 2.))
-            self.bounds = xpos, ypos, w, h
-            self.dolayout()
+    # def pack(self):
+    #     if not self.maximized:
+    #         w, h = self.compute_size()
+    #         if self.title is not None or RWT.TITLE in self.style:
+    #             h += self.theme.title_height
+    #         _, _, wmin, hmin = self.content.children[0].bounds
+    #         w += wmin
+    #         h += hmin
+    #         _, _, dispw, disph = session.runtime.display.bounds
+    #         xpos = int(round(dispw.value / 2. - w.value / 2.))
+    #         ypos = int(round(disph.value / 2. - h.value / 2.))
+    #         self.bounds = xpos, ypos, w, h
+    #         self.dolayout()
             
             
     def onresize_shell(self):
