@@ -91,10 +91,8 @@
       if( rwt.runtime.System.getInstance().isSupported() ) {
       	rwt.remote.Connection.getInstance();
         rwt.remote.MessageProcessor.processMessage( {"head":{"url":"pyrap"},"operations":[]} );//["call","rwt.theme.ThemeStore","loadFallbackTheme",{"url":"rwt-resources/rap-rwt.theme.Fallback.json"}],["call","rwt.theme.ThemeStore","loadActiveTheme",{"url":"rwt-resources/rap-rwt.theme.Default.json"}]]});
-        console.log('sending');
         rwt.remote.Connection.getInstance().getMessageWriter().appendCall("pyrap", "initialize", {"entrypoint": "%s", "args": %s});
         rwt.remote.Connection.getInstance().sendImmediate();
-        console.log('sent');
         // ,["create","w1","rwt.widgets.Display",{}]
       } else {
         var msg='<p style="z-index:100000;background-color:white">' + "Your browser or browser-setup is not supported. <br />Please use one of: IE 9+, Firefox 23+, Safari 6+, Google Chrome 29+ or Opera 15+.<br />Ensure that Javascript is enabled and XMLHttpRequests are allowed." + '</p>';
