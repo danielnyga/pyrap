@@ -1,5 +1,7 @@
 import os
-from time import sleep
+from time import sleep, time
+
+import datetime
 
 from dnutils.tools import ifnone
 from pyrap import session, locations
@@ -9,6 +11,10 @@ from pyrap.events import OnSelect, _rwt_selection_event, _rwt_event
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor, checkwidget
+
+d3wrapper = '''if (typeof d3 === 'undefined') {{
+    {d3content}
+}}'''
 
 
 class RadarChart(Widget):
@@ -21,7 +27,9 @@ class RadarChart(Widget):
         Widget.__init__(self, parent, **options)
         self.theme = RadarTheme(self, session.runtime.mngr.theme)
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
-        session.runtime.ensurejsresources(self._requiredjs)
+        with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
+            cnt = d3wrapper.format(**{'d3content': f.read()})
+            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js')
         self._axes = []
         self._data = {}
         self._opts = opts
@@ -34,6 +42,7 @@ class RadarChart(Widget):
         options = Widget._rwt_options(self)
         if self._opts:
             options.options = self._opts
+        # options.d3 = self._d3
         options.legendtext = ifnone(self._legendtext, '')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
@@ -55,7 +64,6 @@ class RadarChart(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        print('radarsize', w,h)
 
         return w, h
 
@@ -64,7 +72,7 @@ class RadarChart(Widget):
         if op.event not in events:
             return Widget._handle_notify(self, op)
         else:
-            if op.args['type'] == 'remaxis':  # TODO: find a pretty solution for this
+            if op.args.get('type', None) == 'remaxis':  # TODO: find a pretty solution for this
                 idx = next(index for (index, d) in enumerate(self._axes) if d.name == op.args['dataset']['name'])
                 self._axes.pop(idx)
                 self._data = op.args['data']
@@ -143,7 +151,6 @@ class RadarChart(Widget):
 
     def setdata(self, data):
         self._data = data
-        print('set data', data)
         session.runtime << RWTSetOperation(self.id, {'data': data})
 
 
@@ -163,6 +170,14 @@ class RadarAxis(object):
     @name.setter
     def name(self, n):
         self._name = n
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, u):
+        self._unit = u
 
     @property
     def minval(self):
@@ -200,7 +215,7 @@ class RadarAxis(object):
         return self.intervalmin, self.intervalmax
 
     def __str__(self):
-        return 'Axis [name={}, unit={}, limits=[{},{}], intervals=[{},{}]]'.format(self.name, self.unit, self.minval, self.maxval, self.intervalmin, self.intervalmin)
+        return 'Axis {}({}), limits: [{},{}], interval: [{},{}]'.format(self.name, self.unit, self.minval, self.maxval, self.intervalmin, self.intervalmin)
 
     def __repr__(self):
         return '<Axis name={} at 0x{}>'.format(self.name, hash(self))
