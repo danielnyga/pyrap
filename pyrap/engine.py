@@ -511,7 +511,7 @@ class SessionRuntime(object):
                         self.requirecss(f)
         self.create_display()
 
-    def ensurejsresources(self, jsfiles):
+    def ensurejsresources(self, jsfiles, name=None):
         if jsfiles:
             if not isinstance(jsfiles, list):
                 files = [jsfiles]
@@ -526,11 +526,18 @@ class SessionRuntime(object):
                         with open(f, encoding='utf8') as fi:
                             self.requirejs(fi)
                 else:
-                    raise Exception('Could not load file', p)
+                    try:
+                        resource = session.runtime.mngr.resources.registerc(name, 'text/javascript', p.encode('utf8'))
+                        self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
+                    except:
+                        raise Exception('Could not load file', p)
 
     def requirejs(self, f):
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/javascript', f)
         self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
+
+    def requirejstag(self, code):
+        self << RWTCallOperation('rwt.client.JavaScriptTagLoader', 'load', {'code': code})
 
     def requirecss(self, f):
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/css', f)
