@@ -460,26 +460,33 @@ pwt_radar.RadarChart.prototype = {
 
             legendsvg
                 .attr('transform', 'translate('+ this._cfg.w +',0)')
+                .append('svg:g')
+                .attr('transform', 'translate(0, 40)');
 
             // initialize legendtitle
-            var legendtitle = legendsvg.select('legendtitle');
+            var legendtitle = legendsvg.select('.legendtitle');
             legendtitle
-                .text(this._legendtext);
+                .text(this._legendtext)
+                .call(this.wraptext, 300);
 
             //Create color squares
-            var legendrect = legendsvg.select('g').selectAll('rect').data(this._legendopts);
+            var legendrect = legendsvg.select('g').selectAll('.legendopt').data(this._legendopts);
             legendrect
-                .attr("y", function(d, i){ return i * 20;})
-                .style("fill", function(d, i){return that._cfg.color(i);});
-
-            legendrect
-                .enter()
-                .append("rect")
                 .attr("x", 10)
                 .attr("y", function(d, i){ return i * 20;})
                 .attr("width", 10)
                 .attr("height", 10)
-                .style("fill", function(d, i){return that._cfg.color(i);});
+                .style("fill", function(d, i){ return that._cfg.color(i);});
+
+            legendrect
+                .enter()
+                .append("rect")
+                .attr('class', 'legendopt')
+                .attr("x", 10)
+                .attr("y", function(d, i){ return i * 20;})
+                .attr("width", 10)
+                .attr("height", 10)
+                .style("fill", function(d, i){ return that._cfg.color(i);});
 
             legendrect.exit().remove();
 
@@ -1070,30 +1077,18 @@ pwt_radar.RadarChart.prototype = {
                 })
                 .attr("data-id", function(j){return key})
                 .style("fill", that._cfg.color(idx)).style("fill-opacity", .9)
-                .on('mouseover', function (d,i){
+                .on('mouseover', function(d) {
                     d3.select(this).style("cursor", "pointer");
-//                    newX =  parseFloat(d3.select(this).attr('cx')) - 10;
-//                    newY =  parseFloat(d3.select(this).attr('cy')) - 5;
-                    var bodyNode = d3.select('body').node();
-                    var absoluteMousePos = d3.mouse(bodyNode);
-                    var newX = (absoluteMousePos[0] + 10)+'px';
-                    var newY = (absoluteMousePos[1] + 15)+'px';
-
                     tooltip
-                        .style({
-                            left: newX,
-                            top: newY,
-                            position: 'absolute',
-                            'z-index': 1001
-                        })
-                        .text(that.Format(that._allAxis[i].unit, d))
                         .transition(200)
-                        .style('opacity', 1);
+                        .style("display", "inline");
 
                     z = "polygon."+d3.select(this).attr("class");
+
                     that._svgContainer.selectAll("polygon")
                         .transition(200)
                         .style("fill-opacity", 0.1);
+
                     that._svgContainer.selectAll(z)
                         .transition(200)
                         .style("fill-opacity", .7);
@@ -1102,10 +1097,21 @@ pwt_radar.RadarChart.prototype = {
                     d3.select(this).style("cursor", "default");
                     tooltip
                         .transition(200)
-                        .style('opacity', 0);
+                        .style("display", "none");
+
                     that._svgContainer.selectAll("polygon")
                         .transition(200)
                         .style("fill-opacity", that._cfg.opacityArea);
+                })
+                .on('mousemove', function(d, i) {
+                    var absoluteMousePos = d3.mouse(axis.node());
+                    var newX = (absoluteMousePos[0] + 100);
+                    var newY = (absoluteMousePos[1] + 50);
+                    tooltip
+                        .text(that.Format(that._allAxis[i].unit, d))
+                        .attr('x', (newX) + "px")
+                        .attr('y', (newY) + "px");
+
                 })
                 .call(d3.behavior.drag()
                                 .origin(Object)
