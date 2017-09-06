@@ -3,3 +3,5 @@ cssutils
 colored
 pyparsing
 multipart
+dnutils
+
