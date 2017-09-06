@@ -4,10 +4,6 @@
 [submodule "tools/android"]
 	path = tools/android
 	url = git@spritinio.de:pyrap2apk-dev
-[submodule "3rdparty/dnutils"]
-	path = 3rdparty/dnutils
-	url = https://github.com/danielnyga/dnutils.git
-	branch = master
 [submodule "3rdparty/webpy"]
 	path = 3rdparty/webpy
 	url = https://github.com/danielnyga/webpy.git
