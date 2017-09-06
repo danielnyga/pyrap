@@ -150,8 +150,3 @@ class RequestDispatcher(object):
             raise notfound()
         else:
             return app_runtime.handle_request(args[1:], query, content)
-        
-
-        
-        
-

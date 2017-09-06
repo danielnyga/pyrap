@@ -1,6 +1,6 @@
 pwt_d3 = {};
 
-pwt_d3.Graph = function( parent, cssid ) {
+pwt_d3.Graph = function( parent, options ) {
 
     this.WAITMSEC = 100;
     this._linkdistance = 150;
@@ -13,21 +13,17 @@ pwt_d3.Graph = function( parent, cssid ) {
 
     this._parentDIV = this.createElement(parent);
 
-    if (cssid) {
-        this._parentDIV.setAttribute('id', cssid);
-    }
-
     this._svg = d3.select(this._parentDIV).append("svg");
-    this._svgContainer = this._svg.select('g');
+    this._svgContainer = this._svg.select('g.graph');
 
-    this._needsLayout = true;
+    this._initialized = false;
     this._needsRender = true;
     var that = this;
     rap.on( "render", function() {
         if( that._needsRender ) {
-            if( that._needsLayout ) {
+            if( !that._initialized) {
                 that.initialize( that );
-                that._needsLayout = false;
+                that._initialized = true;
             }
             that.update();
             that._needsRender = false;
@@ -44,10 +40,11 @@ pwt_d3.Graph.prototype = {
 
         if (this._svgContainer.empty()) {
             this._svg
-            .attr('width', "100%")
-            .attr('height', "100%")
-            .append( "svg:g" );
-            this._svgContainer = this._svg.select('g');
+                .attr('width', "100%")
+                .attr('height', "100%")
+                .append( "svg:g" )
+                .attr('class', 'graph')
+            this._svgContainer = this._svg.select('g.graph');
         }
 
         if (this._svgContainer.select('defs').empty()) {
@@ -64,6 +61,7 @@ pwt_d3.Graph.prototype = {
                   .append("path")
                   .attr("d", "M0,-5L10,0L0,5 Z");
         }
+
         this.update();
     },
 
@@ -73,13 +71,14 @@ pwt_d3.Graph.prototype = {
         element.style.position = "absolute";
         element.style.left = clientarea[0];
         element.style.top = clientarea[1];
-        element.style.width = "100%";
-        element.style.height = "100%";
+        element.style.width = clientarea[2];
+        element.style.height = clientarea[3];
         parent.append( element );
         return element;
     },
 
-     setBounds: function( args ) {
+
+    setBounds: function( args ) {
         this._parentDIV.style.left = args[0] + "px";
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
@@ -87,7 +86,8 @@ pwt_d3.Graph.prototype = {
         this._w = args[2];
         this._h = args[3];
         this.update();
-     },
+    },
+
 
     setZIndex : function(index) {
         this._parentDIV.style.zIndex = index;
@@ -346,143 +346,222 @@ pwt_d3.Graph.prototype = {
      */
     update : function () {
 
-      var path = this._svgContainer.selectAll("path.link")
-        .data(this.links, function(d) {
-                return d.source.id + "-" + d.target.id;
-                });
+        var that = this;
 
-      var pathEnter = path.enter().append("path")
-        .attr("id", function(d) { return d.source.id + "-" + d.target.id; })
-        .attr("class", function(d) { return "link " + d.arcStyle; })
-        .attr("marker-end", function(d) { return "url(#" + d.arcStyle + ")"; });
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE LINKS                               ///
+        ////////////////////////////////////////////////////////////////////////
 
-      path.exit().remove();
+        // select paths
+        var path = this._svgContainer.selectAll("path.link").data(this.links, function(d) {return d.source.id + "-" + d.target.id;});
 
-      var edgelabels = this._svgContainer.selectAll(".label")
-            .data(this.links, function(d) {
-                return d.source.id + "-" + d.target.id;
-                });
+        // update paths
+        path
+            .attr("id", function(d) { return d.source.id + "-" + d.target.id; })
+            .attr("class", function(d) { return "link " + d.arcStyle; })
+            .attr("marker-end", function(d) { return "url(#" + d.arcStyle + ")"; });
 
-      var edgelabelsEnter = edgelabels.enter().append('text')
-          .style("pointer-events", "none")
-          .attr('class', 'label')
-          .text(function(d){ return d.value.join(' / '); });
+        // create paths
+        path
+            .enter()
+            .append("path")
+            .attr("id", function(d) { return d.source.id + "-" + d.target.id; })
+            .attr("class", function(d) { return "link " + d.arcStyle; })
+            .attr("marker-end", function(d) { return "url(#" + d.arcStyle + ")"; });
 
-      edgelabels.exit().remove();
+        // remove old paths
+        path.exit().remove();
 
-      var circle = this._svgContainer.selectAll("g.node")
-        .data(this.nodes, function(d) { return d.id; } );
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE LINK LABELS                         ///
+        ////////////////////////////////////////////////////////////////////////
 
-      var circleEnter = circle.enter().append("g")
-        .attr("class", "node")
-        .call(this.force.drag);
+        // select link labels
+        var linklabels = this._svgContainer.selectAll(".linklabel").data(this.links, function(d) {return d.source.id + "-" + d.target.id;});
 
-      circleEnter.append("svg:circle")
-        .on("mouseover", function(d) {
-            //Get this bar's x/y values, then augment for the tooltip
-           circleEnter.append("text")
-          .attr("id", "tooltip")
-          .attr("dx", function (d) { return 0; }) // move inside rect
-          .attr("dy", function (d) { return 0; }) // move inside rect
-          .attr("text-anchor", "middle")
-          .attr("font-family", "sans-serif")
-          .attr("font-size", "11px")
-          .attr("font-weight", "bold")
-          .attr("fill", "black")
-          .text(d.text);
-        })
-        .on("mouseout", function() {
-            //Remove the tooltip
-            d3.select("#tooltip").remove();
-        })
-        .attr("r", function(d) {
-          d.radius = 10;
-          return d.radius; } )
-        .attr("id", function(d) { return d.id; } );
+        // update link labels
+        linklabels
+            .text(function(d){ return d.value.join(' / '); });
 
-      circleEnter.append("svg:text")
-        .attr("class","textClass")
-        .attr("dx", function (d) { return 5; }) // move inside rect
-        .attr("dy", function (d) { return 15; }) // move inside rect
-        .text( function(d) { return d.id; } );
+        // create link labels
+        linklabels
+            .enter().append('text')
+            .style("pointer-events", "none")
+            .attr('class', 'linklabel')
+            .text(function(d){ return d.value.join(' / '); });
 
-      circle.exit().remove();
+        // remove old link labels
+        linklabels.exit().remove();
+
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE NODES                               ///
+        ////////////////////////////////////////////////////////////////////////
+
+        // select nodes
+        var circles = this._svgContainer.selectAll("g.node").data(this.nodes, function(d) { return d.id; } );
+
+        // create nodes group
+        var circleEnter = circles
+                            .enter()
+                            .append("g")
+                            .attr("class", "node")
+                            .call(this.force.drag);
+
+        // update nodes
+        circles.select('.circle')
+               .attr("dx", function (d) { return 0; }) // move inside rect
+               .attr("dy", function (d) { return 0; }) // move inside rect
+               .text(function (d) { return d.text; });
+
+        // create nodes
+        circleEnter.append("svg:circle")
+            .on("mouseover", function(d) {
+                tooltip
+                    .transition(200)
+                    .style("display", "inline");
+            })
+            .on('mousemove', function(d) {
+                var absoluteMousePos = d3.mouse(this);
+                var absoluteMousePos = d3.mouse(that._svgContainer.node());
+                var newX = (absoluteMousePos[0] + 20);
+                var newY = (absoluteMousePos[1] - 20);
+
+                tooltip
+                    .text(d.text)
+                    .attr('x', (newX) + "px")
+                    .attr('y', (newY) + "px");
+
+            })
+            .on("mouseout", function(d) {
+                tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .attr('class', 'graphcircle')
+            .attr("r", function(d) {
+                d.radius = 10;
+                return d.radius;
+            })
+            .attr("id", function(d) { return d.id; } );
 
 
-      var tick = function () {
-        path.attr("d", linkArc);
-        edgelabels.attr('d', linkArc);
-        edgelabels.attr('transform', rotateLabel);
-        edgelabels.attr('x', transformLabelX);
-        edgelabels.attr('y', transformLabelY);
-        circle.attr("transform", transform);
-      };
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE NODE LABELS                         ///
+        ////////////////////////////////////////////////////////////////////////
 
-      var rotateLabel = function (d) {
-        var bbox = this.getBBox();
-        var rx = bbox.x+bbox.width/2;
-        var ry = bbox.y+bbox.height/2;
-        var dX = d.target.x - d.source.x;
-        var dY = d.target.y - d.source.y;
-        var rad = Math.atan2(dX, dY);
-        var deg = -90-rad * (180 / Math.PI);
-        return 'rotate(' + deg +' '+rx+' '+ry+')';
-      };
+        // update node labels
+        circles.select('.textClass')
+               .attr("dx", function (d) { return 5; }) // move inside rect
+               .attr("dy", function (d) { return 15; }) // move inside rect
+               .text( function(d) { return d.id; } );
+
+        // create node labels
+        circleEnter.append("svg:text")
+            .attr("class","textClass")
+            .attr("dx", function (d) { return 5; }) // move inside rect
+            .attr("dy", function (d) { return 15; }) // move inside rect
+            .text( function(d) { return d.id; } );
+
+        // remove old nodes
+        circles.exit().remove();
 
 
-      var linkArc = function (d) {
-        var dx = d.target.x - d.source.x,
-            dy = d.target.y - d.source.y,
-            dr = Math.sqrt(dx * dx + dy * dy);
+        var tick = function () {
+            path.attr("d", linkArc);
 
-            // offset to let arc start and end at the edge of the circle
-            var offSetX = (dx * d.target.radius) / dr;
-            var offSetY = (dy * d.target.radius) / dr;
-        return "M" +
-            (d.source.x + offSetX) + "," +
-            (d.source.y + offSetY) + "A" +
-            dr + "," + dr + " 0 0,0 " +
-            (d.target.x - offSetX) + "," +
-            (d.target.y - offSetY);
-      };
+            linklabels
+                .attr('d', linkArc)
+                .attr('transform', rotateLabel)
+                .attr('x', transformLabelX)
+                .attr('y', transformLabelY);
+
+            circles.attr("transform", transform);
+        };
+
+        var rotateLabel = function (d) {
+            var bbox = this.getBBox();
+            var rx = bbox.x+bbox.width/2;
+            var ry = bbox.y+bbox.height/2;
+            var dX = d.target.x - d.source.x;
+            var dY = d.target.y - d.source.y;
+            var rad = Math.atan2(dX, dY);
+            var deg = -90-rad * (180 / Math.PI);
+            return 'rotate(' + deg +' '+rx+' '+ry+')';
+        };
+
+
+        var linkArc = function (d) {
+
+            var dx = d.target.x - d.source.x,
+                dy = d.target.y - d.source.y,
+                dr = Math.sqrt(dx * dx + dy * dy);
+
+                // offset to let arc start and end at the edge of the circle
+                var offSetX = (dx * d.target.radius) / dr;
+                var offSetY = (dy * d.target.radius) / dr;
+            return "M" +
+                (d.source.x + offSetX) + "," +
+                (d.source.y + offSetY) + "A" +
+                dr + "," + dr + " 0 0,0 " +
+                (d.target.x - offSetX) + "," +
+                (d.target.y - offSetY);
+        };
 
       // move arc label to arc
-      var calcLabelPos = function (d, bbox) {
-        var scale = 0.4; // distance from arc
-        var origPos = { x: (d.source.x + d.target.x ) /2 - bbox.width/2, y: (d.source.y + d.target.y) /2 }; // exact middle between source and target
-        var dir = { x: d.target.x - d.source.x, y: d.target.y - d.source.y }; // direction source -> target
-        var rot = { x: dir.y, y: -dir.x }; // rotate direction -90 degrees
-        var ltemp = Math.sqrt(rot.x * rot.x + rot.y * rot.y) / 100; // normalize length
-        var length = ltemp !== 0 ? ltemp : 0.1; // if length is 0, set to small value to prevent NaN
-        var rotNorm = { x: rot.x / length, y: rot.y / length }; // normalize rotation direction
-        return { x: origPos.x - scale * rotNorm.x, y: origPos.y - scale * rotNorm.y};// return moved position
-      };
+        var calcLabelPos = function (d, bbox) {
+            var scale = 0.4; // distance from arc
+            var origPos = { x: (d.source.x + d.target.x ) /2 - bbox.width/2, y: (d.source.y + d.target.y) /2 }; // exact middle between source and target
+            var dir = { x: d.target.x - d.source.x, y: d.target.y - d.source.y }; // direction source -> target
+            var rot = { x: dir.y, y: -dir.x }; // rotate direction -90 degrees
+            var ltemp = Math.sqrt(rot.x * rot.x + rot.y * rot.y) / 100; // normalize length
+            var length = ltemp !== 0 ? ltemp : 0.1; // if length is 0, set to small value to prevent NaN
+            var rotNorm = { x: rot.x / length, y: rot.y / length }; // normalize rotation direction
+            return { x: origPos.x - scale * rotNorm.x, y: origPos.y - scale * rotNorm.y};// return moved position
+        };
 
-      var transform = function (d) {
-        return "translate(" + d.x + "," + d.y + ")";
-      };
+        var transform = function (d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        };
 
-      var transformLabel = function (d) {
-        return "translate(" + d.source.x + "," + d.source.y + ")";
-      };
+        var transformLabel = function (d) {
+            return "translate(" + d.source.x + "," + d.source.y + ")";
+        };
 
-      var transformLabelX = function (d) {
-        var bbox = this.getBBox();
-        return calcLabelPos(d, bbox).x;
-      };
+        var transformLabelX = function (d) {
+            var bbox = this.getBBox();
+            return calcLabelPos(d, bbox).x;
+        };
 
-      var transformLabelY = function (d) {
-        var bbox = this.getBBox();
-        return calcLabelPos(d, bbox).y;
-      };
+        var transformLabelY = function (d) {
+            var bbox = this.getBBox();
+            return calcLabelPos(d, bbox).y;
+        };
 
-      this.force
-        .size([this._w, this._h])
-        .linkDistance( this._linkdistance )
-        .charge( this._charge )
-        .on("tick", tick)
-        .gravity( this._gravity )
-        .start();
+        this.force
+            .size([this._w, this._h])
+            .linkDistance( this._linkdistance )
+            .charge( this._charge )
+            .on("tick", tick)
+            .gravity( this._gravity )
+            .start();
+
+        // tooltip
+        var tooltip = this._svg.selectAll(".tooltip").data([1]);
+
+        // create tooltip
+        tooltip
+            .enter()
+            .append('text')
+            .attr('class', 'tooltip')
+            .style('display', 'none')
+            .style('fill', '#89a35c')
+            .style('z-index', 1000000)
+            .style('font-family', 'sans-serif')
+            .style('font-size', '13px')
+            .style('font-weight', 'bold');
+
+        tooltip.exit().remove();
+
     }
 };
 
@@ -491,15 +570,15 @@ rap.registerTypeHandler( 'pwt.customs.Graph', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    return new pwt_d3.Graph( parent, properties.cssid);
+    return new pwt_d3.Graph( parent, properties);
   },
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'width', 'height', 'linkdistance', 'circleradius', 'charge', 'gravity'],
+  properties: [ 'remove', 'width', 'height', 'linkdistance', 'circleradius', 'charge', 'gravity', 'bounds'],
 
   methods : [ 'updateData' ],
 
-  events: [ ]
+  events: [ 'Selection' ]
 
 } );
