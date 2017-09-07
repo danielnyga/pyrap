@@ -150,6 +150,7 @@ class Graph(Widget):
     def updatedata(self, newlinks):
         remove = [x for x in self.links if x not in newlinks]
         add = [x for x in newlinks if x not in self.links]
+
         session.runtime << RWTCallOperation(self.id, 'updateData', {'remove': remove, 'add': add})
         self._links = [x for x in self.links if x not in remove] + add
         return remove, add
