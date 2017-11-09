@@ -9,7 +9,6 @@ from pyrap.widgets import Spinner, Edit,\
     Separator, Canvas
 from pyrap.constants import DLG, CURSOR
 from pyrap.layout import ColumnLayout, RowLayout, GridLayout, CellLayout
-from pyrap.utils import ifnone
 from pyrap.ptypes import parse_value, Color, Image
 from collections import OrderedDict
 

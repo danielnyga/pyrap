@@ -10,7 +10,7 @@ from web.webapi import notfound
 from pyrap import threads
 import urllib.parse 
 from pyrap.sessions import Session
-from pyrap.utils import RStorage, out
+from pyrap.utils import RStorage
 
 routes = (
     '/test', 'Test',

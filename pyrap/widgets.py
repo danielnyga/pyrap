@@ -11,6 +11,9 @@ import time
 import re
 
 import dnutils
+from dnutils import ifnone
+from dnutils.debug import _caller, out
+
 from pyrap import locations
 from pyrap.base import session
 from pyrap.communication import RWTSetOperation,\
@@ -21,8 +24,8 @@ from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished
 from pyrap.exceptions import WidgetDisposedError
-from pyrap.layout import Layout, LayoutAdapter, CellLayout,\
-    StackLayout
+from pyrap.layout import Layout, LayoutAdapter, CellLayout, \
+    StackLayout, materialize_gridcell, materialize_grid, layout
 from pyrap.ptypes import px, BitField, BoolVar, NumVar, Color,\
     parse_value, toint, Image
 from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
@@ -31,8 +34,7 @@ from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme,\
     SeparatorTheme, DecoratorTheme, LinkTheme
-from pyrap.utils import RStorage, BiMap, out, ifnone, stop, caller, BitMask,\
-    ifnot
+from pyrap.utils import RStorage, BiMap, BitMask
 from collections import OrderedDict
 import collections
 
@@ -59,8 +61,8 @@ def constructor(cls):
                     type(self).create_content(self)
         return wrapper
     return outer
- 
- 
+
+
 class Widget(object):
     
     _styles_ = BiMap({'visible': RWT.VISIBLE,
@@ -133,7 +135,7 @@ class Widget(object):
             if k in type(self)._styles_: self.style.setbit(type(self)._styles_[k:], v)
         # save meta information about where in the code the object
         # has been create for better debugging
-        self._created = caller(3)
+        self._created = _caller(3)
         
 
             
@@ -514,14 +516,12 @@ class Shell(Widget):
         self.content = Composite(self)
         self.content.layout = CellLayout(halign='fill', valign='fill')
         self.on_resize += self.dolayout
-        
-        
+
     def _handle_notify(self, op):
         if op.event not in ('Close', 'Move'): return Widget._handle_notify(self, op)
         if op.event == 'Close': self.on_close.notify()
         elif op.event == 'Move': self.on_move.notify()
-        
-        
+
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.active = self.active
@@ -629,53 +629,57 @@ class Shell(Widget):
     def close(self):
         self.on_close.notify()
     
-    def _maximize(self):
-        self.bounds = session.runtime.display.bounds
+    # def _maximize(self):
+    #     self.bounds = session.runtime.display.bounds
         
-
     def dolayout(self, pack=False):
         # if pack:
         #     self.bounds = 0, 0, 0, 0
         started = time.time()
-        if self.maximized:
-            self._maximize()
-        x, y, w, h = self.client_rect
-        if not pack:  # adjust the content area to fit the clientrect
-            self.content.layout.cell_minwidth = w
-            self.content.layout.cell_maxwidth = w
-            self.content.layout.cell_minheight = h
-            self.content.layout.cell_maxheight = h
-            self.content.layout.maxheight = h
-            self.content.layout.minheight = h
-            self.content.layout.maxwidth = w
-            self.content.layout.minwidth = w
-            self.content.bounds = x, y, w, h
-        layout = LayoutAdapter.create(self.content, None)
+        # if self.maximized:
+        #     self._maximize()
+        # x, y, w, h = self.client_rect
+        # if not pack or self.maximized:  # adjust the content area to fit the clientrect
+        #     self.content.layout.cell_minwidth = w
+        #     self.content.layout.cell_maxwidth = w
+        #     self.content.layout.cell_minheight = h
+        #     self.content.layout.cell_maxheight = h
+        #     self.content.layout.maxheight = h
+        #     self.content.layout.minheight = h
+        #     self.content.layout.maxwidth = w
+        #     self.content.layout.minwidth = w
+        #     self.content.bounds = x, y, w, h
+        # else:
+        #     oldhalign, oldvalign = self.content.layout.halign, self.content.layout.valign
+        #     self.content.layout.halign = self.content.layout.valign = 'center'
+        # # layout = LayoutAdapter.create(self.content, None)
         # if pack:
-        #     layout.layout.halign = 'center'
-        #     layout.layout.valign = 'center'
-        layout.data.cellhpos.set(x)
-        layout.data.cellvpos.set(y)
-        out(layout.children)
-        layout.compute(pack)
-        # if pack: self.pack()
-        end = time.time()
-        self._logger.debug('layout computations took %s sec' % (end - started))
+        #     self.content.layout.halign = 'center'
+        #     self.content.layout.valign = 'center'
+        # layout.data.cellhpos.set(x)
+        # layout.data.cellvpos.set(y)
+        layout(self, pack)
+        # layout.compute(pack)
+        # if pack:
+        #     self.pack()
+        #     self.content.layout.halign, self.content.layout.valign = oldhalign, oldvalign
+        # end = time.time()
+        # self._logger.debug('layout computations took %s sec' % (end - started))
 
 
-    # def pack(self):
-    #     if not self.maximized:
-    #         w, h = self.compute_size()
-    #         if self.title is not None or RWT.TITLE in self.style:
-    #             h += self.theme.title_height
-    #         _, _, wmin, hmin = self.content.children[0].bounds
-    #         w += wmin
-    #         h += hmin
-    #         _, _, dispw, disph = session.runtime.display.bounds
-    #         xpos = int(round(dispw.value / 2. - w.value / 2.))
-    #         ypos = int(round(disph.value / 2. - h.value / 2.))
-    #         self.bounds = xpos, ypos, w, h
-    #         self.dolayout()
+    def pack(self):
+        if not self.maximized:
+            w, h = self.compute_size()
+            if self.title is not None or RWT.TITLE in self.style:
+                h += self.theme.title_height
+            _, _, wmin, hmin = self.content.bounds
+            w += wmin
+            h += hmin
+            _, _, dispw, disph = session.runtime.display.bounds
+            xpos = int(round(dispw.value / 2. - w.value / 2.))
+            ypos = int(round(disph.value / 2. - h.value / 2.))
+            self.bounds = xpos, ypos, w, h
+            # self.dolayout()
             
             
     def onresize_shell(self):
@@ -892,13 +896,14 @@ class Label(Widget):
     _styles_ = Widget._styles_ + {'markup': RWT.MARKUP,
                                   'wrap': RWT.WRAP}
     _defstyle_ = BitField(Widget._defstyle_)
-    
+
     @constructor('Label')
-    def __init__(self, parent, text='', img=None, **options):
+    def __init__(self, parent, text='', img=None, textalign='left', **options):
         Widget.__init__(self, parent, **options)
         self.theme = LabelTheme(self, session.runtime.mngr.theme)
         self._text = text
         self._img = img
+        self._textalign = textalign
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -906,11 +911,24 @@ class Label(Widget):
             options.image = self._get_rwt_img(self.img)
         else:
             options.text = self.text
+        options.alignment = self._textalign
         if RWT.MARKUP in self.style:
             options.markupEnabled = True
             options.customVariant = 'variant_markup'
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
-        
+
+    @property
+    def textalign(self):
+        return self._textalign
+
+    @textalign.setter
+    @checkwidget
+    def textalign(self, align):
+        if align not in ('left', 'right', 'center'):
+            raise ValueError('Illegal text alignment: %s' % align)
+        self._textalign = align
+        session.runtime << RWTSetOperation(self.id, {'alignment': self._textalign})
+
     def _get_rwt_img(self, img):
         if img is not None:
             res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)

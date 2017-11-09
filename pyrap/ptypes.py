@@ -16,7 +16,7 @@ from PIL import Image as PILImage
 
 from dnutils import Condition
 from pyrap.constants import FONT
-from pyrap.utils import out, BitMask, ifnone
+from pyrap.utils import BitMask
 from functools import reduce
 
 
@@ -546,9 +546,8 @@ class Dim(object):
         return str(self._value)
         
     def __repr__(self):
-        return '<%s[%s] at 0x%x>' % (type(self).__name__, str(self), hash(self))
+        return '<%s[%s] at 0x%x>' % (type(self).__name__, str(self), id(self))
 
-            
     
 class Pixels(Dim):
     '''
@@ -567,6 +566,9 @@ class Pixels(Dim):
         else:
             Dim.__init__(self, v)
 
+    def __round__(self):
+        return px(int(round(self.value)))
+
     def __truediv__(self, d):
         s = parse_value(d)
         return px(int(round(self.value / (s.value if type(d) == Pixels else d))))
@@ -584,6 +586,9 @@ class Pixels(Dim):
         return '%spx' % self._value
 
     def __call__(self):
+        return self.value
+
+    def __int__(self):
         return self.value
 
     def num(self):
@@ -1065,7 +1070,8 @@ class Image(object):
             self._img.save(stream)
         else:
             self._img = self._img.resize((w.value, h.value), PILImage.LANCZOS)
-            self._img.save(stream, format=self.fileext)
+            ext = self.fileext.lower()
+            self._img.save(stream, format=ext if ext != 'jpg' else 'jpeg')
 
         self._content = stream.getvalue()
         stream.close()

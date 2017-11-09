@@ -7,12 +7,12 @@ import threading
 import json
 
 import dnutils
+from dnutils import ifnone
+
 from web.webapi import internalerror
 import web
 from pyrap.exceptions import forbidden
-from pyrap.utils import RStorage, jsonify, rstorify, ifnone
-from pyrap.ptypes import Event
-from pyrap.base import session
+from pyrap.utils import RStorage, jsonify, rstorify
 
 
 logger = dnutils.getlogger(__name__)
