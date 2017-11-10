@@ -11,6 +11,7 @@ import dnutils
 from dnutils import allnone, ifnone, out
 from dnutils.stats import stopwatch, print_stopwatches
 
+from pyrap import session
 from pyrap.ptypes import pc, BoundedDim, Var, VarCompound, px, parse_value
 from pyrap.utils import pparti
 from pyrap.constants import inf, RWT
@@ -82,6 +83,7 @@ class GridCell:
         if self._minwidth is not None:
             return self._minwidth
         self._minwidth, _ = self.widget_size
+        # self._minwidth = int(self._minwidth)
         if self.widget is not None:
             self._minwidth += self.widget.layout.padding_left + self.widget.layout.padding_right
         if self.grid:
@@ -93,6 +95,7 @@ class GridCell:
         if self._minheight is not None:
             return self._minheight
         _, self._minheight = self.widget_size
+        # self._minheight = int(self._minheight)
         if self.widget is not None:
             self._minheight += self.widget.layout.padding_top + self.widget.layout.padding_bottom
         if self.grid:
@@ -269,14 +272,13 @@ def compute_minsizes(cell):
         c = order.pop()
         c.width = c.minwidth
         c.height = c.minheight
-        # if c.grid is not None:
-        #     c.grid.equalize_column_widths()
-        #     c.grid.equalize_row_heights()
+        if c.grid is not None:
+            c.grid.equalize_column_widths()
+            c.grid.equalize_row_heights()
         #     c.grid.compute_cell_positions()
 
 
 def distribute(cell):
-    topcell = cell
     fringe = [cell]
     while fringe:
         cell = fringe.pop(0)
@@ -285,7 +287,7 @@ def distribute(cell):
         if cell.widget is None: continue
         layout = cell.widget.layout
         fringe_width, fringe_height = cell.widget.compute_fringe()
-        out('distributing', cell, cell.grid, layout.halign, cell.hpos, cell.vpos, cell.width, cell.height)
+        # out('distributing', cell, cell.grid, layout.halign, cell.hpos, cell.vpos, cell.width, cell.height)
         cont = False
         if cell.grid is not None and layout.halign == 'fill' and cell.width is not None:
             fixcols = cell.fixcols
@@ -365,8 +367,8 @@ def distribute(cell):
             cell.height = cell.minheight
             if cell not in fringe:
                 fringe.append(cell)
-            cont = True
-        if cont: continue
+                cont = True
+        # if cont: continue
         if cell.grid is not None:
             cell.grid.equalize_column_widths()
             cell.grid.equalize_row_heights()
@@ -380,7 +382,7 @@ def apply_layout(cell):
         c = fringe.pop()
         if c.grid is not None:
             fringe.extend(c.grid.itercells())
-        out(c.widget, c.hpos, c.vpos, c.width, c.height)
+        # out(c.widget, c.hpos, c.vpos, c.width, c.height)
         if c.widget is not None and None not in (c.hpos, c.vpos, c.width, c.height):
             # if c is cell:
             #     c.widget.bounds = c.hpos, c.vpos, c.width, c.height
@@ -414,7 +416,7 @@ def apply_layout(cell):
             elif layout.valign == 'center':
                 y = c.vpos + pc(50).of(c.height) - pc(50).of(wheight)
                 height = wheight
-            out(x, y, width, height)
+            # out(x, y, width, height)
             c.widget.bounds = x, y, width, height
             # c.widget.bounds = c.hpos, c.vpos, c.width, c.height
 
@@ -428,6 +430,19 @@ def layout(shell, pack):
         if not pack or shell.maximized:
             cell.hpos, cell.vpos, cell.width, cell.height = shell.client_rect
         distribute(cell)
+        if pack and not shell.maximized:
+            cell.hpos, cell.vpos, _, _ = shell.client_rect
+            cell.width = cell.minwidth
+            cell.height = cell.minheight
+            h, w = 0, 0
+            if shell.title is not None or RWT.TITLE in shell.style:
+                h += shell.theme.title_height
+            w += cell.width
+            h += cell.height
+            _, _, dispw, disph = session.runtime.display.bounds
+            xpos = int(round(dispw.value / 2. - w.value / 2.))
+            ypos = int(round(disph.value / 2. - h.value / 2.))
+            shell.bounds = xpos, ypos, w, h
         apply_layout(cell)
     print_stopwatches()
 
