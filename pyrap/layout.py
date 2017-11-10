@@ -10,6 +10,7 @@ from pprint import pprint
 import dnutils
 from dnutils import allnone, ifnone, out
 from dnutils.stats import stopwatch, print_stopwatches
+from tabulate import tabulate
 
 from pyrap import session
 from pyrap.ptypes import pc, BoundedDim, Var, VarCompound, px, parse_value
@@ -80,14 +81,13 @@ class GridCell:
 
     @property
     def minwidth(self):
-        if self._minwidth is not None:
-            return self._minwidth
-        self._minwidth, _ = self.widget_size
-        # self._minwidth = int(self._minwidth)
-        if self.widget is not None:
-            self._minwidth += self.widget.layout.padding_left + self.widget.layout.padding_right
-        if self.grid:
-            self._minwidth += (len(self.grid.cols) - 1) * self.widget.layout.hspace + sum([c.minwidth for c in self.grid.cols])
+        if self._minwidth is None:
+            self._minwidth, _ = self.widget_size
+            # self._minwidth = int(self._minwidth)
+            if self.widget is not None:
+                self._minwidth += self.widget.layout.padding_left + self.widget.layout.padding_right
+            if self.grid is not None:
+                self._minwidth += sum([c.minwidth for c in self.grid.cols]) + (len(self.grid.cols) - 1) * self.widget.layout.hspace
         return self._minwidth
 
     @property
@@ -98,8 +98,8 @@ class GridCell:
         # self._minheight = int(self._minheight)
         if self.widget is not None:
             self._minheight += self.widget.layout.padding_top + self.widget.layout.padding_bottom
-        if self.grid:
-            self._minheight += (len(self.grid.cols) - 1) * self.widget.layout.vspace + sum([c.minheight for c in self.grid.rows])
+        if self.grid is not None:
+            self._minheight += sum([c.minheight for c in self.grid.rows]) + (len(self.grid.rows) - 1) * self.widget.layout.vspace
         return self._minheight
 
     @property
@@ -154,7 +154,6 @@ class Row(CellSeq):
     def __init__(self, idx, cells=None):
         CellSeq.__init__(self, idx, cells)
         self._minheight = None
-        self.height = None
 
     def __str__(self):
         return '<Row: [%s]>' % ';'.join(['?' if c.widget is None else c.widget.id for c in self.itercells()])
@@ -165,10 +164,13 @@ class Row(CellSeq):
             self._minheight = max([c.minheight for c in self.itercells()])
         return self._minheight
 
+    def setheights(self, h):
+        for cell in self.itercells():
+            cell.height = h
+
     def equalize_heights(self):
         max_height = max([c.height for c in self.itercells()])
-        for cell in self.itercells():
-            cell.height = max_height
+        self.setheights(max_height)
         return max_height
 
 
@@ -178,7 +180,6 @@ class Col(CellSeq):
     def __init__(self, idx, cells=None):
         CellSeq.__init__(self, idx, cells)
         self._minwidth = None
-        self._width = None
 
     def __str__(self):
         return '<Col: [%s]>' % (';'.join(['?' if c.widget is None else c.widget.id for c in self.itercells()]))
@@ -189,10 +190,13 @@ class Col(CellSeq):
             self._minwidth =  max([c.minwidth for c in self.itercells()])
         return self._minwidth
 
+    def setwidths(self, w):
+        for cell in self.itercells():
+            cell.width = w
+
     def equalize_widths(self):
         max_width = max([c.width for c in self.itercells()])
-        for cell in self.itercells():
-            cell.width = max_width
+        self.setwidths(max_width)
         return max_width
 
 
@@ -240,13 +244,17 @@ class LayoutGrid:
     def __str__(self):
         return '<LayoutGrid %dx%d>' % (len(self.rows), len(self.cols))
 
-    def equalize_column_widths(self):
-        for col in self.cols:
-            col.equalize_widths()
+    def equalize_column_widths(self, all_cols_equal=False):
+        maxwidth = max([c.equalize_widths() for c in self.cols])
+        if all_cols_equal:
+            for col in self.cols:
+                col.setwidths(maxwidth)
 
-    def equalize_row_heights(self):
-        for row in self.rows:
-            row.equalize_heights()
+    def equalize_row_heights(self, all_rows_equal=False):
+        maxheight = max([r.equalize_heights() for r in self.rows])
+        if all_rows_equal:
+            for row in self.rows:
+                row.setheights(maxheight)
 
     def compute_cell_positions(self):
         vcum = 0
@@ -256,7 +264,21 @@ class LayoutGrid:
                 cell.hpos = hcum
                 cell.vpos = vcum
                 hcum += cell.width
+                try:
+                    hcum += cell.widget.layout.hspace
+                except AttributeError: pass
             vcum += cell.height
+            try:
+                vcum += cell.widget.layout.vspace
+            except AttributeError: pass
+
+    def print_minsizes(self):
+        sizes = [['%sx%s' % (c.minwidth, c.minheight) for c in row.itercells()] for row in self.rows]
+        print(tabulate(sizes))
+
+    def print_sizes(self):
+        sizes = [['%sx%s' % (c.width, c.height) for c in row.itercells()] for row in self.rows]
+        print(tabulate(sizes))
 
 
 def compute_minsizes(cell):
@@ -275,7 +297,7 @@ def compute_minsizes(cell):
         if c.grid is not None:
             c.grid.equalize_column_widths()
             c.grid.equalize_row_heights()
-        #     c.grid.compute_cell_positions()
+            c.grid.print_sizes()
 
 
 def distribute(cell):
@@ -288,15 +310,16 @@ def distribute(cell):
         layout = cell.widget.layout
         fringe_width, fringe_height = cell.widget.compute_fringe()
         # out('distributing', cell, cell.grid, layout.halign, cell.hpos, cell.vpos, cell.width, cell.height)
-        cont = False
+        # =======================================================================
+        # if this widget already has a width specified, distribute the flexcols
+        # over the remaining free space.
+        # =======================================================================
         if cell.grid is not None and layout.halign == 'fill' and cell.width is not None:
             fixcols = cell.fixcols
             flexcols = cell.flexcols
-            # =======================================================================
-            # if this widget already has a width specified, distribute the flexcols
-            # over the remaining free space.
-            # =======================================================================
+            out('distributing cols in', cell, cell.width, 'x', cell.height)
             if layout.equalwidths:
+                out('making all cell equal widths')
                 if fixcols and flexcols:
                     raise LayoutError('Layout is inconsistent: I was told to make columns in %s '
                                       'equal length, but you have manually specified flexcols. '
@@ -307,36 +330,31 @@ def distribute(cell):
                 raise Exception('Layout is underdetermined: I was told to fill %s '
                                 'horizontally, but I do not have any flexcols. '
                                 '(created at %s)' % (repr(cell.widget), cell.widget._created))
-            # if all([c.data.cellwidth.value is not None for i in fixcols for c in self.col(i)]):
             fixcolwidths = 0
             for col in cell.grid.cols:
                 colwidth = col.equalize_widths()
                 if col.idx in fixcols:
                     fixcolwidths +=  colwidth # the space definitely occupied by fixcols
-                for c in col.itercells():
-                    c.width = c.minwidth
-            fixcolwidths += sum([cell.grid.cols[i].minwidth for i in flexcols])  # + the space at least occupied by the flexcols
             if layout.equalwidths:
                 free = cell.width
             else:
-                free = cell.width - fixcolwidths - layout.hspace * (len(cell.grid.cols) - 1) - layout.padding_left - layout.padding_right - fringe_width
-            flexwidths = pparti(int(free), [flexcols[i] for i in sorted(flexcols)])
+                free = cell.width - fixcolwidths - layout.padding_left - layout.padding_right - fringe_width - layout.hspace * (len(cell.grid.cols) - 1)
+            # compute the widths of the flexible columns proportionally to their specification
+            flexwidths = pparti(max(0, free), [flexcols[i] for i in sorted(flexcols)])
+            # a cell should always have at least the minimum width imposed by the widget containing it
+            flexwidths = [max(fw, cell.grid.cols[i].minwidth) for (fw, i) in zip(flexwidths, flexcols)]
             for fci, flexwidth in zip(flexcols, flexwidths):
                 for c in cell.grid.cols[fci].itercells():
-                    c.width = flexwidth + (c.minwidth if not layout.equalwidths else 0)
-        elif cell.width is None:
-            cell.width = cell.minwidth
-            fringe.append(cell)
-            cont = True
-
+                    c.width = flexwidth
+        # =======================================================================
+        # if this widget already has a height specified, distribute the flexcols
+        # over the remaining free space.
+        # =======================================================================
         if cell.grid is not None and layout.valign == 'fill' and cell.height is not None:
             fixrows = cell.fixrows
             flexrows = cell.flexrows
-            # =======================================================================
-            # if this widget already has a height specified, distribute the flexcols
-            # over the remaining free space.
-            # =======================================================================
             if layout.equalheights:
+                out('distributing heights equally')
                 if fixrows and flexrows:
                     raise LayoutError('Layout is inconsistent: I was told to make rows in %s '
                                       'equal height, but you have manually specified flexrows. '
@@ -348,27 +366,23 @@ def distribute(cell):
                                 'vertically, but I do not have any flexrows. '
                                 '(created at %s)' % (repr(cell.widget), cell.widget._created))
             fixrowheights = 0
+            maxrowheight = 0
             for row in cell.grid.rows:
                 rowheight = row.equalize_heights()
+                maxrowheight = max(maxrowheight, rowheight)
                 if row.idx in fixrows:
-                    fixrowheights += rowheight # the space definitely occupied by fixcols
-                for c in row.itercells():
-                    c.height = c.minheight
-            fixrowheights += sum([cell.grid.rows[i].minheight for i in flexrows])  # + the space at least occupied by the flexcols
-            if layout.equalheights:
-                free = cell.height
-            else:
-                free = cell.height - fixrowheights - layout.vspace * (len(cell.grid.rows) - 1) - layout.padding_top - layout.padding_bottom - fringe_height
-            flexheights = pparti(int(free), [flexrows[i] for i in sorted(flexrows)])
+                    fixrowheights += rowheight # the space definitely occupied by fixrows
+            free = cell.height - fixrowheights - layout.padding_top - layout.padding_bottom - fringe_height - layout.vspace * (len(cell.grid.rows) - 1)
+            out('distributing', free, 'over', len(flexrows), 'rows')
+            # compute the widths of the flexible columns proportionally to their specification
+            flexheights = pparti(free, [flexrows[i] for i in sorted(flexrows)])
+            out('flexheights', flexheights)
+            # a cell should always have at least the minimum height imposed by the widget containing it
+            flexheights = [max(fh, cell.grid.rows[i].minheight) for fh, i in zip(flexheights, flexrows)]
+            out('flexheights', flexheights)
             for fri, flexheight in zip(flexrows, flexheights):
                 for c in cell.grid.rows[fri].itercells():
-                    c.height = flexheight + (c.minheight if not layout.equalheights else 0)
-        elif cell.height is None:
-            cell.height = cell.minheight
-            if cell not in fringe:
-                fringe.append(cell)
-                cont = True
-        # if cont: continue
+                    c.height = flexheight# + (c.minheight if not layout.equalheights else 0)
         if cell.grid is not None:
             cell.grid.equalize_column_widths()
             cell.grid.equalize_row_heights()
@@ -429,6 +443,8 @@ def layout(shell, pack):
         compute_minsizes(cell)
         if not pack or shell.maximized:
             cell.hpos, cell.vpos, cell.width, cell.height = shell.client_rect
+        else:
+            cell.hpos, cell.vpos, cell.width, cell.height = None, None, None, None
         distribute(cell)
         if pack and not shell.maximized:
             cell.hpos, cell.vpos, _, _ = shell.client_rect
