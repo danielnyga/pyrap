@@ -2,5 +2,5 @@ Pillow==3.3.1
 cssutils
 colored
 pyparsing
-multipart
+python-multipart
 dnutils
