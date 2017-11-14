@@ -593,7 +593,10 @@ class Pixels(Dim):
 
     def num(self):
         return self._num
-    
+
+    def __float__(self):
+        return float(self.value)
+
 #     @property
 #     def json(self):
 #         return self.value
