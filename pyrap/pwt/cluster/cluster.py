@@ -9,6 +9,9 @@ from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor, checkwidget
 
+d3wrapper = '''if (typeof d3 === 'undefined') {{
+    {d3content}
+}}'''
 
 class Cluster(Widget):
 
@@ -20,7 +23,9 @@ class Cluster(Widget):
         Widget.__init__(self, parent, **options)
         self.theme = ClusterTheme(self, session.runtime.mngr.theme)
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
-        session.runtime.ensurejsresources(self._requiredjs, force=True)
+        with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
+            cnt = d3wrapper.format(**{'d3content': f.read()})
+            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js')
         self._data = {}
         self._opts = opts
         self.on_select = OnSelect(self)
