@@ -5,34 +5,24 @@ Created on Oct 2, 2015
 '''
 import base64
 import json
+from collections import OrderedDict
+
+from dnutils import out
+from dnutils.threads import sleep
+from dnutils.tools import ifnone
 
 import pyrap
-from dnutils.threads import sleep
+from pyrap import session
+from pyrap.dialogs import msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, \
+    ask_okcancel, open_progress, ask_color
+from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout
+from pyrap.ptypes import BoolVar, Color, px, Image, Font
 from pyrap.pwt.cluster.cluster import Cluster
 from pyrap.pwt.radar.radar import RadarChart
-from dnutils import out, Event
-from dnutils.tools import ifnone
-from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite,\
-    Edit, Combo, TabFolder, TabItem, Group, ScrolledComposite, ScrollBar,\
-    Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem, Spinner, accept, info, error, warning,\
-    FileUpload
-import random
-from pyrap import  threads
-import dnutils
-from pyrap.ptypes import BoolVar, StringVar, Color, px, Image, pc, Font
-from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout,\
-    StackLayout
-import os
-from pyrap.communication import RWTSetOperation
-from pyrap.engine import PushService
-import math
-from collections import OrderedDict
-from pyrap import session
-from threading import current_thread
-from pyrap.constants import DLG
-from pyrap.dialogs import ask_yesnocancel, msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, ask_okcancel,\
-    open_progress, ask_color
-from base64 import b64encode
+from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
+from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
+    Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
+    Menu, MenuItem, Spinner, info, FileUpload
 
 
 class ControlsDemo():
@@ -479,43 +469,21 @@ class ControlsDemo():
             'ExtraWidthX': 300
         }
 
-        radar = RadarChart(comp_pracgraph, legendtext='The material properties', opts=mycfg)
+        # radar_req = RadarChartRed(comp_pracgraph, opts=mycfg, legendtext='The material properties in relation to the property intervals of the requirement profile', halign='fill', valign='fill')
+        radar_req = RadarChart(comp_pracgraph, opts=mycfg, legendtext='The material properties in relation to the property intervals of the requirement profile', halign='fill', valign='fill')
 
         # the legend title and names of the data sets (in the same order as
         # the data point lists are given)
-        radar.addaxis('ElasticModulus', minval=150, maxval=250, unit='GPa', intervalmin=200, intervalmax=220)
-        radar.addaxis('YieldStrength', minval=220, maxval=2500, unit='MPa', intervalmin=500, intervalmax=900)
-        radar.addaxis('TensileStrength', minval=300, maxval=2500, unit='MPa', intervalmin=700, intervalmax=2200)
-        radar.addaxis('CorrosionBehavior', minval=-2, maxval=2, unit='', intervalmin=-1, intervalmax=1)
-        radar.addaxis('Hardness', minval=100, maxval=1000, unit='HV', intervalmin=200, intervalmax=700)
-        radar.addaxis('FatigueStrength', minval=150, maxval=1000, unit='MPa', intervalmin=200, intervalmax=500)
-        radar.addaxis('ElongationAtBreak', minval=0., maxval=1., unit='%', intervalmin=.1, intervalmax=.2)
-        radar.addaxis('NotchImpactEnergy', minval=5, maxval=45, unit='J', intervalmin=15, intervalmax=30)
+        radar_req.addaxis('ElasticModulus', minval=150, maxval=250, unit='GPa', intervalmin=200, intervalmax=220)
+        radar_req.addaxis('YieldStrength', minval=220, maxval=2500, unit='MPa', intervalmin=500, intervalmax=900)
+        radar_req.addaxis('TensileStrength', minval=300, maxval=2500, unit='MPa', intervalmin=700, intervalmax=2200)
+        radar_req.addaxis('CorrosionBehavior', minval=-2, maxval=2, unit='', intervalmin=-1, intervalmax=1)
+        radar_req.addaxis('Hardness', minval=100, maxval=1000, unit='HV', intervalmin=200, intervalmax=700)
+        radar_req.addaxis('FatigueStrength', minval=150, maxval=1000, unit='MPa', intervalmin=200, intervalmax=500)
+        radar_req.addaxis('ElongationAtBreak', minval=0., maxval=1., unit='%', intervalmin=.1, intervalmax=.2)
+        radar_req.addaxis('NotchImpactEnergy', minval=5, maxval=45, unit='J', intervalmin=15, intervalmax=30)
 
-        # intervals = {
-        #     'ElasticModulus': {'min': 200, 'max': 220},
-        #     'YieldStrength': {'min': 500, 'max': 900},
-        #     'TensileStrength': {'min': 700, 'max': 2200},
-        #     'CorrosionBehavior': {'min': -1, 'max': 1},
-        #     'Hardness': {'min': 200, 'max': 700},
-        #     'FatigueStrength': {'min': 200, 'max': 500},
-        #     'ElongationAtBreak': {'min': .1, 'max': .2},
-        #     'NotchImpactEnergy': {'min': 15, 'max': 30},
-        #     'FlexuralAlternateStrength': {'min': 300, 'max': 950}
-        # }
-        #
-        # limits = {
-        #     'ElasticModulus': {'min': 150, 'max': 250},
-        #     'YieldStrength': {'min': 220, 'max': 2500},
-        #     'TensileStrength': {'min': 300, 'max': 2500},
-        #     'CorrosionBehavior': {'min': -2, 'max': 2},
-        #     'Hardness': {'min': 100, 'max': 1000},
-        #     'FatigueStrength': {'min': 150, 'max': 1000},
-        #     'ElongationAtBreak': {'min': 0., 'max': 1.},
-        #     'NotchImpactEnergy': {'min': 5, 'max': 45},
-        #     'FlexuralAlternateStrength': {'min': 150, 'max': 1000}
-        # }
-        radar.setdata({'Material X': [210.0, 1000.0, 2000.0, -1, 700.0, 900.0, .5, 15.0]})
+        radar_req.setdata({'test': [170, 500, 700, 0, 900, 170, .3, 15]})
 
 
     def create_cluster_page(self, parent):

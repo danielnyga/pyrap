@@ -20,7 +20,7 @@ class Cluster(Widget):
         Widget.__init__(self, parent, **options)
         self.theme = ClusterTheme(self, session.runtime.mngr.theme)
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
-        session.runtime.ensurejsresources(self._requiredjs)
+        session.runtime.ensurejsresources(self._requiredjs, force=True)
         self._data = {}
         self._opts = opts
         self.on_select = OnSelect(self)

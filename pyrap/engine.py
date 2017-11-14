@@ -511,7 +511,7 @@ class SessionRuntime(object):
                         self.requirecss(f)
         self.create_display()
 
-    def ensurejsresources(self, jsfiles, name=None):
+    def ensurejsresources(self, jsfiles, name=None, force=False):
         if jsfiles:
             if not isinstance(jsfiles, list):
                 files = [jsfiles]
@@ -520,27 +520,27 @@ class SessionRuntime(object):
             for p in files:
                 if os.path.isfile(p):
                     with open(p, encoding='utf8') as fi:
-                        self.requirejs(fi)
+                        self.requirejs(fi, force=force)
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
                         with open(f, encoding='utf8') as fi:
-                            self.requirejs(fi)
+                            self.requirejs(fi, force=force)
                 else:
                     try:
-                        resource = session.runtime.mngr.resources.registerc(name, 'text/javascript', p.encode('utf8'))
+                        resource = session.runtime.mngr.resources.registerc(name, 'text/javascript', p.encode('utf8'), force=force)
                         self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
                     except:
                         raise Exception('Could not load file', p)
 
-    def requirejs(self, f):
-        resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/javascript', f)
+    def requirejs(self, f, force=False):
+        resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/javascript', f, force=force)
         self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
 
     def requirejstag(self, code):
         self << RWTCallOperation('rwt.client.JavaScriptTagLoader', 'load', {'code': code})
 
-    def requirecss(self, f):
-        resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/css', f)
+    def requirecss(self, f, force=False):
+        resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/css', f, force=force)
         self << RWTCallOperation('rwt.client.CSSLoader', 'linkCss', {'files': [resource.location]})
 
     def loadstyle(self, style):
