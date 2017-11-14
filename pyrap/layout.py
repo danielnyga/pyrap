@@ -261,7 +261,8 @@ class GridCell(LayoutAdapter):
     @property
     def widget_size(self):
         if self._widgetsize is None:
-            self._widgetsize = self.widget.compute_size() if self.widget is not None else (0, 0)
+            w, h = self.widget.compute_size() if self.widget is not None else (0, 0)
+            self._widgetsize = w, h#max(w, ifnone(self.layout.minwidth, 0)), max(h, ifnone(self.layout.minheight, 0))
         return self._widgetsize
 
     def preferred_size(self):
@@ -270,7 +271,7 @@ class GridCell(LayoutAdapter):
         hvp, vvp = self.viewport
         if self._minwidth is None:
             self._minwidth, h = self.widget_size
-            self._minwidth += hfringe + hvp
+            # self._minwidth += 0#hfringe# + hvp
             if self.grid is not None:
                 minwidths = [c.minwidth for c in self.grid.cols]
                 if self.layout.equalwidths:
@@ -278,12 +279,13 @@ class GridCell(LayoutAdapter):
                 else:
                     minwidth = sum(minwidths)
                 self._minwidth += minwidth + (len(self.grid.cols) - 1) * self.layout.hspace
-                self._widgetsize = self._minwidth, h
-                self._minwidth += self.layout.padding_left + self.layout.padding_right
+                self._widgetsize = max(self._minwidth, ifnone(self.layout.minwidth, 0)), h
+                self._minwidth = max(self._minwidth, self._widgetsize[0]) + self.layout.padding_left + self.layout.padding_right
+                self._minwidth = max(self._minwidth, ifnone(self.layout.cell_minwidth, 0))
         # preferred vertical size
         if self._minheight is None:
             w, self._minheight = self.widget_size
-            self._minheight += vfringe + vvp
+            # self._minheight += vfringe# + vvp
             if self.grid is not None:
                 minheights = [r.minheight for r in self.grid.rows]
                 if self.widget.layout.equalheights:
@@ -292,8 +294,9 @@ class GridCell(LayoutAdapter):
                 else:
                     minheight = sum(minheights)
                 self._minheight += minheight + (len(self.grid.rows) - 1) * self.layout.vspace
-                self._widgetsize = w, self._minheight
-                self._minheight += self.layout.padding_top + self.layout.padding_bottom
+                self._widgetsize = w, max(self._minheight, ifnone(self.layout.minheight, 0))
+                self._minheight = max(self._minheight, self._widgetsize[1]) + self.layout.padding_top + self.layout.padding_bottom
+                self._minheight = max(self._minheight, ifnone(self.layout.cell_minheight, 0))
         return self._minwidth, self._minheight
 
     @property
@@ -338,7 +341,7 @@ class GridCell(LayoutAdapter):
         if None in (self.width, self.height):
             self.width, self.height = self.preferred_size()
         fringe_width, fringe_height = self.fringe
-        hvp, vvp = self.viewport
+        hvp, vvp = 0, 0#self.viewport
         # =======================================================================
         # if this widget already has a width specified, distribute the flexcols
         # over the remaining free space.
@@ -375,6 +378,15 @@ class GridCell(LayoutAdapter):
                            fringe_width - hvp - layout.hspace * (len(self.grid.cols) - 1)
                 else:
                     free = self._minwidth
+                if free: # adjust the free space and flexcols
+                    total = sum(flexcols.values())
+                    total_ = total
+                    free_ = free
+                    for i, v in dict(flexcols).items():
+                        if flexcols[i]/total_ < float(self.grid.cols[i].minwidth) / float(free_):
+                            free -= self.grid.cols[i].minwidth
+                            total -= flexcols[i]
+                            del flexcols[i]
             # compute the widths of the flexible columns proportionally to their specification
             flexcolidx = sorted(flexcols.keys())
             flexwidths = dict(zip(flexcolidx, pparti(max(0, free), [flexcols[j] for j in flexcolidx])))
@@ -414,12 +426,21 @@ class GridCell(LayoutAdapter):
             else:
                 if layout.valign == 'fill':
                     free = self.height - fixrowheights - layout.padding_top - layout.padding_bottom - \
-                           fringe_height - vvp - layout.vspace * (len(self.grid.rows) - 1)
+                           fringe_height - vvp - layout.vspace * (len(self.grid.rows) - 1) #- flexrowminheights
                 else:
                     free = self._minheight
+                if free: # adjust the free space and flexrows
+                    total = sum(flexrows.values())
+                    total_ = total
+                    free_ = free
+                    for i, v in dict(flexrows).items():
+                        if flexrows[i]/total_ < float(self.grid.rows[i].minheight) / float(free_):
+                            free -= self.grid.rows[i].minheight
+                            total -= flexrows[i]
+                            del flexrows[i]
             # compute the widths of the flexible columns proportionally to their specification
             flexrowidx = sorted(flexrows.keys())
-            flexheights = dict(zip(flexrowidx, pparti(free, [flexrows[j] for j in flexrowidx])))
+            flexheights = dict(zip(flexrowidx, pparti(max(free, 0), [flexrows[j] for j in flexrowidx])))
             for row in self.grid.rows:
                 # any cell should always have at least the minimum height imposed by the widget containing it,
                 # or the height of the highest cell in the grid, or the height yielded by the distribution
@@ -429,7 +450,7 @@ class GridCell(LayoutAdapter):
             self.grid.equalize_column_widths()
             self.grid.equalize_row_heights()
             self.compute_cell_positions()
-            # self.grid.print_positions()
+            self.grid.print_positions()
         self._apply_layout()
 
     def compute_cell_positions(self):
@@ -437,7 +458,7 @@ class GridCell(LayoutAdapter):
             hvp, vvp = self.viewport
             vcum = 0 #vvp
             for row in self.grid.rows:
-                hcum = hvp
+                hcum = 0
                 for cell in row.itercells():
                     cell.hpos = hcum
                     cell.vpos = vcum
@@ -475,6 +496,8 @@ class GridCell(LayoutAdapter):
             elif layout.valign == 'center':
                 y = self.vpos + pc(50).of(self.height) - pc(50).of(wheight)
                 height = wheight
+            # out('position', self.widget, 'at', x, y, width, height)
+            # out('was at', self.hpos, self.vpos, self.width, self.height, 'widget:', wwidth, wheight)
             self.widget.bounds = x, y, width, height
 
 
