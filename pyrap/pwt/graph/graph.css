@@ -1,0 +1,50 @@
+.link {
+  fill: none;
+  stroke: #08088A;
+  stroke-width: 1.5px;
+}
+
+.link.strokegreen {
+  stroke: #89a35c;
+}
+
+.link.object {
+  stroke: green;
+}
+
+.link.strokeblue {
+  stroke: blue;
+}
+
+.link.default {
+  stroke: black;
+}
+
+.link.dashedred {
+  stroke-dasharray: 0,2 1;
+  stroke: red;
+}
+
+marker {
+  fill: #89a35c;
+}
+
+circle.graphcircle {
+  fill: #bee280;
+  stroke: #89a35c;
+  stroke-width: 1.5px;
+}
+
+text.textClass {
+  font: 15px monospace, arial, sans-serif;
+  font-weight: bold;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+text.linklabel {
+  font: 10px monospace, arial, sans-serif;
+  pointer-events: none;
+  font-weight: normal;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}

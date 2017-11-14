@@ -42,7 +42,6 @@ class RadarChart(Widget):
         options = Widget._rwt_options(self)
         if self._opts:
             options.options = self._opts
-        # options.d3 = self._d3
         options.legendtext = ifnone(self._legendtext, '')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 

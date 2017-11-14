@@ -1,11 +1,17 @@
-from pyrap import session
+import os
+
+from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.utils import ifnone, out
+from pyrap.utils import ifnone
 from pyrap.widgets import Widget, constructor, checkwidget
 
+
+d3wrapper = '''if (typeof d3 === 'undefined') {{
+    {d3content}
+}}'''
 
 class Graph(Widget):
 
@@ -16,6 +22,11 @@ class Graph(Widget):
     def __init__(self, parent, cssid=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = GraphTheme(self, session.runtime.mngr.theme)
+        with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
+            cnt = d3wrapper.format(**{'d3content': f.read()})
+            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js')
+        with open(os.path.join(locations.pwt_loc, 'graph', 'graph.css'), encoding='utf8') as fi:
+            session.runtime.requirecss(fi)
         self._gwidth = None
         self._gheight = None
         self._links = []
@@ -139,6 +150,7 @@ class Graph(Widget):
     def updatedata(self, newlinks):
         remove = [x for x in self.links if x not in newlinks]
         add = [x for x in newlinks if x not in self.links]
+
         session.runtime << RWTCallOperation(self.id, 'updateData', {'remove': remove, 'add': add})
         self._links = [x for x in self.links if x not in remove] + add
         return remove, add
