@@ -2131,7 +2131,7 @@ class Group(Composite):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = list(map(px, bounds))
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
-        
+
     def compute_size(self):
         width, height = Composite.compute_size(self)
         # frame border
@@ -2153,7 +2153,6 @@ class Group(Composite):
     def compute_fringe(self):
         width, height = self.compute_size()
         return width, height
-    
     
     def viewport(self):
         x = y = 0
@@ -2580,6 +2579,7 @@ class List(Widget):
                 raise TypeError('Expected list, got %s' % type(sel))
             else: 
                 sel = [sel] if sel is not None else []
+        self._selidx = sel
         session.runtime << RWTSetOperation(self.id, {'selectionIndices': sel})
     
     def compute_size(self):
