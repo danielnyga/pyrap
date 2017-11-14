@@ -4,6 +4,8 @@ Created on Oct 10, 2015
 @author: nyga
 '''
 import dnutils
+from dnutils import ifnot, ifnone
+
 from pyrap.locations import pyrap_path
 from cssutils import parseFile
 import os

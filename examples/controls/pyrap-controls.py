@@ -12,10 +12,10 @@ from pyrap.pwt.cluster.cluster import Cluster
 from pyrap.pwt.radar.radar import RadarChart
 from dnutils import out, Event
 from dnutils.tools import ifnone
-from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite,\
-    Edit, Combo, TabFolder, TabItem, Group, ScrolledComposite, ScrollBar,\
-    Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem, Spinner, accept, info, error, warning,\
-    FileUpload
+from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Option, Composite, \
+    Edit, Combo, TabFolder, TabItem, Group, ScrolledComposite, ScrollBar, \
+    Browser, List, Canvas, GC, StackedComposite, Scale, Menu, MenuItem, Spinner, accept, info, error, warning, \
+    FileUpload, Cols
 import random
 from pyrap import  threads
 import dnutils
@@ -100,6 +100,8 @@ class ControlsDemo():
         self.create_pages()
         self.navigation.on_select += self.switch_page
         self.navigation.selection = self.pages['Button']
+
+        self.shell.dolayout()
         
         
     def switch_page(self, *args):
@@ -235,14 +237,13 @@ class ControlsDemo():
         upload.on_finished += uploaded
     
     def create_spinner_page(self, parent):
-        body = Composite(parent)
-        body.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        body = Composite(parent, layout=ColumnLayout(valign='fill', halign='fill', equalwidths=True))
         # spinners
         grp = Group(body, 'Spinners')
         grp.layout = GridLayout(cols=2, equalheights=True)
         Label(grp, text='Simple Spinner:', halign='left')
         s1 = Spinner(grp)
-        Label(grp, text='Spinner with ModifyListener:', halign='left')
+        Label(grp, text='Spinner:', halign='left')
         s2 = Spinner(grp)        
         Label(grp, 'Current value:', halign='left')
         l = Label(grp, halign='fill')
@@ -400,7 +401,7 @@ class ControlsDemo():
             scales.append(s)
         self.mainwnd.tabseq = [self.navigation] + scales
         lower = Composite(parent)
-        lower.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=1, padding_right=5)
+        lower.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=1, padding_right=5, hspace=10)
         
         grpleft = Group(lower, text='Balance')
         grpleft.layout = RowLayout(valign='fill', halign='fill', equalheights=1)

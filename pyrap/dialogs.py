@@ -3,7 +3,7 @@ Created on Nov 21, 2016
 
 @author: nyga
 '''
-from dnutils import out
+from dnutils import out, ifnone
 from dnutils.threads import current_thread
 from pyrap.widgets import Spinner, Edit,\
     Separator, Canvas
@@ -74,7 +74,10 @@ class MessageBox(Shell):
     '''
     Represents a simple message box.
     '''
-    
+
+    BTN_MINWIDTH = 120
+    MSGBOX_MINWIDTH = 400
+
     @constructor('MessageBox')    
     def __init__(self, parent, title, text, icon=None, modal=True, resize=False, btnclose=True):
         Shell.__init__(self, parent, title=title, titlebar=True, border=True, 
@@ -94,21 +97,18 @@ class MessageBox(Shell):
     def create_content(self):
         Shell.create_content(self)
         mainarea = Composite(self.content)
-        mainarea.layout = ColumnLayout(padding=10, hspace=5)
-        img = None
-        if self.icon is not None:
-            img = Label(mainarea, img=self.icon, valign='top', halign='left')
-            
         textarea = Composite(mainarea)
-        textarea.layout = RowLayout()
-        text = Label(textarea, self.text, halign='left')
-        
-        buttons = Composite(textarea)
+        mainarea.layout = RowLayout(vspace=20, padding=20, padding_left=20, padding_right=25)
+        if self.icon is not None:
+            Label(textarea, img=self.icon, valign='top', halign='left')
+        textarea.layout = ColumnLayout(hspace=20)
+        Label(textarea, self.text, halign='left', cell_minwidth=self.MSGBOX_MINWIDTH)
+        buttons = Composite(mainarea)
         buttons.layout = ColumnLayout(equalwidths=True, halign='right', valign='bottom')
         self.create_buttons(buttons)
         
     def create_buttons(self, buttons):
-        ok = Button(buttons, text='OK', minwidth=100)
+        ok = Button(buttons, text='OK', minwidth=self.BTN_MINWIDTH, halign='right')
         ok.on_select += lambda *_: self.answer_and_close('ok')
 
 
@@ -116,7 +116,6 @@ class OptionsDialog(Shell):
     '''
     Represents a simple dialog box providing a list of options to the user.
     '''
-
 
     @constructor('OptionsDialog')
     def __init__(self, parent, options):
@@ -187,17 +186,18 @@ class QuestionBox(MessageBox):
         self.buttons = buttons
     
     def create_buttons(self, buttons):
+        minwidth = 120
         if 'ok' in self.buttons:
-            ok = Button(buttons, text='OK', minwidth=100)
+            ok = Button(buttons, text='OK', minwidth=self.BTN_MINWIDTH, halign='right')
             ok.on_select += lambda *_: self.answer_and_close('ok')
         if 'yes' in self.buttons:
-            yes = Button(buttons, text='Yes', halign='fill')
+            yes = Button(buttons, text='Yes', minwidth=self.BTN_MINWIDTH, halign='right')
             yes.on_select += lambda *_: self.answer_and_close('yes')
         if 'no' in self.buttons: 
-            no = Button(buttons, text='No', halign='fill')
+            no = Button(buttons, text='No', minwidth=self.BTN_MINWIDTH, halign='right')
             no.on_select += lambda *_: self.answer_and_close('no')
         if 'cancel' in self.buttons:
-            cancel = Button(buttons, text='Cancel', halign='fill')
+            cancel = Button(buttons, text='Cancel', minwidth=self.BTN_MINWIDTH, halign='right')
             cancel.on_select += lambda *_: self.answer_and_close(None)
 
 

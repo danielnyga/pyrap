@@ -14,7 +14,7 @@ from xml.dom import minidom
 
 from PIL import Image as PILImage
 
-from dnutils import Condition
+from dnutils import Condition, ifnone
 from pyrap.constants import FONT
 from pyrap.utils import BitMask
 from functools import reduce
