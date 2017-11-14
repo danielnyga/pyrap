@@ -100,8 +100,11 @@ pwt_cluster.Cluster.prototype = {
     },
 
     setBounds: function( args ) {
-        console.log('this id', this._rwtId);
-
+        if (this._svgContainer.node() !== null ) {
+            var bbox = this._svgContainer.node().getBBox();
+            this._svgContainer
+                .attr("transform", "translate(" + (bbox.width/2) + "," + (bbox.height/2) + ")");
+        }
         this._parentDIV.style.left = args[0] + "px";
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
@@ -361,7 +364,7 @@ rap.registerTypeHandler( 'pwt.customs.Cluster', {
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'width', 'height', 'data'],
+  properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
 
   methods : [ 'updateData', 'clear', 'highlight'],
 

@@ -252,8 +252,10 @@ rwt/remote/handler/JavaScriptExecutorHandler.js
 rwt/client/UrlLauncher.js
 rwt/remote/handler/UrlLauncherHandler.js
 rwt/client/JavaScriptLoader.js
+rwt/client/JavaScriptTagLoader.js
 rwt/client/CSSLoader.js
 rwt/remote/handler/JavaScriptLoaderHandler.js
+rwt/remote/handler/JavaScriptTagLoaderHandler.js
 rwt/remote/handler/CSSLoaderHandler.js
 rwt/runtime/System.js
 rwt/widgets/util/MnemonicHandler.js
@@ -275,6 +277,7 @@ rwt/remote/handler/DropDownHandler.js
 ../pyrap/pwt/svg/svg.js
 ../pyrap/pwt/ros3d/ros3d.js
 ../pyrap/pwt/radar/radar.js
+../pyrap/pwt/radar_redesign/radar_redesign.js
 ../pyrap/pwt/cluster/cluster.js
 appearances.js'''
 

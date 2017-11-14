@@ -20,7 +20,7 @@ class Cluster(Widget):
         Widget.__init__(self, parent, **options)
         self.theme = ClusterTheme(self, session.runtime.mngr.theme)
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
-        session.runtime.ensurejsresources(self._requiredjs)
+        session.runtime.ensurejsresources(self._requiredjs, force=True)
         self._data = {}
         self._opts = opts
         self.on_select = OnSelect(self)
@@ -48,7 +48,7 @@ class Cluster(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-
+        print('clustersize', w,h)
         return w, h
 
     def _handle_notify(self, op):

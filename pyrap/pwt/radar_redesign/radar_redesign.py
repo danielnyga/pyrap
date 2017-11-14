@@ -1,35 +1,34 @@
 import os
-from time import sleep, time
-
-import datetime
 
 from dnutils.tools import ifnone
+
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
     RWTSetOperation
-from pyrap.events import OnSelect, _rwt_selection_event, _rwt_event
+from pyrap.events import OnSelect, _rwt_event
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor, checkwidget
+
 
 d3wrapper = '''if (typeof d3 === 'undefined') {{
     {d3content}
 }}'''
 
 
-class RadarChart(Widget):
+class RadarChartRed(Widget):
 
-    _rwt_class_name = 'pwt.customs.RadarChart'
+    _rwt_class_name = 'pwt.customs.RadarChartRed'
     _defstyle_ = BitField(Widget._defstyle_)
 
-    @constructor('RadarChart')
+    @constructor('RadarChartRed')
     def __init__(self, parent, legendtext=None, opts=None, **options):
         Widget.__init__(self, parent, **options)
-        self.theme = RadarTheme(self, session.runtime.mngr.theme)
+        self.theme = RadarRedTheme(self, session.runtime.mngr.theme)
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
             cnt = d3wrapper.format(**{'d3content': f.read()})
-            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js')
+            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
         self._axes = []
         self._data = {}
         self._opts = opts
@@ -42,6 +41,7 @@ class RadarChart(Widget):
         options = Widget._rwt_options(self)
         if self._opts:
             options.options = self._opts
+        # options.d3 = self._d3
         options.legendtext = ifnone(self._legendtext, '')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
@@ -99,7 +99,7 @@ class RadarChart(Widget):
         session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
 
     def addaxis(self, name, minval=None, maxval=None, unit='%', intervalmin=None, intervalmax=None):
-        r = RadarAxis(name, minval=minval, maxval=maxval, unit=unit, intervalmin=intervalmin, intervalmax=intervalmax)
+        r = RadarRedAxis(name, minval=minval, maxval=maxval, unit=unit, intervalmin=intervalmin, intervalmax=intervalmax)
         self._axes.append(r)
         session.runtime << RWTCallOperation(self.id, 'addAxis', {'name': name,
                                                                  'limits': [minval, maxval],
@@ -153,7 +153,7 @@ class RadarChart(Widget):
         session.runtime << RWTSetOperation(self.id, {'data': data})
 
 
-class RadarAxis(object):
+class RadarRedAxis(object):
     def __init__(self, name, minval=0, maxval=100, unit='%', intervalmin=None, intervalmax=None):
         self._name = name
         self._minval = minval
@@ -220,19 +220,19 @@ class RadarAxis(object):
         return '<Axis name={} at 0x{}>'.format(self.name, hash(self))
 
 
-class RadarTheme(WidgetTheme):
+class RadarRedTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'RadarChart')
+        WidgetTheme.__init__(self, widget, theme, 'RadarChartRed')
 
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'RadarChart', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'RadarChartRed', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'RadarChart', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'RadarChartRed', self.styles(), self.states())
 
     @bg.setter
     def bg(self, color):
@@ -240,11 +240,11 @@ class RadarTheme(WidgetTheme):
 
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'RadarChart', self.styles(), self.states())
+        return self._theme.get_property('padding', 'RadarChartRed', self.styles(), self.states())
 
     @property
     def font(self):
-        return self._theme.get_property('font', 'RadarChart', self.styles(), self.states())
+        return self._theme.get_property('font', 'RadarChartRed', self.styles(), self.states())
 
     @property
     def margin(self):
