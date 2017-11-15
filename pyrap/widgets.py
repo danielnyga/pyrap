@@ -424,10 +424,7 @@ class Widget(object):
         directions that are occupied by the parent widget and cannot be
         part of the client area.
         '''
-        return px(0), px(0)
-
-    def viewport(self):
-        return px(0), px(0)
+        return px(0), px(0), px(0), px(0)
 
     @property
     def layer(self):
@@ -505,6 +502,8 @@ class Shell(Widget):
         self.on_move = OnMove(self)
         self._tabseq = []
         self._packed = False
+        if self._title is not None:
+            self.style |= RWT.BORDER
     
     def create_content(self):
         self.content = Composite(self)
@@ -528,6 +527,7 @@ class Shell(Widget):
             options.parentShell = parentshell.id
         if self.title is not None or RWT.TITLE in self.style:
             options.style.append('TITLE')
+            options.style.append('BORDER')
             options.text = ifnone(self.title, '')
         if RWT.CLOSE in self.style:
             options.showClose = True
@@ -598,25 +598,10 @@ class Shell(Widget):
 
     @property
     def client_rect(self):
-        area = [0, 0] + list(self.bounds[2:])
-        padding = self.theme.padding
-        if padding:
-            area[0] += padding.left
-            area[2] -= padding.left + padding.right
-            area[1] += padding.top
-            area[3] -= padding.top + padding.bottom
-        t, r, b, l = self.theme.borders
-        area[0] += ifnone(l, 0, lambda l: l.width)
-        area[1] += ifnone(t, 0, lambda t: t.width)
-        area[2] -= ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        area[2] = max(0, area[2])
-        area[3] -= ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        area[3] = max(0, area[3])
-        if self.title is not None or RWT.TITLE in self.style:
-            area[3] -= self.theme.title_height
-            area[1] += self.theme.title_height
-        return area
-    
+        t, r, b, l = self.compute_fringe()
+        _, _, w, h = self.bounds
+        return l, t, w - l - r, h - t - b
+
     @checkwidget
     def close(self):
         self.on_close.notify()
@@ -637,12 +622,13 @@ class Shell(Widget):
             if pack and not self.maximized:
                 adapter.hpos, adapter.vpos, _, _ = self.client_rect
                 adapter.width, adapter.height = adapter.preferred_size()
-                h, w = 0, 0
-                if self.title is not None or RWT.TITLE in self.style:
-                    h += self.theme.title_height
-                w += adapter.width
-                h += adapter.height
-                adapter.widget.bounds = adapter.hpos, adapter.vpos, adapter.width, adapter.height
+                t, r, b, l = self.compute_fringe()
+                w = adapter.width + l + r
+                h = adapter.height + t + b
+                adapter.widget.bounds = adapter.hpos + adapter.layout.padding_left, \
+                                        adapter.vpos + adapter.layout.padding_top, \
+                                        adapter.width - adapter.layout.padding_left - adapter.layout.padding_right, \
+                                        adapter.height - adapter.layout.padding_top - adapter.layout.padding_bottom
                 _, _, dispw, disph = session.runtime.display.bounds
                 xpos = int(round(dispw.value / 2. - w.value / 2.))
                 ypos = int(round(disph.value / 2. - h.value / 2.))
@@ -653,8 +639,21 @@ class Shell(Widget):
         self.dolayout()
         
     def compute_fringe(self):
-        return self.compute_size()
-
+        top, right, bottom, left = 0, 0, 0, 0
+        padding = self.theme.padding
+        if padding:
+            left += padding.left
+            right += padding.right
+            bottom += padding.top
+            top += padding.top
+        t, r, b, l = self.theme.borders
+        left += ifnone(l, 0, lambda l: l.width)
+        top += ifnone(t, 0, lambda t: t.width)
+        right += ifnone(r, 0, lambda r: r.width)
+        bottom += ifnone(b, 0, lambda b: b.width)
+        if self.title is not None or RWT.TITLE in self.style:
+            top += self.theme.title_height
+        return top, right, bottom, left
 
 class Combo(Widget):
 
@@ -2134,25 +2133,42 @@ class Group(Composite):
 
     def compute_size(self):
         width, height = Composite.compute_size(self)
+        t, r, b, l = self.compute_fringe()
+        return width + l + r, height + t + b
+
+    def compute_fringe(self):
+        top, right, bottom, left = (0, 0, 0, 0)
         # frame border
         t, r, b, l = self.theme.frame_borders
-        width += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        height += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        top += ifnone(t, 0, lambda b: b.width)
+        right += ifnone(r, 0, lambda b: b.width)
+        bottom += ifnone(b, 0, lambda b: b.width)
+        left += ifnone(l, 0, lambda b: b.width)
         # frame padding
         padding = self.theme.frame_padding
         if padding:
-            width += ifnone(padding.left, 0) + ifnone(padding.right, 0)
-            height += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+            top += ifnone(padding.top, 0)
+            right += ifnone(padding.right, 0)
+            bottom += ifnone(padding.bottom, 0)
+            left += ifnone(padding.left, 0)
         # frame margin
         margin = self.theme.frame_margin
         if margin:
-            width += ifnone(margin.left, 0) + ifnone(margin.right, 0)
-            height += ifnone(margin.top, 0) + ifnone(margin.bottom, 0)
-        return px(width), px(height)
-        
-    def compute_fringe(self):
-        width, height = self.compute_size()
-        return width, height
+            left += ifnone(margin.left, 0)
+            right += ifnone(margin.right, 0)
+            bottom += ifnone(margin.bottom, 0)
+            top += ifnone(margin.top, 0)
+        # group margin
+        margin = self.theme.margin
+        if margin:
+            top += ifnone(margin.top, 0)
+            right += ifnone(margin.right, 0)
+            bottom += ifnone(margin.bottom, 0)
+            left += ifnone(margin.left, 0)
+        return top, right, bottom, left
+
+        # width, height = self.compute_size()
+        # return width, height
     
     def viewport(self):
         x = y = 0
@@ -2588,8 +2604,8 @@ class List(Widget):
             h = len(self.items) * self._computeitemheight()
         return w, h
     
-    def compute_fringe(self):
-        return 0, 0
+    # def compute_fringe(self):
+    #     return 0, 0
 
 
 class Table(Widget):

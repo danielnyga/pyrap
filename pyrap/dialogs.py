@@ -79,7 +79,7 @@ class MessageBox(Shell):
     MSGBOX_MINWIDTH = 400
 
     @constructor('MessageBox')    
-    def __init__(self, parent, title, text, icon=None, modal=True, resize=False, btnclose=True):
+    def __init__(self, parent, title, text, icon=None, modal=True, resize=True, btnclose=True):
         Shell.__init__(self, parent, title=title, titlebar=True, border=True, 
                        btnclose=btnclose, resize=resize, modal=modal)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
@@ -97,12 +97,12 @@ class MessageBox(Shell):
     def create_content(self):
         Shell.create_content(self)
         mainarea = Composite(self.content)
+        mainarea.layout = RowLayout(padding=20)
         textarea = Composite(mainarea)
-        mainarea.layout = RowLayout(vspace=20, padding=20, padding_left=20, padding_right=25)
         if self.icon is not None:
             Label(textarea, img=self.icon, valign='top', halign='left')
         textarea.layout = ColumnLayout(hspace=20)
-        Label(textarea, self.text, halign='left', cell_minwidth=self.MSGBOX_MINWIDTH)
+        Label(textarea, self.text, halign='left', valign='top', cell_minwidth=self.MSGBOX_MINWIDTH)
         buttons = Composite(mainarea)
         buttons.layout = ColumnLayout(equalwidths=True, halign='right', valign='bottom')
         self.create_buttons(buttons)
