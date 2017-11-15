@@ -1724,6 +1724,8 @@ class ShellTheme(WidgetTheme):
         styles = WidgetTheme.styles(self)
         if RWT.TITLE in self._widget.style:
             styles.add('[TITLE')
+        if RWT.TITLE in self._widget.style:
+            styles.add('[BORDER')
         return styles
 
     @property
