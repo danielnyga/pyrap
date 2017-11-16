@@ -11,7 +11,7 @@ import time
 import re
 
 import dnutils
-from dnutils import ifnone
+from dnutils import ifnone, allnone
 from dnutils.debug import _caller, out
 from dnutils.stats import stopwatch, print_stopwatches
 
@@ -489,12 +489,17 @@ class Shell(Widget):
                                    'resize':    RWT.RESIZE,
                                    'titlebar':  RWT.TITLE,
                                    'modal':     RWT.MODAL}
-    _defstyle_ = Widget._defstyle_ | RWT.VISIBLE | RWT.ACTIVE
+    _defstyle_ = Widget._defstyle_ | RWT.ACTIVE | RWT.TITLE | RWT.RESIZE | RWT.MAXIMIZE | RWT.CLOSE | RWT.MINIMIZE
 
     _logger = dnutils.getlogger(__name__, level=dnutils.DEBUG)
     
     @constructor('Shell')
-    def __init__(self, parent, **options):
+    def __init__(self, **options):
+        parent = options.get('parent')
+        if parent is None:
+            parent = session.runtime.display
+        else:
+            del options['parent']
         Widget.__init__(self, parent, **options)
         self.theme = ShellTheme(self, session.runtime.mngr.theme)
         self._title = options.get('title')
@@ -508,7 +513,7 @@ class Shell(Widget):
     def create_content(self):
         self.content = Composite(self)
         self.content.layout = CellLayout(halign='fill', valign='fill')
-        self.on_resize += self.dolayout
+        # self.on_resize += self.dolayout
 
     def _handle_notify(self, op):
         if op.event not in ('Close', 'Move'): return Widget._handle_notify(self, op)
@@ -605,7 +610,11 @@ class Shell(Widget):
     @checkwidget
     def close(self):
         self.on_close.notify()
-    
+
+    def show(self, pack=False):
+        self.visible = True
+        self.dolayout(pack)
+
     def dolayout(self, pack=False):
         if pack:
             self._packed = True
@@ -623,16 +632,18 @@ class Shell(Widget):
                 adapter.hpos, adapter.vpos, _, _ = self.client_rect
                 adapter.width, adapter.height = adapter.preferred_size()
                 t, r, b, l = self.compute_fringe()
-                w = adapter.width + l + r
-                h = adapter.height + t + b
+                w = max(adapter.width + l + r, ifnone(self.layout.minwidth, 0))
+                h = max(adapter.height + t + b, ifnone(self.layout.minheight, 0))
                 adapter.widget.bounds = adapter.hpos + adapter.layout.padding_left, \
                                         adapter.vpos + adapter.layout.padding_top, \
                                         adapter.width - adapter.layout.padding_left - adapter.layout.padding_right, \
                                         adapter.height - adapter.layout.padding_top - adapter.layout.padding_bottom
                 _, _, dispw, disph = session.runtime.display.bounds
-                xpos = int(round(dispw.value / 2. - w.value / 2.))
-                ypos = int(round(disph.value / 2. - h.value / 2.))
+                xpos = int(round(dispw.value / 2. - w / 2.))
+                ypos = int(round(disph.value / 2. - h / 2.))
                 self.bounds = xpos, ypos, w, h
+                if not allnone((self.layout.minwidth, self.layout.minheight)):
+                    self.dolayout()
         print_stopwatches()
 
     def onresize_shell(self):
@@ -646,11 +657,11 @@ class Shell(Widget):
             right += padding.right
             bottom += padding.top
             top += padding.top
-        t, r, b, l = self.theme.borders
-        left += ifnone(l, 0, lambda l: l.width)
-        top += ifnone(t, 0, lambda t: t.width)
-        right += ifnone(r, 0, lambda r: r.width)
-        bottom += ifnone(b, 0, lambda b: b.width)
+        # t, r, b, l = self.theme.borders
+        # left += ifnone(l, 0, lambda l: l.width)
+        # top += ifnone(t, 0, lambda t: t.width)
+        # right += ifnone(r, 0, lambda r: r.width)
+        # bottom += ifnone(b, 0, lambda b: b.width)
         if self.title is not None or RWT.TITLE in self.style:
             top += self.theme.title_height
         return top, right, bottom, left

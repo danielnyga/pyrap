@@ -4,7 +4,6 @@ Created on Nov 21, 2016
 @author: nyga
 '''
 from dnutils import out, ifnone
-from dnutils.threads import current_thread
 from pyrap.widgets import Spinner, Edit,\
     Separator, Canvas
 from pyrap.constants import DLG, CURSOR
@@ -26,25 +25,25 @@ from pyrap.widgets import Shell, constructor, Label, Composite, Button,\
 
 def msg_box(parent, title, text, icon):
     msg = MessageBox(parent, title, text, icon)
-    msg.dolayout(True)
+    msg.show(True)
     msg.on_close.wait()
     return msg.answer
     
 def ask_question(parent, title, text, buttons):
     msg = QuestionBox(parent, title, text, buttons, DLG.QUESTION)
-    msg.dolayout(True)
+    msg.show(True)
     msg.on_close.wait()
     return msg.answer
 
 def ask_input(parent, title, multiline=False):
     msg = InputBox(parent, title, multiline=multiline)
-    msg.dolayout(True)
+    msg.show(True)
     msg.on_close.wait()
     return msg.answer
 
 def options_list(parent, options):
     msg = OptionsDialog(parent, options)
-    msg.dolayout()
+    msg.show()
     msg.on_close.wait()
     return msg.answer
 
@@ -80,7 +79,7 @@ class MessageBox(Shell):
 
     @constructor('MessageBox')    
     def __init__(self, parent, title, text, icon=None, modal=True, resize=True, btnclose=True):
-        Shell.__init__(self, parent, title=title, titlebar=True, border=True, 
+        Shell.__init__(self, parent=parent, title=title, titlebar=True, border=True,
                        btnclose=btnclose, resize=resize, modal=modal)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
         self.text = text
@@ -210,7 +209,7 @@ class InputBox(Shell):
     @constructor('InputBox')
     def __init__(self, parent, title, icon=None, multiline=False, modal=True, resize=False,
                  btnclose=True):
-        Shell.__init__(self, parent, title=title, titlebar=True, border=True,
+        Shell.__init__(self, parent=parent, title=title, titlebar=True, border=True,
                        btnclose=btnclose, resize=resize, modal=modal)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
         self.icon = {DLG.INFORMATION: self.icontheme.icon_info,
@@ -306,7 +305,7 @@ class ProgressDialog(MessageBox):
     def terminate_and_close(self, *_):
         self.setloop(1)
         self.status = 'Terminating...'
-        self.cancel = True
+        self._target.interrupt()
         self._target.join()
         self.close()
         
@@ -350,7 +349,7 @@ class ColorDialog(Shell):
     
     @constructor('ColorDialog')    
     def __init__(self, parent, color=None, modal=True, resize=False, btnclose=True):
-        Shell.__init__(self, parent, title='Choose Color', titlebar=True, border=True, 
+        Shell.__init__(self, parent=parent, title='Choose Color', titlebar=True, border=True,
                        btnclose=btnclose, resize=resize, modal=modal)
         self._color = parse_value(ifnone(color, 'red'), default=Color)
         
@@ -422,28 +421,30 @@ class ColorDialog(Shell):
                 
         values = Composite(right)
         values.layout = GridLayout(rows=3)
-        
+
         Label(values, 'Hue:', halign='left')
+        Label(values, 'Saturation:', halign='left')
+        Label(values, 'Value:', halign='left')
+
         self.hue = Spinner(values, vmin=0, vmax=255)
         self.hue.on_modify += lambda *_: self.setcolor(self._getcolor('hsv'))
-        
-        Label(values, 'Red:', halign='left')
-        self.red = Spinner(values, vmin=0, vmax=255)
-        self.red.on_modify += lambda *_: self.setcolor(self._getcolor('rgb'))
-        
-        Label(values, 'Saturation:', halign='left')
+
         self.saturation = Spinner(values, vmin=0, vmax=255)
         self.saturation.on_modify += lambda *_: self.setcolor(self._getcolor('hsv'))
-        
-        Label(values, 'Green:', halign='left')
-        self.green = Spinner(values, vmin=0, vmax=255)
-        self.green.on_modify += lambda *_: self.setcolor(self._getcolor('rgb'))
-        
-        Label(values, 'Value:', halign='left')
+
         self.value = Spinner(values, vmin=0, vmax=255)
         self.value.on_modify += lambda *_: self.setcolor(self._getcolor('hsv'))
-        
+
+        Label(values, 'Red:', halign='left')
+        Label(values, 'Green:', halign='left')
         Label(values, 'Blue:', halign='left')
+
+        self.red = Spinner(values, vmin=0, vmax=255)
+        self.red.on_modify += lambda *_: self.setcolor(self._getcolor('rgb'))
+
+        self.green = Spinner(values, vmin=0, vmax=255)
+        self.green.on_modify += lambda *_: self.setcolor(self._getcolor('rgb'))
+
         self.blue = Spinner(values, vmin=0, vmax=255)
         self.blue.on_modify += lambda *_: self.setcolor(self._getcolor('rgb'))
         
