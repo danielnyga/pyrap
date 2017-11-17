@@ -3,17 +3,29 @@ Created on Aug 1, 2015
 
 @author: nyga
 """
+import datetime
+import re
+
 import dnutils
+import sys
+
+import os
+
+from dnutils.threads import ThreadInterrupt
+
 import web
-from dnutils import Thread
+from dnutils import Thread, out, expose, first
+
+from pyrap.sessions import PyRAPSession
+from web import utils
 from web.webapi import notfound
-from pyrap import threads
+from pyrap import threads, locations
 import urllib.parse 
-from pyrap.sessions import Session
 from pyrap.utils import RStorage
 
+
 routes = (
-    '/test', 'Test',
+    # '/test', 'Test',
     '/(.*)/(.*)', 'RequestDispatcher',
     '/(.*)', 'RequestDispatcher',
 )
@@ -21,21 +33,24 @@ routes = (
 web.config.debug = True
 debug = True
 
-class Test():
-    def GET(self, *args, **kwargs):
-        return str(session._data)
-
 
 class PyRAPServer(web.application):
 
     def run(self, port=8080, *middleware):
         logger = dnutils.getlogger(__name__)
-        def terminate(*_):
-            Thread(target=web.httpserver.server.shutdown).start()
-        dnutils.add_handler(dnutils.signals.SIGINT, terminate)
+        # def terminate(*_):
+        #     Thread(target=web.httpserver.server.shutdown).start()
+        # dnutils.add_handler(dnutils.signals.SIGINT, terminate)
         func = self.wsgifunc(*middleware)
-        web.httpserver.runbasic(func, ('0.0.0.0', port))
+        try:
+            out('starting')
+            web.httpserver.runbasic(func, ('0.0.0.0', port))
+        except (ThreadInterrupt, KeyboardInterrupt):
+            out('interrupted')
+            for path, app in _registry.items():
+                app.terminate()
         logger.error('goodbye.')
+        expose('/pyrap/threads', dnutils.threads.iteractive())
     
 
 class ApplicationRegistry(object):
@@ -50,6 +65,7 @@ class ApplicationRegistry(object):
     """
     def __init__(self):
         self.apps = {}
+        self.items = self.apps.items
         
     def register(self, config):
         from .engine import ApplicationManager
@@ -65,11 +81,13 @@ class ApplicationRegistry(object):
 
 _server = PyRAPServer(routes, globals())
 web.config.session_parameters.timeout = 30 * 60 # 30 min session timeout
-session = Session(_server)
+session = PyRAPSession(_server)
+session.server = _server
 _registry = ApplicationRegistry()
 
 
-def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme=None, icon=None, requirejs=None, requirecss=None, rcpath='rwt-resources'):
+def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme=None, icon=None,
+                 requirejs=None, requirecss=None, rcpath='rwt-resources'):
     """
     Register a new PyRAP app.
     
@@ -113,7 +131,18 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
                       })
     _registry.register(config)
 
-def run(port=8080):
+
+register = register_app
+
+
+def run(port=8080, admintool=False):
+    if admintool:
+        sys.path.append(os.path.join(locations.pyrap_path, 'examples', 'pyrap-admin'))
+        from admin import PyRAPAdmin
+        register(clazz=PyRAPAdmin,
+                 path='admin',
+                 entrypoints={'start': PyRAPAdmin.main},
+                 name='pyRAP Administration')
     _server.run(port=port)
 
 
@@ -142,7 +171,7 @@ class RequestDispatcher(object):
             # the form ['pyrap/subpath/folder', 'index.html'] 
             tail = args[0].split('/')
             args = tail + [args[-1]]
-        app_context = str(args[0]) # first element of the path always identifies the app
+        app_context = first(args, str) # first element of the path always identifies the app
         app_runtime = _registry[app_context]
         # if there is an app registered under the given context, dispatch the request
         # to the respective runtime, or report a 404 error, otherwise.

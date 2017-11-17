@@ -12,17 +12,20 @@ import mimetypes
 import os
 import traceback
 import urllib.request, urllib.parse, urllib.error
+from pprint import pprint
 from threading import Lock, Event
 
 import dnutils
 import web
 from datetime import datetime
+
+from pyrap.utils import RStorage
 from web.session import SessionExpired
 from web.utils import storify, Storage
 from web.webapi import notfound, badrequest, seeother, notmodified
 
 import pyrap
-from dnutils import out, Relay, getlogger, RLock, stop
+from dnutils import out, Relay, getlogger, RLock, stop, first, ifnone, logs
 from pyrap import locations, threads
 from pyrap.base import session
 from pyrap.clientjs import gen_clientjs
@@ -63,6 +66,7 @@ class ApplicationManager(object):
         with open(os.path.join(locations.html_loc, 'pyrap.html')) as f:
             self.startup_page = f.read()
         self.log_ = getlogger(self.__class__.__name__)
+        self.msglog = getlogger('/pyrap/msg', logs.DEBUG)
 
     def _install_theme(self, name, theme):
         '''
@@ -128,11 +132,11 @@ class ApplicationManager(object):
         Create a new instance of the application, by instantiating the custom
         application `clazz` in from the config and attaching it to the HTTP session.
         '''
-        session.create()
-        session.on_kill += lambda data: out('kill session', data.session_id)
+        session.new()
+        session.on_kill += lambda *_: out('killed', session.id)
         session.app = self
-        session.runtime = SessionRuntime(session.session_id, self, self.config.clazz())
-        session._save()
+        out('creating runtime')
+        session._PyRAPSession__sessiondata.runtime = SessionRuntime(self, self.config.clazz())
 
     def handle_request(self, args, query, content):
         '''
@@ -149,11 +153,15 @@ class ApplicationManager(object):
                             payload of the request.
         
         '''
-        if not session.valid_id:  # session id has a wrong format or so.
-            raise badrequest('invalid session id %s' % session.session_id)
-        if session.expired:  # session id has expired
-            self.log_.debug('session %s has expired' % session.session_id)
-            raise rwterror(RWTError.SESSION_EXPIRED)
+        pprint(session._PyRAPSession__sessions)
+        if session.id is not None:
+            if not session.check_validity():  # session id has a wrong format or so.
+                raise badrequest('invalid session id %s' % session.id)
+            if session.expired:  # session id has expired
+                self.log_.debug('session %s has expired' % session.id)
+                out('session %s has expired' % session.id)
+                raise rwterror(RWTError.SESSION_EXPIRED)
+
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # SERVE RESOURCES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -162,15 +170,25 @@ class ApplicationManager(object):
             return self.resources.serve(rcname)
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        # HANDLE SERVICES
+        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        if 'servicehandler' in query:
+            handler = session.runtime.servicehandlers.get(query['servicehandler'])
+            if handler is not None:
+                return handler.run(web.ctx.environ, content, **query)
+            else:
+                raise notfound()
+
+        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # START NEW SESSION
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        sid = session.session_id
-        if sid is None and web.ctx.method == 'GET':  # always start a new sessionand sessionid not in self.sessions:
+        if web.ctx.method == 'GET':  # always start a new session
+            session.expire()
             if not args:
                 raise seeother('%s/' % self.config.path)
             else:
                 if not args[0]:  # no entrypoint is specified, so use the deafult one
-                    default = self.config.default
+                    default = ifnone(self.config.default, first(self.config.entrypoints.keys()))
                     # if callable(default):
                     if isinstance(default, collections.Callable):
                         entrypoint = default()
@@ -187,34 +205,25 @@ class ApplicationManager(object):
                 self.config.name, self.icon.location if hasattr(self, 'icon') else '', entrypoint, str(query)))
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        # HANDLE SERVICES
-        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        if 'servicehandler' in query:
-            handler = session.runtime.servicehandlers.get(query['servicehandler'])
-            if handler is not None:
-                return handler.run(web.ctx.environ, content, **query)
-            else:
-                raise notfound()
-
-        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        self._create_session()
+        if not args or args[0] != 'pyrap':  # this is a pyrap message (modify this in pyrap.html)
+            raise notfound()
         try:
-            if args and args[0] == 'pyrap':  # this is a pyrap message (modify this in pyrap.html)
-                if sid is None:
-                    self._create_session()
-                session.runtime.relay.acquire()
-                msg = parse_msg(content.decode('utf8'))
-                self.log_.debug('>>> ' + str(msg))
-                session.runtime.relay.inc()
-                # dispatch the event to the respective session
-                session.runtime.handle_msg(msg)
-                session.runtime.relay.dec()
-                session.runtime.relay.wait()
-                r = session.runtime.compose_msg()
-                smsg = json.dumps(r.json)
-                web.header('Content-Type', 'application/json')
-                return smsg
+            session.runtime.relay.acquire()
+            msg = parse_msg(content.decode('utf8'))
+            self.msglog.debug('>>> ' + str(msg))
+            session.runtime.relay.inc()
+            # dispatch the event to the respective session
+            session.runtime.handle_msg(msg)
+            session.runtime.relay.dec()
+            session.runtime.relay.wait()
+            r = session.runtime.compose_msg()
+            smsg = json.dumps(r.json)
+            self.msglog.debug('<<< ' + smsg)
+            web.header('Content-Type', 'application/json')
+            return smsg
         except SessionExpired:
             raise rwterror(RWTError.SESSION_EXPIRED)
         except:
@@ -226,6 +235,14 @@ class ApplicationManager(object):
         # we should never get here
         raise rwterror(RWTError.SERVER_ERROR)
 
+    def terminate(self):
+        for sid, session_ in session.store._dict.items():
+            # out(session_)
+            if self is session_.get('app'):
+                out('killing %s session' % self.config.name, sid)
+                for _, thread in dict(session_.get('threads')).items():
+                    out('  killing thread', thread.name)
+                    thread.interrupt()
 
 class WindowManager(object):
     '''
@@ -281,21 +298,33 @@ class WindowManager(object):
 
 class PushService(object):
     '''Helper class for managing server push sessions.'''
-    __lock = RLock()
-    __active = 0
+    # __lock = RLock()
+    # __active = 0
+
+    def __init__(self):
+        if not hasattr(session._internal, 'pushservice'):
+            session._internal.pushservice = RStorage()
+        try:
+            self._lock = session._internal.pushservice._lock
+        except AttributeError:
+            self._lock = session._internal.pushservice._lock = RLock()
+        try:
+            self._active = session._internal.pushservice._active
+        except AttributeError:
+            self._active = session._internal.pushservice._active = 0
 
     def start(self):
-        with PushService.__lock:
+        with self._lock:
             if 'org.eclipse.rap.pushsession' not in list(session.runtime.servicehandlers.handlers.keys()):
                 session.runtime.servicehandlers.register(PushServiceHandler())
-            if not PushService.__active:
+            if not self._active:
                 session.runtime.activate_push(True)
-            PushService.__active += 1
+            self._active += 1
 
     def stop(self):
-        with PushService.__lock:
-            PushService.__active -= 1
-            if not PushService.__active:
+        with self._lock:
+            self._active -= 1
+            if not self._active:
                 session.runtime.activate_push(False)
 
     def flush(self):
@@ -319,8 +348,7 @@ class SessionRuntime(object):
     of and response to :class:`RWTMessage`s coming from the client. 
     '''
 
-    def __init__(self, sessionid, mngr, app):
-        self.id = sessionid
+    def __init__(self, mngr, app):
         self.lock = Lock()
         self.app = app
         self.mngr = mngr
@@ -393,6 +421,9 @@ class SessionRuntime(object):
 
     def handle_msg(self, msg):
         # first consolidate the operations to avoid duplicate computations
+        if msg.head.get('shutdown', False):
+            session.expire()
+            # return
         ops = []
         for o in msg.operations:
             consolidated = False
@@ -484,7 +515,7 @@ class SessionRuntime(object):
 
     def initialize_app(self, entrypoint, args):
         self.put_header('url', 'pyrap')
-        self.put_header('cid', pyrap.session.session_id)
+        self.put_header('cid', session.id)
         self.load_fallback_theme('rwt-resources/rap-rwt.theme.Fallback.json')
         self.load_active_theme('rwt-resources/rap-rwt.theme.Default.json')
         for ff in self.mngr.theme.fontfaces:
@@ -563,7 +594,7 @@ class SessionRuntime(object):
         self.display = Display(self.windows)
 
     def create_shell(self):
-        self.mngr.config.entrypoints[self.entrypoint](self.app, self.display, **self.args)
+        self.mngr.config.entrypoints[self.entrypoint](self.app, **self.args)
         self._initialized = True
 
     def load_fallback_theme(self, url):

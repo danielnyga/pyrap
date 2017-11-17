@@ -15,26 +15,25 @@ from dnutils import ifnone, allnone
 from dnutils.debug import _caller, out
 from dnutils.stats import stopwatch, print_stopwatches
 
-from pyrap import locations
-from pyrap.base import session
-from pyrap.communication import RWTSetOperation,\
+from . import locations
+from .base import session
+from .communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
-from pyrap.constants import RWT, GCBITS, CURSOR
-from pyrap.handlers import FileUploadServiceHandler
-from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
+from .constants import RWT, GCBITS, CURSOR
+from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished
-from pyrap.exceptions import WidgetDisposedError
-from pyrap.layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout
-from pyrap.ptypes import px, BitField, BoolVar, NumVar, Color,\
+from .exceptions import WidgetDisposedError
+from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout
+from .ptypes import px, BitField, BoolVar, NumVar, Color,\
     parse_value, toint, Image
-from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
+from .themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme,\
     SeparatorTheme, DecoratorTheme, LinkTheme
-from pyrap.utils import RStorage, BiMap, BitMask
+from .utils import RStorage, BiMap, BitMask
 from collections import OrderedDict
 import collections
 

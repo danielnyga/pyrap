@@ -6,9 +6,10 @@ Created on Nov 23, 2015
 import dnutils
 from dnutils import out
 from dnutils.threads import current_thread, SuspendableThread, RLock
+
+from pyrap.base import session
 from pyrap.ptypes import Event
 from pyrap.communication import RWTListenOperation
-from pyrap.base import session
 
 
 class RWTEvent(Event):

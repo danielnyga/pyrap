@@ -1,6 +1,7 @@
 import dnutils
+from dnutils.threads import current_thread
+
 import pyrap
-import traceback
 
 from dnutils import SuspendableThread, out
 
@@ -20,18 +21,20 @@ class DetachedSessionThread(SuspendableThread):
     def __init__(self, group=None, target=None, name=None, args=(), kwargs=None):
         SuspendableThread.__init__(self, group=group, target=target, name=name, args=args, kwargs=kwargs)
         try:
-            self._session = pyrap.session
-            self._session_id = pyrap.session.session_id
+            self.__session_id = pyrap.session.id
         except AttributeError:
             raise RuntimeError('%s can only be instatiated from a %s instance' % (self.__class__.__name__, self.__class__.__name__))
 
     def _run(self):
         self.__sessionload()
-        SuspendableThread.run(self)
+        try:
+            pyrap.session.threads[current_thread().ident] = current_thread()
+            SuspendableThread.run(self)
+        finally:
+            del pyrap.session.threads[current_thread().ident]
 
     def __sessionload(self):
-        pyrap.session.session_id = self._session_id
-        pyrap.session.load()
+        pyrap.session._PyRAPSession__locals['session_id'] = self.__session_id
 
 
 class SessionThread(DetachedSessionThread):
