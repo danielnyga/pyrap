@@ -5,8 +5,6 @@ Created on Oct 3, 2015
 '''
 import os
 
-from dnutils import out
-
 from pyrap.locations import js_loc, code_base
 
 clientjs_files = '''

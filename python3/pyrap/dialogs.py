@@ -3,7 +3,7 @@ Created on Nov 21, 2016
 
 @author: nyga
 '''
-from dnutils import out, ifnone
+from dnutils import ifnone
 from pyrap.widgets import Spinner, Edit,\
     Separator, Canvas
 from pyrap.constants import DLG, CURSOR
@@ -185,7 +185,6 @@ class QuestionBox(MessageBox):
         self.buttons = buttons
     
     def create_buttons(self, buttons):
-        minwidth = 120
         if 'ok' in self.buttons:
             ok = Button(buttons, text='OK', minwidth=self.BTN_MINWIDTH, halign='right')
             ok.on_select += lambda *_: self.answer_and_close('ok')
@@ -262,8 +261,10 @@ class ProgressDialog(MessageBox):
         self._secondary = None
         self._bars = None
         self._max = 100
-        self._target = DetachedSessionThread(target=target, args=(self,))
-        self.cancel = False
+        if isinstance(target, DetachedSessionThread):
+            self._target = target
+        else:
+            self._target = DetachedSessionThread(target=target, args=(self,))
         self.push = PushService()
         self.autoclose = BoolVar(autoclose)
         

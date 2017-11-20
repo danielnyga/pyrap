@@ -3,7 +3,9 @@ Created on Oct 10, 2015
 
 @author: nyga
 '''
-from dnutils.tools import ifnot, ifnone
+import dnutils
+from dnutils import ifnot, ifnone
+
 from pyrap.locations import pyrap_path
 from cssutils import parseFile
 import os
@@ -13,7 +15,7 @@ from cssutils.css.value import Value, ColorValue, DimensionValue, URIValue,\
     CSSFunction
 import uuid
 import json
-import dnlog
+from logging import DEBUG
 from pyrap.ptypes import Color, Pixels, parse_value, Dim,\
     Font, Image, pc, Percent, px
 from pyrap.ptypes import BitField
@@ -26,6 +28,7 @@ import math
 from cssutils.css.cssfontfacerule import CSSFontFaceRule
 from pyparsing import Literal, alphanums, alphas, Word, ZeroOrMore, quotedString,\
     removeQuotes
+from cssutils.css import value
 
 TYPE = 'type-selector'
 CLASS = 'class'
@@ -33,7 +36,7 @@ PSEUDOCLASS = 'pseudo-class'
 ATTRIBUTE = 'attribute-selector'
 UNIVERSAL = 'universal'
 
-logger = dnlog.getlogger(__name__)
+logger = dnutils.getlogger(__name__)
 
 
 def isnone(cssval):
@@ -80,7 +83,7 @@ class Theme(object):
         self.rules = defaultdict(list)
         self.rcpath = None
         self.fontfaces = []
-        self.logger = dnlog.getlogger(type(self).__name__, level=dnlog.INFO)
+        self.logger = dnutils.getlogger(type(self).__name__, level=dnutils.INFO)
 
     def extract(self, *types):
         if '*' not in types: types = types + ('*',)
@@ -1721,6 +1724,8 @@ class ShellTheme(WidgetTheme):
         styles = WidgetTheme.styles(self)
         if RWT.TITLE in self._widget.style:
             styles.add('[TITLE')
+        if RWT.TITLE in self._widget.style:
+            styles.add('[BORDER')
         return styles
 
     @property

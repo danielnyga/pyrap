@@ -9,33 +9,31 @@ import os
 import time
 
 import re
-from Tkinter import IntVar
 
-import dnlog
-import ptypes
-from dnutils.debug import _caller
-from dnutils.tools import ifnone
-from pyrap import locations
-from pyrap.base import session
-from pyrap.communication import RWTSetOperation,\
+import dnutils
+from dnutils import ifnone, allnone
+from dnutils.debug import _caller, out
+from dnutils.stats import stopwatch, print_stopwatches
+
+import locations
+from base import session
+from communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
-from pyrap.constants import RWT, GCBITS, CURSOR
-from pyrap.handlers import FileUploadServiceHandler
-from pyrap.events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
+from constants import RWT, GCBITS, CURSOR
+from events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished
-from pyrap.exceptions import WidgetDisposedError
-from pyrap.layout import Layout, LayoutAdapter, CellLayout,\
-    StackLayout
-from pyrap.ptypes import px, BitField, BoolVar, NumVar, Color,\
+from exceptions import WidgetDisposedError
+from layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout
+from ptypes import px, BitField, BoolVar, NumVar, Color,\
     parse_value, toint, Image
-from pyrap.themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
+from themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme,\
     SeparatorTheme, DecoratorTheme, LinkTheme
-from pyrap.utils import RStorage, BiMap, BitMask
+from utils import RStorage, BiMap, BitMask
 from collections import OrderedDict
 
 
@@ -61,8 +59,8 @@ def constructor(cls):
                     type(self).create_content(self)
         return wrapper
     return outer
- 
- 
+
+
 class Widget(object):
     
     _styles_ = BiMap({'visible': RWT.VISIBLE,
@@ -101,7 +99,6 @@ class Widget(object):
             else:
                 raise Exception(self.widget + " is not among its parent's children!")
 
-
     def __init__(self, parent, **options):
         self._disposed = True
         self.parent = parent
@@ -136,13 +133,10 @@ class Widget(object):
         # save meta information about where in the code the object
         # has been create for better debugging
         self._created = _caller(3)
-        
 
-            
     def __repr__(self):
         return '<%s id=%s%s at 0x%s>' % (self.__class__.__name__, self.id, '' if not hasattr(self, 'text') else (' text="%s"' % self.text), hash(self))
-            
-            
+
     def _update_layout_from_dict(self, d):
         if 'minwidth' in d:
             self.layout.minwidth = d['minwidth']
@@ -414,8 +408,8 @@ class Widget(object):
         return px(width), px(height)
 
     def shell(self):
-        if isinstance(self.parent, Shell):
-            return self.parent
+        if isinstance(self, Shell):
+            return self
         else:
             return self.parent.shell()
 
@@ -429,12 +423,7 @@ class Widget(object):
         directions that are occupied by the parent widget and cannot be
         part of the client area.
         '''
-        return px(0), px(0)
-    
-    
-    def viewport(self):
-        return px(0), px(0)
-
+        return px(0), px(0), px(0), px(0)
 
     @property
     def layer(self):
@@ -499,36 +488,51 @@ class Shell(Widget):
                                    'resize':    RWT.RESIZE,
                                    'titlebar':  RWT.TITLE,
                                    'modal':     RWT.MODAL}
-    _defstyle_ = Widget._defstyle_ | RWT.VISIBLE | RWT.ACTIVE
+    _defstyle_ = Widget._defstyle_ | RWT.ACTIVE | RWT.TITLE | RWT.RESIZE | RWT.MAXIMIZE | RWT.CLOSE | RWT.MINIMIZE
 
-    _logger = dnlog.getlogger(__name__, level=dnlog.DEBUG)
+    _logger = dnutils.getlogger(__name__, level=dnutils.DEBUG)
     
     @constructor('Shell')
-    def __init__(self, parent, **options):
+    def __init__(self, **options):
+        parent = options.get('parent')
+        if parent is None:
+            parent = session.runtime.display
+        else:
+            del options['parent']
         Widget.__init__(self, parent, **options)
         self.theme = ShellTheme(self, session.runtime.mngr.theme)
         self._title = options.get('title')
         self.on_close = OnClose(self)
         self.on_move = OnMove(self)
         self._tabseq = []
-    
+        self._packed = False
+        if self._title is not None:
+            self.style |= RWT.BORDER
+
     def create_content(self):
         self.content = Composite(self)
         self.content.layout = CellLayout(halign='fill', valign='fill')
-        self.on_resize += self.dolayout
-        
-        
+        # self.on_resize += self.dolayout
+
     def _handle_notify(self, op):
         if op.event not in ('Close', 'Move'): return Widget._handle_notify(self, op)
         if op.event == 'Close': self.on_close.notify()
         elif op.event == 'Move': self.on_move.notify()
-        
-        
+
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.items():
+            if key == 'mode':
+                if value in ('maximized', 'minimized'):
+                    self.style |= {'maximized': RWT.MAXIMIZED, 'minimized': RWT.MINIMIZED}[value]
+                else:
+                    del self.style[RWT.MINIMIZED | RWT.MAXIMIZED]
+
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.active = self.active
         if self.maximized:
-            options.mode = 'maximized' 
+            options.mode = 'maximized'
         options.visibility = self.visible
         if hasattr(options, 'parent'): del options['parent']
         parentshell = self.parent_shell
@@ -536,6 +540,7 @@ class Shell(Widget):
             options.parentShell = parentshell.id
         if self.title is not None or RWT.TITLE in self.style:
             options.style.append('TITLE')
+            options.style.append('BORDER')
             options.text = ifnone(self.title, '')
         if RWT.CLOSE in self.style:
             options.showClose = True
@@ -563,8 +568,7 @@ class Shell(Widget):
         self._tabseq = widgets
         for i, w in enumerate(widgets):
             session.runtime << RWTSetOperation(w.id, {'tabIndex': (i+1)})
-    
-        
+
     @property
     def title(self):
         return self._title
@@ -593,11 +597,7 @@ class Shell(Widget):
     def maximized(self, m):
         self.style.setbit(RWT.MAXIMIZED, m)
         session.runtime << RWTSetOperation(self.id, {'mode': 'maximized'})
-        if m: 
-            self._maximize()
-            session.runtime.display.on_resize += self.dolayout
-            
-        
+
     @property
     def parent_shell(self):
         p = self.parent
@@ -608,82 +608,62 @@ class Shell(Widget):
 
     @property
     def client_rect(self):
-        area = [0, 0] + list(self.bounds[2:])
-        padding = self.theme.padding
-        if padding:
-            area[0] += padding.left
-            area[2] -= padding.left + padding.right
-            area[1] += padding.top
-            area[3] -= padding.top + padding.bottom
+        t, r, b, l = self.compute_fringe()
+        _, _, w, h = self.bounds
+        return l, t, w - l - r, h - t - b
 
-        t, r, b, l = self.theme.borders
-        area[0] += ifnone(l, 0, lambda l: l.width)
-        area[1] += ifnone(t, 0, lambda t: t.width)
-        area[2] -= ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        area[2] = max(0, area[2])
-        area[3] -= ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        area[3] = max(0, area[3])
-
-        if self.title is not None or RWT.TITLE in self.style:
-            area[3] -= self.theme.title_height
-            area[1] += self.theme.title_height
-
-        return area
-    
     @checkwidget
     def close(self):
         self.on_close.notify()
-    
-    def _maximize(self):
-        self.bounds = session.runtime.display.bounds
-        
+
+    def show(self, pack=False):
+        self.visible = True
+        self.dolayout(pack)
 
     def dolayout(self, pack=False):
-        if pack:
-            self.bounds = 0, 0, 0, 0
-        started = time.time()
-        if self.maximized:
-            self._maximize()
-        x, y, w, h = self.client_rect
-        self.content.layout.cell_minwidth = w
-        self.content.layout.cell_maxwidth = w
-        self.content.layout.cell_minheight = h
-        self.content.layout.cell_maxheight = h
-        self.content.layout.maxheight = h
-        self.content.layout.minheight = h
-        self.content.layout.maxwidth = w
-        self.content.layout.minwidth = w
-        self.content.bounds = x, y, w, h
-        layout = LayoutAdapter.create(self.content, None)
-        layout.data.cellhpos.set(x)
-        layout.data.cellvpos.set(y)
-        layout.compute()
-        if pack: self.pack()
-        end = time.time()
-        self._logger.debug('layout computations took %s sec' % (end - started))
+        if pack is None:
+            pack = self._packed
+        else:
+            self._packed = pack
+        with stopwatch('/pyrap/layout'):
+            # materialize the layout tree
+            adapter = materialize_adapters(self)
+            if not pack or self.maximized:
+                adapter.hpos, adapter.vpos, adapter.width, adapter.height = self.client_rect
+            else:
+                adapter.hpos, adapter.vpos, adapter.width, adapter.height = None, None, None, None
+            adapter.run()
+            if pack and not self.maximized:
+                adapter.hpos, adapter.vpos, _, _ = self.client_rect
+                adapter.width, adapter.height = adapter.preferred_size()
+                t, r, b, l = self.compute_fringe()
+                w = max(adapter.width + l + r, ifnone(self.layout.minwidth, 0))
+                h = max(adapter.height + t + b, ifnone(self.layout.minheight, 0))
+                adapter.widget.bounds = adapter.hpos + adapter.layout.padding_left, \
+                                        adapter.vpos + adapter.layout.padding_top, \
+                                        adapter.width - adapter.layout.padding_left - adapter.layout.padding_right, \
+                                        adapter.height - adapter.layout.padding_top - adapter.layout.padding_bottom
+                _, _, dispw, disph = session.runtime.display.bounds
+                xpos = int(round(dispw.value / 2. - w / 2.))
+                ypos = int(round(disph.value / 2. - h / 2.))
+                self.bounds = xpos, ypos, w, h
+                if not allnone((self.layout.minwidth, self.layout.minheight)):
+                    self.dolayout()
 
-
-    def pack(self):
-        if not self.maximized:
-            w, h = self.compute_size()
-            if self.title is not None or RWT.TITLE in self.style: 
-                h += self.theme.title_height
-            _, _, wmin, hmin = self.content.children[0].bounds
-            w += wmin
-            h += hmin
-            _, _, dispw, disph = session.runtime.display.bounds
-            xpos = int(round(dispw.value / 2. - w.value / 2.))
-            ypos = int(round(disph.value / 2. - h.value / 2.))
-            self.bounds = xpos, ypos, w, h
-            self.dolayout()
-            
-            
     def onresize_shell(self):
         self.dolayout()
         
     def compute_fringe(self):
-        return self.compute_size()
-
+        top, right, bottom, left = 0, 0, 0, 0
+        padding = self.theme.padding
+        if padding:
+            left += padding.left
+            right += padding.right
+            bottom += padding.top
+            top += padding.top
+        if self.title is not None or RWT.TITLE in self.style:
+            top += self.theme.title_height
+        return top, right, bottom, left
 
 class Combo(Widget):
 
@@ -892,13 +872,14 @@ class Label(Widget):
     _styles_ = Widget._styles_ + {'markup': RWT.MARKUP,
                                   'wrap': RWT.WRAP}
     _defstyle_ = BitField(Widget._defstyle_)
-    
+
     @constructor('Label')
-    def __init__(self, parent, text='', img=None, **options):
+    def __init__(self, parent, text='', img=None, textalign='left', **options):
         Widget.__init__(self, parent, **options)
         self.theme = LabelTheme(self, session.runtime.mngr.theme)
         self._text = text
         self._img = img
+        self._textalign = textalign
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -906,20 +887,30 @@ class Label(Widget):
             options.image = self._get_rwt_img(self.img)
         else:
             options.text = self.text
+        options.alignment = self._textalign
         if RWT.MARKUP in self.style:
             options.markupEnabled = True
             options.customVariant = 'variant_markup'
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
-        
-        
+
+    @property
+    def textalign(self):
+        return self._textalign
+
+    @textalign.setter
+    @checkwidget
+    def textalign(self, align):
+        if align not in ('left', 'right', 'center'):
+            raise ValueError('Illegal text alignment: %s' % align)
+        self._textalign = align
+        session.runtime << RWTSetOperation(self.id, {'alignment': self._textalign})
+
     def _get_rwt_img(self, img):
         if img is not None:
             res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         return img
-
-
 
     @property
     def img(self):
@@ -960,8 +951,8 @@ class Label(Widget):
             w, h = self.img.size
         else:
             lines = self._text.split('\n')
-            w = max([session.runtime.textsize_estimate(self.theme.font, l)[0] for l in lines])
-            _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
+            w = max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
+            _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
             h *= len(lines)
         padding = self.theme.padding
         if padding:
@@ -1428,15 +1419,19 @@ class Edit(Widget):
 
 
 class Composite(Widget):
-    
+    '''A generic container that holds other widgets.'''
+
+    _styles_ = Widget._styles_ + BiMap({})
     _rwt_class_name_ = 'rwt.widgets.Composite'
     _defstyle_ = BitField(Widget._defstyle_)
     
     @constructor('Composite')
-    def __init__(self, parent, **options):
+    def __init__(self, parent, layout=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = CompositeTheme(self, session.runtime.mngr.theme)
-        
+        if layout is not None:
+            self.layout = layout
+
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.style.append('NONE')
@@ -1453,7 +1448,83 @@ class Composite(Widget):
     def compute_size(self):
         return Widget.compute_size(self)
     
-    
+
+class Cols(Composite):
+    '''A composite only consisting of horizontally queued widgets.'''
+
+    @constructor
+    def __init__(self, parent, **options):
+        Composite.__init__(self, parent, **options)
+        self.layout = ColumnLayout(minwidth=options.get('minwidth'),
+                                   maxwidth=options.get('maxwidth'),
+                                   minheight=options.get('minheight'),
+                                   maxheight=options.get('maxheight'),
+                                   valign=options.get('valign'),
+                                   halign=options.get('halign'),
+                                   cell_minwidth=options.get('cell_minwidth'),
+                                   cell_maxwidth=options.get('cell_maxwidth'),
+                                   cell_minheight=options.get('cell_minheight'),
+                                   cell_maxheight=options.get('cell_maxheight'),
+                                   padding_top=options.get('padding_top'),
+                                   padding_bottom=options.get('padding_bottom'),
+                                   padding_left=options.get('padding_left'),
+                                   padding_right=options.get('padding_right'),
+                                   padding=options.get('padding'),
+                                   hspace=options.get('hspace'),
+                                   equalwidths=options.get('equalwidths'))
+
+
+class Rows(Composite):
+    '''A composite only consisting of vertically queued widgets.'''
+
+    @constructor
+    def __init__(self, parent, **options):
+        Composite.__init__(self, parent, **options)
+        self.layout = RowLayout(minwidth=options.get('minwidth'),
+                                maxwidth=options.get('maxwidth'),
+                                minheight=options.get('minheight'),
+                                maxheight=options.get('maxheight'),
+                                valign=options.get('valign'),
+                                halign=options.get('halign'),
+                                cell_minwidth=options.get('cell_minwidth'),
+                                cell_maxwidth=options.get('cell_maxwidth'),
+                                cell_minheight=options.get('cell_minheight'),
+                                cell_maxheight=options.get('cell_maxheight'),
+                                padding_top=options.get('padding_top'),
+                                padding_bottom=options.get('padding_bottom'),
+                                padding_left=options.get('padding_left'),
+                                padding_right=options.get('padding_right'),
+                                padding=options.get('padding'),
+                                vspace=options.get('vspace'),
+                                equalheights=options.get('equalheights'))
+
+
+class Grid(Composite):
+    '''A composite that arragnes its children in a grid.'''
+
+    @constructor
+    def __init__(self, parent, **options):
+        Composite.__init__(self, parent, cols=None, rows=None, **options)
+        self.layout = GridLayout(cols=cols, rows=rows,
+                                 minwidth=options.get('minwidth'),
+                                 maxwidth=options.get('maxwidth'),
+                                 minheight=options.get('minheight'),
+                                 maxheight=options.get('maxheight'),
+                                 valign=options.get('valign'),
+                                 halign=options.get('halign'),
+                                 cell_minwidth=options.get('cell_minwidth'),
+                                 cell_maxwidth=options.get('cell_maxwidth'),
+                                 cell_minheight=options.get('cell_minheight'),
+                                 cell_maxheight=options.get('cell_maxheight'),
+                                 padding_top=options.get('padding_top'),
+                                 padding_bottom=options.get('padding_bottom'),
+                                 padding_left=options.get('padding_left'),
+                                 padding_right=options.get('padding_right'),
+                                 padding=options.get('padding'),
+                                 hspace=options.get('hspace'),
+                                 vspace=options.get('vspace'))
+
+
 class StackedComposite(Composite):
     '''
     A composite that stacks its elements in z direction.
@@ -2040,12 +2111,13 @@ class Group(Composite):
     _defstyle_ = BitField(Widget._defstyle_)
     
     @constructor('Group')
-    def __init__(self, parent, text='', **options):
+    def __init__(self, parent, text='', layout=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = GroupTheme(self, session.runtime.mngr.theme)
         self._text = text
-        
-        
+        if layout is not None:
+            self.layout = layout
+
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.style.append('NONE')
@@ -2055,8 +2127,7 @@ class Group(Composite):
     @property
     def text(self):
         return self._text
-    
-    
+
     @text.setter
     @checkwidget    
     def text(self, text):
@@ -2069,28 +2140,45 @@ class Group(Composite):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = map(px, bounds)
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
-        
+
     def compute_size(self):
         width, height = Composite.compute_size(self)
+        t, r, b, l = self.compute_fringe()
+        return width + l + r, height + t + b
+
+    def compute_fringe(self):
+        top, right, bottom, left = (0, 0, 0, 0)
         # frame border
         t, r, b, l = self.theme.frame_borders
-        width += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        height += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+        top += ifnone(t, 0, lambda b: b.width)
+        right += ifnone(r, 0, lambda b: b.width)
+        bottom += ifnone(b, 0, lambda b: b.width)
+        left += ifnone(l, 0, lambda b: b.width)
         # frame padding
         padding = self.theme.frame_padding
         if padding:
-            width += ifnone(padding.left, 0) + ifnone(padding.right, 0)
-            height += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
+            top += ifnone(padding.top, 0)
+            right += ifnone(padding.right, 0)
+            bottom += ifnone(padding.bottom, 0)
+            left += ifnone(padding.left, 0)
         # frame margin
         margin = self.theme.frame_margin
         if margin:
-            width += ifnone(margin.left, 0) + ifnone(margin.right, 0)
-            height += ifnone(margin.top, 0) + ifnone(margin.bottom, 0)
-        return px(width), px(height)
-        
-    def compute_fringe(self):
-        width, height = self.compute_size()
-        return width, height
+            left += ifnone(margin.left, 0)
+            right += ifnone(margin.right, 0)
+            bottom += ifnone(margin.bottom, 0)
+            top += ifnone(margin.top, 0)
+        # group margin
+        margin = self.theme.margin
+        if margin:
+            top += ifnone(margin.top, 0)
+            right += ifnone(margin.right, 0)
+            bottom += ifnone(margin.bottom, 0)
+            left += ifnone(margin.left, 0)
+        return top, right, bottom, left
+
+        # width, height = self.compute_size()
+        # return width, height
     
     
     def viewport(self):
@@ -2187,7 +2275,8 @@ class Browser(Widget):
             else:
                 raise Exception('URL "{}" is not a valid url or existing local file!'.format(url))
         else:
-            res = session.runtime.mngr.resources.registerf('_blank.html', 'text/html', os.path.join(locations.rc_loc, 'static', 'html', 'blank.html'))
+            with open(os.path.join(locations.rc_loc, 'static', 'html', 'blank.html'), encoding='utf8') as f:
+                res = session.runtime.mngr.resources.registerf('_blank.html', 'text/html', f)
             return res.location
 
     @property
@@ -2517,6 +2606,7 @@ class List(Widget):
                 raise TypeError('Expected list, got %s' % type(sel))
             else: 
                 sel = [sel] if sel is not None else []
+        self._selidx = sel
         session.runtime << RWTSetOperation(self.id, {'selectionIndices': sel})
     
     def compute_size(self):
@@ -2525,8 +2615,8 @@ class List(Widget):
             h = len(self.items) * self._computeitemheight()
         return w, h
     
-    def compute_fringe(self):
-        return 0, 0
+    # def compute_fringe(self):
+    #     return 0, 0
 
 
 class Table(Widget):

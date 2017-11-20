@@ -597,9 +597,6 @@ class Shell(Widget):
     def maximized(self, m):
         self.style.setbit(RWT.MAXIMIZED, m)
         session.runtime << RWTSetOperation(self.id, {'mode': 'maximized'})
-        # if m:
-        #     self._maximize()
-        #     session.runtime.display.on_resize += self.dolayout
 
     @property
     def parent_shell(self):
@@ -664,11 +661,6 @@ class Shell(Widget):
             right += padding.right
             bottom += padding.top
             top += padding.top
-        # t, r, b, l = self.theme.borders
-        # left += ifnone(l, 0, lambda l: l.width)
-        # top += ifnone(t, 0, lambda t: t.width)
-        # right += ifnone(r, 0, lambda r: r.width)
-        # bottom += ifnone(b, 0, lambda b: b.width)
         if self.title is not None or RWT.TITLE in self.style:
             top += self.theme.title_height
         return top, right, bottom, left

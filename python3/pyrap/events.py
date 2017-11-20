@@ -4,7 +4,6 @@ Created on Nov 23, 2015
 @author: nyga
 '''
 import dnutils
-from dnutils import out
 from dnutils.threads import current_thread, SuspendableThread, RLock
 
 from pyrap.base import session

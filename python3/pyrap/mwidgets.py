@@ -17,8 +17,10 @@ class ComboMobile(Composite):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('ComboMobile')
-    def __init__(self, parent, items=[], editable=True, message=None, text=None, **options):
+    def __init__(self, parent, items=None, editable=True, message=None, text=None, **options):
         Widget.__init__(self, parent, **options)
+        if items is None:
+            items = []
         self.theme = CompositeTheme(self, session.runtime.mngr.theme)
         self.layout = ColumnLayout(flexcols=0, halign='fill', valign='fill')
         self._items = items

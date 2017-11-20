@@ -5,16 +5,17 @@ Created on Aug 1, 2015
 '''
 import threading
 import json
-import dnlog
+
+import dnutils
+from dnutils import ifnone
+
 from web.webapi import internalerror
 import web
-
-from dnutils.tools import ifnone
 from pyrap.exceptions import forbidden
 from pyrap.utils import RStorage, jsonify, rstorify
 
 
-logger = dnlog.getlogger(__name__)
+logger = dnutils.getlogger(__name__)
 
 class RWTMessage(RStorage):
     '''

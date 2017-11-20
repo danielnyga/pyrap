@@ -3,18 +3,23 @@ Created on Aug 1, 2015
 
 @author: nyga
 '''
+import dnutils
+import sys
+
+import os
+
+from dnutils.threads import ThreadInterrupt
 
 import web
-from web.webapi import notfound
+from dnutils import expose, first, logs
 
-import dnlog
-from pyrap import threads
-import urlparse 
-from pyrap.sessions import Session
+from pyrap.sessions import PyRAPSession, SessionCleanupThread
+from web.webapi import notfound
+from pyrap import locations
+import urllib.parse
 from pyrap.utils import RStorage
 
 routes = (
-    '/test', 'Test',
     '/(.*)/(.*)', 'RequestDispatcher',
     '/(.*)', 'RequestDispatcher',
 )
@@ -22,26 +27,30 @@ routes = (
 web.config.debug = True
 debug = True
 
-class Test():
-    def GET(self, *args, **kwargs):
-        return str(session._data)
+dnutils.logs.loggers({
+    '/pyrap/session_cleanup': logs.newlogger(logs.console, level=logs.ERROR),
+    '/pyrap/http_msgs': logs.newlogger(logs.console, level=logs.ERROR),
+    '/pyrap/main': logs.newlogger(logs.console, level=logs.INFO)
+})
 
 
 class PyRAPServer(web.application):
 
-    def run(self, port=8080, *middleware):
-        logger = dnlog.getlogger(__name__)
+    def run(self, port=8080, bindip='127.0.0.1', *middleware):
+        logger = dnutils.getlogger('/pyrap/main')
+        SessionCleanupThread(session).start()
         try:
-            func = self.wsgifunc(*middleware)
-            web.httpserver.runbasic(func, ('0.0.0.0', port))
-        except (KeyboardInterrupt, SystemExit), e:
-            for _, t in dict(list(threads.iteractive())).items():
-                if isinstance(t, threads.SessionThread): t.kill()
-        logger.error('goodbye.')
-    
+            logger.info('starting pyrap server')
+            for path, app in _registry.items():
+                logger.info('http://%s:%s/%s/' % (bindip, port, app.config.path))
+            web.httpserver.runbasic(self.wsgifunc(*middleware), (bindip, port))
+        except (ThreadInterrupt, KeyboardInterrupt):
+            logger.info('received ctrl-c')
+        logger.info('goodbye.')
+
 
 class ApplicationRegistry(object):
-    '''
+    """
     Store for all PyRAP application managers.
     
     Every app that is being registered gets an :class:`ApplicationManager` 
@@ -49,10 +58,11 @@ class ApplicationRegistry(object):
     The :class:`ApplicationManager` instance unique for every application
     context, i.e. if you try to register two PyRap apps under the same
     path, PyRAP will raise an Exception.
-    '''
+    """
     def __init__(self):
         self.apps = {}
-        
+        self.items = self.apps.items
+
     def register(self, config):
         from engine import ApplicationManager
         if config.path in self.apps:
@@ -67,11 +77,13 @@ class ApplicationRegistry(object):
 
 _server = PyRAPServer(routes, globals())
 web.config.session_parameters.timeout = 30 * 60 # 30 min session timeout
-session = Session(_server)
+session = PyRAPSession(_server)
+session.server = _server
 _registry = ApplicationRegistry()
 
 
-def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme=None, icon=None, requirejs=None, requirecss=None, rcpath='rwt-resources'):
+def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme=None, icon=None,
+                 requirejs=None, requirecss=None, rcpath='rwt-resources'):
     '''
     Register a new PyRAP app.
     
@@ -115,7 +127,18 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
                       })
     _registry.register(config)
 
-def run(port=8080):
+
+register = register_app
+
+
+def run(port=8080, admintool=False):
+    if admintool:
+        sys.path.append(os.path.join(locations.pyrap_path, 'examples', 'pyrap-admin'))
+        from admin import PyRAPAdmin
+        register(clazz=PyRAPAdmin,
+                 path='admin',
+                 entrypoints={'start': PyRAPAdmin.main},
+                 name='pyRAP Administration')
     _server.run(port=port)
 
 
@@ -144,7 +167,7 @@ class RequestDispatcher(object):
             # the form ['pyrap/subpath/folder', 'index.html'] 
             tail = args[0].split('/')
             args = tail + [args[-1]]
-        app_context = str(args[0]) # first element of the path always identifies the app
+        app_context = first(args, str) # first element of the path always identifies the app
         app_runtime = _registry[app_context]
         # if there is an app registered under the given context, dispatch the request
         # to the respective runtime, or report a 404 error, otherwise.
@@ -153,7 +176,3 @@ class RequestDispatcher(object):
         else:
             return app_runtime.handle_request(args[1:], query, content)
         
-
-        
-        
-

@@ -14,18 +14,16 @@ from xml.dom import minidom
 
 from PIL import Image as PILImage
 
-from dnutils import out
-from dnutils.tools import ifnone
+from dnutils import Condition, ifnone
 from pyrap.constants import FONT
 from pyrap.utils import BitMask
-from pyrap import threads
 
 
 class Event(object):
     
     def __init__(self):
         self._listeners = []
-        self._wait = threads.Condition()
+        self._wait = Condition()
         
     def __iadd__(self, l):
         if l not in self._listeners:
@@ -547,9 +545,8 @@ class Dim(object):
         return str(self._value)
         
     def __repr__(self):
-        return '<%s[%s] at 0x%x>' % (type(self).__name__, str(self), hash(self))
+        return '<%s[%s] at 0x%x>' % (type(self).__name__, str(self), id(self))
 
-            
     
 class Pixels(Dim):
     '''
@@ -567,6 +564,9 @@ class Pixels(Dim):
             Dim.__init__(self, v.value)
         else:
             Dim.__init__(self, v)
+
+    def __round__(self):
+        return px(int(round(self.value)))
 
     def __div__(self, d):
         s = parse_value(d)
@@ -587,9 +587,15 @@ class Pixels(Dim):
     def __call__(self):
         return self.value
 
+    def __int__(self):
+        return self.value
+
     def num(self):
         return self._num
-    
+
+    def __float__(self):
+        return float(self.value)
+
 #     @property
 #     def json(self):
 #         return self.value
@@ -1065,7 +1071,8 @@ class Image(object):
             self._img.save(stream)
         else:
             self._img = self._img.resize((w.value, h.value), PILImage.LANCZOS)
-            self._img.save(stream, format=self.fileext)
+            ext = self.fileext.lower()
+            self._img.save(stream, format=ext if ext != 'jpg' else 'jpeg')
 
         self._content = str(stream.getvalue())
         stream.close()

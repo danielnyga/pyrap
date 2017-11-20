@@ -155,7 +155,6 @@ class ApplicationManager(object):
                 raise badrequest('invalid session id %s' % session.id)
             if session.expired:  # session id has expired
                 self.log_.debug('session %s has expired' % session.id)
-                out('session %s has expired' % session.id)
                 raise rwterror(RWTError.SESSION_EXPIRED)
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

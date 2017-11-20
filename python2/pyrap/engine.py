@@ -3,8 +3,10 @@ Created on Oct 2, 2015
 
 @author: nyga
 '''
+import email
 import json
-import md5
+from collections import defaultdict
+from hashlib import md5
 import mimetypes
 
 import os
@@ -18,8 +20,7 @@ from web.session import SessionExpired
 from web.utils import storify, Storage
 from web.webapi import notfound, badrequest, seeother, notmodified
 
-import pyrap
-from dnutils import out
+from dnutils import out, Relay, getlogger, RLock, first, ifnone, logs, Lock, Event
 from pyrap import locations, threads
 from pyrap.base import session
 from pyrap.clientjs import gen_clientjs
@@ -30,19 +31,11 @@ from pyrap.events import FocusEventData
 from pyrap.exceptions import ResourceError
 from pyrap.handlers import PushServiceHandler, FileUploadServiceHandler
 from pyrap.ptypes import Image
-import dnlog
 from pyrap.themes import Theme, FontMetrics
 from pyrap.widgets import Display
 import rfc822
 from pyrap.threads import Kapo, RLock
 
-mimetypes.init()
-
-
-mimetypes.types_map.update({
-    '.otf': 'application/font-sfnt',
-    '.ttf': 'application/font-sfnt'
-})
 
 class ApplicationManager(object):
     '''
@@ -68,7 +61,8 @@ class ApplicationManager(object):
         self.startup_page = None
         with open(os.path.join(locations.html_loc, 'pyrap.html')) as f:
             self.startup_page = f.read()
-        self.log_ = dnlog.getlogger(self.__class__.__name__)
+        self.log_ = getlogger(self.__class__.__name__)
+        self.httplog = getlogger('/pyrap/http_msgs')
 
     def _install_theme(self, name, theme):
         '''
@@ -82,12 +76,11 @@ class ApplicationManager(object):
         for ff in theme.fontfaces:
             if not ff.src.islocal: continue
             fileext = os.path.splitext(ff.src.url)[-1]
-            out(fileext, mimetypes.types_map[fileext])
-            r = self.resources.registerc('themes/fonts/%s%s' % (md5.new(ff.content).hexdigest(), fileext),
+            r = self.resources.registerc('themes/fonts/%s%s' % (md5(ff.content).hexdigest(), fileext),
                                          mimetypes.types_map[fileext], ff.content)
             ff.src.url = r.location
         if not name.endswith('.json'): name += '.json'
-        self.resources.registerc(name=name, content_type='application/json', content=json.dumps(compiled))
+        self.resources.registerc(name=name, content_type='application/json', content=json.dumps(compiled).encode('utf8'))
 
     def _setup(self):
         '''
@@ -99,16 +92,17 @@ class ApplicationManager(object):
         an app should happen, which is independent of any instantiation of the app.
         For example, loading static resources that should be server later can be loaded here.
         '''
-        self.resources.registerc('rap-client.js', 'application/javascript', gen_clientjs())
-        self.resources.registerf('resource/static/image/blank.gif', 'image/gif',
-                                 os.path.join(locations.rc_loc, 'static', 'image', 'blank.gif'))
+        self.resources.registerc('rap-client.js', 'application/javascript', gen_clientjs().encode('utf8'))
+        with open(os.path.join(locations.rc_loc, 'static', 'image', 'blank.gif'), 'rb') as f:
+            self.resources.registerf('resource/static/image/blank.gif', 'image/gif', f)
+
         if self.config.icon:
             if isinstance(self.config.icon, Image):
                 self.icon = self.resources.registerc('resource/static/favicon.ico',
                                                      'image/%s' % self.config.icon.fileext, self.config.icon.content)
             else:
-                self.icon = self.resources.registerf('resource/static/favicon.ico', 'image/vnd.microsoft.icon',
-                                                     self.config.icon)
+                with open(self.config.icon, 'rb') as f:
+                    self.icon = self.resources.registerf('resource/static/favicon.ico', 'image/vnd.microsoft.icon', f)
         # =======================================================================
         # load the theme
         # =======================================================================
@@ -134,11 +128,11 @@ class ApplicationManager(object):
         Create a new instance of the application, by instantiating the custom
         application `clazz` in from the config and attaching it to the HTTP session.
         '''
-        session.create()
-        session.on_kill += lambda data: out('kill session', data.session_id)
-        session.app = self
-        session.runtime = SessionRuntime(session.session_id, self, self.config.clazz())
-        session._save()
+        session.new()
+        session.on_kill += lambda *_: out('killed', session.id)
+        session._PyRAPSession__sessiondata.app = self
+        session._PyRAPSession__sessiondata.runtime = SessionRuntime(self, self.config.clazz())
+        session.connect_client()
 
     def handle_request(self, args, query, content):
         '''
@@ -155,11 +149,12 @@ class ApplicationManager(object):
                             payload of the request.
         
         '''
-        if not session.valid_id:  # session id has a wrong format or so.
-            raise badrequest('invalid session id %s' % session.session_id)
-        if session.expired:  # session id has expired
-            self.log_.debug('session %s has expired' % session.session_id)
-            raise rwterror(RWTError.SESSION_EXPIRED)
+        if session.id is not None:
+            if not session.check_validity():  # session id has a wrong format or so.
+                raise badrequest('invalid session id %s' % session.id)
+            if session.expired:  # session id has expired
+                self.log_.debug('session %s has expired' % session.id)
+                raise rwterror(RWTError.SESSION_EXPIRED)
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # SERVE RESOURCES
@@ -169,16 +164,26 @@ class ApplicationManager(object):
             return self.resources.serve(rcname)
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        # HANDLE SERVICES
+        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        if 'servicehandler' in query:
+            handler = session.runtime.servicehandlers.get(query['servicehandler'])
+            if handler is not None:
+                return handler.run(web.ctx.environ, content, **query)
+            else:
+                raise notfound()
+
+        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # START NEW SESSION
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        sid = session.session_id
-        if sid is None and web.ctx.method == 'GET':  # always start a new sessionand sessionid not in self.sessions:
+        if web.ctx.method == 'GET':  # always start a new session
             if not args:
                 raise seeother('%s/' % self.config.path)
             else:
                 if not args[0]:  # no entrypoint is specified, so use the deafult one
-                    default = self.config.default
-                    if callable(default):
+                    default = ifnone(self.config.default, first(self.config.entrypoints.keys()))
+                    # if callable(default):
+                    if isinstance(default, collections.Callable):
                         entrypoint = default()
                     elif default:
                         entrypoint = str(default)
@@ -193,42 +198,40 @@ class ApplicationManager(object):
                 self.config.name, self.icon.location if hasattr(self, 'icon') else '', entrypoint, str(query)))
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        # HANDLE SERVICES
-        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        if 'servicehandler' in query:
-
-            handler = session.runtime.servicehandlers.get(query['servicehandler'])
-            if handler is not None:
-                return handler.run(content, web.ctx.environ, kwargs=query)
-            else:
-                raise notfound()
-
-        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        if session.id is None or session.expired:
+            self._create_session()
+        if not args or args[0] != 'pyrap':  # this is a pyrap message (modify this in pyrap.html)
+            raise notfound()
         try:
-            if args and args[0] == 'pyrap':  # this is a pyrap message (modify this in pyrap.html)
-                if sid is None:
-                    self._create_session()
-                msg = parse_msg(content)
-                self.log_.debug('>>> ' + str(msg))
-                with session.runtime.kapo:
-                    session.runtime.kapo.inc()
-                    # dispatch the event to the respective session
-                    session.runtime.handle_msg(msg)
-                    session.runtime.kapo.dec()
-                    session.runtime.kapo.wait()
-                    r = session.runtime.compose_msg()
-                    smsg = json.dumps(r.json)
-                    web.header('Content-Type', 'application/json')
-                    return smsg
+            session.atime = datetime.now()
+            session.runtime.relay.acquire()
+            msg = parse_msg(content.decode('utf8'))
+            self.httplog.debug('>>> ' + str(msg))
+            session.runtime.relay.inc()
+            # dispatch the event to the respective session
+            session.runtime.handle_msg(msg)
+            session.runtime.relay.dec()
+            session.runtime.relay.wait()
+            r = session.runtime.compose_msg()
+            smsg = json.dumps(r.json)
+            self.httplog.debug('<<< ' + smsg)
+            web.header('Content-Type', 'application/json')
+            return smsg
         except SessionExpired:
             raise rwterror(RWTError.SESSION_EXPIRED)
         except:
             traceback.print_exc()
             raise rwterror(RWTError.SERVER_ERROR)
+        finally:
+            session.runtime.relay.release()
+            session.runtime.relay.reset()
         # we should never get here
         raise rwterror(RWTError.SERVER_ERROR)
+
+    def __repr__(self):
+        return '<ApplicationManager:%s>' % self.config
 
 
 class WindowManager(object):
@@ -285,21 +288,33 @@ class WindowManager(object):
 
 class PushService(object):
     '''Helper class for managing server push sessions.'''
-    __lock = RLock()
-    __active = 0
+    # __lock = RLock()
+    # __active = 0
+
+    def __init__(self):
+        if not hasattr(session, 'pushservice'):
+            session.pushservice = RStorage()
+        try:
+            self._lock = session.pushservice._lock
+        except AttributeError:
+            self._lock = session.pushservice._lock = RLock()
+        try:
+            self._active = session.pushservice._active
+        except AttributeError:
+            self._active = session.pushservice._active = 0
 
     def start(self):
-        with PushService.__lock:
-            if 'org.eclipse.rap.pushsession' not in session.runtime.servicehandlers.handlers.keys():
+        with self._lock:
+            if 'org.eclipse.rap.pushsession' not in list(session.runtime.servicehandlers.handlers.keys()):
                 session.runtime.servicehandlers.register(PushServiceHandler())
-            if not PushService.__active:
+            if not self._active:
                 session.runtime.activate_push(True)
-            PushService.__active += 1
+            self._active += 1
 
     def stop(self):
-        with PushService.__lock:
-            PushService.__active -= 1
-            if not PushService.__active:
+        with self._lock:
+            self._active -= 1
+            if not self._active:
                 session.runtime.activate_push(False)
 
     def flush(self):
@@ -323,8 +338,7 @@ class SessionRuntime(object):
     of and response to :class:`RWTMessage`s coming from the client. 
     '''
 
-    def __init__(self, sessionid, mngr, app):
-        self.id = sessionid
+    def __init__(self, mngr, app):
         self.lock = Lock()
         self.app = app
         self.mngr = mngr
@@ -337,10 +351,12 @@ class SessionRuntime(object):
         self.entrypoint_args = None
         self.fontmetrics = {}
         self.default_font = None
-        self.log_ = dnlog.getlogger(type(self).__name__)
-        self.kapo = Kapo(verbose=0)
+        self.log_ = getlogger(type(self).__name__)
+        self.relay = Relay()
         self.servicehandlers = ServiceHandlerManager()
         self.push = Event()
+        self._layout_needed = defaultdict(set)
+        self._dolayout = set()
 
     def put_operation(self, op):
         '''
@@ -395,8 +411,11 @@ class SessionRuntime(object):
 
     def handle_msg(self, msg):
         # first consolidate the operations to avoid duplicate computations
+        if msg.head.get('shutdown', False):
+            self.headers['cid'] = None
+            session.disconnect_client()
+            return
         ops = []
-        self._layout_needed = 0
         for o in msg.operations:
             consolidated = False
             for o_ in ops:
@@ -418,8 +437,14 @@ class SessionRuntime(object):
                 wnd = self.windows[o.target]
                 if wnd is None: continue
                 # start a new session thread for processing the notify messages
-                t = threads.SessionThread(target=wnd._handle_notify, args=(o,)).start()
-                t.suspended.wait()
+                t = threads.SessionThread(target=wnd._handle_notify, args=(o,))
+                block = Event()
+                t.add_handler(dnutils.threads.SUSPEND, block.set)
+                t.add_handler(dnutils.threads.TERM, block.set)
+                t.start()
+                block.wait()
+                t.rm_handler(dnutils.threads.TERM, block.set)
+                t.rm_handler(dnutils.threads.SUSPEND, block.set)
                 # wnd._handle_notify(o)
             elif isinstance(o, RWTSetOperation):
                 wnd = self.windows[o.target]
@@ -429,8 +454,9 @@ class SessionRuntime(object):
                 target = self.windows[o.target]
                 if target is None: target = self
                 target._handle_call(o)
-        if self._layout_needed:
-            self.display.on_resize.notify()
+        if self._dolayout:
+                while set(self._dolayout):
+                    self.windows[self._dolayout.pop()].dolayout(None)
 
         if self.state == APPSTATE.INITIALIZED:
             self.log_.info('creating shell...')
@@ -453,14 +479,16 @@ class SessionRuntime(object):
         return RWTCallOperation('rwt.client.TextSizeMeasurement', 'measureItems',
                                 {'items': [[hash_, sample, font.family, font.size.value, font.bf, font.it, -1, True]]})
 
-    def textsize_estimate(self, font, text):
+    def textsize_estimate(self, font, text, shell=None):
         hash_ = font
         if type(hash_) is not str:
             hash_ = str(font)
         hash_ += text
         if hash_ not in self.fontmetrics or self.fontmetrics[hash_].dimensions == (None, None):
-            self << self.create_textsize_measurement_call(font, text)
-
+            tm = self.create_textsize_measurement_call(font, text)
+            self << tm
+            if shell is not None:
+                self._layout_needed[hash_].add(shell.id)
             return self.default_font.estimate(text)
         else:
             return self.fontmetrics[hash_].dimensions
@@ -472,11 +500,12 @@ class SessionRuntime(object):
                     self.fontmetrics[id_].dimensions = dims
                     if self.default_font is None:
                         self.default_font = self.fontmetrics[id_]
-                    self._layout_needed = 1
+                    self._dolayout.update(self._layout_needed[id_])
+                    del self._layout_needed[id_]
 
     def initialize_app(self, entrypoint, args):
         self.put_header('url', 'pyrap')
-        self.put_header('cid', pyrap.session.session_id)
+        self.put_header('cid', session.id)
         self.load_fallback_theme('rwt-resources/rap-rwt.theme.Fallback.json')
         self.load_active_theme('rwt-resources/rap-rwt.theme.Default.json')
         for ff in self.mngr.theme.fontfaces:
@@ -509,7 +538,7 @@ class SessionRuntime(object):
                         self.requirecss(f)
         self.create_display()
 
-    def ensurejsresources(self, jsfiles):
+    def ensurejsresources(self, jsfiles, name=None, force=False):
         if jsfiles:
             if not isinstance(jsfiles, list):
                 files = [jsfiles]
@@ -517,19 +546,28 @@ class SessionRuntime(object):
                 files = jsfiles
             for p in files:
                 if os.path.isfile(p):
-                    self.requirejs(p)
+                    with open(p, encoding='utf8') as fi:
+                        self.requirejs(fi, force=force)
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
-                        self.requirejs(f)
+                        with open(f, encoding='utf8') as fi:
+                            self.requirejs(fi, force=force)
                 else:
-                    raise Exception('Could not load file', p)
+                    try:
+                        resource = session.runtime.mngr.resources.registerc(name, 'text/javascript', p.encode('utf8'), force=force)
+                        self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
+                    except:
+                        raise Exception('Could not load file', p)
 
-    def requirejs(self, f):
-        resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/javascript', f)
+    def requirejs(self, f, force=False):
+        resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/javascript', f, force=force)
         self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
 
-    def requirecss(self, f):
-        resource = session.runtime.mngr.resources.registerf(os.path.basename(f), 'text/css', f)
+    def requirejstag(self, code):
+        self << RWTCallOperation('rwt.client.JavaScriptTagLoader', 'load', {'code': code})
+
+    def requirecss(self, f, force=False):
+        resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/css', f, force=force)
         self << RWTCallOperation('rwt.client.CSSLoader', 'linkCss', {'files': [resource.location]})
 
     def loadstyle(self, style):
@@ -546,11 +584,7 @@ class SessionRuntime(object):
         self.display = Display(self.windows)
 
     def create_shell(self):
-        # self.shell = Shell(self.display, maximized=True)
-        # self.shell.bg = Color('green')
-        # self.shell.maximized = True
-        self.mngr.config.entrypoints[self.entrypoint](self.app, self.display, **self.args)
-        # self.shell.onresize_shell()
+        self.mngr.config.entrypoints[self.entrypoint](self.app, **self.args)
         self._initialized = True
 
     def load_fallback_theme(self, url):
@@ -629,22 +663,24 @@ class ResourceManager(object):
     def __getitem__(self, name):
         return self.get(name)
 
-    def registerf(self, name, content_type, filepath, force=False, limit=inf):
+    def registerf(self, name, content_type, stream, force=False, limit=inf):
         '''
         Make a file available for download under the given path.
         
         :param name:            the name of the resource under which it will be availble
                                 for download to the outside.
         :param content_type:    the MIME type of the resource
-        :param filepath:        the local file path where the resource is located.
+        :param stream:          a file-like object that supports read(). Represents the content of the resource.
         :param force:           whether or not an already registered resource
                                 under the same name shall be replaced.
         :param limit:           limit the number of downloads to the specified amount.
                                 the resource will be unregistered after the
                                 specified number of downloads has been reached.
         '''
-        with open(filepath) as f:
-            return self.registerc(name, content_type, f.read(), force=force, limit=limit)
+        c = stream.read()
+        if type(c) is str:
+            c = c.encode('utf8')
+        return self.registerc(name, content_type, c, force=force, limit=limit)
 
     def registerc(self, name, content_type, content, force=False, limit=inf):
         '''
@@ -678,8 +714,8 @@ class ResourceManager(object):
         cache_date = web.ctx.env.get('HTTP_IF_MODIFIED_SINCE', 0)
         if cache_date:
             # check if the requested resource is younger than in the client's cache
-            ttuple = rfc822.parsedate_tz(cache_date)
-            cache_date = datetime.utcfromtimestamp(rfc822.mktime_tz(ttuple))
+            ttuple = email.utils.parsedate_tz(cache_date)
+            cache_date = datetime.utcfromtimestamp(email.utils.mktime_tz(ttuple))
             if cache_date > resource.last_change:
                 raise notmodified()
         web.modified(resource.last_change)

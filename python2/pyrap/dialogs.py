@@ -3,7 +3,7 @@ Created on Nov 21, 2016
 
 @author: nyga
 '''
-from dnutils.tools import ifnone
+from dnutils import ifnone
 from pyrap.widgets import Spinner, Edit,\
     Separator, Canvas
 from pyrap.constants import DLG, CURSOR
@@ -25,25 +25,25 @@ from pyrap.widgets import Shell, constructor, Label, Composite, Button,\
 
 def msg_box(parent, title, text, icon):
     msg = MessageBox(parent, title, text, icon)
-    msg.dolayout(True)
+    msg.show(True)
     msg.on_close.wait()
     return msg.answer
     
 def ask_question(parent, title, text, buttons):
     msg = QuestionBox(parent, title, text, buttons, DLG.QUESTION)
-    msg.dolayout(True)
+    msg.show(True)
     msg.on_close.wait()
     return msg.answer
 
 def ask_input(parent, title, multiline=False):
     msg = InputBox(parent, title, multiline=multiline)
-    msg.dolayout(True)
+    msg.show(True)
     msg.on_close.wait()
     return msg.answer
 
 def options_list(parent, options):
     msg = OptionsDialog(parent, options)
-    msg.dolayout()
+    msg.show()
     msg.on_close.wait()
     return msg.answer
 
@@ -73,10 +73,13 @@ class MessageBox(Shell):
     '''
     Represents a simple message box.
     '''
-    
+
+    BTN_MINWIDTH = 120
+    MSGBOX_MINWIDTH = 400
+
     @constructor('MessageBox')    
-    def __init__(self, parent, title, text, icon=None, modal=True, resize=False, btnclose=True):
-        Shell.__init__(self, parent, title=title, titlebar=True, border=True, 
+    def __init__(self, parent, title, text, icon=None, modal=True, resize=True, btnclose=True):
+        Shell.__init__(self, parent=parent, title=title, titlebar=True, border=True,
                        btnclose=btnclose, resize=resize, modal=modal)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
         self.text = text
@@ -93,21 +96,18 @@ class MessageBox(Shell):
     def create_content(self):
         Shell.create_content(self)
         mainarea = Composite(self.content)
-        mainarea.layout = ColumnLayout(padding=10, hspace=5)
-        img = None
-        if self.icon is not None:
-            img = Label(mainarea, img=self.icon, valign='top', halign='left')
-            
+        mainarea.layout = RowLayout(padding=20)
         textarea = Composite(mainarea)
-        textarea.layout = RowLayout()
-        text = Label(textarea, self.text, halign='left')
-        
-        buttons = Composite(textarea)
+        if self.icon is not None:
+            Label(textarea, img=self.icon, valign='top', halign='left')
+        textarea.layout = ColumnLayout(hspace=20)
+        Label(textarea, self.text, halign='left', valign='top', cell_minwidth=self.MSGBOX_MINWIDTH)
+        buttons = Composite(mainarea)
         buttons.layout = ColumnLayout(equalwidths=True, halign='right', valign='bottom')
         self.create_buttons(buttons)
         
     def create_buttons(self, buttons):
-        ok = Button(buttons, text='OK', minwidth=100)
+        ok = Button(buttons, text='OK', minwidth=self.BTN_MINWIDTH, halign='right')
         ok.on_select += lambda *_: self.answer_and_close('ok')
 
 
@@ -187,16 +187,16 @@ class QuestionBox(MessageBox):
     
     def create_buttons(self, buttons):
         if 'ok' in self.buttons:
-            ok = Button(buttons, text='OK', minwidth=100)
+            ok = Button(buttons, text='OK', minwidth=self.BTN_MINWIDTH, halign='right')
             ok.on_select += lambda *_: self.answer_and_close('ok')
         if 'yes' in self.buttons:
-            yes = Button(buttons, text='Yes', halign='fill')
+            yes = Button(buttons, text='Yes', minwidth=self.BTN_MINWIDTH, halign='right')
             yes.on_select += lambda *_: self.answer_and_close('yes')
         if 'no' in self.buttons: 
-            no = Button(buttons, text='No', halign='fill')
+            no = Button(buttons, text='No', minwidth=self.BTN_MINWIDTH, halign='right')
             no.on_select += lambda *_: self.answer_and_close('no')
         if 'cancel' in self.buttons:
-            cancel = Button(buttons, text='Cancel', halign='fill')
+            cancel = Button(buttons, text='Cancel', minwidth=self.BTN_MINWIDTH, halign='right')
             cancel.on_select += lambda *_: self.answer_and_close(None)
 
 
@@ -209,7 +209,7 @@ class InputBox(Shell):
     @constructor('InputBox')
     def __init__(self, parent, title, icon=None, multiline=False, modal=True, resize=False,
                  btnclose=True):
-        Shell.__init__(self, parent, title=title, titlebar=True, border=True,
+        Shell.__init__(self, parent=parent, title=title, titlebar=True, border=True,
                        btnclose=btnclose, resize=resize, modal=modal)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
         self.icon = {DLG.INFORMATION: self.icontheme.icon_info,
@@ -423,28 +423,30 @@ class ColorDialog(Shell):
                 
         values = Composite(right)
         values.layout = GridLayout(rows=3)
-        
+
         Label(values, 'Hue:', halign='left')
+        Label(values, 'Saturation:', halign='left')
+        Label(values, 'Value:', halign='left')
+
         self.hue = Spinner(values, vmin=0, vmax=255)
         self.hue.on_modify += lambda *_: self.setcolor(self._getcolor('hsv'))
-        
-        Label(values, 'Red:', halign='left')
-        self.red = Spinner(values, vmin=0, vmax=255)
-        self.red.on_modify += lambda *_: self.setcolor(self._getcolor('rgb'))
-        
-        Label(values, 'Saturation:', halign='left')
+
         self.saturation = Spinner(values, vmin=0, vmax=255)
         self.saturation.on_modify += lambda *_: self.setcolor(self._getcolor('hsv'))
-        
-        Label(values, 'Green:', halign='left')
-        self.green = Spinner(values, vmin=0, vmax=255)
-        self.green.on_modify += lambda *_: self.setcolor(self._getcolor('rgb'))
-        
-        Label(values, 'Value:', halign='left')
+
         self.value = Spinner(values, vmin=0, vmax=255)
         self.value.on_modify += lambda *_: self.setcolor(self._getcolor('hsv'))
-        
+
+        Label(values, 'Red:', halign='left')
+        Label(values, 'Green:', halign='left')
         Label(values, 'Blue:', halign='left')
+
+        self.red = Spinner(values, vmin=0, vmax=255)
+        self.red.on_modify += lambda *_: self.setcolor(self._getcolor('rgb'))
+
+        self.green = Spinner(values, vmin=0, vmax=255)
+        self.green.on_modify += lambda *_: self.setcolor(self._getcolor('rgb'))
+
         self.blue = Spinner(values, vmin=0, vmax=255)
         self.blue.on_modify += lambda *_: self.setcolor(self._getcolor('rgb'))
         

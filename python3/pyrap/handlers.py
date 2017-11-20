@@ -7,9 +7,7 @@ from multipart.multipart import parse_options_header
 from requests.structures import CaseInsensitiveDict
 
 import web
-from dnutils import out
 
-# from pyrap import session
 from pyrap import session
 
 
