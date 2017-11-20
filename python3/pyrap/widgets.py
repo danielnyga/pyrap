@@ -624,13 +624,10 @@ class Shell(Widget):
         self.dolayout(pack)
 
     def dolayout(self, pack=False):
-        waspacked = self._packed
         if pack is None:
             pack = self._packed
-        elif pack:
-            self._packed = True
         else:
-            self._packed = False
+            self._packed = pack
         with stopwatch('/pyrap/layout'):
             # materialize the layout tree
             adapter = materialize_adapters(self)
@@ -655,8 +652,6 @@ class Shell(Widget):
                 self.bounds = xpos, ypos, w, h
                 if not allnone((self.layout.minwidth, self.layout.minheight)):
                     self.dolayout()
-        self._packed = waspacked
-        # print_stopwatches()
 
     def onresize_shell(self):
         self.dolayout()
