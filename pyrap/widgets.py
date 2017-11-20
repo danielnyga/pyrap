@@ -519,11 +519,20 @@ class Shell(Widget):
         if op.event == 'Close': self.on_close.notify()
         elif op.event == 'Move': self.on_move.notify()
 
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.items():
+            if key == 'mode':
+                if value in ('maximized', 'minimized'):
+                    self.style |= {'maximized': RWT.MAXIMIZED, 'minimized': RWT.MINIMIZED}[value]
+                else:
+                    del self.style[RWT.MINIMIZED | RWT.MAXIMIZED]
+
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.active = self.active
         if self.maximized:
-            options.mode = 'maximized' 
+            options.mode = 'maximized'
         options.visibility = self.visible
         if hasattr(options, 'parent'): del options['parent']
         parentshell = self.parent_shell
@@ -615,10 +624,13 @@ class Shell(Widget):
         self.dolayout(pack)
 
     def dolayout(self, pack=False):
-        if pack:
-            self._packed = True
+        waspacked = self._packed
         if pack is None:
             pack = self._packed
+        elif pack:
+            self._packed = True
+        else:
+            self._packed = False
         with stopwatch('/pyrap/layout'):
             # materialize the layout tree
             adapter = materialize_adapters(self)
@@ -643,7 +655,8 @@ class Shell(Widget):
                 self.bounds = xpos, ypos, w, h
                 if not allnone((self.layout.minwidth, self.layout.minheight)):
                     self.dolayout()
-        print_stopwatches()
+        self._packed = waspacked
+        # print_stopwatches()
 
     def onresize_shell(self):
         self.dolayout()
