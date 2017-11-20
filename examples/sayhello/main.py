@@ -25,4 +25,4 @@ if __name__ == '__main__':
                    entrypoints={'sayhello': SayHello.main},
                    path='helloworld',
                    name='My First pyRAP app!')
-    pyrap.run()
+    pyrap.run(admintool=True)

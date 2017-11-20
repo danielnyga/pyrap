@@ -524,7 +524,7 @@ Group {
 }
 
 Group-Frame {
-  margin: 10px 0px 10px 0px;
+  margin: 10px 5px 10px 5px;
   padding: 15px 8px 10px 8px;
   border: 1px solid #bdbdbd;
   border-radius: 2px;
@@ -639,6 +639,7 @@ List-Item:hover {
     from( #ebebeb ),
     to( #d5d5d5 )
   );
+  opacity: 0;
 }
 
 List-Item:selected {
@@ -673,6 +674,7 @@ List-Item:even:hover {
     from( #ebebeb ),
     to( #d5d5d5 )
   );
+  opacity: .2;
 }
 
 List-Item:even:selected {
@@ -682,6 +684,7 @@ List-Item:even:selected {
     from( #5882b5 ),
     to( #416693 )
   );
+  opacity: 0.2;
 }
 
 List-Item:even:selected:unfocused {

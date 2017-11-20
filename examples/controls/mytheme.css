@@ -47,8 +47,9 @@ Label.header {
 }
 
 Label.headline {
-  font: 24px bold italic "Debby";
+  font: 18px normal Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   text-shadow: 1px 1px 0px grey;
+  color: #3AD512;
 }
 
 @font-face {

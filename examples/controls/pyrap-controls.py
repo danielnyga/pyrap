@@ -8,7 +8,7 @@ import json
 from collections import OrderedDict
 
 from dnutils import out
-from dnutils.threads import sleep
+from dnutils.threads import sleep, ThreadInterrupt
 from dnutils.tools import ifnone
 
 import pyrap
@@ -30,11 +30,9 @@ class ControlsDemo():
     @staticmethod
     def setup(application): pass
 
-    def desktop(self, display, **kwargs):
-        self.shell = Shell(display)#, titlebar=1, btnclose=True, resize=True, btnmax=True, btnmin=True)
-        self.shell.maximized = True
-        
-        
+    def desktop(self, **kwargs):
+        self.shell = Shell(titlebar=False, maximized=True)
+
         shell = self.shell
         self.mainwnd = shell
         
@@ -89,20 +87,17 @@ class ControlsDemo():
         self.content = StackedComposite(main, halign='fill', valign='fill')
         self.create_pages()
         self.navigation.on_select += self.switch_page
-        self.navigation.selection = self.pages['Button']
+        self.navigation.selection = self.pages['Browser']
+        self.switch_page()
 
-        self.shell.dolayout()
-        
-        
     def switch_page(self, *args):
         for page in (self.pages.values()):
             page.layout.exclude = self.navigation.selection is not page
         self.content.selection = self.navigation.selection
         self.shell.onresize_shell()
 
-
     def create_pages(self):
-        self.pages = {}
+        self.pages = OrderedDict()
         #=======================================================================
         # create scale page
         #=======================================================================
@@ -146,7 +141,7 @@ class ControlsDemo():
         self.pages['List'] = page
         
         #=======================================================================
-        # create scale page
+        # create dialogs page
         #=======================================================================
         page  = self.create_page_template('Dialog Demo')
         self.create_dialogs_page(page)
@@ -181,15 +176,14 @@ class ControlsDemo():
         self.pages['Cluster'] = page
         
         
-        for page in (list(self.pages.values())[1:]):
+        for page in [self.pages[k] for k in sorted(self.pages.keys())][1:]:
             page.layout.exclude = True
         self.navigation.items = self.pages
-        
 
     def create_page_template(self, heading):
         # content area
         tab = Composite(self.content)
-        tab.layout = RowLayout(halign='fill', valign='fill', flexrows=(1, 2, 3))
+        tab.layout = RowLayout(halign='fill', valign='fill', flexrows={1: 2, 2: 1, 3: .5})
         #heading
         header = Label(tab, text=heading, halign='left')
         header.css = 'headline'#font = header.font.modify(size='16px', bf=1)
@@ -245,7 +239,7 @@ class ControlsDemo():
         
         # settings
         settings = Group(body, 'Settings')
-        settings.layout = GridLayout(cols=2)
+        settings.layout = GridLayout(cols=2, equalheights=True)
         
         Label(settings, 'Minimum:', halign='right')
         min_ = Edit(settings, text=str(s1.min), halign='fill')
@@ -274,14 +268,14 @@ class ControlsDemo():
         apply.on_select += apply_settings
         self.shell.tabseq = (s1, s2, min_, max_, digs, sel, apply)
             
-        
-    
     def create_dialogs_page(self, parent):
-        grp_info_dlgs = Group(parent, text='Info Dialogs')
-        grp_info_dlgs.layout = ColumnLayout(equalwidths=1)
-        
+        grp_info_dlgs = Composite(parent)#, text='Info Dialogs')
+        grp_info_dlgs.layout = ColumnLayout(valign='fill', minheight=100)
+        grp_info_dlgs.bg = Color('blue')
+
         b = Button(grp_info_dlgs, 'Show Info', halign='fill')
-        b.decorator = info('this is a decorator description.', halign='left', valign='top')
+        b.decorator = info('this is a decorator description.')
+
         def showinfo(*_):
             ret = msg_ok(self.shell,
                    title='pyRAP Message Box', 
@@ -299,37 +293,44 @@ class ControlsDemo():
             msg_err(self.shell, title='Error Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
         b.on_select += showerr
         
-        grp_progress_dlgs = Group(parent, text='Other Dialogs')
-        grp_progress_dlgs.layout = ColumnLayout(equalwidths=1)
+        grp_progress_dlgs = Composite(parent)#, text='Other Dialogs')
+        grp_progress_dlgs.layout = ColumnLayout(valign='fill')
+        grp_progress_dlgs.bg = Color('yellow')
 
         def process(dlg):
-            dlg.status = 'Preparing a time-consuming task...'
-            dlg.setloop(1)
-            sleep(2.5)
-            dlg.setloop(0)
-            dlg.max = 100
-            for i in range(100):
-                dlg.status = 'Step %d completed' % (i+1)
-                dlg.inc()
-                if dlg.cancel: return
+            try:
+                dlg.status = 'Preparing a time-consuming task...'
+                dlg.setloop(1)
+                sleep(2.5)
+                dlg.setloop(0)
+                dlg.max = 100
+                for i in range(100):
+                    dlg.status = 'Step %d completed' % (i+1)
+                    dlg.inc()
+                    if dlg.cancel: return
+                    dlg.push.flush()
+                    sleep(.1)
+                dlg.status = 'Done. All tasks completed.'
+                dlg.setfinished()
                 dlg.push.flush()
-                sleep(.1)
-            dlg.status = 'Done. All tasks completed.'
-            dlg.setfinished()
-            dlg.push.flush()
+            except ThreadInterrupt:
+                out('process was interrupted.')
 
         b = Button(grp_progress_dlgs, 'Open Progress...', halign='fill')
         def showprog(*_):
             open_progress(self.shell, 'Progress Report', 'Running a long procedure...', target=process)
         b.on_select += showprog
         
-        b = Button(grp_progress_dlgs, 'Color Dialog', halign='fill')
+        b = Button(grp_progress_dlgs, 'Change color...', valign='center')
         def showcolor(*_):
-            out('user picked', ask_color(self.shell))
+            color = ask_color(self.shell)
+            out('user picked', color)
+            grp_progress_dlgs.bg = color
         b.on_select += showcolor
         
-        grp_info_dlgs = Group(parent, text='Question Dialogs')
-        grp_info_dlgs.layout = ColumnLayout()
+        grp_info_dlgs = Composite(parent)#, text='Question Dialogs')
+        grp_info_dlgs.layout = ColumnLayout(valign='fill')
+        grp_info_dlgs.bg = Color('red')
 
         b = Button(grp_info_dlgs, 'Yes-No Question')
         def ask_yesno_(*_):
@@ -387,17 +388,25 @@ class ControlsDemo():
         eq.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=1)
         scales = []
         for _ in range(20):
-            s = Scale(eq, valign='fill', orientation=RWT.VERTICAL)
+            c = Composite(eq, layout=RowLayout(valign='fill', flexrows=1))
+            Label(c, '+')
+            s = Scale(c, valign='fill', orientation=RWT.VERTICAL)
+            Label(c, '-')
             scales.append(s)
         self.mainwnd.tabseq = [self.navigation] + scales
         lower = Composite(parent)
         lower.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=1, padding_right=5, hspace=10)
         
         grpleft = Group(lower, text='Balance')
-        grpleft.layout = RowLayout(valign='fill', halign='fill', equalheights=1)
+        grpleft.layout = ColumnLayout(valign='fill', halign='fill', flexcols=1)
+        Label(grpleft, '-')
         Scale(grpleft, halign='fill', orientation=RWT.HORIZONTAL)
+        Label(grpleft, '+')
         grpright = Group(lower, text='Fader', valign='fill', halign='fill')
-        grpright.layout = RowLayout(valign='fill', halign='fill', equalheights=1)
+        grpright.layout = ColumnLayout(valign='fill', halign='fill', flexcols=1)
+        Label(grpright, '-')
+        Scale(grpright, halign='fill', orientation=RWT.HORIZONTAL)
+        Label(grpright, '+')
         
     
     def create_canvas_page(self, parent):
@@ -442,13 +451,16 @@ class ControlsDemo():
             b.badge = str(i+1)
 #         b.on_select += select
         
-    
     def create_browser_page(self, parent):
         grp = Group(parent, text='Browser')
-        grp.layout = CellLayout(halign='left', valign='top')
-        browser = Button(grp, text='Open Browser')
+        # grp.layout = GridLayout(cols=1, minheight=200, minwidth=200, flexcols=0)
+        # container = Composite(grp)
+        grp.layout = ColumnLayout(minheight=200, minwidth=200, flexcols=0)
+        # grp.bg = 'yellow'
+        # grp.bg = 'green'
+        Label(grp, 'Click:', halign='center')
+        browser = Button(grp, text='Open Browser', halign='center')
         browser.on_select += self.open_browser
-
 
     def create_radar_page(self, parent):
         grp = Group(parent, text='Radar')
@@ -515,8 +527,9 @@ class ControlsDemo():
         btn.on_select += highlight
 
     def open_browser(self, data):
-        dlg = Shell(self.mainwnd, title='pyRAP Browser', border=True,
+        dlg = Shell(title='pyRAP Browser', border=True,
                     btnclose=True, btnmax=True, resize=True, modal=False, titlebar=True)
+        dlg.on_resize += dlg.dolayout
         dlg.bounds = self.mainwnd.width / 2 - 150, self.mainwnd.height / 2 - 100, 500, 300
         content = Composite(dlg.content)
         content.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
@@ -550,7 +563,6 @@ class ControlsDemo():
         scroll.content = container
 
 
-
 if __name__ == '__main__':
 #     pyraplog.level(pyraplog.DEBUG)
     pyrap.register_app(clazz=ControlsDemo, 
@@ -560,5 +572,5 @@ if __name__ == '__main__':
                                     'mobile': ControlsDemo.mobile},
                        theme='mytheme.css',
                        setup=ControlsDemo.setup, default=lambda: 'mobile' if pyrap.session.useragent.mobile else 'desktop')
-    pyrap.run()
+    pyrap.run(admintool=True)
 
