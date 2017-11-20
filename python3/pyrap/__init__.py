@@ -1,9 +1,9 @@
 import os
 
-from _version import __version__
-
 from . import locations
 from . import submodules
+
+from _version import __version__
 
 import mimetypes
 mimetypes.init([os.path.join(os.path.dirname(__file__), '..', 'etc', 'mime.types')] + mimetypes.knownfiles)

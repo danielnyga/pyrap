@@ -80,7 +80,7 @@ class CaseInsensitiveDict(collections.MutableMapping):
         return str(dict(self.items()))
 
 
-class RStorage(edict, object):
+class RStorage(dict):
     '''
     Recursive extension of web.util.Storage that applies the Storage constructor
     recursively to all value elements that are dicts.
