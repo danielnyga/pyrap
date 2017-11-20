@@ -45,10 +45,10 @@ class PyRAPServer(web.application):
             web.httpserver.runbasic(self.wsgifunc(*middleware), ('0.0.0.0', port))
         except (ThreadInterrupt, KeyboardInterrupt):
             logger.info('received ctrl-c')
-        finally:
-            try:
-                expose('/pyrap/threads', dnutils.threads.iteractive())
-            except ThreadInterrupt: pass
+        # finally:
+        #     try:
+        #         expose('/pyrap/threads', dnutils.threads.iteractive())
+        #     except ThreadInterrupt: pass
         logger.info('goodbye.')
 
 

@@ -214,7 +214,7 @@ class SessionCleanupThread(SuspendableThread):
             session = self.session
             while not dnutils.threads.interrupted():
                 logger.debug(len(list(session._PyRAPSession__sessions.keys())), 'sessions active.')
-                logs.expose('/pyrap/sessions', list(session._PyRAPSession__sessions.values()), ignore_errors=True)
+                # logs.expose('/pyrap/sessions', list(session._PyRAPSession__sessions.values()), ignore_errors=True)
                 for sid in set(session._PyRAPSession__sessions.keys()):
                     session._PyRAPSession__locals['session_id'] = sid
                     if session.expired:
