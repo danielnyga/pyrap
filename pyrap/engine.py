@@ -12,8 +12,6 @@ import mimetypes
 import os
 import traceback
 import urllib.request, urllib.parse, urllib.error
-from pprint import pprint
-from threading import Lock, Event
 
 import dnutils
 import web
@@ -24,8 +22,7 @@ from web.session import SessionExpired
 from web.utils import storify, Storage
 from web.webapi import notfound, badrequest, seeother, notmodified
 
-import pyrap
-from dnutils import out, Relay, getlogger, RLock, stop, first, ifnone, logs
+from dnutils import out, Relay, getlogger, RLock, first, ifnone, logs, Lock, Event
 from pyrap import locations, threads
 from pyrap.base import session
 from pyrap.clientjs import gen_clientjs
@@ -66,7 +63,7 @@ class ApplicationManager(object):
         with open(os.path.join(locations.html_loc, 'pyrap.html')) as f:
             self.startup_page = f.read()
         self.log_ = getlogger(self.__class__.__name__)
-        self.msglog = getlogger('/pyrap/msg', logs.DEBUG)
+        self.httplog = getlogger('/pyrap/http_msgs')
 
     def _install_theme(self, name, theme):
         '''
@@ -134,9 +131,9 @@ class ApplicationManager(object):
         '''
         session.new()
         session.on_kill += lambda *_: out('killed', session.id)
-        session.app = self
-        out('creating runtime')
+        session._PyRAPSession__sessiondata.app = self
         session._PyRAPSession__sessiondata.runtime = SessionRuntime(self, self.config.clazz())
+        session.connect_client()
 
     def handle_request(self, args, query, content):
         '''
@@ -153,7 +150,6 @@ class ApplicationManager(object):
                             payload of the request.
         
         '''
-        pprint(session._PyRAPSession__sessions)
         if session.id is not None:
             if not session.check_validity():  # session id has a wrong format or so.
                 raise badrequest('invalid session id %s' % session.id)
@@ -183,7 +179,6 @@ class ApplicationManager(object):
         # START NEW SESSION
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         if web.ctx.method == 'GET':  # always start a new session
-            session.expire()
             if not args:
                 raise seeother('%s/' % self.config.path)
             else:
@@ -207,13 +202,15 @@ class ApplicationManager(object):
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        self._create_session()
+        if session.id is None or session.expired:
+            self._create_session()
         if not args or args[0] != 'pyrap':  # this is a pyrap message (modify this in pyrap.html)
             raise notfound()
         try:
+            session.atime = datetime.now()
             session.runtime.relay.acquire()
             msg = parse_msg(content.decode('utf8'))
-            self.msglog.debug('>>> ' + str(msg))
+            self.httplog.debug('>>> ' + str(msg))
             session.runtime.relay.inc()
             # dispatch the event to the respective session
             session.runtime.handle_msg(msg)
@@ -221,7 +218,7 @@ class ApplicationManager(object):
             session.runtime.relay.wait()
             r = session.runtime.compose_msg()
             smsg = json.dumps(r.json)
-            self.msglog.debug('<<< ' + smsg)
+            self.httplog.debug('<<< ' + smsg)
             web.header('Content-Type', 'application/json')
             return smsg
         except SessionExpired:
@@ -235,14 +232,9 @@ class ApplicationManager(object):
         # we should never get here
         raise rwterror(RWTError.SERVER_ERROR)
 
-    def terminate(self):
-        for sid, session_ in session.store._dict.items():
-            # out(session_)
-            if self is session_.get('app'):
-                out('killing %s session' % self.config.name, sid)
-                for _, thread in dict(session_.get('threads')).items():
-                    out('  killing thread', thread.name)
-                    thread.interrupt()
+    def __repr__(self):
+        return '<ApplicationManager:%s>' % self.config
+
 
 class WindowManager(object):
     '''
@@ -302,16 +294,16 @@ class PushService(object):
     # __active = 0
 
     def __init__(self):
-        if not hasattr(session._internal, 'pushservice'):
-            session._internal.pushservice = RStorage()
+        if not hasattr(session, 'pushservice'):
+            session.pushservice = RStorage()
         try:
-            self._lock = session._internal.pushservice._lock
+            self._lock = session.pushservice._lock
         except AttributeError:
-            self._lock = session._internal.pushservice._lock = RLock()
+            self._lock = session.pushservice._lock = RLock()
         try:
-            self._active = session._internal.pushservice._active
+            self._active = session.pushservice._active
         except AttributeError:
-            self._active = session._internal.pushservice._active = 0
+            self._active = session.pushservice._active = 0
 
     def start(self):
         with self._lock:
@@ -422,8 +414,9 @@ class SessionRuntime(object):
     def handle_msg(self, msg):
         # first consolidate the operations to avoid duplicate computations
         if msg.head.get('shutdown', False):
-            session.expire()
-            # return
+            self.headers['cid'] = None
+            session.disconnect_client()
+            return
         ops = []
         for o in msg.operations:
             consolidated = False

@@ -3,9 +3,6 @@ Created on Aug 1, 2015
 
 @author: nyga
 """
-import datetime
-import re
-
 import dnutils
 import sys
 
@@ -14,18 +11,16 @@ import os
 from dnutils.threads import ThreadInterrupt
 
 import web
-from dnutils import Thread, out, expose, first
+from dnutils import expose, first, logs
 
-from pyrap.sessions import PyRAPSession
-from web import utils
+from pyrap.sessions import PyRAPSession, SessionCleanupThread
 from web.webapi import notfound
-from pyrap import threads, locations
+from pyrap import locations
 import urllib.parse 
 from pyrap.utils import RStorage
 
 
 routes = (
-    # '/test', 'Test',
     '/(.*)/(.*)', 'RequestDispatcher',
     '/(.*)', 'RequestDispatcher',
 )
@@ -33,25 +28,29 @@ routes = (
 web.config.debug = True
 debug = True
 
+dnutils.logs.loggers({
+    '/pyrap/session_cleanup': logs.newlogger(logs.console, level=logs.INFO),
+    '/pyrap/http_msgs': logs.newlogger(logs.console, level=logs.ERROR),
+    '/pyrap/main': logs.newlogger(logs.console, level=logs.INFO)
+})
+
 
 class PyRAPServer(web.application):
 
     def run(self, port=8080, *middleware):
-        logger = dnutils.getlogger(__name__)
-        # def terminate(*_):
-        #     Thread(target=web.httpserver.server.shutdown).start()
-        # dnutils.add_handler(dnutils.signals.SIGINT, terminate)
-        func = self.wsgifunc(*middleware)
+        logger = dnutils.getlogger('/pyrap/main')
+        SessionCleanupThread(session).start()
         try:
-            out('starting')
-            web.httpserver.runbasic(func, ('0.0.0.0', port))
+            logger.info('starting pyrap server')
+            web.httpserver.runbasic(self.wsgifunc(*middleware), ('0.0.0.0', port))
         except (ThreadInterrupt, KeyboardInterrupt):
-            out('interrupted')
-            for path, app in _registry.items():
-                app.terminate()
-        logger.error('goodbye.')
-        expose('/pyrap/threads', dnutils.threads.iteractive())
-    
+            logger.info('received ctrl-c')
+        finally:
+            try:
+                expose('/pyrap/threads', dnutils.threads.iteractive())
+            except ThreadInterrupt: pass
+        logger.info('goodbye.')
+
 
 class ApplicationRegistry(object):
     """

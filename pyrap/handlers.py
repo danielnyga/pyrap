@@ -2,6 +2,7 @@ import io
 from io import BytesIO
 
 import multipart
+from dnutils.threads import ThreadInterrupt
 from multipart.multipart import parse_options_header
 from requests.structures import CaseInsensitiveDict
 
@@ -9,6 +10,7 @@ import web
 from dnutils import out
 
 # from pyrap import session
+from pyrap import session
 
 
 class ServiceHandler(object):
@@ -33,9 +35,12 @@ class PushServiceHandler(ServiceHandler):
         ServiceHandler.__init__(self, 'org.eclipse.rap.serverpush')
 
     def run(self, *args, **kwargs):
-        while not session.runtime.push.wait(2): pass
-        web.header('Content-Type', 'text/html')
-        session.runtime.push.clear()
+        try:
+            while not session.runtime.push.wait(2): pass
+            web.header('Content-Type', 'text/html')
+            session.runtime.push.clear()
+        except ThreadInterrupt:
+            pass
         return ''
 
 

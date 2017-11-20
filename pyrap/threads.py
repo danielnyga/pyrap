@@ -28,10 +28,10 @@ class DetachedSessionThread(SuspendableThread):
     def _run(self):
         self.__sessionload()
         try:
-            pyrap.session.threads[current_thread().ident] = current_thread()
+            pyrap.session._threads.append(current_thread())
             SuspendableThread.run(self)
         finally:
-            del pyrap.session.threads[current_thread().ident]
+            pyrap.session._threads.remove(current_thread())
 
     def __sessionload(self):
         pyrap.session._PyRAPSession__locals['session_id'] = self.__session_id

@@ -10,12 +10,12 @@ from pprint import pprint
 
 import os
 
-from dnutils.threads import current_thread
+from dnutils.threads import current_thread, Thread, ThreadInterrupt, sleep, SuspendableThread
 
 import web
 import time
 
-from dnutils import Lock, out, RLock, ifnone
+from dnutils import Lock, out, RLock, ifnone, logs
 import dnutils
 from pyrap import threads
 from web.py3helpers import PY2
@@ -29,8 +29,8 @@ from pyrap.utils import RStorage
 _defconf = utils.storage({
     'cookie_name': 'webpy_session_id',
     'cookie_domain': None,
-    'cookie_path' : None,
-    'timeout': 86400, #24 * 60 * 60, # 24 hours in seconds
+    # 'cookie_path' : None,
+    'timeout': 60 * 60 * 2,  # 2 hours in seconds
     'ignore_expiry': True,
     'ignore_change_ip': True,
     'secret_key': 'fLjUfxqXtfNoIldA0A0J',
@@ -48,60 +48,54 @@ class SessionKilled(Event):
         listener(data)
 
 
+class InvalidSessionError(Exception):
+    pass
+
+
 class PyRAPSession:
     '''
     Session management for pyRAP.
     '''
 
-    def __init__(self, server, config=None):
-        server.add_processor(self._prepare_thread)
+    def __init__(self, server=None, config=None):
+        if server:
+            server.add_processor(self._prepare_thread)
         self.__lock = RLock()
         self.__sessions = {}
         self.__locals = web.threadeddict()
         self._config = ifnone(config, _defconf)
 
     def _prepare_thread(self, handler):
-        out('preparing thread...')
         request = Storage()
         request.query = {str(k): str(v) for k, v in urllib.parse.parse_qsl(web.ctx.query[1:], keep_blank_values=True)}
-        cookie_name = self._config.cookie_name
-        sid = web.cookies().get(cookie_name)
-
-        # protection against session_id tampering
-        if sid and not PyRAPSession.check_id(sid):
-            sid = None
-
+        # cookie_name = self._config.cookie_name
         # get the session or create a new one if necessary
-        if sid in self.__sessions:
-            self.__locals['session_id'] = sid
-
-        # self.__locals['ip'] = web.ctx.ip
-        out('thread', current_thread().name, 'successfully prepared (session id %s)' % self.id)
+        self.__locals['session_id'] = request.query.get('cid')  # web.cookies().get(cookie_name)
         return handler()
 
     def new(self):
         sid = self.__generate_session_id()
         self.__locals['session_id'] = sid
-        self.__init_session(sid)
-        cookie_name = self._config.cookie_name
-        cookie_domain = self._config.cookie_domain
-        cookie_path = self._config.cookie_path
-        httponly = self._config.httponly
-        secure = self._config.secure
-        web.setcookie(cookie_name, sid, expires='', domain=cookie_domain, httponly=httponly,
-                      secure=secure, path=cookie_path)
+        store = Storage()
+        self.__sessions[sid] = store
+        # self.connect_client(sid)
+        store.on_kill = SessionKilled()
+        store.ip = web.ctx.ip
+        store.expired = False
+        store.threads = []
+        store.ctime = datetime.datetime.now()
+        store.last_activicty = datetime.datetime.now()
+        # self.__init_session(sid)
 
     @property
     def _threads(self):
         return self.__sessiondata.threads
 
-    def __init_session(self, sid):
-        store = Storage()
-        self.__sessions[sid] = store
-        store.on_kill = SessionKilled()
-        store.ip = web.ctx.ip
-        store.expired = False
-        store.ctime = datetime.datetime.now()
+    def fromid(self, sid):
+        session = PyRAPSession()
+        session.__locals = {'session_id': sid}
+        session.__sessions = self.__sessions
+        return session
 
     @property
     def __sessiondata(self):
@@ -121,6 +115,10 @@ class PyRAPSession:
         return sid
 
     @property
+    def app(self):
+        return self.__sessiondata.app
+
+    @property
     def on_kill(self):
         return self.__sessiondata.on_kill
 
@@ -131,8 +129,20 @@ class PyRAPSession:
         self.__sessiondata.on_kill = e
 
     @property
+    def client(self):
+        return self.__sessiondata.client if self.id in self.__sessions else None
+
+    @property
     def ctime(self):
         return self.__sessiondata.ctime
+
+    @property
+    def atime(self):
+        return self.__sessiondata.atime
+
+    @atime.setter
+    def atime(self, t):
+        self.__sessiondata.atime = t
 
     @property
     def runtime(self):
@@ -144,7 +154,7 @@ class PyRAPSession:
 
     @property
     def ip(self):
-        return self.__sessiondata.ip
+        return self.client.ip
 
     def check_validity(self):
         return PyRAPSession.check_id(self.id) and self.check_ip()
@@ -154,22 +164,35 @@ class PyRAPSession:
         return _idregex.match(sid)
 
     def check_ip(self):
-        return self.ip == web.ctx.ip or self._config.ignore_change_ip
+        return self.client is None or self.ip == web.ctx.ip or self._config.ignore_change_ip
 
     @property
     def expired(self):
-        if self.id not in self.__sessions or self.__sessiondata.expired:
+        conditions = (self.id in self.__sessions and
+                      self.client is not None and
+                      not self.__sessiondata.expired)
+        if not conditions:
             return True
-        if self.ctime:
+        if self.atime:
             now = datetime.datetime.now()
-            return (now - self.ctime).seconds > self._config.timeout
+            return (now - self.atime).seconds > self._config.timeout
         return False
         
-    # def _setcookie(self, session_id, expires='', **kw): raise
-    
     def expire(self):
         """Expire the session, make it no longer available"""
         self.__sessiondata.expired = True
+
+    def connect_client(self):
+        '''Connects the client to this session by storing a cooking with the session id.'''
+        client = Storage()
+        client.ip = web.ctx.ip
+        client.orig_ip = web.ctx.env.get('HTTP_X_FORWARDED_FOR', web.ctx.ip)
+        client.useragent = web.ctx.env['HTTP_USER_AGENT']
+        self.__sessiondata.client = client
+
+    def disconnect_client(self):
+        '''Deletes from the client the cookie that holds the session id.'''
+        self.__sessiondata.client = None
 
     def __str__(self):
         return '<Session id:%s ctime:%s>' % (self.id, self.ctime.strftime('%Y-%m-%d %H:%M:%S'))
@@ -178,58 +201,32 @@ class PyRAPSession:
         return str(self)
 
 
-            # def cleanup(self, timeout):
-    #     now = time.time()
-    #     for session_id, content in dict(self._dict).items():
-    #         if 'creation_time' not in content or (now - content['creation_time']) > timeout or content['_expired']:
-    #             if 'on_kill' in content:
-    #                 content['on_kill'].notify(RStorage(content))
-    #             if session_id in self:
-    #                 del self[session_id]
-    #             # clean up the SessionThreads belonging to this session
-    #             for _, t in dnutils.threads.iteractive():
-    #                 out('killing?')
-    #                 if isinstance(t, threads.DetachedSessionThread) and t._session_id == session_id:
-    #                     out('killing!')
-    #                     t.interrupt()
-        
-        
-class DictStore(web.session.Store):
-    """Base class for session stores"""
+class SessionCleanupThread(SuspendableThread):
 
-    def __init__(self):
-        self._dict = Storage()
-        # self._lock = Lock()
+    def __init__(self, session):
+        SuspendableThread.__init__(self, name='session_cleanup')
+        self.session = session
 
-    def __contains__(self, key):
-        # with self._lock:
-        return key in self._dict
-
-    def __getitem__(self, key):
-        # with self._lock:
-        return self._dict.get(key)
-
-    def __setitem__(self, key, value):
-        # with self._lock:
-         self._dict[key] = value
-            
-    def __delitem__(self, key):
-        # with self._lock:
-        del self._dict[key]
-
-    def cleanup(self, timeout):
-        now = time.time()
-        for session_id, content in dict(self._dict).items():
-            pprint(content)
-            if 'creation_time' not in content or (now - content['creation_time']) > timeout or content['_expired']:
-                if 'on_kill' in content:
-                    content['on_kill'].notify(RStorage(content))
-                if session_id in self:
-                    del self[session_id]
-                # clean up the SessionThreads belonging to this session
-                for _, t in dnutils.threads.iteractive():
-                    out('killing?')
-                    if isinstance(t, threads.DetachedSessionThread) and t._session_id == session_id:
-                        out('killing!')
-                        t.interrupt()
-                        
+    def run(self):
+        try:
+            logger = logs.getlogger('/pyrap/session_cleanup')
+            logger.info('session cleanup thread running.')
+            session = self.session
+            while not dnutils.threads.interrupted():
+                logger.debug(len(list(session._PyRAPSession__sessions.keys())), 'sessions active.')
+                logs.expose('/pyrap/sessions', list(session._PyRAPSession__sessions.values()), ignore_errors=True)
+                for sid in set(session._PyRAPSession__sessions.keys()):
+                    session._PyRAPSession__locals['session_id'] = sid
+                    if session.expired:
+                        logger.debug('killing session', session.id)
+                        session.on_kill.notify(session)
+                        # clean up the SessionThreads belonging to this session
+                        for t in session._threads:
+                            if isinstance(t, threads.SuspendableThread):
+                                t.interrupt()
+                        for t in session._threads:
+                            t.join()
+                        del session._PyRAPSession__sessions[sid]
+                sleep(2)
+        except ThreadInterrupt:
+            logger.info('session cleanup thread terminated.')
