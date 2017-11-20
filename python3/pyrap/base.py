@@ -29,7 +29,7 @@ web.config.debug = True
 debug = True
 
 dnutils.logs.loggers({
-    '/pyrap/session_cleanup': logs.newlogger(logs.console, level=logs.INFO),
+    '/pyrap/session_cleanup': logs.newlogger(logs.console, level=logs.ERROR),
     '/pyrap/http_msgs': logs.newlogger(logs.console, level=logs.ERROR),
     '/pyrap/main': logs.newlogger(logs.console, level=logs.INFO)
 })
@@ -37,18 +37,16 @@ dnutils.logs.loggers({
 
 class PyRAPServer(web.application):
 
-    def run(self, port=8080, *middleware):
+    def run(self, port=8080, bindip='127.0.0.1', *middleware):
         logger = dnutils.getlogger('/pyrap/main')
         SessionCleanupThread(session).start()
         try:
             logger.info('starting pyrap server')
-            web.httpserver.runbasic(self.wsgifunc(*middleware), ('0.0.0.0', port))
+            for path, app in _registry.items():
+                logger.info('http://%s:%s/%s/' % (bindip, port, app.config.path))
+            web.httpserver.runbasic(self.wsgifunc(*middleware), (bindip, port))
         except (ThreadInterrupt, KeyboardInterrupt):
             logger.info('received ctrl-c')
-        # finally:
-        #     try:
-        #         expose('/pyrap/threads', dnutils.threads.iteractive())
-        #     except ThreadInterrupt: pass
         logger.info('goodbye.')
 
 
