@@ -31,7 +31,7 @@ class ControlsDemo():
     def setup(application): pass
 
     def desktop(self, **kwargs):
-        self.shell = Shell(titlebar=False, maximized=True)
+        self.shell = Shell(maximized=True, titlebar=False)
 
         shell = self.shell
         self.mainwnd = shell
@@ -568,8 +568,8 @@ if __name__ == '__main__':
     pyrap.register_app(clazz=ControlsDemo, 
                        path='controls', 
                        name='pyRAP Controls Demo', 
-                       entrypoints={'desktop': ControlsDemo.desktop,
-                                    'mobile': ControlsDemo.mobile},
+                       entrypoints={'desktop': ControlsDemo.desktop},
+                                    # 'mobile': ControlsDemo.mobile},
                        theme='mytheme.css',
                        setup=ControlsDemo.setup)#, default=lambda: 'mobile' if 'mobile' in pyrap.session.client.useragent else 'desktop')
     pyrap.run(admintool=True)
