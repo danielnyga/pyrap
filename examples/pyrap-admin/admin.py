@@ -50,17 +50,18 @@ class PyRAPAdmin:
     def invalidate_session(self, data):
         try:
             sel = self.sessionlist.selection
-            out('invalidating session:', sel.session_id)
-            edict(sel).pprint()
-            del session.store[sel.session_id]
+            out('invalidating session:', sel.id)
+            sel.expire()
+            edict(sel._PyRAPSession__sessions).pprint()
         except KeyError: pass
 
     def update_sessions(self):
         try:
+            out('started session update thread')
             while not threads.interrupted():
                 items = OrderedDict()
-                for sid, session_ in session.store._dict.items():
-                    items[sid] = RStorage(session_)
+                for sid, session_ in session._PyRAPSession__sessions.items():
+                    items[sid] = session.fromid(sid)
                 self.sessionlist.items = items
                 sleep(2)
                 self.push.flush()
