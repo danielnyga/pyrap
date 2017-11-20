@@ -5,26 +5,23 @@ Created on Oct 27, 2015
 '''
 import datetime
 import re
-from _sha1 import sha1
-from pprint import pprint
 
 import os
+import urlparse
 
-from dnutils.threads import current_thread, Thread, ThreadInterrupt, sleep, SuspendableThread
+from dnutils.threads import ThreadInterrupt, sleep, SuspendableThread
 
 import web
 import time
 
 from dnutils import Lock, out, RLock, ifnone, logs
 import dnutils
+from web.session import sha1
+
 from pyrap import threads
-from web.py3helpers import PY2
 from web.utils import Storage
-from copy import deepcopy
-import urllib.parse
 from web import utils
 from pyrap.ptypes import Event
-from pyrap.utils import RStorage
 
 _defconf = utils.storage({
     'cookie_name': 'webpy_session_id',
@@ -67,7 +64,7 @@ class PyRAPSession:
 
     def _prepare_thread(self, handler):
         request = Storage()
-        request.query = {str(k): str(v) for k, v in urllib.parse.parse_qsl(web.ctx.query[1:], keep_blank_values=True)}
+        request.query = {str(k): str(v) for k, v in urlparse.parse_qsl(web.ctx.query[1:], keep_blank_values=True)}
         # cookie_name = self._config.cookie_name
         # get the session or create a new one if necessary
         self.__locals['session_id'] = request.query.get('cid')  # web.cookies().get(cookie_name)
@@ -108,7 +105,7 @@ class PyRAPSession:
             now = time.time()
             secret_key = self._config.secret_key
             hashable = "%s%s%s%s" %(rand, now, utils.safestr(web.ctx.ip), secret_key)
-            sid = sha1(hashable if PY2 else hashable.encode('utf-8')) #TODO maybe a better way to deal with this, without using an if-statement
+            sid = sha1(hashable)
             sid = sid.hexdigest()
             if sid not in self.__sessions:
                 break

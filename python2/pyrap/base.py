@@ -3,6 +3,8 @@ Created on Aug 1, 2015
 
 @author: nyga
 '''
+import urlparse
+
 import dnutils
 import sys
 
@@ -11,12 +13,11 @@ import os
 from dnutils.threads import ThreadInterrupt
 
 import web
-from dnutils import expose, first, logs
+from dnutils import first, logs
 
 from pyrap.sessions import PyRAPSession, SessionCleanupThread
 from web.webapi import notfound
 from pyrap import locations
-import urllib.parse
 from pyrap.utils import RStorage
 
 routes = (
@@ -113,7 +114,7 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
     :param icon:         image path under which the application's icon can
                          be found.
     '''
-    config = RStorage({'clazz': clazz,
+    config = web.Storage({'clazz': clazz,
                       'path': path,
                       'name': name,
                       'entrypoints': dict(entrypoints),
@@ -124,7 +125,7 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
                       'icon': icon,
                       'requirejs': requirejs,
                       'requirecss': requirecss
-                      })
+                          })
     _registry.register(config)
 
 

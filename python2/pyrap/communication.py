@@ -23,7 +23,7 @@ class RWTMessage(RStorage):
     a header (dict) and a list of operations.
     '''
     
-    __slots__ = RStorage.__slots__ + ['json']
+    # __slots__ = RStorage.__slots__ + ['json']
     
     def __init__(self, head=None, operations=None):
         RStorage.__init__(self, utf8=False)

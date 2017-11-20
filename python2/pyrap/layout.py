@@ -3,7 +3,7 @@ Created on Dec 2, 2015
 
 @author: nyga
 '''
-from itertools import zip_longest
+from itertools import izip_longest
 
 from dnutils import ifnone, out
 from tabulate import tabulate
@@ -99,7 +99,7 @@ class CellSeq:
         self._cells.append(cell)
 
     def itercells(self):
-        for c in self.cells:
+        for c in self._cells:
             yield c
 
     def __repr__(self):
@@ -183,7 +183,7 @@ class LayoutGrid:
             wmatrix.append([c for c in chdrn] + [GridCell(None, self.cell) for _ in range(limit - len(chdrn))])
             children = children[len(chdrn):]
         if rowcount is not None:  # transpose the matrix if #rows are given
-            wmatrix = list(zip_longest(*wmatrix))
+            wmatrix = list(izip_longest(*wmatrix))
         self.cols = []
         self.rows = []
         for i, cells in enumerate(wmatrix):
@@ -647,13 +647,13 @@ class Layout(BaseLayout):
         self.cell_maxwidth = ifnone(cell_maxwidth, None, parse_value)
         self.cell_minheight = ifnone(cell_minheight, None, parse_value)
         self.cell_maxheight = ifnone(cell_maxheight, None, parse_value)
-        self.valign = ifnone(valign, type(self).V_ALIGN)
-        self.halign = ifnone(halign, type(self).H_ALIGN)
+        self.valign = ifnone(valign, self.V_ALIGN)
+        self.halign = ifnone(halign, self.H_ALIGN)
 
-        self.padding_top = ifnone(padding, type(self).PADDING_TOP)
-        self.padding_right = ifnone(padding, type(self).PADDING_RIGHT)
-        self.padding_bottom = ifnone(padding, type(self).PADDING_BOTTOM)
-        self.padding_left = ifnone(padding, type(self).PADDING_LEFT)
+        self.padding_top = ifnone(padding, self.PADDING_TOP)
+        self.padding_right = ifnone(padding, self.PADDING_RIGHT)
+        self.padding_bottom = ifnone(padding, self.PADDING_BOTTOM)
+        self.padding_left = ifnone(padding, self.PADDING_LEFT)
 
         self.padding_top = ifnone(padding_top, self.padding_top)
         self.padding_right = ifnone(padding_right, self.padding_right)
@@ -747,8 +747,8 @@ class GridLayout(Layout):
             self.flexcols = {c: 1 for c in flexcols}
         else:
             self.flexcols = ifnone(flexcols, {})
-        self.vspace = ifnone(vspace, type(self).VSPACE)
-        self.hspace = ifnone(hspace, type(self).HSPACE)
+        self.vspace = ifnone(vspace, self.VSPACE)
+        self.hspace = ifnone(hspace, self.HSPACE)
         self.equalheights = equalheights
         self.equalwidths = equalwidths
         self.squared = squared

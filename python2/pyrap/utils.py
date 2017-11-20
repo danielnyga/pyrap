@@ -6,7 +6,8 @@ Created on Nov 10, 2015
 import sys
 
 import collections
-from dnutils import edict
+from dnutils import edict, out
+
 
 #
 # case-insensitive dict taken from requests
@@ -80,7 +81,7 @@ class CaseInsensitiveDict(collections.MutableMapping):
         return str(dict(self.items()))
 
 
-class RStorage(edict, object):
+class RStorage(dict, object):
     '''
     Recursive extension of web.util.Storage that applies the Storage constructor
     recursively to all value elements that are dicts.
@@ -94,20 +95,21 @@ class RStorage(edict, object):
     
     def __setattr__(self, key, value):
         if key in self.__slots__:
-            self.__dict__[key] = value
+            object.__setattr__(self, key, value)
         else: 
             self[key] = value
-            
+
     def __setitem__(self, key, value):
         if self._utf8 and isinstance(key, basestring): key = key.encode('utf8')
         dict.__setitem__(self, key, rstorify(value, utf8=self._utf8))
-            
+
     def __getattr__(self, key):
-        if key in type(self).__slots__: 
-            return self.__dict__[key]
+        # out(key, type(self).__slots__)
+        if key not in self.__slots__:
+            return self[key]
         else:
             try:
-                return self[key]
+                return object.__getattr__(self, key)
             except KeyError, k:
                 raise AttributeError, k
             

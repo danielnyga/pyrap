@@ -1,10 +1,12 @@
 import os
-import sys
-
-from _version import __version__
 
 import locations
 import submodules
+
+import sys
+print sys.path
+
+from _version import __version__
 
 import mimetypes
 mimetypes.init([os.path.join(locations.pyrap_path, 'etc', 'mime.types')] + mimetypes.knownfiles)

@@ -1,1 +1,5 @@
-# no submodules required for python 2
+import sys
+
+from pyrap import locations
+
+sys.path.insert(0, locations.pyrap_path)

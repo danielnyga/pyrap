@@ -14,6 +14,7 @@ import traceback
 import urllib
 from threading import Lock, Event
 
+import dnutils
 import web
 from datetime import datetime
 from web.session import SessionExpired
@@ -34,7 +35,6 @@ from pyrap.ptypes import Image
 from pyrap.themes import Theme, FontMetrics
 from pyrap.widgets import Display
 import rfc822
-from pyrap.threads import Kapo, RLock
 
 
 class ApplicationManager(object):
@@ -182,8 +182,7 @@ class ApplicationManager(object):
             else:
                 if not args[0]:  # no entrypoint is specified, so use the deafult one
                     default = ifnone(self.config.default, first(self.config.entrypoints.keys()))
-                    # if callable(default):
-                    if isinstance(default, collections.Callable):
+                    if callable(default):
                         entrypoint = default()
                     elif default:
                         entrypoint = str(default)
@@ -293,7 +292,7 @@ class PushService(object):
 
     def __init__(self):
         if not hasattr(session, 'pushservice'):
-            session.pushservice = RStorage()
+            session.pushservice = Storage()
         try:
             self._lock = session.pushservice._lock
         except AttributeError:
@@ -623,7 +622,7 @@ class Resource(object):
         self.content_type = content_type
         self.content = content
         self.registry = registry
-        self.md5 = md5.new(content).hexdigest()
+        self.md5 = md5(content).hexdigest()
         if name is None:
             self.name = self.md5 + mimetypes.guess_extension(content_type)
         self.last_change = datetime.now()
@@ -678,8 +677,8 @@ class ResourceManager(object):
                                 specified number of downloads has been reached.
         '''
         c = stream.read()
-        if type(c) is str:
-            c = c.encode('utf8')
+        # if type(c) is str:
+        #     c = c.encode('utf8')
         return self.registerc(name, content_type, c, force=force, limit=limit)
 
     def registerc(self, name, content_type, content, force=False, limit=inf):
