@@ -3,9 +3,6 @@ import os
 import locations
 import submodules
 
-import sys
-print sys.path
-
 from _version import __version__
 
 import mimetypes
