@@ -571,6 +571,6 @@ if __name__ == '__main__':
                        entrypoints={'desktop': ControlsDemo.desktop,
                                     'mobile': ControlsDemo.mobile},
                        theme='mytheme.css',
-                       setup=ControlsDemo.setup, default=lambda: 'mobile' if pyrap.session.useragent.mobile else 'desktop')
+                       setup=ControlsDemo.setup)#, default=lambda: 'mobile' if 'mobile' in pyrap.session.client.useragent else 'desktop')
     pyrap.run(admintool=True)
 
