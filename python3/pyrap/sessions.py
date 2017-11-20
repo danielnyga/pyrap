@@ -85,6 +85,7 @@ class PyRAPSession:
         store.threads = []
         store.ctime = datetime.datetime.now()
         store.last_activicty = datetime.datetime.now()
+        store.client = None
         # self.__init_session(sid)
 
     @property
