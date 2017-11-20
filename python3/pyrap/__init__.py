@@ -1,7 +1,6 @@
 import os
-import sys
 
-from dnutils import out
+from _version import __version__
 
 from . import locations
 from . import submodules

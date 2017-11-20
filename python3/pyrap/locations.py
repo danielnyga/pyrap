@@ -9,7 +9,8 @@ import pyrap
 pyrap_path = os.path.normpath(os.path.join(os.path.dirname(pyrap.__file__), '..'))
 if os.path.basename(pyrap_path).startswith('python'):
     pyrap_path = os.path.normpath(os.path.join(pyrap_path, '..'))
-js_loc = os.path.join(pyrap_path, 'js')
+code_base = os.path.normpath(os.path.join(os.path.dirname(pyrap.__file__), '..'))
+js_loc = os.path.realpath(os.path.join(pyrap_path, 'js'))
 html_loc = os.path.join(pyrap_path, 'html')
 css_loc = os.path.join(pyrap_path, 'css')
 rc_loc = os.path.join(pyrap_path, 'resource')

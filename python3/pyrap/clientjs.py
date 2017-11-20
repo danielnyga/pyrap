@@ -4,7 +4,10 @@ Created on Oct 3, 2015
 @author: nyga
 '''
 import os
-from pyrap.locations import js_loc
+
+from dnutils import out
+
+from pyrap.locations import js_loc, code_base
 
 clientjs_files = '''
 debug-settings.js
@@ -273,13 +276,13 @@ rwt/widgets/util/TemplateRenderer.js
 rwt/widgets/DropDown.js
 rwt/widgets/util/DropDownSynchronizer.js
 rwt/remote/handler/DropDownHandler.js
-../pyrap/pwt/graph/graph.js
-../pyrap/pwt/svg/svg.js
-../pyrap/pwt/ros3d/ros3d.js
-../pyrap/pwt/radar/radar.js
-../pyrap/pwt/radar_redesign/radar_redesign.js
-../pyrap/pwt/cluster/cluster.js
-appearances.js'''
+{code_base}/pyrap/pwt/graph/graph.js
+{code_base}/pyrap/pwt/svg/svg.js
+{code_base}/pyrap/pwt/ros3d/ros3d.js
+{code_base}/pyrap/pwt/radar/radar.js
+{code_base}/pyrap/pwt/radar_redesign/radar_redesign.js
+{code_base}/pyrap/pwt/cluster/cluster.js
+appearances.js'''.format(code_base=code_base)
 
 
 def gen_clientjs():
@@ -287,8 +290,8 @@ def gen_clientjs():
     files = clientjs_files.split('\n')
     for i, filename in enumerate(files):
         if not filename.strip(): continue
-        filename = os.path.join(*filename.split('/'))
-        with open(os.path.join(js_loc, filename)) as f:
+        fullpath = filename if os.path.isabs(filename) else os.path.join(js_loc, filename)
+        with open(fullpath) as f:
             jscontent += f.read()
         if i < len(files) - 1: jscontent += '\n'
     return jscontent
