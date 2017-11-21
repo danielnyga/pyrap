@@ -14,6 +14,7 @@ import traceback
 import urllib
 from threading import Lock, Event
 
+import StringIO
 import dnutils
 import web
 from datetime import datetime
@@ -545,7 +546,7 @@ class SessionRuntime(object):
                 files = jsfiles
             for p in files:
                 if os.path.isfile(p):
-                    with open(p, encoding='utf8') as fi:
+                    with open(p) as fi:
                         self.requirejs(fi, force=force)
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
@@ -559,7 +560,10 @@ class SessionRuntime(object):
                         raise Exception('Could not load file', p)
 
     def requirejs(self, f, force=False):
+        stream = StringIO.StringIO()
+        stream.write(f.read().decode('utf8'))
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/javascript', f, force=force)
+        stream.close()
         self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
 
     def requirejstag(self, code):
