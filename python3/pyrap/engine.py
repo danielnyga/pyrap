@@ -167,7 +167,15 @@ class ApplicationManager(object):
                 raise rwterror(RWTError.SESSION_EXPIRED)
         else:
             self._create_session()
-
+        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        # HANDLE SERVICES
+        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        if 'servicehandler' in query:
+            handler = session.runtime.servicehandlers.get(query['servicehandler'])
+            if handler is not None:
+                return handler.run(web.ctx.environ, content, **query)
+            else:
+                raise notfound()
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # LOAD EXISTING OR START NEW SESSION
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -189,17 +197,6 @@ class ApplicationManager(object):
                     raise badrequest('No such entrypoint: "%s"' % entrypoint)
                 # send the parameterized the start page to the client
                 return str(self.startup_page % (self.config.name, self.icon.location if hasattr(self, 'icon') else '', session.id, entrypoint, str(query)))
-
-        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        # HANDLE SERVICES
-        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        if 'servicehandler' in query:
-            handler = session.runtime.servicehandlers.get(query['servicehandler'])
-            if handler is not None:
-                return handler.run(web.ctx.environ, content, **query)
-            else:
-                raise notfound()
-
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
