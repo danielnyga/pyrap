@@ -238,7 +238,6 @@ class GridCell(LayoutAdapter):
         self._minheight = None
         self._widgetsize = None
         self._fringe = None
-        self._viewport = None
 
     @property
     def grid(self):
@@ -249,7 +248,7 @@ class GridCell(LayoutAdapter):
     @property
     def fringe(self):
         if self._fringe is None:
-            self._fringe = self.widget.compute_fringe() if self.widget is not None else (0, 0)
+            self._fringe = self.widget.compute_fringe() if self.widget is not None else (0, 0, 0, 0)
         return self._fringe
 
     @property
@@ -373,7 +372,10 @@ class GridCell(LayoutAdapter):
             fringe = set(flexcolidx)
             while fringe:
                 idx = fringe.pop()
-                ratio = float(flexwidths[idx]) / float(self.grid.cols[idx].minwidth)
+                try:
+                    ratio = float(flexwidths[idx]) / float(self.grid.cols[idx].minwidth)
+                except ZeroDivisionError:
+                    ratio = 1
                 if 0 < ratio < 1:
                     for i, h in dict(flexwidths).items():
                         flexwidths[i] = float(h) * 1. / ratio
@@ -425,7 +427,10 @@ class GridCell(LayoutAdapter):
             fringe = set(flexrowidx)
             while fringe:
                 idx = fringe.pop()
-                ratio = float(flexheights[idx]) / float(self.grid.rows[idx].minheight)
+                try:
+                    ratio = float(flexheights[idx]) / float(self.grid.rows[idx].minheight)
+                except ZeroDivisionError:
+                    ratio = 1
                 if 0 < ratio < 1:
                     for i, h in dict(flexheights).items():
                         flexheights[i] = float(h) * 1. / ratio
@@ -499,6 +504,13 @@ class StackLayoutAdapter(LayoutAdapter):
         self._minwidth = None
         self._minheight = None
         self._widgetsize = None
+        self._fringe = None
+
+    @property
+    def fringe(self):
+        if self._fringe is None:
+            self._fringe = self.widget.compute_fringe() if self.widget is not None else (0, 0, 0, 0)
+        return self._fringe
 
     @property
     def stack(self):
@@ -516,15 +528,21 @@ class StackLayoutAdapter(LayoutAdapter):
             self._minwidth, h = self.widget_size
             if self.stack:
                 self._minwidth += max([p.preferred_size()[0] for p in self.stack])
-                self._widgetsize = self._minwidth, h
-                self._minwidth += self.layout.padding_left + self.layout.padding_right
+                self._widgetsize =  max(self._minwidth, ifnone(self.layout.minwidth, 0)), h
+                # self._minwidth += self.layout.padding_left + self.layout.padding_right
+                self._minwidth = max(self._minwidth,
+                                     self._widgetsize[0]) + self.layout.padding_left + self.layout.padding_right
+                self._minwidth = max(self._minwidth, ifnone(self.layout.cell_minwidth, 0))
         # preferred vertical size
         if self._minheight is None:
             w, self._minheight = self.widget_size
             if self.stack:
                 self._minheight += max([p.preferred_size()[1] for p in self.stack])
-                self._widgetsize = w, self._minheight
-                self._minheight += self.layout.padding_top + self.layout.padding_bottom
+                self._widgetsize = w, max(self._minheight, ifnone(self.layout.minheight, 0))
+                # self._minheight += self.layout.padding_top + self.layout.padding_bottom
+                self._minheight = max(self._minheight,
+                                      self._widgetsize[1]) + self.layout.padding_top + self.layout.padding_bottom
+                self._minheight = max(self._minheight, ifnone(self.layout.cell_minheight, 0))
         return self._minwidth, self._minheight
 
     @property
@@ -541,16 +559,17 @@ class StackLayoutAdapter(LayoutAdapter):
         layout = self.layout
         # t, r, b, l = self.widget.compute_fringe()
         if self.stack:
+            top, right, bottom, left =  self.fringe
             if self.width is not None and layout.halign == 'fill':
                 pagewidth = self.width
             else:
                 pagewidth = self.minwidth
-            pagewidth -= layout.padding_left - layout.padding_right
+            pagewidth -= layout.padding_left + layout.padding_right + left + right
             if self.height is not None and layout.valign == 'fill':
                 pageheight = self.height
             else:
                 pageheight = self.minheight
-            pageheight -= layout.padding_top - layout.padding_bottom
+            pageheight -= layout.padding_top + layout.padding_bottom + top + bottom
             for page in self.stack:
                 page.width = pagewidth
                 page.height = pageheight
