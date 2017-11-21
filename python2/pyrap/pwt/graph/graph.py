@@ -1,9 +1,10 @@
+from dnutils import ifnone
+
 from pyrap import session
 from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.utils import ifnone, out
 from pyrap.widgets import Widget, constructor, checkwidget
 
 
