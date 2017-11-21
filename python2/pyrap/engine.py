@@ -130,10 +130,10 @@ class ApplicationManager(object):
         application `clazz` in from the config and attaching it to the HTTP session.
         '''
         session.new()
+        session.connect_client()
         session.on_kill += lambda *_: out('killed', session.id)
         session._PyRAPSession__sessiondata.app = self
         session._PyRAPSession__sessiondata.runtime = SessionRuntime(self, self.config.clazz())
-        session.connect_client()
 
     def handle_request(self, args, query, content):
         '''
@@ -148,34 +148,28 @@ class ApplicationManager(object):
                             holding key/value pairs of the parameters of this request.
         :param content:     in case of a "POST" request, this argument holds the 
                             payload of the request.
-        
         '''
-        if session.id is not None:
-            if not session.check_validity():  # session id has a wrong format or so.
-                raise badrequest('invalid session id %s' % session.id)
-            if session.expired:  # session id has expired
-                self.log_.debug('session %s has expired' % session.id)
-                raise rwterror(RWTError.SESSION_EXPIRED)
-
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        # SERVE RESOURCES
+        # SERVE RESOURCES - WITHOUT SESSION
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         if args and args[0] == self.config.rcpath:
             rcname = '/'.join(args[1:])
             return self.resources.serve(rcname)
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        # HANDLE SERVICES
+        # LOAD EXISTING OR START NEW SESSION
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        if 'servicehandler' in query:
-            handler = session.runtime.servicehandlers.get(query['servicehandler'])
-            if handler is not None:
-                return handler.run(web.ctx.environ, content, **query)
-            else:
-                raise notfound()
+        if session.id is not None:
+            if not session.check_validity():  # session id has a wrong format or so.
+                raise badrequest('invalid session id %s' % session.id)
+            if session.expired:  # session id has expired
+                self.log_.debug('session %s has expired' % session.id)
+                raise rwterror(RWTError.SESSION_EXPIRED)
+        else:
+            self._create_session()
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        # START NEW SESSION
+        # LOAD EXISTING OR START NEW SESSION
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         if web.ctx.method == 'GET':  # always start a new session
             if not args:
@@ -194,14 +188,21 @@ class ApplicationManager(object):
                 if entrypoint not in self.config.entrypoints:
                     raise badrequest('No such entrypoint: "%s"' % entrypoint)
                 # send the parameterized the start page to the client
-                return str(self.startup_page % (
-                self.config.name, self.icon.location if hasattr(self, 'icon') else '', entrypoint, str(query)))
+                return str(self.startup_page % (self.config.name, self.icon.location if hasattr(self, 'icon') else '', session.id, entrypoint, str(query)))
+
+        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        # HANDLE SERVICES
+        # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        if 'servicehandler' in query:
+            handler = session.runtime.servicehandlers.get(query['servicehandler'])
+            if handler is not None:
+                return handler.run(web.ctx.environ, content, **query)
+            else:
+                raise notfound()
 
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        if session.id is None or session.expired:
-            self._create_session()
         if not args or args[0] != 'pyrap':  # this is a pyrap message (modify this in pyrap.html)
             raise notfound()
         try:
