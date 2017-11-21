@@ -29,7 +29,7 @@ class DetachedSessionThread(SuspendableThread):
         self.__sessionload()
         try:
             pyrap.session._threads.append(current_thread())
-            SuspendableThread.run(self)
+            self.run()
         finally:
             pyrap.session._threads.remove(current_thread())
 
