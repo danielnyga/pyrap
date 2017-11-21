@@ -116,7 +116,6 @@ class OptionsDialog(Shell):
     Represents a simple dialog box providing a list of options to the user.
     '''
 
-
     @constructor('OptionsDialog')
     def __init__(self, parent, options):
         Shell.__init__(self, parent, titlebar=False, border=True, resize=False, modal=True)
@@ -351,7 +350,7 @@ class ColorDialog(Shell):
     
     @constructor('ColorDialog')    
     def __init__(self, parent, color=None, modal=True, resize=False, btnclose=True):
-        Shell.__init__(self, parent, title='Choose Color', titlebar=True, border=True, 
+        Shell.__init__(self, parent=parent, title='Choose Color', titlebar=True, border=True,
                        btnclose=btnclose, resize=resize, modal=modal)
         self._color = parse_value(ifnone(color, 'red'), default=Color)
         
