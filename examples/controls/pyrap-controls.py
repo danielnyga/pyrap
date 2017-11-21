@@ -17,12 +17,12 @@ from pyrap.dialogs import msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel,
     ask_okcancel, open_progress, ask_color
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout
 from pyrap.ptypes import BoolVar, Color, px, Image, Font
-from pyrap.pwt.cluster.cluster import Cluster
-from pyrap.pwt.radar.radar import RadarChart
-from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
+# from pyrap.pwt.cluster.cluster import Cluster
+# from pyrap.pwt.radar.radar import RadarChart
+# from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
     Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
-    Menu, MenuItem, Spinner, info, FileUpload
+    Menu, MenuItem, Spinner, info, FileUpload, TabFolder
 
 
 class ControlsDemo():
@@ -32,7 +32,7 @@ class ControlsDemo():
 
     def desktop(self, **kwargs):
         self.shell = Shell(maximized=True, titlebar=False)
-
+        self.shell.on_resize += self.shell.dolayout
         shell = self.shell
         self.mainwnd = shell
         
@@ -81,13 +81,14 @@ class ControlsDemo():
         footer.bgimg = Image('images/background_grey.png')
         footer.bg = 'light grey'
         Label(footer, halign='left', valign='bottom', text='powered by pyRAP v0.1').bg = 'transp'
+
         #=======================================================================
         # content area
         #=======================================================================
         self.content = StackedComposite(main, halign='fill', valign='fill')
         self.create_pages()
         self.navigation.on_select += self.switch_page
-        self.navigation.selection = self.pages['Browser']
+        self.navigation.selection = self.pages['TabFolders']
         self.switch_page()
 
     def switch_page(self, *args):
@@ -161,20 +162,26 @@ class ControlsDemo():
         self.create_upload_page(page)
         self.pages['FileUpload'] = page
 
+        # =======================================================================
+        # create tab folders
+        # =======================================================================
+        page = self.create_page_template('Tab Folders')
+        self.create_tabfolder_page(page)
+        self.pages['TabFolders'] = page
+
         #=======================================================================
         # create radar chart
         #=======================================================================
-        page  = self.create_page_template('Radar Chart Demo')
-        self.create_radar_page(page)
-        self.pages['Radar'] = page
+        # page  = self.create_page_template('Radar Chart Demo')
+        # self.create_radar_page(page)
+        # self.pages['Radar'] = page
 
         #=======================================================================
         # create D3 cluster chart
         #=======================================================================
-        page = self.create_page_template('D3 Cluster')
-        self.create_cluster_page(page)
-        self.pages['Cluster'] = page
-        
+        # page = self.create_page_template('D3 Cluster')
+        # self.create_cluster_page(page)
+        # self.pages['Cluster'] = page
         
         for page in [self.pages[k] for k in sorted(self.pages.keys())][1:]:
             page.layout.exclude = True
@@ -188,7 +195,16 @@ class ControlsDemo():
         header = Label(tab, text=heading, halign='left')
         header.css = 'headline'#font = header.font.modify(size='16px', bf=1)
         return tab
-    
+
+    def create_tabfolder_page(self, parent):
+        page = Composite(parent, layout=RowLayout(halign='fill', valign='fill', equalheights=True))
+        tabs = TabFolder(page, halign='center', valign='center', tabpos='bottom', minheight=200)
+        page1 = tabs.addtab('First Page')
+        Label(page1, 'Hello', halign='fill', valign='fill').bg = 'red'
+        page2 = tabs.addtab('Second Page')
+        Label(page2, 'pyRAP!', halign='center', valign='center').bg = 'yellow'
+        tabs.selected = 0
+
     def create_upload_page(self, parent):
         body = Composite(parent)
         body.layout = RowLayout(halign='fill', valign='fill', flexrows=3)
