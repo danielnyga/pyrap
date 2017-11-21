@@ -1443,11 +1443,16 @@ class Composite(Widget):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = list(map(px, bounds))
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
-        session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
+        session.runtime << RWTSetOperation(self.id, {'clientArea': map(int, self.client_rect)})
         
     def compute_size(self):
         return Widget.compute_size(self)
-    
+
+    @property
+    def client_rect(self):
+        t, r, b, l = self.compute_fringe()
+        _, _, w, h = self.bounds
+        return l, t, w - l - r, h - t - b
 
 class Cols(Composite):
     '''A composite only consisting of horizontally queued widgets.'''
@@ -1661,15 +1666,24 @@ class TabFolder(Composite):
     _styles_ = Composite._styles_ + {'tabpos': RWT.TOP}
 
     @constructor('TabFolder')
-    def __init__(self, parent, tabpos='TOP', **options):
+    def __init__(self, parent, tabpos='top', **options):
         Widget.__init__(self, parent, **options)
         self.theme = TabFolderTheme(self, session.runtime.mngr.theme)
-        self._tabpos = tabpos
+        if tabpos == 'top':
+            self.style |= RWT.TOP
+        elif tabpos != 'bottom':
+            raise ValueError('illegal parameter value for tabpos: %s' % tabpos)
+        else:
+            del self.style[RWT.TOP]
         self._items = []
         self.on_select = OnSelect(self)
         self._selected = None
         self.layout = StackLayout(halign=self.layout.halign, 
                                   valign=self.layout.valign,
+                                  minwidth=self.layout.minwidth,
+                                  minheight=self.layout.minheight,
+                                  cell_minwidth=self.layout.cell_minwidth,
+                                  cell_minheight=self.layout.cell_minheight,
                                   padding_top=self.layout.padding_top,
                                   padding_right=self.layout.padding_right,
                                   padding_bottom=self.layout.padding_bottom,
@@ -1677,16 +1691,11 @@ class TabFolder(Composite):
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        options.style.append(self._tabpos)
+        if RWT.TOP in self.style:
+            options.style.append('TOP')
+        else:
+            options.style.append('BOTTOM')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
-
-    @Composite.bounds.setter
-    @checkwidget
-    def bounds(self, bounds):
-        if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
-        self._bounds = list(map(px, bounds))
-        session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
-        session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
 
     @checkwidget
     def addtab(self, title='', img=None, idx=None):
@@ -1720,26 +1729,30 @@ class TabFolder(Composite):
         item.selected = 1
         session.runtime << RWTSetOperation(self.id, {'selection': self._selected})
 
-    
     def compute_size(self):
         width, height = Composite.compute_size(self)
+        t, r, b, l = self.compute_fringe()
+        width += l + r
+        height += t + b
+        width += sum([i.compute_size()[0] for i in self.items])
         # content container border
-        t, r, b, l = self.theme.container_borders
-        width += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        height += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        itemsizes = [i.compute_size() for i in self.items]
-        if itemsizes:
-            width += max([s[0] for s in itemsizes])
-            height += max([s[1] for s in itemsizes])
         return width, height
 
-    
     def compute_fringe(self):
-        width, height = self.compute_size()
+        top, right, bottom, left = 0, 0, 0, 0
+        t, r, b, l = self.theme.container_borders
+        top += ifnone(t, 0, lambda b: b.width)
+        right += ifnone(r, 0, lambda b: b.width)
+        bottom += ifnone(b, 0, lambda b: b.width)
+        left += ifnone(l, 0, lambda b: b.width)
         itemsizes = [i.compute_size() for i in self.items]
         if itemsizes:
-            width -= max([s[0] for s in itemsizes])
-        return width, height
+            height = max([s[1] for s in itemsizes])
+            if RWT.TOP in self.style:
+                top += height
+            else:
+                bottom += height
+        return top, right, bottom, left
     
 
 class TabItem(Widget):
@@ -1794,7 +1807,7 @@ class TabItem(Widget):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = list(map(px, bounds))
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
-        session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
+        # session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
 
     @property
     def idx(self):
