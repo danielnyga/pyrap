@@ -952,7 +952,7 @@ class Label(Widget):
         w, h = 0, 0
         if self.img is not None:
             w, h = self.img.size
-        elif self._textalign != 'wrap':
+        elif RWT.WRAP not in self.style:
             lines = self._text.split('\n')
             w += max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
