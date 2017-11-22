@@ -457,12 +457,12 @@ class Display(Widget):
     def __init__(self, parent):
         Widget.__init__(self, parent)
         self._cursor_loc = (px(0), px(0))
-        
-        
+
     def _handle_set(self, op):
         for k, v in op.args.items():
             if k not in ('cursorLocation', ): Widget._handle_set(self, op) 
-            if k == 'cursorLocation': self._cursor_loc = list(map(px, v))
+            if k == 'cursorLocation':
+                self._cursor_loc = list(map(px, v))
             if k == 'focusControl':
                 if v in session.runtime.windows:
                     session.runtime.windows._set_focus(session.runtime.windows[v])
