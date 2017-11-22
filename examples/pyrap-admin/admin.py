@@ -8,6 +8,7 @@ import pyrap
 from pyrap import session
 from pyrap.engine import PushService
 from pyrap.layout import RowLayout, ColumnLayout
+from pyrap.sessions import SessionError
 from pyrap.threads import DetachedSessionThread
 from pyrap.utils import RStorage
 from pyrap.widgets import Shell, Label, List, Rows, Composite, Button
@@ -27,10 +28,16 @@ class PyRAPAdmin:
         Label(sessions, 'Sessions:', halign='left')
         self.sessionlist = List(sessions, halign='fill', valign='fill', minwidth=300, vscroll=True)
 
-        session_options = Composite(container, layout=RowLayout(valign='fill', flexrows=1))
+        session_options = Composite(container, layout=RowLayout(valign='fill', flexrows=2))
         Label(session_options, 'Operations:')
         btn_invalidate = Button(session_options, 'Invalidate Session', valign='top')
         btn_invalidate.on_select += self.invalidate_session
+
+        self.session_details = Label(session_options, valign='fill', halign='fill', wrap=True)
+
+        def update_session_details(*_):
+            self.session_details.text = str(self.sessionlist.selection.app)
+        self.sessionlist.on_select += update_session_details
 
         processes = Composite(container, layout=RowLayout(valign='fill', flexrows=1))
         Label(processes, 'All pyRAP Threads:', halign='left')
@@ -62,19 +69,21 @@ class PyRAPAdmin:
                 items = OrderedDict()
                 for sid, session_ in session._PyRAPSession__sessions.items():
                     items[sid] = session.fromid(sid)
-                self.sessionlist.items = items
+                if set(self.sessionlist.items.keys()) != set(items.keys()):
+                    out('sessions changed')
+                    self.sessionlist.items = items
+                    self.push.flush()
                 sleep(2)
-                self.push.flush()
-        except ThreadInterrupt:
-            out('exiting session update thread')
+        except (ThreadInterrupt, SessionError) as e:
+            out('exiting session update thread due to', type(e))
 
     def update_processes(self):
         try:
             while not threads.interrupted():
                 self.update_process_list()
                 sleep(2)
-        except ThreadInterrupt:
-            out('exiting process update thread')
+        except (ThreadInterrupt, SessionError) as e:
+            out('exiting process update thread due to', type(e))
 
     def update_process_list(self):
         items = OrderedDict()
@@ -84,8 +93,10 @@ class PyRAPAdmin:
         for thread in threading.enumerate():
             if type(thread) is threading._DummyThread: continue
             items['%s (%s)' % (thread.name, thread.ident)] = thread
-        self.processlist.items = items
-        self.push.flush()
+        if set(items.keys()) != set(self.processlist.items.keys()):
+            self.processlist.items = items
+            out('processes changed')
+            self.push.flush()
 
 
 if __name__ == '__main__':
