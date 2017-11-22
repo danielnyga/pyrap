@@ -382,7 +382,7 @@ class GridCell(LayoutAdapter):
                     ratio = 1
                 if 0 < ratio < 1:
                     for i, h in dict(flexwidths).items():
-                        flexwidths[i] = float(h) * 1. / ratio
+                        flexwidths[i] = px(round(float(h) * 1. / ratio))
                     fringe = set(flexcolidx)
             for col in self.grid.cols:
                 # a cell should always have at least the minimum width imposed by the widget containing it
@@ -437,7 +437,7 @@ class GridCell(LayoutAdapter):
                     ratio = 1
                 if 0 < ratio < 1:
                     for i, h in dict(flexheights).items():
-                        flexheights[i] = float(h) * 1. / ratio
+                        flexheights[i] = px(round(float(h) * 1. / ratio))
                     fringe = set(flexrowidx)
             for row in self.grid.rows:
                 # any cell should always have at least the minimum height imposed by the widget containing it,
