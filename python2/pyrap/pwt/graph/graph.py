@@ -1,12 +1,16 @@
+import os
 from dnutils import ifnone
 
-from pyrap import session
+from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor, checkwidget
 
+d3wrapper = '''if (typeof d3 === 'undefined') {{
+    {d3content}
+}}'''
 
 class Graph(Widget):
 
@@ -17,6 +21,11 @@ class Graph(Widget):
     def __init__(self, parent, cssid=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = GraphTheme(self, session.runtime.mngr.theme)
+        # with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
+        #     cnt = d3wrapper.format(**{'d3content': f.read()})
+        #     session.runtime.ensurejsresources(cnt, name='d3.v3.min.js')
+        with open(os.path.join(locations.pwt_loc, 'graph', 'graph.css')) as fi:
+            session.runtime.requirecss(fi)
         self._gwidth = None
         self._gheight = None
         self._links = []
