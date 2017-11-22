@@ -1,8 +1,7 @@
 import os
 from io import BytesIO
 
-from dnutils import out, ifnone
-from lxml.etree import XMLSyntaxError
+from dnutils import ifnone
 
 from pyrap import session
 from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
@@ -44,18 +43,10 @@ class SVG(Widget):
 
     def _get_rwt_svg(self, svg):
         if os.path.isfile(svg):
-            try:
-                self.tree = ET.parse(svg)
-            except XMLSyntaxError:
-                out('Did not get a valid xml string. Creating empty svg.', svg)
-                self.tree = ET.fromstring('<svg></svg>')
+            self.tree = ET.parse(svg)
             self.root = self.tree.getroot()
         else:
-            try:
-                self.root = ET.fromstring(svg)
-            except XMLSyntaxError:
-                out('Did not get a valid xml string. Creating empty svg.', svg)
-                self.root = ET.fromstring('<svg></svg>')
+            self.root = ET.fromstring(svg)
             self.tree = ET.ElementTree(self.root)
         w, h = self.root.attrib['viewBox'].split()[-2:]
         self._vbwidth = int(float(w))
