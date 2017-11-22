@@ -39,7 +39,7 @@ class ControlsDemo():
         #=======================================================================
         # main layout
         #=======================================================================
-        scroll = ScrolledComposite(self.mainwnd.content, vscroll=1, hscroll=1)
+        scroll = ScrolledComposite(shell.content, vscroll=1, hscroll=0, halign='fill', valign='fill', minwidth=100, minheight=100)
         outer = scroll.content
         outer.layout = RowLayout(halign='fill', valign='fill', flexrows=2)
         
@@ -69,7 +69,7 @@ class ControlsDemo():
         # main area
         #=======================================================================
         main = Composite(outer)
-        main.layout = ColumnLayout(halign='fill', valign='fill', flexcols=1)
+        main.layout = ColumnLayout(halign='fill', valign='fill', flexcols=1, minheight=500)
         self.navigation = List(main, border=1, valign='fill', 
                           minwidth=px(250),
                           vscroll=1)
@@ -88,8 +88,10 @@ class ControlsDemo():
         self.content = StackedComposite(main, halign='fill', valign='fill')
         self.create_pages()
         self.navigation.on_select += self.switch_page
-        self.navigation.selection = self.pages['TabFolders']
+        self.navigation.selection = self.pages['Scrolled']
         self.switch_page()
+
+        self.shell.show(True)
 
     def switch_page(self, *args):
         for page in (self.pages.values()):
@@ -169,6 +171,13 @@ class ControlsDemo():
         self.create_tabfolder_page(page)
         self.pages['TabFolders'] = page
 
+        # =======================================================================
+        # create tab folders
+        # =======================================================================
+        page = self.create_page_template('Scrolled Composite')
+        self.create_scrolled_page(page)
+        self.pages['Scrolled'] = page
+
         #=======================================================================
         # create radar chart
         #=======================================================================
@@ -195,6 +204,14 @@ class ControlsDemo():
         header = Label(tab, text=heading, halign='left')
         header.css = 'headline'#font = header.font.modify(size='16px', bf=1)
         return tab
+
+    def create_scrolled_page(self, parent):
+        page = Composite(parent, layout=CellLayout(halign='fill', valign='fill'))
+        container = Composite(page, layout=RowLayout())
+        Label(container, 'This frame is scrollable:', halign='left')
+        scrolled = ScrolledComposite(container, vscroll=True, hscroll=True)  #, minwidth=300, minheight=300, border=True)
+        scrolled.content.layout = CellLayout(minwidth=700, minheight=700)  #RowLayout(halign='fill', valign='fill')
+        Label(scrolled.content, halign='fill', valign='fill', padding=20).css = 'bgrepeat'
 
     def create_tabfolder_page(self, parent):
         page = Composite(parent, layout=RowLayout(halign='fill', valign='fill', equalheights=True))

@@ -39,6 +39,11 @@ Composite.navbar {
   padding: 0px 0px 10px 0px;
 }
 
+Label.bgrepeat {
+    background-image: url('images/salvage.gif');
+    background-repeat: repeat;
+}
+
 Label.header {
   font: 72px 'Debby';
   text-shadow: 1px 1px 0px black;
