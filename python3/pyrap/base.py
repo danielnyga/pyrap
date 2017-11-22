@@ -25,7 +25,7 @@ routes = (
     '/(.*)', 'RequestDispatcher',
 )
 
-web.config.debug = True
+web.config.debug = False
 debug = True
 
 dnutils.logs.loggers({
