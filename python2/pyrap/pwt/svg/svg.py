@@ -1,6 +1,7 @@
 import os
 from io import BytesIO
 
+from dnutils import out, ifnone
 from lxml.etree import XMLSyntaxError
 
 from pyrap import session
@@ -8,7 +9,6 @@ from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
 from pyrap.events import OnSelect, _rwt_selection_event, _rwt_event
 from pyrap.themes import WidgetTheme
-from pyrap.utils import out, ifnone
 from pyrap.widgets import Widget, constructor, checkwidget
 from lxml import etree as ET
 

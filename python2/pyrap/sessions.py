@@ -4,24 +4,22 @@ Created on Oct 27, 2015
 @author: nyga
 '''
 import datetime
-import re
-
 import os
+import re
+import time
 import urlparse
 
-from dnutils.threads import ThreadInterrupt, sleep, SuspendableThread
-
-import web
-import time
-
-from dnutils import Lock, out, RLock, ifnone, logs
 import dnutils
+import web
+from dnutils import RLock, ifnone, logs
+from dnutils.threads import ThreadInterrupt, sleep, SuspendableThread
+from web import utils
 from web.session import sha1
+from web.utils import Storage
 
 from pyrap import threads
-from web.utils import Storage
-from web import utils
 from pyrap.ptypes import Event
+
 
 _defconf = utils.storage({
     'cookie_name': 'webpy_session_id',
