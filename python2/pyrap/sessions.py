@@ -11,7 +11,7 @@ import urlparse
 
 import dnutils
 import web
-from dnutils import RLock, ifnone, logs
+from dnutils import RLock, ifnone, logs, out
 from dnutils.threads import ThreadInterrupt, sleep, SuspendableThread
 from web import utils
 from web.session import sha1
@@ -46,10 +46,12 @@ class SessionKilled(Event):
 class InvalidSessionError(Exception):
     pass
 
+
 class SessionError(Exception):
     pass
 
-class PyRAPSession:
+
+class PyRAPSession(object):
     '''
     Session management for pyRAP.
     '''
@@ -87,7 +89,6 @@ class PyRAPSession:
             store.threads = []
             store.ctime = datetime.datetime.now()
             store.atime = store.ctime
-            store.last_activicty = datetime.datetime.now()
 
     @property
     def _threads(self):
@@ -222,7 +223,6 @@ class SessionCleanupThread(SuspendableThread):
             session = self.session
             while not dnutils.threads.interrupted():
                 logger.debug(len(list(session._PyRAPSession__sessions.keys())), 'sessions active.')
-                # logs.expose('/pyrap/sessions', list(session._PyRAPSession__sessions.values()), ignore_errors=True)
                 for sid in set(session._PyRAPSession__sessions.keys()):
                     session._PyRAPSession__locals['session_id'] = sid
                     with session._PyRAPSession__lock:

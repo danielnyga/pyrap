@@ -33,6 +33,7 @@ from pyrap.events import FocusEventData
 from pyrap.exceptions import ResourceError
 from pyrap.handlers import PushServiceHandler, FileUploadServiceHandler
 from pyrap.ptypes import Image
+from pyrap.sessions import SessionError
 from pyrap.themes import Theme, FontMetrics
 from pyrap.widgets import Display
 import collections

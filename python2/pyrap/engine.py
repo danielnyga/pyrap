@@ -412,7 +412,7 @@ class SessionRuntime(object):
         # first consolidate the operations to avoid duplicate computations
         if msg.head.get('shutdown', False):
             self.headers['cid'] = None
-            session.disconnect_client()
+            session.expire()
             return
         ops = []
         for o in msg.operations:
