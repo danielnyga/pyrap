@@ -270,7 +270,8 @@ class GridCell(LayoutAdapter):
                     minwidth = max(minwidths) * len(self.grid.cols)
                 else:
                     minwidth = sum(minwidths)
-                self._minwidth += minwidth + (len(self.grid.cols) - 1) * self.layout.hspace
+                if self.layout.hexceed == 'pack':
+                    self._minwidth += minwidth + (len(self.grid.cols) - 1) * self.layout.hspace
                 self._widgetsize = max(self._minwidth, ifnone(self.layout.minwidth, 0)), h
                 self._minwidth = max(self._minwidth, self._widgetsize[0]) + self.layout.padding_left + self.layout.padding_right
                 self._minwidth = max(self._minwidth, ifnone(self.layout.cell_minwidth, 0))
@@ -284,7 +285,8 @@ class GridCell(LayoutAdapter):
                     minheight = maxminheight * len(self.grid.rows)
                 else:
                     minheight = sum(minheights)
-                self._minheight += minheight + (len(self.grid.rows) - 1) * self.layout.vspace
+                if self.layout.vexceed == 'pack':
+                    self._minheight += minheight + (len(self.grid.rows) - 1) * self.layout.vspace
                 self._widgetsize = w, max(self._minheight, ifnone(self.layout.minheight, 0))
                 self._minheight = max(self._minheight, self._widgetsize[1]) + self.layout.padding_top + self.layout.padding_bottom
                 self._minheight = max(self._minheight, ifnone(self.layout.cell_minheight, 0))
@@ -734,13 +736,17 @@ class GridLayout(Layout):
     EQUAL_HEIGHTS = False
     EQUAL_WIDTHS = False
     SQUARED = False
-    
+
+    H_EXCEED = 'pack'
+    V_EXCEED = 'pack'
+
     def __init__(self, cols=None, rows=None, flexrows=None, flexcols=None, minwidth=None, 
                  maxwidth=None, minheight=None, maxheight=None, valign=None, halign=None,
                  cell_minwidth=None, cell_maxwidth=None, cell_minheight=None,
                  cell_maxheight=None, vspace=None, hspace=None, equalheights=None,
                  equalwidths=None, squared=None, padding_top=None, padding_bottom=None,
-                 padding_left=None, padding_right=None, padding=None):
+                 padding_left=None, padding_right=None, padding=None, exceed=None,
+                 hexceed=None, vexceed=None):
         Layout.__init__(self, minwidth=minwidth, maxwidth=maxwidth, minheight=minheight,
                         maxheight=maxheight, valign=valign, halign=halign,
                         cell_minwidth=cell_minwidth, cell_maxwidth=cell_maxwidth,
@@ -768,6 +774,8 @@ class GridLayout(Layout):
             self.flexcols = ifnone(flexcols, {})
         self.vspace = ifnone(vspace, self.VSPACE)
         self.hspace = ifnone(hspace, self.HSPACE)
+        self.hexceed = ifnone(hexceed, ifnone(exceed, self.H_EXCEED))
+        self.vexceed = ifnone(vexceed, ifnone(exceed, self.V_EXCEED))
         self.equalheights = equalheights
         self.equalwidths = equalwidths
         self.squared = squared
@@ -784,7 +792,8 @@ class CellLayout(GridLayout):
                  maxheight=None, valign=None, halign=None, cell_minwidth=None, 
                  cell_maxwidth=None, cell_minheight=None, cell_maxheight=None,
                  squared=None, padding_top=None, padding_bottom=None,
-                 padding_left=None, padding_right=None, padding=None):
+                 padding_left=None, padding_right=None, padding=None, exceed=None,
+                 hexceed=None, vexceed=None):
         GridLayout.__init__(self, cols=1, flexcols={0: 1}, flexrows={0: 1}, maxwidth=maxwidth,
                         minwidth=minwidth, minheight=minheight, maxheight=maxheight,
                         valign=valign, halign=halign, cell_minwidth=cell_minwidth, 
@@ -792,7 +801,12 @@ class CellLayout(GridLayout):
                         cell_maxheight=cell_maxheight, squared=squared,
                         padding_top=padding_top, padding_bottom=padding_bottom,
                         padding_left=padding_left, padding_right=padding_right,
-                        padding=padding)
+                        padding=padding, exceed=exceed, vexceed=vexceed, hexceed=hexceed)
+
+    def adapt(self, widget, parent):
+        if len(widget.children) > 1:
+            raise LayoutError('Cell layout may only have one child. (created at %s)' % str(widget._created))
+        return GridCell(widget, parent)
 
 
 class RowLayout(GridLayout): 
@@ -801,7 +815,8 @@ class RowLayout(GridLayout):
                  maxheight=None, valign=None, halign=None, cell_maxwidth=None, 
                  cell_minheight=None, cell_maxheight=None, cell_minwidth=None,
                  equalheights=None, padding_top=None, padding_bottom=None,
-                 padding_left=None, padding_right=None, vspace=None, padding=None):
+                 padding_left=None, padding_right=None, vspace=None, padding=None, exceed=None,
+                 hexceed=None, vexceed=None):
         GridLayout.__init__(self, cols=1, flexrows=flexrows, flexcols={0: 1}, maxwidth=maxwidth,
                         minwidth=minwidth, minheight=minheight, maxheight=maxheight,
                         valign=valign, halign=halign, cell_minwidth=cell_minwidth, 
@@ -809,7 +824,8 @@ class RowLayout(GridLayout):
                         cell_maxheight=cell_maxheight, equalheights=equalheights,
                         padding_top=padding_top, padding_bottom=padding_bottom,
                         padding_left=padding_left, padding_right=padding_right, 
-                        vspace=vspace, padding=padding)
+                        vspace=vspace, padding=padding, exceed=exceed, vexceed=vexceed,
+                        hexceed=hexceed)
         
 
 class ColumnLayout(GridLayout): 
@@ -818,7 +834,8 @@ class ColumnLayout(GridLayout):
                  maxheight=None, valign=None, halign=None, cell_maxwidth=None, 
                  cell_minheight=None, cell_maxheight=None, cell_minwidth=None,
                  equalwidths=None, padding_top=None, padding_bottom=None,
-                 padding_left=None, padding_right=None, hspace=None, padding=None):
+                 padding_left=None, padding_right=None, hspace=None, padding=None,
+                 exceed=None, hexceed=None, vexceed=None):
         GridLayout.__init__(self, rows=1, flexrows={0: 1}, flexcols=flexcols, maxwidth=maxwidth,
                         minwidth=minwidth, minheight=minheight, maxheight=maxheight,
                         valign=valign, halign=halign, cell_minwidth=cell_minwidth, 
@@ -826,7 +843,8 @@ class ColumnLayout(GridLayout):
                         cell_maxheight=cell_maxheight, equalwidths=equalwidths,
                         padding_top=padding_top, padding_bottom=padding_bottom,
                         padding_left=padding_left, padding_right=padding_right,
-                        hspace=hspace, padding=padding)
+                        hspace=hspace, padding=padding, exceed=exceed, vexceed=vexceed,
+                        hexceed=hexceed)
 
 
 class StackLayout(GridLayout):
@@ -834,9 +852,9 @@ class StackLayout(GridLayout):
     def __init__(self, minwidth=None, 
                  maxwidth=None, minheight=None, maxheight=None, valign=None, halign=None,
                  cell_minwidth=None, cell_maxwidth=None, cell_minheight=None,
-                 cell_maxheight=None,
-                 padding_top=None, padding_bottom=None,
-                 padding_left=None, padding_right=None, padding=None):
+                 cell_maxheight=None, padding_top=None, padding_bottom=None,
+                 padding_left=None, padding_right=None, padding=None, exceed=None,
+                 hexceed=None, vexceed=None):
         GridLayout.__init__(self, cols=1, 
                             minwidth=minwidth, maxwidth=maxwidth, minheight=minheight,
                             maxheight=maxheight,
@@ -845,7 +863,8 @@ class StackLayout(GridLayout):
                             cell_maxheight=cell_maxheight, padding_top=padding_top,
                             padding_bottom=padding_bottom, padding_left=padding_left,
                             padding_right=padding_right, padding=padding, vspace=None,
-                            equalwidths=(halign=='fill'), equalheights=(valign=='fill'))
+                            equalwidths=(halign=='fill'), equalheights=(valign=='fill'),
+                            exceed=exceed, vexceed=vexceed, hexceed=hexceed)
 
     def adapt(self, widget, parent):
         return StackLayoutAdapter(widget, parent)
