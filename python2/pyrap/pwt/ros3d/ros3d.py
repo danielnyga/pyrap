@@ -1,4 +1,7 @@
+import codecs
 import os
+
+from dnutils import out
 
 from pyrap import locations
 from pyrap import session
@@ -14,24 +17,17 @@ class ROS3D(Widget):
     _defstyle_ = Widget._defstyle_
 
     @constructor('ROS3D')
-    def __init__(self, parent, cssid=None, requiredjs=None, url=None, port=None, urdfdata=None, **options):
+    def __init__(self, parent, cssid=None, url=None, port=None, urdfdata=None, **options):
         Widget.__init__(self, parent, **options)
-        if requiredjs is None:
-            requiredjs = []
         self._cssid = cssid
         self._url = url
         self._port = port
         self._urdfdata = urdfdata
         rwt_loc = os.path.join(locations.pwt_loc, 'ros3d', 'robotwebtools')
-        self._requiredjs = [os.path.join(rwt_loc, 'three.js'),
-                            os.path.join(rwt_loc, 'ColladaLoader.js'),
-                            os.path.join(rwt_loc, 'STLLoader.js'),
-                            os.path.join(rwt_loc, 'ColladaLoader2.js'),
-                            os.path.join(rwt_loc, 'eventemitter2.min.js'),
-                            os.path.join(rwt_loc, 'roslib.js'),
-                            os.path.join(rwt_loc, 'ros3d.js')]
-        self._requiredjs.extend(requiredjs)
-        session.runtime.ensurejsresources(self._requiredjs)
+        for req in ['three.js', 'ColladaLoader.js', 'STLLoader.js', 'ColladaLoader2.js', 'eventemitter2.min.js', 'roslib.js', 'ros3d.js']:
+            out('loading', os.path.join(rwt_loc, req))
+            with codecs.open(os.path.join(rwt_loc, req), 'r', encoding='utf8') as f:
+                session.runtime.ensurejsresources(f.read(), name=req, force=True)
         self._gwidth = None
         self._gheight = None
         self.theme = ROS3DTheme(self, session.runtime.mngr.theme)
