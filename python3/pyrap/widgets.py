@@ -891,6 +891,8 @@ class Label(Widget):
         if RWT.MARKUP in self.style:
             options.markupEnabled = True
             options.customVariant = 'variant_markup'
+        if RWT.WRAP in self.style:
+            options.style.append('WRAP')
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
 
     @property
@@ -947,11 +949,12 @@ class Label(Widget):
         session.runtime << RWTSetOperation(self.id, {'text': self._text})
         
     def compute_size(self):
+        w, h = 0, 0
         if self.img is not None:
             w, h = self.img.size
-        else:
+        elif self._textalign != 'wrap':
             lines = self._text.split('\n')
-            w = max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
+            w += max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
             h *= len(lines)
         padding = self.theme.padding
