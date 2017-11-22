@@ -1488,12 +1488,20 @@ class ScrolledCompositeTheme(WidgetTheme):
 class ScrollBarTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'ScrollBar')
+        WidgetTheme.__init__(self, widget, theme, 'ScrollBar', 'ScrollBar-Thumb')
         self._bg = None
 
     @property
     def margin(self):
         return self._theme.get_property('margin', 'ScrollBar', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def width(self):
+        return self._theme.get_property('width', 'ScrollBar', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def minheight(self):
+        return self._theme.get_property('min-height', 'ScrollBar-Thumb', self.custom_variant(), self.styles(), self.states())
 
 
 class ScaleTheme(WidgetTheme):

@@ -1454,6 +1454,7 @@ class Composite(Widget):
         _, _, w, h = self.bounds
         return l, t, w - l - r, h - t - b
 
+
 class Cols(Composite):
     '''A composite only consisting of horizontally queued widgets.'''
 
@@ -1585,10 +1586,12 @@ class ScrolledComposite(Composite):
 
     @constructor('ScrolledComposite')
     def __init__(self, parent,**options):
-        Widget.__init__(self, parent, **options)
+        Composite.__init__(self, parent, **options)
         self.theme = ScrolledCompositeTheme(self, session.runtime.mngr.theme)
         self._content = None
-        self.layout = CellLayout(halign='fill', valign='fill')
+        self.layout = CellLayout(exceed='truncate', halign=self.layout.halign, valign=self.layout.valign,
+                                 minwidth=self.layout.minwidth, minheight=self.layout.minheight,
+                                 cell_minwidth=self.layout.cell_minwidth, cell_minheight=self.layout.cell_minheight)
         self._hbar, self._vbar = None, None
         
     def create_content(self):
@@ -1599,7 +1602,6 @@ class ScrolledComposite(Composite):
             self._vbar = ScrollBar(self, orientation=RWT.VERTICAL)
             self._vbar.visible = True
         self.content = Composite(self)
-
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1636,6 +1638,15 @@ class ScrolledComposite(Composite):
         self._content = content
         session.runtime << RWTSetOperation(self.id, {'content': content.id})
 
+    def compute_size(self):
+        width, height = 0, 0
+        if RWT.HSCROLL in self.style:
+            width += self._hbar.theme.minheight
+            height += self._hbar.theme.width
+        if RWT.VSCROLL in self.style:
+            height += self._vbar.theme.minheight
+            width += self._vbar.theme.width
+        return width, height
 
 class ScrollBar(Widget):
 
@@ -1864,7 +1875,7 @@ class TabItem(Widget):
         if self.img is not None:
             w, h = self.img.size
         else:
-            w, h = session.runtime.textsize_estimate(self.theme.font, self._text)
+            w, h = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
         width += w
         height += h
         return width, height
