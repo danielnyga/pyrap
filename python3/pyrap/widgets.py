@@ -457,12 +457,12 @@ class Display(Widget):
     def __init__(self, parent):
         Widget.__init__(self, parent)
         self._cursor_loc = (px(0), px(0))
-        
-        
+
     def _handle_set(self, op):
         for k, v in op.args.items():
             if k not in ('cursorLocation', ): Widget._handle_set(self, op) 
-            if k == 'cursorLocation': self._cursor_loc = list(map(px, v))
+            if k == 'cursorLocation':
+                self._cursor_loc = list(map(px, v))
             if k == 'focusControl':
                 if v in session.runtime.windows:
                     session.runtime.windows._set_focus(session.runtime.windows[v])
@@ -891,6 +891,8 @@ class Label(Widget):
         if RWT.MARKUP in self.style:
             options.markupEnabled = True
             options.customVariant = 'variant_markup'
+        if RWT.WRAP in self.style:
+            options.style.append('WRAP')
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
 
     @property
@@ -947,11 +949,12 @@ class Label(Widget):
         session.runtime << RWTSetOperation(self.id, {'text': self._text})
         
     def compute_size(self):
+        w, h = 0, 0
         if self.img is not None:
             w, h = self.img.size
-        else:
+        elif self._textalign != 'wrap':
             lines = self._text.split('\n')
-            w = max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
+            w += max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
             h *= len(lines)
         padding = self.theme.padding
