@@ -18,7 +18,6 @@ import StringIO
 import dnutils
 import web
 from datetime import datetime
-from web.session import SessionExpired
 from web.utils import storify, Storage
 from web.webapi import notfound, badrequest, seeother, notmodified
 
@@ -33,6 +32,7 @@ from pyrap.events import FocusEventData
 from pyrap.exceptions import ResourceError
 from pyrap.handlers import PushServiceHandler, FileUploadServiceHandler
 from pyrap.ptypes import Image
+from pyrap.sessions import SessionError
 from pyrap.themes import Theme, FontMetrics
 from pyrap.widgets import Display
 import rfc822
@@ -62,7 +62,7 @@ class ApplicationManager(object):
         self.startup_page = None
         with open(os.path.join(locations.html_loc, 'pyrap.html')) as f:
             self.startup_page = f.read()
-        self.log_ = getlogger(self.__class__.__name__)
+        self.log_ = getlogger('/pyrap/main')
         self.httplog = getlogger('/pyrap/http_msgs')
 
     def _install_theme(self, name, theme):
@@ -130,7 +130,6 @@ class ApplicationManager(object):
         application `clazz` in from the config and attaching it to the HTTP session.
         '''
         session.new()
-        session.connect_client()
         session.on_kill += lambda *_: out('killed', session.id)
         session._PyRAPSession__sessiondata.app = self
         session._PyRAPSession__sessiondata.runtime = SessionRuntime(self, self.config.clazz())
@@ -171,11 +170,14 @@ class ApplicationManager(object):
         # HANDLE SERVICES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         if 'servicehandler' in query:
-            handler = session.runtime.servicehandlers.get(query['servicehandler'])
-            if handler is not None:
-                return handler.run(web.ctx.environ, content, **query)
-            else:
-                raise notfound()
+            try:
+                handler = session.runtime.servicehandlers.get(query['servicehandler'])
+                if handler is not None:
+                    return handler.run(web.ctx.environ, content, **query)
+                else:
+                    raise notfound()
+            except SessionError:
+                raise rwterror(RWTError.SESSION_EXPIRED)
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # LOAD EXISTING OR START NEW SESSION
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -200,10 +202,9 @@ class ApplicationManager(object):
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         # HANDLE THE RUNTIME MESSAGES
         # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        if not args or args[0] != 'pyrap':  # this is a pyrap message (modify this in pyrap.html)
-            raise notfound()
         try:
-            session.atime = datetime.now()
+            if not args or args[0] != 'pyrap':  # this is a pyrap message (modify this in pyrap.html)
+                raise notfound()
             session.runtime.relay.acquire()
             msg = parse_msg(content.decode('utf8'))
             self.httplog.debug('>>> ' + str(msg))
@@ -217,7 +218,7 @@ class ApplicationManager(object):
             self.httplog.debug('<<< ' + smsg)
             web.header('Content-Type', 'application/json')
             return smsg
-        except SessionExpired:
+        except SessionError:
             raise rwterror(RWTError.SESSION_EXPIRED)
         except:
             traceback.print_exc()
@@ -428,7 +429,8 @@ class SessionRuntime(object):
                     break
             if not consolidated:
                 ops.append(o)
-
+        if len(ops) > 1:
+            session.touch()
         for o in sorted(ops, key=lambda o: {RWTSetOperation: 0, RWTNotifyOperation: 1, RWTCallOperation: 2}[type(o)]):
             self.log_.debug('   >>> ' + str(o))
             if isinstance(o, RWTNotifyOperation):

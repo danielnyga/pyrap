@@ -46,6 +46,8 @@ class SessionKilled(Event):
 class InvalidSessionError(Exception):
     pass
 
+class SessionError(Exception):
+    pass
 
 class PyRAPSession:
     '''
@@ -55,7 +57,6 @@ class PyRAPSession:
     def __init__(self, server=None, config=None):
         if server:
             server.add_processor(self._prepare_thread)
-        self.__lock = RLock()
         self.__sessions = {}
         self.__locals = web.threadeddict()
         self._config = ifnone(config, _defconf)
@@ -63,26 +64,30 @@ class PyRAPSession:
     def _prepare_thread(self, handler):
         request = Storage()
         request.query = {str(k): str(v) for k, v in urlparse.parse_qsl(web.ctx.query[1:], keep_blank_values=True)}
-        # cookie_name = self._config.cookie_name
         # get the session or create a new one if necessary
         self.__locals['session_id'] = request.query.get('cid')  # web.cookies().get(cookie_name)
         return handler()
 
+    @property
+    def __lock(self):
+        return self.__sessiondata.lock
+
     def new(self):
-        sid = self.__generate_session_id()
-        self.__locals['session_id'] = sid
-        store = Storage()
-        self.__sessions[sid] = store
-        # self.connect_client(sid)
-        store.on_kill = SessionKilled()
-        store.ip = web.ctx.ip
-        store.expired = False
-        store.threads = []
-        store.ctime = datetime.datetime.now()
-        store.atime = store.ctime
-        store.last_activicty = datetime.datetime.now()
-        store.client = None
-        # self.__init_session(sid)
+        lock = RLock()
+        with lock:
+            sid = self.__generate_session_id()
+            self.__locals['session_id'] = sid
+            store = Storage()
+            self.__sessions[sid] = store
+            self.connect_client()
+            store.lock = lock
+            store.on_kill = SessionKilled()
+            store.ip = web.ctx.ip
+            store.expired = False
+            store.threads = []
+            store.ctime = datetime.datetime.now()
+            store.atime = store.ctime
+            store.last_activicty = datetime.datetime.now()
 
     @property
     def _threads(self):
@@ -96,7 +101,10 @@ class PyRAPSession:
 
     @property
     def __sessiondata(self):
-        return self.__sessions[self.__locals['session_id']]
+        sid = self.__locals['session_id']
+        if sid not in self.__sessions:
+            raise SessionError()
+        return self.__sessions[sid]
 
     def __generate_session_id(self):
         """Generate a random id for session"""
@@ -110,6 +118,9 @@ class PyRAPSession:
             if sid not in self.__sessions:
                 break
         return sid
+
+    def touch(self):
+        self.__sessiondata.atime = datetime.datetime.now()
 
     @property
     def app(self):
@@ -214,16 +225,17 @@ class SessionCleanupThread(SuspendableThread):
                 # logs.expose('/pyrap/sessions', list(session._PyRAPSession__sessions.values()), ignore_errors=True)
                 for sid in set(session._PyRAPSession__sessions.keys()):
                     session._PyRAPSession__locals['session_id'] = sid
-                    if session.expired:
-                        logger.debug('killing session', session.id)
-                        session.on_kill.notify(session)
-                        # clean up the SessionThreads belonging to this session
-                        for t in session._threads:
-                            if isinstance(t, threads.SuspendableThread):
-                                t.interrupt()
-                        for t in session._threads:
-                            t.join()
-                        del session._PyRAPSession__sessions[sid]
+                    with session._PyRAPSession__lock:
+                        if session.expired:
+                            logger.debug('killing session', session.id)
+                            session.on_kill.notify(session)
+                            # clean up the SessionThreads belonging to this session
+                            for t in session._threads:
+                                if isinstance(t, threads.SuspendableThread):
+                                    t.interrupt()
+                            for t in session._threads:
+                                t.join()
+                            del session._PyRAPSession__sessions[sid]
                 sleep(2)
         except ThreadInterrupt:
             logger.info('session cleanup thread terminated.')
