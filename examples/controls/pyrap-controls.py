@@ -209,7 +209,7 @@ class ControlsDemo():
         page = Composite(parent, layout=CellLayout(halign='fill', valign='fill'))
         container = Composite(page, layout=RowLayout())
         Label(container, 'This frame is scrollable:', halign='left')
-        scrolled = ScrolledComposite(container, vscroll=True, hscroll=True)  #, minwidth=300, minheight=300, border=True)
+        scrolled = ScrolledComposite(container, vscroll=True, hscroll=True, minwidth=300, minheight=300, border=True)
         scrolled.content.layout = CellLayout(minwidth=700, minheight=700)  #RowLayout(halign='fill', valign='fill')
         Label(scrolled.content, halign='fill', valign='fill', padding=20).css = 'bgrepeat'
 
