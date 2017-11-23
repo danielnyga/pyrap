@@ -674,7 +674,6 @@ List-Item:even:hover {
     from( #ebebeb ),
     to( #d5d5d5 )
   );
-  opacity: .2;
 }
 
 List-Item:even:selected {
@@ -684,8 +683,18 @@ List-Item:even:selected {
     from( #5882b5 ),
     to( #416693 )
   );
-  opacity: 0.2;
 }
+
+List-Item:even:selected:hover {
+  color: #ffffff;
+  background-image: none
+}
+
+List-Item:selected:hover {
+  color: #ffffff;
+  background-image: none;
+}
+
 
 List-Item:even:selected:unfocused {
   color: #ffffff;
@@ -747,6 +756,12 @@ MenuItem:pressed {
     from( #416693 ),
     to( #5882b5 )
   );
+}
+
+MenuItem:disabled:hover {
+  color: #bdbdbd;
+  text-shadow: none;
+  background-image: none;
 }
 
 MenuItem:disabled {
