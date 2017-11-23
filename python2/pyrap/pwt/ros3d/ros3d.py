@@ -17,9 +17,8 @@ class ROS3D(Widget):
     _defstyle_ = Widget._defstyle_
 
     @constructor('ROS3D')
-    def __init__(self, parent, cssid=None, url=None, port=None, urdfdata=None, **options):
+    def __init__(self, parent, url=None, port=None, urdfdata=None, **options):
         Widget.__init__(self, parent, **options)
-        self._cssid = cssid
         self._url = url
         self._port = port
         self._urdfdata = urdfdata
@@ -32,10 +31,9 @@ class ROS3D(Widget):
         self._gheight = None
         self.theme = ROS3DTheme(self, session.runtime.mngr.theme)
 
+
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        if self._cssid:
-            options.cssid = self._cssid
         if self._url:
             options.url = self._url
         if self._port:

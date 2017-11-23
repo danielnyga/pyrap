@@ -521,10 +521,12 @@ class SessionRuntime(object):
                 files = self.mngr.config.requirejs
             for p in files:
                 if os.path.isfile(p):
-                    self.requirejs(p)
+                    with open(p) as fi:
+                        self.requirejs(fi)
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
-                        self.requirejs(f)
+                        with open(f) as fi:
+                            self.requirejs(fi)
         if self.mngr.config.requirecss:
             if not isinstance(self.mngr.config.requirecss, list):
                 files = [self.mngr.config.requirecss]
@@ -532,7 +534,8 @@ class SessionRuntime(object):
                 files = self.mngr.config.requirecss
             for p in files:
                 if os.path.isfile(p):
-                    self.requirecss(p)
+                    with open(p) as fi:
+                        self.requirecss(fi)
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.css')]:
                         self.requirecss(f)
@@ -560,10 +563,7 @@ class SessionRuntime(object):
                         raise Exception('Could not load file', p)
 
     def requirejs(self, f, force=False):
-        stream = StringIO.StringIO()
-        stream.write(f.read().decode('utf8'))
         resource = session.runtime.mngr.resources.registerf(os.path.basename(f.name), 'text/javascript', f, force=force)
-        stream.close()
         self << RWTCallOperation('rwt.client.JavaScriptLoader', 'load', {'files': [resource.location]})
 
     def requirejstag(self, code):
