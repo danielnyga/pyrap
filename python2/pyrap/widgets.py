@@ -11,7 +11,7 @@ import time
 import re
 
 import dnutils
-from dnutils import ifnone, allnone
+from dnutils import ifnone, allnone, first
 from dnutils.debug import _caller, out
 from dnutils.stats import stopwatch, print_stopwatches
 
@@ -2653,12 +2653,15 @@ class Table(Widget):
 
     _rwt_class_name_ = 'rwt.widgets.Grid'
 
-    _styles_ = Composite._styles_ + BiMap({'noscroll': RWT.NOSCROLL,
+    _styles_ = Widget._styles_ + BiMap({'noscroll': RWT.NOSCROLL,
                                            'single': RWT.SINGLE,
                                            'multi': RWT.MULTI})
+    _defstyle_ = Widget._defstyle_ | RWT.SINGLE | RWT.BORDER
 
     @constructor('Table')
-    def __init__(self, parent, markupenabled=False, bgimg=None, indentwidth=0, items=0, itemheight=25, headervisible=True, headerheight=30, **options):
+    def __init__(self, parent, markupenabled=False, bgimg=None, indentwidth=0, items=0,
+                 itemheight=25, headervisible=True, headerheight=30, linesvisible=True,
+                 colsmoveable=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = TableTheme(self, session.runtime.mngr.theme)
         self._markupenabled = markupenabled
@@ -2668,11 +2671,13 @@ class Table(Widget):
         self._columncount = 0
         self._itemcount = items
         self._itemheight = itemheight
+        self._linesvisible = linesvisible
         self._headervisible = headervisible
         self._headerheight = headerheight
         self._colsmoveable = False
         self._columns = []
         self._items = []
+        self._selection = []
 
     def create_content(self):
         if RWT.NOSCROLL not in self.style:
@@ -2690,17 +2695,23 @@ class Table(Widget):
         options.appearance = 'table'
         options.indentionWidth = self._indentwidth
         options.markupEnabled = self._markupenabled
+        options.headerVisible = self._headervisible
         options.headerHeight = self._headerheight
+        options.linesVisible = self._linesvisible
         options.itemHeight = self._itemheight
         options.treeColumn = -1
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
-
 
     def _get_rwt_img(self, img):
         if img is not None:
             res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
             img = [res.location, img.width.value, img.height.value]
         return img
+
+    def _handle_set(self, op):
+        for key, value in op.args.iteritems():
+            if key == 'selection':
+                self._selection = [session.runtime.windows[id_].idx for id_ in value]
 
     @property
     def hbar(self):
@@ -2739,15 +2750,15 @@ class Table(Widget):
         self._columncount = colcount
         session.runtime << RWTSetOperation(self.id, {'columnCount': colcount})
 
-    @property
-    def itemcount(self):
-        return self._itemcount
+    # @property
+    # def itemcount(self):
+    #     return self._itemcount
 
-    @itemcount.setter
-    @checkwidget
-    def itemcount(self, items):
-        self._itemcount = items
-        session.runtime << RWTSetOperation(self.id, {'itemCount': items})
+    # @itemcount.setter
+    # @checkwidget
+    # def itemcount(self, items):
+    #     self._itemcount = items
+    #     session.runtime << RWTSetOperation(self.id, {'itemCount': items})
 
     @property
     def itemheight(self):
@@ -2760,6 +2771,7 @@ class Table(Widget):
         session.runtime << RWTSetOperation(self.id, {'itemheight': itemheight})
 
     def linesvisible(self, visible):
+        self._linesvisible = visible
         session.runtime << RWTSetOperation(self.id, {'linesVisible': visible})
 
     def backgroundimg(self, imgpath):
@@ -2768,10 +2780,6 @@ class Table(Widget):
     def headervisible(self, visible):
         self._headervisible = visible
         session.runtime << RWTSetOperation(self.id, {'headerVisible': visible})
-
-    def headerheight(self, h):
-        self._headerheight = h
-        session.runtime << RWTSetOperation(self.id, {'headerHeight': h})
 
     @property
     def colsmoveable(self):
@@ -2787,30 +2795,61 @@ class Table(Widget):
     def itemmetrics(self):
         metrics = []
         left = 0
+        maxheight = 0
         for i, col in enumerate(self.cols):
+            width, height = map(int, col.compute_size())
+            width = ifnone(col.width, width)
+            maxheight = max(height, maxheight)
             col.left = left
-            width = col.w
+            col.width = width
+            # width = col.w
             imgwidth = 0
             for item in self.items:
                 imgwidth = max(imgwidth, item.imgwidth(i))
-
             imgleft = left + col.theme.padding.left.value
             textleft = imgleft + imgwidth
             textwidth = max(0, width - col.theme.padding.left.value - imgwidth)
             metrics.append([col.idx, left, width, imgleft, imgwidth, textleft, textwidth])
             left += width
         session.runtime << RWTSetOperation(self.id, {'itemMetrics': metrics})
+        session.runtime << RWTSetOperation(self.id, {'headerHeight': maxheight})
 
     def additem(self, texts, index=None, **options):
-        TableItem(self, idx=index, texts=texts, **options)
-        self.itemcount = max(self.itemcount, len(self.items))
-        self.itemmetrics()
+        item = TableItem(self, idx=index, texts=texts, **options)
+        session.runtime << RWTSetOperation(self.id, {'itemCount': len(self.items)})
+        return item
 
-    def addcol(self, text, tooltip=None, **options):
-        TableColumn(self, text=text, tooltip=tooltip, **options)
+    def rmitem(self, item):
+        if type(item) is int:
+            item = self.items[item]
+        item.dispose()
+        self.items.remove(item)
+        try:
+            self._selection.remove(item.idx)
+        except ValueError: pass
+        for i in self.items[item.idx:]:
+            i.idx = i.idx - 1
+            if i.idx + 1 in self._selection:
+                self._selection.remove(i.idx + 1)
+                self._selection.append(i.idx)
+        session.runtime << RWTSetOperation(self.id, {'itemCount': len(self.items)})
+
+    def addcol(self, text, tooltip=None, moveable=False, **options):
+        TableColumn(self, text=text, tooltip=tooltip, moveable=moveable, **options)
         self.colcount = max(self.colcount, len(self.cols))
         session.runtime << RWTSetOperation(self.id, {'columnOrder': [c.id for c in self._columns]})
+
+    def compute_size(self):
         self.itemmetrics()
+        return Widget.compute_size(self)
+
+    @property
+    def selection(self):
+        sel = [self.items[i] for i in self._selection]
+        if RWT.MULTI in self.style:
+            return sel
+        else:
+            return first(sel)
 
 
 class TableItem(Widget):
@@ -2819,15 +2858,16 @@ class TableItem(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('TableItem')
-    def __init__(self, parent, texts=None, idx=None, images=None, **options):
+    def __init__(self, parent, texts=None, idx=None, images=None, data=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = TableItemTheme(self, session.runtime.mngr.theme)
-        self._idx = idx if idx else parent.itemcount
+        self._idx = idx if idx else len(parent.items)
         self._texts = texts
         self._images = images
         if self in parent.children:
             parent.children.remove(self)
         self.parent.items.insert(self._idx, self)
+        self.data = data
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -2902,7 +2942,7 @@ class TableColumn(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('TableColumn')
-    def __init__(self, parent, text=None, tooltip=None, width=50, img=None, **options):
+    def __init__(self, parent, text=None, tooltip=None, width=None, img=None, moveable=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = TableColumnTheme(self, session.runtime.mngr.theme)
         self._idx = parent.colcount
@@ -2913,12 +2953,12 @@ class TableColumn(Widget):
         self._moveable = parent.colsmoveable
         self.on_move = OnMove(self)
         self.on_select = OnSelect(self)
-
-        if parent.cols:
-            col = parent.cols[-1]
-            self._left = col.left + col.w
-        else:
-            self._left = 0
+        self._left = 0
+        # if parent.cols:
+        #     col = parent.cols[-1]
+        #     self._left = col.left + col.w
+        # else:
+        #     self._left = 0
 
         if self in parent.children:
             parent.children.remove(self)
@@ -2935,10 +2975,13 @@ class TableColumn(Widget):
         options.width = self._width
         options.left = self._left
         options.moveable = self._moveable
-
         if self._tooltip:
             options.toolTip = self._tooltip
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+
+    def _resize(self, width):
+        self._width = width
+        self.parent.itemmetrics()
 
     def _get_rwt_img(self, img):
         if img is not None:
@@ -2948,6 +2991,7 @@ class TableColumn(Widget):
 
     def _handle_call(self, op):
         if op.method == 'move': self.mv(op.args)
+        if op.method == 'resize': self._resize( **op.args)
 
     def mv(self, args):
         self.parent.cols.remove(self)
@@ -2993,12 +3037,12 @@ class TableColumn(Widget):
         session.runtime << RWTSetOperation(self.id, {'image': self._get_rwt_img(self.img)})
 
     @property
-    def w(self):
+    def width(self):
         return self._width
 
-    @w.setter
+    @width.setter
     @checkwidget
-    def w(self, width):
+    def width(self, width):
         self._width = width
         session.runtime << RWTSetOperation(self.id, {'width': width})
 
