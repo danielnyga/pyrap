@@ -1357,7 +1357,8 @@ class Edit(Widget):
     _rwt_class_name = 'rwt.widgets.Text'
     _styles_ = Widget._styles_ + {'multiline': RWT.MULTI,
                                   'wrap': RWT.WRAP,
-                                  'alignleft': RWT.LEFT}
+                                  'alignleft': RWT.LEFT,
+                                  'password': RWT.PASSWORD}
     _defstyle_ = BitField(Widget._defstyle_ | RWT.BORDER | RWT.LEFT)
 
     @constructor('Edit')
@@ -1386,7 +1387,9 @@ class Edit(Widget):
             options.style.append('WRAP')
         if RWT.LEFT in self.style:
             options.style.append('LEFT')
-
+        if RWT.PASSWORD in self.style:
+            options.style.append('PASSWORD')
+            options.echoChar = '?'
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
