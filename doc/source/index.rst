@@ -32,7 +32,9 @@ Contents:
    
    synopsis
    introduction
-
+   widgets
+   layouts
+   advanced
 
 Indices and tables
 ==================

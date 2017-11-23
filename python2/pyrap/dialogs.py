@@ -60,12 +60,51 @@ def ask_okcancel(parent, title, text):
     return ask_question(parent, title, text, ['ok', 'cancel'])
 
 def msg_ok(parent, title, text):
+    '''
+    Displays a message dialog with the given title and text.
+
+    The dialog only has one single OK button and an "information" icon.
+    The dialog is modal wrt. the parent shell, i.e. the parent shell will be blocked
+    until the user confirms the message by hitting OK.
+
+    :param parent: the parent shell
+    :param title:  text to be displayed in the title bar
+    :param text:   text to be displayed in the message box.
+
+    :return: None
+    '''
     return msg_box(parent, title, text, DLG.INFORMATION)
 
 def msg_warn(parent, title, text):
+    '''
+    Displays a warning message with the given title and text.
+
+    The dialog only has one single OK button and an "warning" icon.
+    The dialog is modal wrt. the parent shell, i.e. the parent shell will be blocked
+    until the user confirms the message by hitting OK.
+
+    :param parent: the parent shell
+    :param title:  text to be displayed in the title bar
+    :param text:   text to be displayed in the message box.
+
+    :return: ``None``
+    '''
     return msg_box(parent, title, text, DLG.WARNING)
 
 def msg_err(parent, title, text):
+    '''
+    Displays a error dialog with the given title and text.
+
+    The dialog only has one single OK button and an "error" icon.
+    The dialog is modal wrt. the parent shell, i.e. the parent shell will be blocked
+    until the user confirms the message by hitting OK.
+
+    :param parent: the parent shell
+    :param title:  text to be displayed in the title bar
+    :param text:   text to be displayed in the message box.
+
+    :return: None
+    '''
     return msg_box(parent, title, text, DLG.ERROR)
     
 
