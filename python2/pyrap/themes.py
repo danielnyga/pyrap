@@ -1163,6 +1163,33 @@ class SeparatorTheme(WidgetTheme):
         return self._theme.get_property('width', 'Label-SeparatorLine', self.custom_variant(), self.styles(), self.states())
 
 
+class SashTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'Sash', 'Sash-Handle')
+
+    def styles(self):
+        styles = WidgetTheme.styles(self)
+        if RWT.HORIZONTAL in self._widget.style:
+            styles.add('[HORIZONTAL')
+        if RWT.VERTICAL in self._widget.style:
+            styles.add('[VERTICAL')
+        return styles
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'Sash', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'Sash', self.custom_variant(), self.styles(),
+                                         self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def width(self):
+        return self._theme.get_property('width', 'Sash', self.custom_variant(), self.styles(), self.states())
+
+
 class LabelTheme(WidgetTheme):
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Label', 'Label-SeparatorLine')

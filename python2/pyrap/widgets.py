@@ -27,12 +27,12 @@ from exceptions import WidgetDisposedError
 from layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout
 from ptypes import px, BitField, BoolVar, NumVar, Color,\
     parse_value, toint, Image
-from themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
+from themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme, \
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
-    TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme,\
-    SeparatorTheme, DecoratorTheme, LinkTheme
+    TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme, \
+    SeparatorTheme, DecoratorTheme, LinkTheme, SashTheme
 from utils import RStorage, BiMap, BitMask
 from collections import OrderedDict
 
@@ -3750,5 +3750,39 @@ class Decorator(Widget):
             y_ = y + h - self.iconheight
         w_ = self.iconwidth
         h_ = self.iconheight
-        return x_, y_, w_, h_ 
-    
+        return x_, y_, w_, h_
+
+
+class Sash(Widget):
+
+    _rwt_class_name = 'rwt.widgets.Sash'
+
+    _styles_ = Widget._styles_
+    _defstyle_ = Widget._defstyle_
+
+    @constructor('Sash')
+    def __init__(self, parent, orientation, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = SashTheme(self, session.runtime.mngr.theme)
+        self.orientation = orientation
+        if self.orientation in ('v', 'vertical'):
+            self.style |= RWT.VERTICAL
+        elif self.orientation == ('h', 'horizontal'):
+            self.style |= RWT.HORIZONTAL
+        self.on_select = OnSelect(self)
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_selection_event(op))
+        return True
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
+
+    def compute_size(self):
+        w = self.theme.width
+        return (w, 0) if RWT.VERTICAL in self.style else (0, w)

@@ -2131,6 +2131,7 @@ ExpandItem-Button:expanded:hover {
 /* Sash default theme */
 
 Sash {
+  width: 5px;
   border: none;
   background-image: none;
   background-color: transparent;

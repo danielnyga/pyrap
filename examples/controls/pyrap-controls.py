@@ -22,7 +22,7 @@ from pyrap.ptypes import BoolVar, Color, px, Image, Font
 # from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
     Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
-    Menu, MenuItem, Spinner, info, FileUpload, TabFolder
+    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash
 
 
 class ControlsDemo():
@@ -69,10 +69,20 @@ class ControlsDemo():
         # main area
         #=======================================================================
         main = Composite(outer)
-        main.layout = ColumnLayout(halign='fill', valign='fill', flexcols=1, minheight=500)
+        main.layout = ColumnLayout(halign='fill', valign='fill', flexcols=2, minheight=500)
         self.navigation = List(main, border=1, valign='fill', 
                           minwidth=px(250),
                           vscroll=1)
+        # =======================================================================
+        # footer
+        # =======================================================================
+        sash = Sash(main, orientation='v', valign='fill')
+
+        def resize(event):
+            out(event, 'x', event.x, 'y', event.y)
+
+        sash.on_select += resize
+
         #=======================================================================
         # footer
         #=======================================================================
@@ -88,7 +98,7 @@ class ControlsDemo():
         self.content = StackedComposite(main, halign='fill', valign='fill')
         self.create_pages()
         self.navigation.on_select += self.switch_page
-        self.navigation.selection = self.pages['Scrolled']
+        self.navigation.selection = self.pages['Tables']
         self.switch_page()
 
         self.shell.show(True)
@@ -178,6 +188,14 @@ class ControlsDemo():
         self.create_scrolled_page(page)
         self.pages['Scrolled'] = page
 
+        page = self.create_page_template('Table Demo')
+        self.create_table_page(page)
+        self.pages['Tables'] = page
+
+        page = self.create_page_template('Sash Demo')
+        self.create_sash_page(page)
+        self.pages['Sash'] = page
+
         #=======================================================================
         # create radar chart
         #=======================================================================
@@ -204,6 +222,40 @@ class ControlsDemo():
         header = Label(tab, text=heading, halign='left')
         header.css = 'headline'#font = header.font.modify(size='16px', bf=1)
         return tab
+
+    def create_sash_page(self, parent):
+        container = Composite(parent, layout=ColumnLayout(halign='fill', valign='fill', flexcols=[0,2]))
+
+        left = Label(container, 'LEFT', halign='fill', valign='fill', border=True)
+        sash = Sash(container, orientation='v', valign='fill')
+
+        right = Label(container, 'RIGHT', halign='fill', valign='fill', border=True)
+
+
+    def create_table_page(self, parent):
+        table = Table(parent, halign='fill', valign='fill', headervisible=True, colsmoveable=True)
+        table.addcol('Last Name')
+        table.addcol('First Name')
+        table.addcol('Title')
+
+        table.additem(['Nyga', 'Daniel', 'Dr.'])
+        table.additem(['Picklum', 'Mareike', 'M.Sc.'])
+        table.additem(['Beetz', 'Michael', 'Prof. PhD.'])
+        table.additem(['Balint-Benczedi', 'Ferenc', 'M.Sc.'])
+
+        m = Menu(table, popup=True)
+        delete = MenuItem(m, 'Delete...')
+
+        def rmitem(*_):
+            out('removing', table.selection.texts)
+            if table.selection:
+                table.rmitem(table.selection)
+            if not table.items:
+                delete.enabled = False
+
+        delete.on_select += rmitem
+
+        table.menu = m
 
     def create_scrolled_page(self, parent):
         page = Composite(parent, layout=CellLayout(halign='fill', valign='fill'))
@@ -312,18 +364,18 @@ class ControlsDemo():
         def showinfo(*_):
             ret = msg_ok(self.shell,
                    title='pyRAP Message Box', 
-                   text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+                   text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.')
             out('message box returned', ret)
         b.on_select += showinfo
         
         b = Button(grp_info_dlgs, 'Show Warning', halign='fill')
         def showwarn(*_):
-            msg_warn(self.shell, title='pyRAP Warning', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+            msg_warn(self.shell, title='pyRAP Warning', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.')
         b.on_select += showwarn
         
         b = Button(grp_info_dlgs, 'Show Error', halign='fill')
         def showerr(*_):
-            msg_err(self.shell, title='Error Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.\n\nAre you OK with that?')
+            msg_err(self.shell, title='Error Box', text='This is my first message. It can also span multiple lines. You just have to put\nnewline in the message box text.')
         b.on_select += showerr
         
         grp_progress_dlgs = Composite(parent)#, text='Other Dialogs')
@@ -340,7 +392,7 @@ class ControlsDemo():
                 for i in range(100):
                     dlg.status = 'Step %d completed' % (i+1)
                     dlg.inc()
-                    if dlg.cancel: return
+                    if dlg.interrupted: return
                     dlg.push.flush()
                     sleep(.1)
                 dlg.status = 'Done. All tasks completed.'
