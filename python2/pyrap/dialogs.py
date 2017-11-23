@@ -324,6 +324,10 @@ class ProgressDialog(MessageBox):
     
     def inc(self):
         self._primary.value = self._primary.value + 1
+
+    @property
+    def interrupted(self):
+        return self._target._interrupt
     
     @status.setter
     @checkwidget
