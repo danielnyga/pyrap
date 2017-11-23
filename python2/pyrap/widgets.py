@@ -690,7 +690,7 @@ class Combo(Widget):
 
 
     def compute_size(self):
-        w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX')
+        w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX', self.shell())
         for padding in (self.theme.padding, self.theme.itempadding):
             if padding:
                 w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
@@ -1077,9 +1077,9 @@ class Link(Widget):
         else:
             lines = self._displaytext.split('\n')
             w = max(
-                [session.runtime.textsize_estimate(self.theme.font, l)[0] for l
+                [session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l
                  in lines])
-            _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
+            _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
             h *= len(lines)
         padding = self.theme.padding
         if padding:
@@ -1179,7 +1179,7 @@ class Button(Widget):
     
     def compute_size(self):
         width, height = Widget.compute_size(self)
-        tw, th = session.runtime.textsize_estimate(self.theme.font, self._text)
+        tw, th = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
         width += tw
         height += th
         if self.img is not None:
@@ -1266,7 +1266,7 @@ class Checkbox(Widget):
                 self._checked.set(value)
     
     def compute_size(self):
-        w, h = session.runtime.textsize_estimate(self.theme.font, self._text)
+        w, h = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
         textheight = px(h) 
         for padding in (self.theme.padding, self.theme.fipadding):
             if padding:
@@ -1337,7 +1337,7 @@ class Option(Widget):
                 self._checked.set(value)
 
     def compute_size(self):
-        w, h = session.runtime.textsize_estimate(self.theme.font, self._text)
+        w, h = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
         textheight = px(h) 
         for padding in (self.theme.padding, self.theme.fipadding):
             if padding:
@@ -1394,7 +1394,7 @@ class Edit(Widget):
 
     def compute_size(self):
         width, height = Widget.compute_size(self)
-        w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX')
+        w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX', self.shell())
         width += w
         height += h
         return width, height
@@ -2452,7 +2452,7 @@ class MenuItem(Widget):
     def compute_size(self):
         w, h = Widget.compute_size(self)
         if self.text:
-            w_, h_ = session.runtime.textsize_estimate(self.theme.font, self.text)
+            w_, h_ = session.runtime.textsize_estimate(self.theme.font, self.text, self.shell())
             w += w_
             h += h_
         return w, h
@@ -2541,7 +2541,7 @@ class List(Widget):
 
     def _computeitemheight(self):
         if self.itemheight is None:
-            _, h = session.runtime.textsize_estimate(self.theme.font, 'X')
+            _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
             if self.markup:
                 lines = [len(i.split('<br>')) for i in self.items]
                 if lines:
@@ -2888,7 +2888,7 @@ class TableItem(Widget):
         if self.img is not None:
             w, h = self.img.size
         else:
-            w, h = session.runtime.textsize_estimate(self.theme.font, self._text)
+            w, h = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
         width += w
         height += h
 
@@ -3024,7 +3024,7 @@ class TableColumn(Widget):
         if self.img is not None:
             w, h = self.img.size
         else:
-            w, h = session.runtime.textsize_estimate(self.theme.font, self._text)
+            w, h = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
         width += w
         height += h
         return width, height
@@ -3509,7 +3509,7 @@ class Spinner(Widget):
         text = max(str(self.min), str(self.max)) + 'XX'
         if self.digits:
             text += '.'
-        tw, th = session.runtime.textsize_estimate(self.theme.font, text)
+        tw, th = session.runtime.textsize_estimate(self.theme.font, text, self.shell())
         w += max(w1, w2)
         w += tw
         h += th
@@ -3573,7 +3573,7 @@ class FileUpload(Widget):
 
     def compute_size(self):
         width, height = Widget.compute_size(self)
-        tw, th = session.runtime.textsize_estimate(self.theme.font, self._text)
+        tw, th = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
         width += tw
         height += th
         return width, height
