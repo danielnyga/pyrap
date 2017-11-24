@@ -132,7 +132,7 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
 register = register_app
 
 
-def run(port=8080, admintool=False):
+def run(bindip='127.0.0.1', port=8080, admintool=False):
     if admintool:
         sys.path.append(os.path.join(locations.pyrap_path, 'examples', 'pyrap-admin'))
         from admin import PyRAPAdmin
@@ -140,7 +140,7 @@ def run(port=8080, admintool=False):
                  path='admin',
                  entrypoints={'start': PyRAPAdmin.main},
                  name='pyRAP Administration')
-    _server.run(port=port)
+    _server.run(bindip=bindip, port=port)
 
 
 class RequestDispatcher(object):
