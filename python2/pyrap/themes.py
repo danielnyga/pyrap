@@ -1323,6 +1323,14 @@ class ButtonTheme(WidgetTheme):
         return self._theme.get_property('margin', 'Button', self.custom_variant(), self.styles(), self.states())
 
 
+class ToggleTheme(ButtonTheme):
+
+    def styles(self):
+        styles = ButtonTheme.styles(self)
+        styles.add('[TOGGLE')
+        return styles
+
+
 class CheckboxTheme(WidgetTheme):
 
     def __init__(self, widget, theme):

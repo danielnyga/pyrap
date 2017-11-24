@@ -27,6 +27,7 @@ from exceptions import WidgetDisposedError
 from layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout
 from ptypes import px, BitField, BoolVar, NumVar, Color,\
     parse_value, toint, Image
+from pyrap.themes import ToggleTheme
 from themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme, \
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
@@ -1279,6 +1280,29 @@ class Checkbox(Widget):
         h += (self.theme.icon.height.value - textheight) if (self.theme.icon.height.value > textheight) else 0
         w += self.theme.spacing
         return w, h
+
+
+class Toggle(Checkbox, Button):
+
+    @constructor('Toggle')
+    def __init__(self, parent, text='', **options):
+        Checkbox.__init__(self, parent, text=text, **options)
+        Button.__init__(self, parent, text=text, **options)
+        self.theme = ToggleTheme(self, session.runtime.mngr.theme)
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        options.text = self._text
+        options.style.append('TOGGLE')
+        # options.style.append('LEFT')
+        options.tabIndex = 1
+        if self.checked is not None:
+            options.selection = self.checked
+        options.grayed = True if (self.checked is None) else False
+        session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+
+    def compute_size(self):
+        return Button.compute_size(self)
 
 
 class Option(Widget):
