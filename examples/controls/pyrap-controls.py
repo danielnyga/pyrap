@@ -22,7 +22,7 @@ from pyrap.ptypes import BoolVar, Color, px, Image, Font
 # from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
     Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
-    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash
+    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle
 
 
 class ControlsDemo():
@@ -534,8 +534,11 @@ class ControlsDemo():
             b = Checkbox(grp, text='click-%s' % i)
             b.bind(BoolVar())
             b.badge = str(i+1)
-#         b.on_select += select
-        
+
+        pushbuttons = Group(parent, layout=ColumnLayout(halign='fill', equalwidths=True))
+        button = Button(pushbuttons, 'Pushbutton')
+        toggle = Toggle(pushbuttons, 'Togglebutton')
+
     def create_browser_page(self, parent):
         grp = Group(parent, text='Browser')
         # grp.layout = GridLayout(cols=1, minheight=200, minwidth=200, flexcols=0)
