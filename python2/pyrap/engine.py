@@ -3,7 +3,7 @@ Created on Oct 2, 2015
 
 @author: nyga
 '''
-import email
+from email.utils import parsedate_tz, mktime_tz
 import json
 from collections import defaultdict
 from hashlib import md5
@@ -717,8 +717,8 @@ class ResourceManager(object):
         cache_date = web.ctx.env.get('HTTP_IF_MODIFIED_SINCE', 0)
         if cache_date:
             # check if the requested resource is younger than in the client's cache
-            ttuple = email.utils.parsedate_tz(cache_date)
-            cache_date = datetime.utcfromtimestamp(email.utils.mktime_tz(ttuple))
+            ttuple = parsedate_tz(cache_date)
+            cache_date = datetime.utcfromtimestamp(mktime_tz(ttuple))
             if cache_date > resource.last_change:
                 raise notmodified()
         web.modified(resource.last_change)
