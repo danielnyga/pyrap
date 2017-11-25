@@ -131,7 +131,7 @@ def jsonify(o):
         return o.json
     elif isinstance(o, dict):
         return {str(k): jsonify(v) for k, v in o.items()}
-    elif type(o) in (list, tuple):
+    elif type(o) in (list, tuple, map):
         return [jsonify(e) for e in o]
     elif isinstance(o, (int, float, bool, str, type(None))):
         return o

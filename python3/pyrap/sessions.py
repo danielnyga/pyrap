@@ -7,6 +7,7 @@ import datetime
 import re
 
 import os
+import urllib
 
 from dnutils.threads import current_thread, Thread, ThreadInterrupt, sleep, SuspendableThread
 
@@ -116,7 +117,7 @@ class PyRAPSession(object):
             now = time.time()
             secret_key = self._config.secret_key
             hashable = "%s%s%s%s" %(rand, now, utils.safestr(web.ctx.ip), secret_key)
-            sid = sha1(hashable)
+            sid = sha1(hashable.encode('utf8'))
             sid = sid.hexdigest()
             if sid not in self.__sessions:
                 break

@@ -27,12 +27,12 @@ from .exceptions import WidgetDisposedError
 from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout
 from .ptypes import px, BitField, BoolVar, NumVar, Color,\
     parse_value, toint, Image
-from .themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme,\
+from .themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme, \
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
-    TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme,\
-    SeparatorTheme, DecoratorTheme, LinkTheme
+    TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme, \
+    SeparatorTheme, DecoratorTheme, LinkTheme, SashTheme, ToggleTheme
 from .utils import RStorage, BiMap, BitMask
 from collections import OrderedDict
 import collections
