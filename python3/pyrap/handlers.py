@@ -55,7 +55,7 @@ class FileUploadServiceHandler(ServiceHandler):
     def accept(self, fnames):
         token = str(hash(''.join(fnames)))
         self._files[token] = None
-        return token, 'pyrap?servicehandler={}&cid={}&token={}'.format(self.name, session.session_id, token)
+        return token, 'pyrap?servicehandler={}&cid={}&token={}'.format(self.name, session.id, token)
 
     def run(self, headers, content, **kwargs):
         token = kwargs.get('token')
