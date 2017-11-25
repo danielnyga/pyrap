@@ -3,8 +3,5 @@ cssutils
 colored
 pyparsing
 python-multipart
-email
 dnutils
 web.py
-
-
