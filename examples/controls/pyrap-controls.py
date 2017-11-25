@@ -26,6 +26,15 @@ from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, 
     Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle
 
 
+class Images:
+    IMG_UP = Image('images/icons/up.gif')
+    IMG_DOWN = Image('images/icons/down.gif')
+    IMG_CHECK = Image('images/icons/tick.png')
+    IMG_RED = Image('images/icons/bullet_red.png')
+    IMG_GREEN = Image('images/icons/bullet_green.png')
+    IMG_WHITE = Image('images/icons/bullet_white.png')
+
+
 class ControlsDemo():
     
     @staticmethod
@@ -235,15 +244,15 @@ class ControlsDemo():
 
 
     def create_table_page(self, parent):
-        table = Table(parent, halign='fill', valign='fill', headervisible=True, colsmoveable=True)
-        table.addcol('Last Name')
+        table = Table(parent, halign='fill', valign='fill', headervisible=True, colsmoveable=True, check=True)
+        table.addcol('Last Name', img=Images.IMG_RED)
         table.addcol('First Name')
         table.addcol('Title')
 
-        table.additem(['Nyga', 'Daniel', 'Dr.'])
-        table.additem(['Picklum', 'Mareike', 'M.Sc.'])
-        table.additem(['Beetz', 'Michael', 'Prof. PhD.'])
-        table.additem(['Balint-Benczedi', 'Ferenc', 'M.Sc.'])
+        table.additem(['Nyga', 'Daniel', 'Dr.'], images=[Images.IMG_CHECK, None, Images.IMG_GREEN, None])
+        table.additem(['Picklum', 'Mareike', 'M.Sc.'], images=[Images.IMG_CHECK, None, Images.IMG_GREEN, None])
+        table.additem(['Beetz', 'Michael', 'Prof. PhD.'], images=[Images.IMG_DOWN, None, Images.IMG_WHITE, None])
+        table.additem(['Balint-Benczedi', 'Ferenc', 'M.Sc.'], images=[Images.IMG_DOWN, None, Images.IMG_RED, None])
 
         m = Menu(table, popup=True)
         delete = MenuItem(m, 'Delete...')
