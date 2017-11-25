@@ -7,6 +7,7 @@ import base64
 import json
 from collections import OrderedDict
 
+import sys
 from dnutils import out
 from dnutils.threads import sleep, ThreadInterrupt
 from dnutils.tools import ifnone
@@ -90,7 +91,8 @@ class ControlsDemo():
         footer.layout = ColumnLayout(halign='fill', flexcols=0, minheight=50)
         footer.bgimg = Image('images/background_grey.png')
         footer.bg = 'light grey'
-        Label(footer, halign='left', valign='bottom', text='powered by pyRAP v0.1').bg = 'transp'
+        pyversion = '.'.join(map(str, sys.version_info[:3]))
+        Label(footer, halign='left', valign='bottom', text='powered by pyRAP v%s on Python %s' % (pyrap.__version__, pyversion)).bg = 'transp'
 
         #=======================================================================
         # content area
