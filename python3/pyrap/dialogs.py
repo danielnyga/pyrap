@@ -332,7 +332,8 @@ class ProgressDialog(MessageBox):
     @status.setter
     @checkwidget
     def status(self, msg):
-        self.text.text = msg 
+        self.text.text = msg
+        self.dolayout()
     
     def start(self):
         self.push.start()

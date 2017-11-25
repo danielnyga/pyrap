@@ -321,7 +321,7 @@ class ProgressDialog(MessageBox):
     @property
     def status(self):
         return self.text.text
-    
+
     def inc(self):
         self._primary.value = self._primary.value + 1
 
@@ -332,7 +332,8 @@ class ProgressDialog(MessageBox):
     @status.setter
     @checkwidget
     def status(self, msg):
-        self.text.text = msg 
+        self.text.text = msg
+        self.dolayout()
     
     def start(self):
         self.push.start()
