@@ -11,7 +11,7 @@ import time
 import re
 
 import dnutils
-from dnutils import ifnone, allnone
+from dnutils import ifnone, allnone, first
 from dnutils.debug import _caller, out
 from dnutils.stats import stopwatch, print_stopwatches
 
@@ -1674,7 +1674,7 @@ class ScrolledComposite(Composite):
         session.runtime << RWTSetOperation(self.id, {'content': content.id})
 
     def compute_size(self):
-        width, height = 0, 0
+        width, height = Widget.compute_size(self)
         if RWT.HSCROLL in self.style:
             width += self._hbar.theme.minheight
             height += self._hbar.theme.width
