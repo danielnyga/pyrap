@@ -377,7 +377,13 @@ class Widget(object):
             text = ''
         session.runtime << RWTSetOperation(self.id, {'badge': text})
         
-        
+    def _get_rwt_img(self, img):
+        if img is not None:
+            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
+            img = [res.location, img.width.value, img.height.value]
+        else: img = None
+        return img
+
     def compute_size(self):
         '''
         Compute the dimensions of space that this widget will occupy when displayed
@@ -2676,8 +2682,9 @@ class Table(Widget):
     _rwt_class_name_ = 'rwt.widgets.Grid'
 
     _styles_ = Widget._styles_ + BiMap({'noscroll': RWT.NOSCROLL,
-                                           'single': RWT.SINGLE,
-                                           'multi': RWT.MULTI})
+                                        'single': RWT.SINGLE,
+                                        'multi': RWT.MULTI,
+                                        'check': RWT.CHECK})
     _defstyle_ = Widget._defstyle_ | RWT.SINGLE | RWT.BORDER
 
     @constructor('Table')
@@ -2714,6 +2721,9 @@ class Table(Widget):
             options.style.append('SINGLE')
         elif RWT.MULTI in self.style:
             options.style.append('MULTI')
+        if RWT.CHECK in self.style:
+            options.style.append('CHECK')
+            options.checkBoxMetrics = [4, 21]
         options.appearance = 'table'
         options.indentionWidth = self._indentwidth
         options.markupEnabled = self._markupenabled
@@ -2731,7 +2741,7 @@ class Table(Widget):
         return img
 
     def _handle_set(self, op):
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selection':
                 self._selection = [session.runtime.windows[id_].idx for id_ in value]
 
@@ -2823,18 +2833,21 @@ class Table(Widget):
             width = ifnone(col.width, width)
             maxheight = max(height, maxheight)
             col.left = left
-            col.width = width
-            # width = col.w
+            session.runtime << RWTSetOperation(col.id, {'width': width})
             imgwidth = 0
             for item in self.items:
-                imgwidth = max(imgwidth, item.imgwidth(i))
+                imgwidth = int(max(imgwidth, item.imgwidth(i)))
             imgleft = left + col.theme.padding.left.value
+            if RWT.CHECK in self.style and i == 0:
+                imgleft += self.theme.checkbox_width + self.theme.checkbox_margin.left + self.theme.checkbox_margin.right
             textleft = imgleft + imgwidth
-            textwidth = max(0, width - col.theme.padding.left.value - imgwidth)
+            if imgwidth and self.items:
+                textleft += item.theme.cell_spacing
+            textwidth = max(0, width - textleft + left)
             metrics.append([col.idx, left, width, imgleft, imgwidth, textleft, textwidth])
             left += width
-        session.runtime << RWTSetOperation(self.id, {'itemMetrics': metrics})
-        session.runtime << RWTSetOperation(self.id, {'headerHeight': maxheight})
+        session.runtime << RWTSetOperation(self.id, {'itemMetrics': [[int(e) for e in m] for m in metrics]})
+        session.runtime << RWTSetOperation(self.id, {'headerHeight': int(maxheight)})
 
     def additem(self, texts, index=None, **options):
         item = TableItem(self, idx=index, texts=texts, **options)
@@ -2899,13 +2912,9 @@ class TableItem(Widget):
             del options['enabled']
         options.texts = self._texts
         options.index = self.idx
+        if self.images:
+            options.images = [None if i is None else self._get_rwt_img(i) for i in self._images]
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
-
-    def _get_rwt_img(self, img):
-        if img is not None:
-            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
-            img = [res.location, img.width.value, img.height.value]
-        return img
 
     @property
     def idx(self):
@@ -2938,17 +2947,17 @@ class TableItem(Widget):
         session.runtime << RWTSetOperation(self.id, {'images': [self._get_rwt_img(i) for i in images]})
 
     def imgwidth(self, idx):
-        w = px(0)
+        w = 0
         if self.images:
             if self.images[idx] is not None:
-                _, w, _ = self.images[idx]
+                _, w = self.images[idx].size
         return w
-
 
     def compute_size(self):
         width, height = Widget.compute_size(self)
         if self.img is not None:
-            w, h = self.img.size
+            w, h = self.imgwidth()
+            w += '3'
         else:
             w, h = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
         width += w
@@ -2964,52 +2973,41 @@ class TableColumn(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('TableColumn')
-    def __init__(self, parent, text=None, tooltip=None, width=None, img=None, moveable=False, **options):
+    def __init__(self, parent, text=None, tooltip=None, width=None, img=None, moveable=False, check=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = TableColumnTheme(self, session.runtime.mngr.theme)
         self._idx = parent.colcount
         self._text = text
         self._tooltip = tooltip
         self._width = width
+        self._check = check
         self._img = img
         self._moveable = parent.colsmoveable
         self.on_move = OnMove(self)
         self.on_select = OnSelect(self)
         self._left = 0
-        # if parent.cols:
-        #     col = parent.cols[-1]
-        #     self._left = col.left + col.w
-        # else:
-        #     self._left = 0
-
         if self in parent.children:
             parent.children.remove(self)
         self.parent.cols.insert(self._idx, self)
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        if 'style' in options:
-            del options['style']
-        if 'enabled' in options:
-            del options['enabled']
         options.text = self._text
         options.index = self.idx
         options.width = self._width
         options.left = self._left
         options.moveable = self._moveable
+        if self._check:
+            options.check = True
         if self._tooltip:
             options.toolTip = self._tooltip
+        if self.img:
+            options.image = self._get_rwt_img(self.img)
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
 
     def _resize(self, width):
         self._width = width
         self.parent.itemmetrics()
-
-    def _get_rwt_img(self, img):
-        if img is not None:
-            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
-            img = [res.location, img.width.value, img.height.value]
-        return img
 
     def _handle_call(self, op):
         if op.method == 'move': self.mv(op.args)
@@ -3078,21 +3076,15 @@ class TableColumn(Widget):
         self._left = left
         session.runtime << RWTSetOperation(self.id, {'left': left})
 
-    def imgwidth(self):
-        if self.img:
-            _, w, _ = self._get_rwt_img(self.img)
-        else:
-            w = 0
-        return w
-
     def compute_size(self):
         width, height = Widget.compute_size(self)
+        wimg, himg = 0, 0
         if self.img is not None:
-            w, h = self.img.size
-        else:
-            w, h = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
-        width += w
-        height += h
+            wimg, himg = self.img.size
+            wimg += 2
+        wtxt, htxt = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
+        width += wimg + wtxt + 1 if self.parent._linesvisible else 0
+        height += max(himg, htxt)
         return width, height
 
     def moveable(self, moveable):

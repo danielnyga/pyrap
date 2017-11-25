@@ -1942,7 +1942,7 @@ class ListTheme(WidgetTheme):
 
 class TableTheme(WidgetTheme):
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'Table')
+        WidgetTheme.__init__(self, widget, theme, 'Table', 'Table-Checkbox')
 
     @property
     def font(self):
@@ -1977,6 +1977,18 @@ class TableTheme(WidgetTheme):
     @property
     def margin(self):
         return self._theme.get_property('margin', 'Table', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def checkbox_width(self):
+        return self._theme.get_property('width', 'Table-Checkbox', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def checkbox_width(self):
+        return self._theme.get_property('width', 'Table-Checkbox', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def checkbox_margin(self):
+        return self._theme.get_property('margin', 'Table-Checkbox', self.custom_variant(), self.styles(), self.states())
 
 
 class TableColumnTheme(WidgetTheme):
@@ -2017,10 +2029,14 @@ class TableColumnTheme(WidgetTheme):
     def margin(self):
         return self._theme.get_property('margin', 'TableColumn', self.custom_variant(), self.styles(), self.states())
 
+    @property
+    def spacing(self):
+        return self._theme.get_property('spacing', 'TableColumn', self.custom_variant(), self.styles(), self.states())
+
 
 class TableItemTheme(WidgetTheme):
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'TableItem')
+        WidgetTheme.__init__(self, widget, theme, 'TableItem', 'Table-Cell')
 
     @property
     def font(self):
@@ -2056,7 +2072,9 @@ class TableItemTheme(WidgetTheme):
     def margin(self):
         return self._theme.get_property('margin', 'TableItem', self.custom_variant(), self.styles(), self.states())
 
-
+    @property
+    def cell_spacing(self):
+        return self._theme.get_property('spacing', 'Table-Cell', self.custom_variant(), self.styles(), self.states())
 
 
 class ThemeRule(object):
