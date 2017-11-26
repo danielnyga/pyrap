@@ -494,7 +494,7 @@ class Shell(Widget):
                                    'resize':    RWT.RESIZE,
                                    'titlebar':  RWT.TITLE,
                                    'modal':     RWT.MODAL}
-    _defstyle_ = Widget._defstyle_ | RWT.ACTIVE | RWT.TITLE | RWT.RESIZE | RWT.MAXIMIZE | RWT.CLOSE | RWT.MINIMIZE
+    _defstyle_ = (Widget._defstyle_ | RWT.ACTIVE | RWT.TITLE | RWT.RESIZE | RWT.MAXIMIZE | RWT.CLOSE | RWT.MINIMIZE) & ~RWT.VISIBLE
 
     _logger = dnutils.getlogger(__name__, level=dnutils.DEBUG)
     
@@ -1288,12 +1288,15 @@ class Checkbox(Widget):
 
 
 class Toggle(Checkbox, Button):
+    _rwt_class_name_ = 'rwt.widgets.Button'
+    _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('Toggle')
-    def __init__(self, parent, text='', **options):
-        Checkbox.__init__(self, parent, text=text, **options)
+    def __init__(self, parent, text='', texts=None, **options):
         Button.__init__(self, parent, text=text, **options)
+        Checkbox.__init__(self, parent, text=text, **options)
         self.theme = ToggleTheme(self, session.runtime.mngr.theme)
+        self._texts = texts
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1305,6 +1308,27 @@ class Toggle(Checkbox, Button):
             options.selection = self.checked
         options.grayed = True if (self.checked is None) else False
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+        self._update_text()
+        if self._texts:
+            self.on_checked += self._update_text
+
+    @property
+    def texts(self, txts):
+        if len(txts) != 2:
+            raise ValueError('attribute must be tuple of length 2')
+        self._texts = txts
+        self._update_text()
+
+    def _update_text(self, *_):
+        if self._texts:
+            checked = 1 if self.checked else 0
+            out(checked)
+            self.text = self._texts[checked]
+
+    @checkwidget
+    def _rwt_set_checkmark(self):
+        Checkbox._rwt_set_checkmark(self)
+        self._update_text()
 
     def compute_size(self):
         return Button.compute_size(self)
