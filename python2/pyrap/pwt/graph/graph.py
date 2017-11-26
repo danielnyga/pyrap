@@ -21,9 +21,9 @@ class Graph(Widget):
     def __init__(self, parent, cssid=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = GraphTheme(self, session.runtime.mngr.theme)
-        # with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
-        #     cnt = d3wrapper.format(**{'d3content': f.read()})
-        #     session.runtime.ensurejsresources(cnt, name='d3.v3.min.js')
+        with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
+            cnt = d3wrapper.format(**{'d3content': f.read()})
+            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js')
         with open(os.path.join(locations.pwt_loc, 'graph', 'graph.css')) as fi:
             session.runtime.requirecss(fi)
         self._gwidth = None

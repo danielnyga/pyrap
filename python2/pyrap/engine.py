@@ -288,6 +288,7 @@ class PushService(object):
     # __lock = RLock()
     # __active = 0
 
+    # TODO: check if called from sessionthread
     def __init__(self):
         if not hasattr(session, 'pushservice'):
             session.pushservice = Storage()
