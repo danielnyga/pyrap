@@ -34,7 +34,7 @@ class PushServiceHandler(ServiceHandler):
 
     def run(self, *args, **kwargs):
         try:
-            while not session.runtime.push.wait(2): pass
+            session.runtime.push.wait()
             web.header('Content-Type', 'text/html')
             session.runtime.push.clear()
         except ThreadInterrupt:

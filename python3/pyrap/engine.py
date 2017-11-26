@@ -316,9 +316,11 @@ class PushService(object):
             self._active -= 1
             if not self._active:
                 session.runtime.activate_push(False)
+                self.flush()
 
     def flush(self):
-        session.runtime.push.set()
+        with session.runtime.relay:
+            session.runtime.push.set()
 
     def __enter__(self):
         self.start()
@@ -413,7 +415,7 @@ class SessionRuntime(object):
         # first consolidate the operations to avoid duplicate computations
         if msg.head.get('shutdown', False):
             self.headers['cid'] = None
-            session.disconnect_client()
+            session.expire()
             return
         ops = []
         for o in msg.operations:

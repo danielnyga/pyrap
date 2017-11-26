@@ -12,7 +12,6 @@ import mimetypes
 import os
 import traceback
 import urllib
-from threading import Lock, Event
 
 import StringIO
 import dnutils
@@ -35,7 +34,6 @@ from pyrap.ptypes import Image
 from pyrap.sessions import SessionError
 from pyrap.themes import Theme, FontMetrics
 from pyrap.widgets import Display
-import rfc822
 
 
 class ApplicationManager(object):
@@ -315,9 +313,11 @@ class PushService(object):
             self._active -= 1
             if not self._active:
                 session.runtime.activate_push(False)
+                self.flush()
 
     def flush(self):
-        session.runtime.push.set()
+        with session.runtime.relay:
+            session.runtime.push.set()
 
     def __enter__(self):
         self.start()
