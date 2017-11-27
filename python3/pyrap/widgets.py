@@ -677,10 +677,10 @@ class Combo(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('Combo')
-    def __init__(self, parent, items='', editable=True, **options):
+    def __init__(self, parent, items=None, editable=True, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ComboTheme(self, session.runtime.mngr.theme)
-        self._items = items
+        self._items = ifnone(items, [])
         self._setitems(items)
         self._text = None
         self.on_select = OnSelect(self)

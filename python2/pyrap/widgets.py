@@ -677,11 +677,11 @@ class Combo(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('Combo')
-    def __init__(self, parent, items='', editable=True, **options):
+    def __init__(self, parent, items=None, editable=True, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ComboTheme(self, session.runtime.mngr.theme)
-        self._items = items
-        self._setitems(items)
+        self._items = ifnone(items, [])
+        self._setitems(ifnone(items, []))
         self._text = None
         self.on_select = OnSelect(self)
         self.on_modify = OnModify(self)
@@ -784,7 +784,7 @@ class DropDown(Widget):
 
 
     @constructor('DropDown')
-    def __init__(self, parent, items='', markupEnabled=True, visible=False, visibleItemCount=5, **options):
+    def __init__(self, parent, items='', markupEnabled=False, visible=False, visibleItemCount=5, **options):
         Widget.__init__(self, parent, **options)
         self.theme = DropDownTheme(self, session.runtime.mngr.theme)
         self._items = items
