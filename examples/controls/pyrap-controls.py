@@ -23,7 +23,7 @@ from pyrap.ptypes import BoolVar, Color, px, Image, Font
 # from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
     Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
-    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle
+    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle, DropDown, Combo
 
 
 class Images:
@@ -255,12 +255,40 @@ class ControlsDemo():
         table.additem(['Balint-Benczedi', 'Ferenc', 'M.Sc.'], images=[Images.IMG_DOWN, None, Images.IMG_RED, None])
 
         m = Menu(table, popup=True)
+        insert = MenuItem(m, 'Insert...')
         delete = MenuItem(m, 'Delete...')
 
+        def insertitem(event):
+            dlg = Shell(parent=self.shell, title='Create new entry')
+            dlg.content.layout = GridLayout(valign='fill', equalheights=True, cols=2, padding=20)
+            Label(dlg.content, 'First Name:', halign='right')
+            fname = Edit(dlg.content, minwidth=200)
+            Label(dlg.content, 'Last Name:', halign='right')
+            lname = Edit(dlg.content, minwidth=200)
+            Label(dlg.content, 'Title', halign='right')
+            title = Combo(dlg.content, halign='fill')
+            title.items = ['M. Sc.', 'Dr.', 'Prof.']
+            Composite(dlg.content)
+            buttons = Composite(dlg.content, layout=ColumnLayout(equalwidths=True))
+            ok = Button(buttons, 'OK')
+            cancel = Button(buttons, 'Cancel')
+            dlg.tabseq = (fname, lname, title, ok, cancel)
+
+            def insert(event):
+                table.additem([lname.text, fname.text, title.text])
+                dlg.close()
+
+            ok.on_select += insert
+            cancel.on_select += lambda _: dlg.close()
+            dlg.show(True)
+
+        insert.on_select += insertitem
+
         def rmitem(*_):
-            out('removing', table.selection.texts)
             if table.selection:
-                table.rmitem(table.selection)
+                doit = ask_yesno(self.shell, 'Please confirm', 'Are you sure you want to delete %s' % table.selection) == 'yes'
+                if doit:
+                    table.rmitem(table.selection)
             if not table.items:
                 delete.enabled = False
 
