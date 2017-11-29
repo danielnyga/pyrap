@@ -282,7 +282,7 @@ class InputBox(Shell):
 
 def open_progress(parent, title, text, target, autoclose=False):
     dlg = ProgressDialog(parent, title, text, target, modal=0, autoclose=autoclose)
-    dlg.dolayout(True)
+    dlg.show(True)
     dlg.start()
             
 class ProgressDialog(MessageBox):
@@ -339,8 +339,7 @@ class ProgressDialog(MessageBox):
         self._btncancel.text = 'Close'
         self._btncancel.on_select += lambda *_: self.close()
         if self.autoclose: self.close()
-        
-        
+
     def terminate_and_close(self, *_):
         self.setloop(1)
         self.status = 'Terminating...'
@@ -378,7 +377,7 @@ class ProgressDialog(MessageBox):
 
 def ask_color(parent, modal=True, color=None):
     dlg = ColorDialog(parent, color)
-    dlg.dolayout(True)
+    dlg.show(True)
     dlg.on_close.wait()
     return dlg._color
     
