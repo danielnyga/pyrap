@@ -92,6 +92,8 @@ rwt.qx.Class.define( "rwt.widgets.GridItem", {
         result = parentItem.getChild( index );
         result.markCached();
       } else {
+        // in pyRAP, we added the field this._grid so every GridItem is also
+        // aware of its table, so a GridItem can also update "global" settings of the table
         result = new rwt.widgets.GridItem( parentItem, index, false, parent instanceof rwt.widgets.Grid ? parent : parentItem.grid );
       }
       return result;
@@ -118,30 +120,35 @@ rwt.qx.Class.define( "rwt.widgets.GridItem", {
     },
 
     setIndex : function( value ) {
-      console.log('setting index of ' + this + ' to ' + value);
+        /*
+        IMPORTANT: we changed the semantics of the setIndex() function
+        in pyRAP to automatically swap two items when the index of one item
+        is set. We also actually allow for changes in indexes when, for
+        example, sorting items.
+        */
       var siblings = this._parent._children;
       var oldIdx = siblings.indexOf( this )
       if( oldIdx !== value ) {
         var target = siblings[ value ];
-        console.log( "swapping objects " + this + " (" + oldIdx + ") and " + target + "(" + value + ")")
+//        console.log( "swapping objects " + this + " (" + oldIdx + ") and " + target + "(" + value + ")")
         siblings[ value ] = this;
         siblings[ oldIdx ] = target;
-        console.log(this._parent._indexCache);
+//        console.log(this._parent._indexCache);
         this._parent._indexCache[ this.toHashCode() ] = value
         this._parent._indexCache[ target.toHashCode() ] = oldIdx
-        console.log("grid is:" + this._grid);
+//        console.log("grid is:" + this._grid);
         this._grid._topItem = null;
         this._grid._updateTopItem();
-        console.log("top item is:" + this._grid._getTopItem());
+//        console.log("top item is:" + this._grid._getTopItem());
 //        delete this._parent._indexCache[ this.toHashCode() ]
 //        delete this._parent._indexCache[ target.toHashCode() ]
-        this._update( "content" );
-        target._update( "content" );
+//        this._update( "content" );
+//        target._update( "content" );
         if( target && !target.isCached() ) {
           target.dispose();
         }
       }
-      console.log(siblings)
+//      console.log(siblings);
     },
 
     clear : function() {
