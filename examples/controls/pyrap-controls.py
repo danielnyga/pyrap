@@ -296,6 +296,19 @@ class ControlsDemo():
 
         table.menu = m
 
+        btn = Button(parent, 'sort')
+
+        def sort(_):
+            items = sorted(table.items, key=lambda i: i.texts[0])
+            for i, item in enumerate(items):
+                item.idx = i
+
+        update = Button(parent, 'update')
+
+        update.on_select += lambda *_: table.update_table()
+
+        btn.on_select += sort
+
     def create_scrolled_page(self, parent):
         page = Composite(parent, layout=CellLayout(halign='fill', valign='fill'))
         container = Composite(page, layout=RowLayout())

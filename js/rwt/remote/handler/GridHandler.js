@@ -54,6 +54,10 @@ rwt.remote.HandlerRegistry.add( "rwt.widgets.Grid", {
     return result.concat( rwt.remote.HandlerUtil.getDestroyableChildrenFinder()( widget ) );
   },
 
+  methods : [
+    "update"
+  ],
+
   properties : rwt.remote.HandlerUtil.extendControlProperties( [
     "itemCount",
     "itemHeight",

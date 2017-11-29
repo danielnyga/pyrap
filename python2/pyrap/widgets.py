@@ -2752,12 +2752,6 @@ class Table(Widget):
         options.treeColumn = -1
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
-    def _get_rwt_img(self, img):
-        if img is not None:
-            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
-            img = [res.location, img.width.value, img.height.value]
-        return img
-
     def _handle_set(self, op):
         for key, value in op.args.iteritems():
             if key == 'selection':
@@ -2904,6 +2898,62 @@ class Table(Widget):
         else:
             return first(sel)
 
+    def update_table(self):
+        session.runtime << RWTCallOperation(self.id, 'update', {})
+
+
+class Tree(Table):
+
+    _rwt_class_name_ = 'rwt.widgets.Grid'
+    _defstyle_ = BitField(Widget._defstyle_)
+
+    @constructor('Tree')
+    def __init__(self, parent, markupenabled=False, bgimg=None, indentwidth=0, items=0,
+                 itemheight=25, headervisible=True, headerheight=30, linesvisible=True,
+                 colsmoveable=False, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = TableTheme(self, session.runtime.mngr.theme)
+        self._markupenabled = markupenabled
+        self._hbar, self._vbar = None, None
+        self._bgimg = bgimg
+        self._indentwidth = indentwidth
+        self._columncount = 0
+        self._itemcount = items
+        self._itemheight = itemheight
+        self._linesvisible = linesvisible
+        self._headervisible = headervisible
+        self._headerheight = headerheight
+        self._colsmoveable = False
+        self._columns = []
+        self._items = []
+        self._selection = []
+
+    def create_content(self):
+        if RWT.NOSCROLL not in self.style:
+            self._hbar = ScrollBar(self, orientation=RWT.HORIZONTAL)
+            self._hbar.visible = True
+            self._vbar = ScrollBar(self, orientation=RWT.VERTICAL)
+            self._vbar.visible = True
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if RWT.SINGLE in self.style:
+            options.style.append('SINGLE')
+        elif RWT.MULTI in self.style:
+            options.style.append('MULTI')
+        if RWT.CHECK in self.style:
+            options.style.append('CHECK')
+            options.checkBoxMetrics = [4, 21]
+        options.appearance = 'tree'
+        options.indentionWidth = self._indentwidth
+        options.markupEnabled = self._markupenabled
+        options.headerVisible = self._headervisible
+        options.headerHeight = self._headerheight
+        options.linesVisible = self._linesvisible
+        options.itemHeight = self._itemheight
+        options.treeColumn = -1
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+
 
 class TableItem(Widget):
 
@@ -2934,6 +2984,13 @@ class TableItem(Widget):
             options.images = [None if i is None else self._get_rwt_img(i) for i in self._images]
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
 
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else: events[op.event].notify(_rwt_selection_event(op))
+        return True
+
     @property
     def idx(self):
         return self._idx
@@ -2943,6 +3000,9 @@ class TableItem(Widget):
     def idx(self, idx):
         self._idx = idx
         session.runtime << RWTSetOperation(self.id, {'index': self._idx})
+
+    # def update_table(self):
+    #     session.runtime << RWTCallOperation(self.parent.id, 'update', {})
 
     @property
     def texts(self):
