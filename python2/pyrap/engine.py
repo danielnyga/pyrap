@@ -457,7 +457,9 @@ class SessionRuntime(object):
                 target._handle_call(o)
         if self._dolayout:
                 while set(self._dolayout):
-                    self.windows[self._dolayout.pop()].dolayout(None)
+                    wnd = self._dolayout.pop()
+                    if wnd in self.windows:
+                        self.windows[wnd].dolayout(None)
 
         if self.state == APPSTATE.INITIALIZED:
             self.log_.info('creating shell...')
