@@ -2721,10 +2721,11 @@ class Table(Widget):
         self._linesvisible = linesvisible
         self._headervisible = headervisible
         self._headerheight = headerheight
-        self._colsmoveable = False
+        self._colsmoveable = colsmoveable
         self._columns = []
         self._items = []
         self._selection = []
+        self._sortedby = None
 
     def create_content(self):
         if RWT.NOSCROLL not in self.style:
@@ -2881,10 +2882,11 @@ class Table(Widget):
                 self._selection.append(i.idx)
         session.runtime << RWTSetOperation(self.id, {'itemCount': len(self.items)})
 
-    def addcol(self, text, tooltip=None, moveable=False, **options):
-        TableColumn(self, text=text, tooltip=tooltip, moveable=moveable, **options)
+    def addcol(self, text, tooltip=None, moveable=False, sortable=False, **options):
+        col = TableColumn(self, text=text, tooltip=tooltip, moveable=moveable, sortable=sortable, **options)
         self.colcount = max(self.colcount, len(self.cols))
         session.runtime << RWTSetOperation(self.id, {'columnOrder': [c.id for c in self._columns]})
+        return col
 
     def compute_size(self):
         self.itemmetrics()
@@ -2897,6 +2899,14 @@ class Table(Widget):
             return sel
         else:
             return first(sel)
+
+    def sortby(self, column, direction):
+        self._sortedby = column, direction
+        session.runtime << RWTSetOperation(self.id, {'sortColumn': column.id, 'sortDirection': direction})
+
+    @property
+    def sortedby(self):
+        return self._sortedby
 
     def update_table(self):
         session.runtime << RWTCallOperation(self.id, 'update', {})
@@ -3001,9 +3011,6 @@ class TableItem(Widget):
         self._idx = idx
         session.runtime << RWTSetOperation(self.id, {'index': self._idx})
 
-    # def update_table(self):
-    #     session.runtime << RWTCallOperation(self.parent.id, 'update', {})
-
     @property
     def texts(self):
         return self._texts
@@ -3051,7 +3058,8 @@ class TableColumn(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('TableColumn')
-    def __init__(self, parent, text=None, tooltip=None, width=None, img=None, moveable=False, check=False, **options):
+    def __init__(self, parent, text=None, tooltip=None, width=None, img=None, moveable=False, check=False,
+                 sortable=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = TableColumnTheme(self, session.runtime.mngr.theme)
         self._idx = parent.colcount
@@ -3064,9 +3072,17 @@ class TableColumn(Widget):
         self.on_move = OnMove(self)
         self.on_select = OnSelect(self)
         self._left = 0
+        self._sortable = sortable
         if self in parent.children:
             parent.children.remove(self)
         self.parent.cols.insert(self._idx, self)
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else: events[op.event].notify(_rwt_selection_event(op))
+        return True
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -3082,6 +3098,18 @@ class TableColumn(Widget):
         if self.img:
             options.image = self._get_rwt_img(self.img)
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+        if self._sortable:
+            self.on_select += self.togglesort
+
+    def togglesort(self, _):
+        if not self._sortable:
+            raise AttributeError('column is not sortable')
+        sortedby = self.parent.sortedby
+        if sortedby is None:
+            direction = 'down'
+        else:
+            oldcol, direction = sortedby
+        self.parent.sortby(self, 'up' if (direction == 'down' or oldcol is not self) else 'down')
 
     def _resize(self, width):
         self._width = width
@@ -3174,7 +3202,7 @@ class TableColumn(Widget):
 
     def alignment(self, alignment):
         session.runtime << RWTSetOperation(self.id, {'alignment': alignment})
-    
+
 
 class GC(object):
     '''the graphics context'''
