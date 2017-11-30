@@ -88,10 +88,18 @@ class ControlsDemo():
         # =======================================================================
         sash = Sash(main, orientation='v', valign='fill')
 
-        def resize(event):
-            out(event, 'x', event.x, 'y', event.y)
+        def apply_sash(event):
+            x, _, _, _ = sash.bounds
+            delta_x = event.x - x
+            i = sash.parent.children.index(sash)
+            prev = sash.parent.children[i-1]
+            prev.layout.minwidth = prev.width + delta_x #+ 2 * sash.parent.layout.hspace
+            try:
+                del sash.parent.layout.flexcols[0]
+            except (IndexError, KeyError): pass
+            self.shell.dolayout()
 
-        sash.on_select += resize
+        sash.on_select += apply_sash
 
         #=======================================================================
         # footer
@@ -239,9 +247,20 @@ class ControlsDemo():
 
         left = Label(container, 'LEFT', halign='fill', valign='fill', border=True)
         sash = Sash(container, orientation='v', valign='fill')
-
         right = Label(container, 'RIGHT', halign='fill', valign='fill', border=True)
 
+        def apply_sash(event):
+            x, _, _, _ = sash.bounds
+            delta_x = event.x - x
+            i = sash.parent.children.index(sash)
+            prev = sash.parent.children[i-1]
+            prev.layout.minwidth = prev.width + delta_x #+ 2 * sash.parent.layout.hspace
+            try:
+                del sash.parent.layout.flexcols[0]
+            except (IndexError, KeyError): pass
+            self.shell.dolayout()
+
+        sash.on_select += apply_sash
 
     def create_table_page(self, parent):
         table = Table(parent, halign='fill', valign='fill', headervisible=True, colsmoveable=True, check=True)
@@ -319,21 +338,7 @@ class ControlsDemo():
                 delete.enabled = False
 
         delete.on_select += rmitem
-
         table.menu = m
-
-        btn = Button(parent, 'sort')
-
-        def sort(_):
-            items = sorted(table.items, key=lambda i: i.texts[0])
-            for i, item in enumerate(items):
-                item.idx = i
-
-        update = Button(parent, 'update')
-
-        update.on_select += lambda *_: table.update_table()
-
-        btn.on_select += sort
 
     def create_scrolled_page(self, parent):
         page = Composite(parent, layout=CellLayout(halign='fill', valign='fill'))
