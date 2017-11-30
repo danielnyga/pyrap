@@ -43,7 +43,7 @@ def ask_input(parent, title, multiline=False):
 
 def options_list(parent, options):
     msg = OptionsDialog(parent, options)
-    msg.show()
+    msg.show(pack=True)
     msg.on_close.wait()
     return msg.answer
 
@@ -157,7 +157,7 @@ class OptionsDialog(Shell):
 
     @constructor('OptionsDialog')
     def __init__(self, parent, options):
-        Shell.__init__(self, parent, titlebar=False, border=True, resize=False, modal=True)
+        Shell.__init__(self, parent=parent, titlebar=False, border=True, resize=False, modal=True, minwidth=.9*session.runtime.display.width, minheight=.4*session.runtime.display.height)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
         self.answer = None
         self._options = None
@@ -184,14 +184,7 @@ class OptionsDialog(Shell):
         Shell.create_content(self)
 
         # calculate and set options field size
-        maxitemwidth, _ = session.runtime.textsize_estimate(Font(family='Verdana, "Lucida Sans", Arial, Helvetica, sans-serif', size=14), sorted(list(self.options.keys()), key=len)[-1])
-        itemheight = 41
-        w = self.parent.width - px(40)
-        h = min(itemheight * len(self.options) + 10, self.parent.height - px(40))
-        vscroll = h == self.parent.height - px(40)
-        hscroll = maxitemwidth > self.parent.width - px(40)
-        self.bounds = self.parent.width / 2 - w / 2, self.parent.height / 2 - h / 2, w, h
-        mainarea = ScrolledComposite(self.content, padding=px(40), hscroll=hscroll, vscroll=vscroll)
+        mainarea = ScrolledComposite(self.content, padding=px(40), hscroll=True, vscroll=True, halign='fill', valign='fill')
         mainarea.content.layout = CellLayout(halign='fill', valign='fill')
 
         optionslist = Composite(mainarea.content)
@@ -199,6 +192,7 @@ class OptionsDialog(Shell):
 
         self.create_options(optionslist)
 
+        self.show(True)
 
     def create_options(self, parent):
         for c in parent.children:
@@ -288,7 +282,7 @@ class InputBox(Shell):
 
 def open_progress(parent, title, text, target, autoclose=False):
     dlg = ProgressDialog(parent, title, text, target, modal=0, autoclose=autoclose)
-    dlg.dolayout(True)
+    dlg.show(True)
     dlg.start()
             
 class ProgressDialog(MessageBox):
@@ -321,7 +315,7 @@ class ProgressDialog(MessageBox):
     @property
     def status(self):
         return self.text.text
-    
+
     def inc(self):
         self._primary.value = self._primary.value + 1
 
@@ -345,8 +339,7 @@ class ProgressDialog(MessageBox):
         self._btncancel.text = 'Close'
         self._btncancel.on_select += lambda *_: self.close()
         if self.autoclose: self.close()
-        
-        
+
     def terminate_and_close(self, *_):
         self.setloop(1)
         self.status = 'Terminating...'
@@ -384,7 +377,7 @@ class ProgressDialog(MessageBox):
 
 def ask_color(parent, modal=True, color=None):
     dlg = ColorDialog(parent, color)
-    dlg.dolayout(True)
+    dlg.show(True)
     dlg.on_close.wait()
     return dlg._color
     
