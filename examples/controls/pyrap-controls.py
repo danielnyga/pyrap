@@ -689,15 +689,11 @@ class ControlsDemo():
         btn.on_select += highlight
 
     def open_browser(self, data):
-        dlg = Shell(title='pyRAP Browser', border=True,
-                    btnclose=True, btnmax=True, resize=True, modal=False, titlebar=True)
+        dlg = Shell(title='pyRAP Browser', minwidth=500, minheight=400)
         dlg.on_resize += dlg.dolayout
-        dlg.bounds = self.mainwnd.width / 2 - 150, self.mainwnd.height / 2 - 100, 500, 300
-        content = Composite(dlg.content)
-        content.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+        content = Composite(dlg.content, layout=RowLayout(halign='fill', valign='fill', flexrows=1))
+        address_bar = Composite(content, layout=ColumnLayout(halign='fill', valign='fill', flexcols=1))
 
-        address_bar = Composite(content)
-        address_bar.layout = ColumnLayout(halign='fill', valign='fill', flexcols=1)
         Label(address_bar, text='URL:')
         address = Edit(address_bar, text='http://www.tagesschau.de', message='Type your address here', halign='fill', valign='fill')
         btngo = Button(address_bar, text='Go!')
@@ -706,11 +702,9 @@ class ControlsDemo():
         def load(*_):
             browser.url = address.text
         btngo.on_select += load
-        dlg.dolayout()
-        # current_thread().setsuspended()
+        dlg.show(True)
         dlg.on_close.wait()
-        out('browser window closed')
-        
+
         
     def mobile(self, shell, **kwargs):
         parent = shell.content
