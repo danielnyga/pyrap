@@ -266,22 +266,13 @@ class ControlsDemo():
         table = Table(parent, halign='fill', valign='fill', headervisible=True, colsmoveable=True, check=True)
 
         def sort_by_firstname(_):
-            out('sorting by first name')
             table.items = sorted(table.items, key=lambda item: item.texts[0], reverse=table.sortedby[1] == 'down')
-            for i in table.items:
-                print(i.texts[0])
 
         def sort_by_lastname(_):
-            out('sorting by last name')
             table.items = sorted(table.items, key=lambda item: item.texts[1], reverse=table.sortedby[1] == 'down')
-            for i in table.items:
-                print(i.texts[1])
 
         def sort_by_title(_):
-            out('sorting by title')
             table.items = sorted(table.items, key=lambda item: item.texts[2], reverse=table.sortedby[1] == 'down')
-            for i in table.items:
-                print(i.texts[2])
 
         firstname = table.addcol('Last Name', img=Images.IMG_RED, sortable=True)
         firstname.on_select += sort_by_firstname
