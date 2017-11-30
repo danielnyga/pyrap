@@ -1145,7 +1145,7 @@ Table[BORDER] {
 TableColumn {
   font: 14px Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
   background-color: #f0f0f0;
-  padding: 8px 3px 8px 3px;
+  padding: 8px 8px 8px 8px;
   background-image: gradient(
     linear, left top, left bottom,
     from( #f9f9f9 ),
@@ -1259,7 +1259,7 @@ TableColumn-SortIndicator:down {
 }
 
 Table-Cell {
-  spacing: 3px;
+  spacing: 5px;
   padding: 5px 3px 5px 3px;
 }
 

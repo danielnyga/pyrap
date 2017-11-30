@@ -2725,10 +2725,11 @@ class Table(Widget):
         self._linesvisible = linesvisible
         self._headervisible = headervisible
         self._headerheight = headerheight
-        self._colsmoveable = False
+        self._colsmoveable = colsmoveable
         self._columns = []
         self._items = []
         self._selection = []
+        self._sortedby = None
 
     def create_content(self):
         if RWT.NOSCROLL not in self.style:
@@ -2756,12 +2757,6 @@ class Table(Widget):
         options.treeColumn = -1
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
-    def _get_rwt_img(self, img):
-        if img is not None:
-            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
-            img = [res.location, img.width.value, img.height.value]
-        return img
-
     def _handle_set(self, op):
         for key, value in op.args.iteritems():
             if key == 'selection':
@@ -2782,7 +2777,12 @@ class Table(Widget):
     @items.setter
     @checkwidget
     def items(self, items):
+        for i, item in enumerate(items):
+            if item not in self.items:
+                raise ValueError('item %s not found in table. Create new items using Table.additem().' % (item))
+            item._setidx(i)
         self._items = items
+        session.runtime << RWTCallOperation(self.id, 'update', {})
 
     @property
     def cols(self):
@@ -2885,16 +2885,17 @@ class Table(Widget):
             self._selection.remove(item.idx)
         except ValueError: pass
         for i in self.items[item.idx:]:
-            i.idx = i.idx - 1
+            i._setidx(i.idx - 1)
             if i.idx + 1 in self._selection:
                 self._selection.remove(i.idx + 1)
                 self._selection.append(i.idx)
         session.runtime << RWTSetOperation(self.id, {'itemCount': len(self.items)})
 
-    def addcol(self, text, tooltip=None, moveable=False, **options):
-        TableColumn(self, text=text, tooltip=tooltip, moveable=moveable, **options)
+    def addcol(self, text, tooltip=None, moveable=False, sortable=False, **options):
+        col = TableColumn(self, text=text, tooltip=tooltip, moveable=moveable, sortable=sortable, **options)
         self.colcount = max(self.colcount, len(self.cols))
         session.runtime << RWTSetOperation(self.id, {'columnOrder': [c.id for c in self._columns]})
+        return col
 
     def compute_size(self):
         self.itemmetrics()
@@ -2907,6 +2908,70 @@ class Table(Widget):
             return sel
         else:
             return first(sel)
+
+    def sortby(self, column, direction):
+        self._sortedby = column, direction
+        session.runtime << RWTSetOperation(self.id, {'sortColumn': column.id, 'sortDirection': direction})
+
+    @property
+    def sortedby(self):
+        return self._sortedby
+
+    def update_table(self):
+        session.runtime << RWTCallOperation(self.id, 'update', {})
+
+
+class Tree(Table):
+
+    _rwt_class_name_ = 'rwt.widgets.Grid'
+    _defstyle_ = BitField(Widget._defstyle_)
+
+    @constructor('Tree')
+    def __init__(self, parent, markupenabled=False, bgimg=None, indentwidth=0, items=0,
+                 itemheight=25, headervisible=True, headerheight=30, linesvisible=True,
+                 colsmoveable=False, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = TableTheme(self, session.runtime.mngr.theme)
+        self._markupenabled = markupenabled
+        self._hbar, self._vbar = None, None
+        self._bgimg = bgimg
+        self._indentwidth = indentwidth
+        self._columncount = 0
+        self._itemcount = items
+        self._itemheight = itemheight
+        self._linesvisible = linesvisible
+        self._headervisible = headervisible
+        self._headerheight = headerheight
+        self._colsmoveable = False
+        self._columns = []
+        self._items = []
+        self._selection = []
+
+    def create_content(self):
+        if RWT.NOSCROLL not in self.style:
+            self._hbar = ScrollBar(self, orientation=RWT.HORIZONTAL)
+            self._hbar.visible = True
+            self._vbar = ScrollBar(self, orientation=RWT.VERTICAL)
+            self._vbar.visible = True
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if RWT.SINGLE in self.style:
+            options.style.append('SINGLE')
+        elif RWT.MULTI in self.style:
+            options.style.append('MULTI')
+        if RWT.CHECK in self.style:
+            options.style.append('CHECK')
+            options.checkBoxMetrics = [4, 21]
+        options.appearance = 'tree'
+        options.indentionWidth = self._indentwidth
+        options.markupEnabled = self._markupenabled
+        options.headerVisible = self._headervisible
+        options.headerHeight = self._headerheight
+        options.linesVisible = self._linesvisible
+        options.itemHeight = self._itemheight
+        options.treeColumn = -1
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
 
 class TableItem(Widget):
@@ -2938,13 +3003,19 @@ class TableItem(Widget):
             options.images = [None if i is None else self._get_rwt_img(i) for i in self._images]
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
 
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else: events[op.event].notify(_rwt_selection_event(op))
+        return True
+
     @property
     def idx(self):
         return self._idx
 
-    @idx.setter
     @checkwidget
-    def idx(self, idx):
+    def _setidx(self, idx):
         self._idx = idx
         session.runtime << RWTSetOperation(self.id, {'index': self._idx})
 
@@ -2995,7 +3066,8 @@ class TableColumn(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('TableColumn')
-    def __init__(self, parent, text=None, tooltip=None, width=None, img=None, moveable=False, check=False, **options):
+    def __init__(self, parent, text=None, tooltip=None, width=None, img=None, moveable=False, check=False,
+                 sortable=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = TableColumnTheme(self, session.runtime.mngr.theme)
         self._idx = parent.colcount
@@ -3008,9 +3080,17 @@ class TableColumn(Widget):
         self.on_move = OnMove(self)
         self.on_select = OnSelect(self)
         self._left = 0
+        self._sortable = sortable
         if self in parent.children:
             parent.children.remove(self)
         self.parent.cols.insert(self._idx, self)
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else: events[op.event].notify(_rwt_selection_event(op))
+        return True
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -3026,6 +3106,18 @@ class TableColumn(Widget):
         if self.img:
             options.image = self._get_rwt_img(self.img)
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+        if self._sortable:
+            self.on_select += self.togglesort
+
+    def togglesort(self, _):
+        if not self._sortable:
+            raise AttributeError('column is not sortable')
+        sortedby = self.parent.sortedby
+        if sortedby is None:
+            direction = 'down'
+        else:
+            oldcol, direction = sortedby
+        self.parent.sortby(self, 'up' if (direction == 'down' or oldcol is not self) else 'down')
 
     def _resize(self, width):
         self._width = width
@@ -3118,7 +3210,7 @@ class TableColumn(Widget):
 
     def alignment(self, alignment):
         session.runtime << RWTSetOperation(self.id, {'alignment': alignment})
-    
+
 
 class GC(object):
     '''the graphics context'''

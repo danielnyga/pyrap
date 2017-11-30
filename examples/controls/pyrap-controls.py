@@ -88,10 +88,18 @@ class ControlsDemo():
         # =======================================================================
         sash = Sash(main, orientation='v', valign='fill')
 
-        def resize(event):
-            out(event, 'x', event.x, 'y', event.y)
+        def apply_sash(event):
+            x, _, _, _ = sash.bounds
+            delta_x = event.x - x
+            i = sash.parent.children.index(sash)
+            prev = sash.parent.children[i-1]
+            prev.layout.minwidth = prev.width + delta_x #+ 2 * sash.parent.layout.hspace
+            try:
+                del sash.parent.layout.flexcols[0]
+            except (IndexError, KeyError): pass
+            self.shell.dolayout()
 
-        sash.on_select += resize
+        sash.on_select += apply_sash
 
         #=======================================================================
         # footer
@@ -239,15 +247,41 @@ class ControlsDemo():
 
         left = Label(container, 'LEFT', halign='fill', valign='fill', border=True)
         sash = Sash(container, orientation='v', valign='fill')
-
         right = Label(container, 'RIGHT', halign='fill', valign='fill', border=True)
 
+        def apply_sash(event):
+            x, _, _, _ = sash.bounds
+            delta_x = event.x - x
+            i = sash.parent.children.index(sash)
+            prev = sash.parent.children[i-1]
+            prev.layout.minwidth = prev.width + delta_x #+ 2 * sash.parent.layout.hspace
+            try:
+                del sash.parent.layout.flexcols[0]
+            except (IndexError, KeyError): pass
+            self.shell.dolayout()
+
+        sash.on_select += apply_sash
 
     def create_table_page(self, parent):
         table = Table(parent, halign='fill', valign='fill', headervisible=True, colsmoveable=True, check=True)
-        table.addcol('Last Name', img=Images.IMG_RED)
-        table.addcol('First Name')
-        table.addcol('Title')
+
+        def sort_by_firstname(_):
+            table.items = sorted(table.items, key=lambda item: item.texts[0], reverse=table.sortedby[1] == 'down')
+
+        def sort_by_lastname(_):
+            table.items = sorted(table.items, key=lambda item: item.texts[1], reverse=table.sortedby[1] == 'down')
+
+        def sort_by_title(_):
+            table.items = sorted(table.items, key=lambda item: item.texts[2], reverse=table.sortedby[1] == 'down')
+
+        firstname = table.addcol('Last Name', img=Images.IMG_RED, sortable=True)
+        firstname.on_select += sort_by_firstname
+
+        lastname = table.addcol('First Name', sortable=True)
+        lastname.on_select += sort_by_lastname
+
+        title = table.addcol('Title', sortable=True)
+        title.on_select += sort_by_title
 
         table.additem(['Nyga', 'Daniel', 'Dr.'], images=[Images.IMG_CHECK, None, Images.IMG_GREEN, None])
         table.additem(['Picklum', 'Mareike', 'M.Sc.'], images=[Images.IMG_CHECK, None, Images.IMG_GREEN, None])
@@ -286,14 +320,15 @@ class ControlsDemo():
 
         def rmitem(*_):
             if table.selection:
-                doit = ask_yesno(self.shell, 'Please confirm', 'Are you sure you want to delete %s' % table.selection) == 'yes'
+                doit = ask_yesno(self.shell, 'Please confirm', 'Are you sure you want to delete %s %s %s?' % (table.selection.texts[2],
+                                                                                                              table.selection.texts[1],
+                                                                                                              table.selection.texts[0])) == 'yes'
                 if doit:
                     table.rmitem(table.selection)
             if not table.items:
                 delete.enabled = False
 
         delete.on_select += rmitem
-
         table.menu = m
 
     def create_scrolled_page(self, parent):

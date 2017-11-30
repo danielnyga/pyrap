@@ -15,7 +15,7 @@ rwt.qx.Class.define( "rwt.widgets.GridItem", {
   extend : rwt.qx.Target,
   include : rwt.widgets.util.HtmlAttributesMixin,
 
-  construct : function( parent, index, placeholder ) {
+  construct : function( parent, index, placeholder, grid ) {
     // Dispose is only needed to remove items from the tree and widget manager.
     // Since it holds no references to the dom, it suffices to dispose tree.
     this._autoDispose = false;
@@ -43,6 +43,7 @@ rwt.qx.Class.define( "rwt.widgets.GridItem", {
     this._cellGrayed = [];
     this._cellCheckable = [];
     this._variant = null;
+    this._grid = grid;
     if( this._parent != null ) {
       this._level = this._parent.getLevel() + 1;
       this._parent._add( this, index );
@@ -79,6 +80,7 @@ rwt.qx.Class.define( "rwt.widgets.GridItem", {
     this._cellGrayed = null;
     this._cellCheckable = null;
     this._rootItem = null;
+    this._grid = null;
   },
 
   statics : {
@@ -90,7 +92,9 @@ rwt.qx.Class.define( "rwt.widgets.GridItem", {
         result = parentItem.getChild( index );
         result.markCached();
       } else {
-        result = new rwt.widgets.GridItem( parentItem, index, false );
+        // in pyRAP, we added the field this._grid so every GridItem is also
+        // aware of its table, so a GridItem can also update "global" settings of the table
+        result = new rwt.widgets.GridItem( parentItem, index, false, parent instanceof rwt.widgets.Grid ? parent : parentItem.grid );
       }
       return result;
     },
@@ -116,14 +120,35 @@ rwt.qx.Class.define( "rwt.widgets.GridItem", {
     },
 
     setIndex : function( value ) {
+        /*
+        IMPORTANT: we changed the semantics of the setIndex() function
+        in pyRAP to automatically swap two items when the index of one item
+        is set. We also actually allow for changes in indexes when, for
+        example, sorting items.
+        */
       var siblings = this._parent._children;
-      if( siblings.indexOf( this ) !== value ) {
+      var oldIdx = siblings.indexOf( this )
+      if( oldIdx !== value ) {
         var target = siblings[ value ];
+//        console.log( "swapping objects " + this + " (" + oldIdx + ") and " + target + "(" + value + ")")
         siblings[ value ] = this;
+        siblings[ oldIdx ] = target;
+//        console.log(this._parent._indexCache);
+        this._parent._indexCache[ this.toHashCode() ] = value
+        this._parent._indexCache[ target.toHashCode() ] = oldIdx
+//        console.log("grid is:" + this._grid);
+        this._grid._topItem = null;
+        this._grid._updateTopItem();
+//        console.log("top item is:" + this._grid._getTopItem());
+//        delete this._parent._indexCache[ this.toHashCode() ]
+//        delete this._parent._indexCache[ target.toHashCode() ]
+//        this._update( "content" );
+//        target._update( "content" );
         if( target && !target.isCached() ) {
           target.dispose();
         }
       }
+//      console.log(siblings);
     },
 
     clear : function() {
