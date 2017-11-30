@@ -2773,7 +2773,12 @@ class Table(Widget):
     @items.setter
     @checkwidget
     def items(self, items):
+        for i, item in enumerate(items):
+            if item not in self.items:
+                raise ValueError('item %s not found in table. Create new items using Table.additem().' % (item))
+            item._setidx(i)
         self._items = items
+        session.runtime << RWTCallOperation(self.id, 'update', {})
 
     @property
     def cols(self):
@@ -2876,7 +2881,7 @@ class Table(Widget):
             self._selection.remove(item.idx)
         except ValueError: pass
         for i in self.items[item.idx:]:
-            i.idx = i.idx - 1
+            i._setidx(i.idx - 1)
             if i.idx + 1 in self._selection:
                 self._selection.remove(i.idx + 1)
                 self._selection.append(i.idx)
@@ -3005,9 +3010,8 @@ class TableItem(Widget):
     def idx(self):
         return self._idx
 
-    @idx.setter
     @checkwidget
-    def idx(self, idx):
+    def _setidx(self, idx):
         self._idx = idx
         session.runtime << RWTSetOperation(self.id, {'index': self._idx})
 
