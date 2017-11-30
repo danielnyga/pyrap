@@ -3909,6 +3909,10 @@ class Sash(Widget):
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
+        if RWT.VERTICAL in self.style:
+            options.style.append('VERTICAL')
+        else:
+            options.style.append('HORIZONTAL')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
