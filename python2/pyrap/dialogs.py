@@ -117,7 +117,7 @@ class MessageBox(Shell):
     MSGBOX_MINWIDTH = 400
 
     @constructor('MessageBox')    
-    def __init__(self, parent, title, text, icon=None, modal=True, resize=True, btnclose=True):
+    def __init__(self, parent, title, text, icon=None, modal=True, resize=False, btnclose=True):
         Shell.__init__(self, parent=parent, title=title, titlebar=True, border=True,
                        btnclose=btnclose, resize=resize, modal=modal)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
