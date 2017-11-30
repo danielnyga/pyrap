@@ -343,9 +343,9 @@ class ControlsDemo():
         page = Composite(parent, layout=RowLayout(halign='fill', valign='fill', equalheights=True))
         tabs = TabFolder(page, halign='center', valign='center', tabpos='bottom', minheight=200)
         page1 = tabs.addtab('First Page')
-        Label(page1, 'Hello', halign='fill', valign='fill').bg = 'red'
+        Label(page1.content, 'Hello', halign='fill', valign='fill').bg = 'red'
         page2 = tabs.addtab('Second Page')
-        Label(page2, 'pyRAP!', halign='center', valign='center').bg = 'yellow'
+        Label(page2.content, 'pyRAP!', halign='center', valign='center').bg = 'yellow'
         tabs.selected = 0
 
     def create_upload_page(self, parent):
