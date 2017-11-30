@@ -1,13 +1,12 @@
 import os
+from dnutils import ifnone
 
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.utils import ifnone
 from pyrap.widgets import Widget, constructor, checkwidget
-
 
 d3wrapper = '''if (typeof d3 === 'undefined') {{
     {d3content}
@@ -25,7 +24,7 @@ class Graph(Widget):
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
             cnt = d3wrapper.format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js')
-        with open(os.path.join(locations.pwt_loc, 'graph', 'graph.css'), encoding='utf8') as fi:
+        with open(os.path.join(locations.pwt_loc, 'graph', 'graph.css')) as fi:
             session.runtime.requirecss(fi)
         self._gwidth = None
         self._gheight = None
@@ -99,6 +98,29 @@ class Graph(Widget):
     def gravity(self, gravity):
         self._gravity = gravity
         session.runtime << RWTSetOperation(self.id, {'gravity': gravity})
+
+    def arrow(self, arrowid):
+        '''
+        Appends a marker with the given id in the graph's definitions.
+
+        :param arrowid:  string denoting a css id to manipulate the arrow heads of the graph.
+
+        Example: set `arrowid` to e.g. 'fancy' and add the following lines to your
+        .css file:
+            marker#fancy {
+              fill: none;
+            }
+
+            .link.fancy {
+              stroke: yellow;
+            }
+
+        With the `arcstyle` of a link in the graph data set to 'fancy' as well,
+        the respective link will be drawn yellow without a marker head.
+        Set the `arcstyle` to 'dashed fancy' to draw a yellow dashed stroke
+        without an arrow head.
+        '''
+        session.runtime << RWTSetOperation(self.id, {'arrow': arrowid})
 
     @property
     def charge(self):

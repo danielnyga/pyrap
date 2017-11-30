@@ -10,11 +10,13 @@ pwt_d3.Graph = function( parent, options ) {
     this.force = d3.layout.force();
     this.nodes = this.force.nodes();
     this.links = this.force.links();
+    this._markertypes = ["red", "green", "black", "blue"];
 
     this._parentDIV = this.createElement(parent);
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.graph');
+    this._defs = this._svgContainer.select('defs');
 
     this._initialized = false;
     this._needsRender = true;
@@ -47,19 +49,8 @@ pwt_d3.Graph.prototype = {
             this._svgContainer = this._svg.select('g.graph');
         }
 
-        if (this._svgContainer.select('defs').empty()) {
-            this._svgContainer.append("defs").selectAll("marker")
-                  .data(["dashedred", "strokegreen", "dashed", "strokeblue", "arrowhead", "default"])
-                  .enter().append("marker")
-                  .attr("id", function(d) { return d; })
-                  .attr("viewBox", "0 -5 10 10")
-                  .attr("refX", 10)
-                  .attr("refY", -.8)
-                  .attr("markerWidth", 7.5)
-                  .attr("markerHeight", 7.5)
-                  .attr("orient", "auto")
-                  .append("path")
-                  .attr("d", "M0,-5L10,0L0,5 Z");
+        if (this._defs.empty()) {
+            this._defs = this._svgContainer.append("defs");
         }
 
         this.update();
@@ -106,6 +97,15 @@ pwt_d3.Graph.prototype = {
         this.update();
     },
 
+    /**
+     * allows showing/hiding arrow heads and changing color
+     * by appending respective css class
+     * default: arrow heads shown, color #89a35c.
+     */
+    setArrow: function( arrow ) {
+        this._markertypes.append(arrow);
+        this.update();
+    },
 
     setHeight: function( height ) {
         this._parentDIV.style.height = height + "px";
@@ -155,10 +155,10 @@ pwt_d3.Graph.prototype = {
         this.clear();
         for (var dataIndex = 0; dataIndex < data.length; dataIndex++) {
             if (this.findNodeIndex(data[dataIndex].source.name) === -1) {
-                this.addNode(data[dataIndex].source.name, data[dataIndex].source.text);
+                this.addNode(data[dataIndex].source.name, data[dataIndex].source.text, data[dataIndex].source.type);
             }
             if (this.findNodeIndex(data[dataIndex].target.name) === -1) {
-                this.addNode(data[dataIndex].target.name, data[dataIndex].target.text);
+                this.addNode(data[dataIndex].target.name, data[dataIndex].target.text, data[dataIndex].target.type);
             }
             this.links.push({"source": this.findNode(data[dataIndex].source),"target": this.findNode(data[dataIndex].target),"value": data[dataIndex].value, "arcStyle":data[dataIndex].arcStyle});
         }
@@ -168,9 +168,8 @@ pwt_d3.Graph.prototype = {
     /**
      * adds a node with the given id to the nodes list
      */
-    addNode : function (id, tttext) {
-        this.nodes.push({"id":id, 'text': tttext});
-//        this.playSound();
+    addNode : function (id, text, type) {
+        this.nodes.push({'id': id, 'text': text, 'type': type});
         this.update();
     },
 
@@ -179,7 +178,6 @@ pwt_d3.Graph.prototype = {
      */
     removeNode : function (id) {
         this.nodes.splice(this.findNodeIndex(id),1);
-//        this.playSound();
         this.update();
     },
 
@@ -194,11 +192,11 @@ pwt_d3.Graph.prototype = {
 
         // if any of the link nodes does not exist, create it
         if (typeof src === 'undefined') {
-            this.addNode(lnk.source.name, lnk.source.text);
+            this.addNode(lnk.source.name, lnk.source.text, lnk.source.type);
             var src = this.findNode(lnk.source.name);
         }
         if (typeof tgt === 'undefined') {
-            this.addNode(lnk.target.name, lnk.target.text);
+            this.addNode(lnk.target.name, lnk.target.text, lnk.target.type);
             var tgt = this.findNode(lnk.target.name);
         }
 
@@ -312,20 +310,28 @@ pwt_d3.Graph.prototype = {
     },
 
     /**
-     * clone audio object to play sound synchronously
-     */
-    playSound : function() {
-        var audioClone = this.audio.cloneNode();
-        audioClone.play();
-    },
-
-
-    /**
      * redraws the graph with the updated nodes and links
      */
     update : function () {
 
         var that = this;
+
+        this._markers = this._defs.selectAll("marker").data(this._markertypes);
+
+        this._markers
+              .enter()
+              .append("marker")
+              .attr("id", function(d) { return d; })
+              .attr("viewBox", "0 -5 10 10")
+              .attr("refX", 10)
+              .attr("refY", -.8)
+              .attr("markerWidth", 7.5)
+              .attr("markerHeight", 7.5)
+              .attr("orient", "auto")
+              .append("path")
+              .attr("d", "M0,-5L10,0L0,5 Z");
+
+        this._markers.exit().remove();
 
         ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE LINKS                               ///
@@ -338,7 +344,10 @@ pwt_d3.Graph.prototype = {
         links
             .attr("id", function(d) { return d.source.id + "-" + d.target.id; })
             .attr("class", function(d) { return "link " + d.arcStyle; })
-            .attr("marker-end", function(d) { return "url(#" + d.arcStyle + ")"; });
+            .attr("marker-end", function(d) {
+                var split = d.arcStyle.split(' ');
+                var as = split[split.length-1];
+                return "url(#" + as + ")"; });
 
         // create links
         links
@@ -346,7 +355,10 @@ pwt_d3.Graph.prototype = {
             .append("path")
             .attr("id", function(d) { return d.source.id + "-" + d.target.id; })
             .attr("class", function(d) { return "link " + d.arcStyle; })
-            .attr("marker-end", function(d) { return "url(#" + d.arcStyle + ")"; });
+            .attr("marker-end", function(d) {
+                var split = d.arcStyle.split(' ');
+                var as = split[split.length-1];
+                return "url(#" + as + ")"; });
 
         // remove old links
         links.exit().remove();
@@ -416,7 +428,13 @@ pwt_d3.Graph.prototype = {
                     .transition(200)
                     .style("display", "none");
             })
-            .attr('class', 'graphcircle')
+            .attr('class', function(d) {
+                if (typeof(d.type) == 'undefined') {
+                    return 'graphcircle';
+                } else {
+                    return d.type;
+                }
+            })
             .attr("r", function(d) {
                 d.radius = 10;
                 return d.radius;
@@ -554,7 +572,7 @@ rap.registerTypeHandler( 'pwt.customs.Graph', {
 
     destructor: 'destroy',
 
-    properties: [ 'remove', 'width', 'height', 'linkdistance', 'circleradius', 'charge', 'gravity', 'bounds'],
+    properties: [ 'remove', 'width', 'height', 'linkdistance', 'circleradius', 'charge', 'gravity', 'bounds', 'arrow'],
 
     methods : [ 'updateData' ],
 

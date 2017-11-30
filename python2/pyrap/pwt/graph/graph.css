@@ -1,32 +1,47 @@
 .link {
   fill: none;
-  stroke: #08088A;
   stroke-width: 1.5px;
-}
-
-.link.strokegreen {
-  stroke: #89a35c;
-}
-
-.link.object {
-  stroke: green;
-}
-
-.link.strokeblue {
-  stroke: blue;
-}
-
-.link.default {
   stroke: black;
 }
 
-.link.dashedred {
-  stroke-dasharray: 0,2 1;
+.link.red {
   stroke: red;
 }
 
+.link.green {
+  stroke: #89a35c;
+}
+
+.link.black {
+  stroke: black;
+}
+
+.link.blue {
+  stroke: blue;
+}
+
+.link.dashed {
+  stroke-dasharray: 0,2 1;
+}
+
 marker {
+  fill: none;
+}
+
+marker#red {
+  fill: red;
+}
+
+marker#green {
   fill: #89a35c;
+}
+
+marker#black {
+  strfill: black;
+}
+
+marker#blue {
+  fill: blue;
 }
 
 circle.graphcircle {

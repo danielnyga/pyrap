@@ -99,6 +99,29 @@ class Graph(Widget):
         self._gravity = gravity
         session.runtime << RWTSetOperation(self.id, {'gravity': gravity})
 
+    def arrow(self, arrowid):
+        '''
+        Appends a marker with the given id in the graph's definitions.
+
+        :param arrowid:  string denoting a css id to manipulate the arrow heads of the graph.
+
+        Example: set `arrowid` to e.g. 'fancy' and add the following lines to your
+        .css file:
+            marker#fancy {
+              fill: none;
+            }
+
+            .link.fancy {
+              stroke: yellow;
+            }
+
+        With the `arcstyle` of a link in the graph data set to 'fancy' as well,
+        the respective link will be drawn yellow without a marker head.
+        Set the `arcstyle` to 'dashed fancy' to draw a yellow dashed stroke
+        without an arrow head.
+        '''
+        session.runtime << RWTSetOperation(self.id, {'arrow': arrowid})
+
     @property
     def charge(self):
         return self._charge
@@ -149,6 +172,7 @@ class Graph(Widget):
     def updatedata(self, newlinks):
         remove = [x for x in self.links if x not in newlinks]
         add = [x for x in newlinks if x not in self.links]
+
         session.runtime << RWTCallOperation(self.id, 'updateData', {'remove': remove, 'add': add})
         self._links = [x for x in self.links if x not in remove] + add
         return remove, add
