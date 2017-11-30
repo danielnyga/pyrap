@@ -277,6 +277,7 @@ rwt/remote/handler/DropDownHandler.js
 {code_base}/pyrap/pwt/graph/graph.js
 {code_base}/pyrap/pwt/svg/svg.js
 {code_base}/pyrap/pwt/ros3d/ros3d.js
+{code_base}/pyrap/pwt/barchart/barchart.js
 appearances.js'''.format(code_base=code_base)
 
 
