@@ -79,15 +79,15 @@ class FileUploadServiceHandler(ServiceHandler):
             f['file'].content +=data[start:end]
 
         def on_part_end():
-            tokens = f._header.split(b'\r\n')
+            tokens = f['file']._header.split(b'\r\n')
             b = tokens[0]
             opts = CaseInsensitiveDict({k.strip(): v.strip() for k, v in [t.split(b':') for t in tokens[1:] if len(t.split(b':')) == 2]})
             del opts[b'content-disposition']
-            _, o = parse_options_header(f._header)
+            _, o = parse_options_header(f['file']._header)
             if o:
                 o = CaseInsensitiveDict(o)
                 opts['content-disposition'] = o
-                f.name = o[b'filename'].decode()
+                f['file'].name = o[b'filename'].decode()
             f['file'].type = opts[b'content-type'].decode()
             files.append(f)
 
@@ -108,5 +108,5 @@ class FileUploadServiceHandler(ServiceHandler):
             parser.write(chunk)
             if len(chunk) != to_read: break
         stream.close()
-        self._files[token] = [{'filename': f.name, 'filetype': f.type, 'filecontent': f.content} for f in files]
+        self._files[token] = [{'filename': f['file'].name, 'filetype': f['file'].type, 'filecontent': f['file'].content} for f in files]
         return ''
