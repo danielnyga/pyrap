@@ -583,8 +583,9 @@ class SessionRuntime(object):
         self << RWTCallOperation('rwt.client.JavaScriptExecutor', 'execute', {'content': code})
 
     def download(self, path, mimetype):
-        resource = session.runtime.mngr.resources.registerf(os.path.basename(path), mimetype, path)
-        resource.download()
+        with open(path, 'r') as f:
+            resource = session.runtime.mngr.resources.registerf(os.path.basename(path), mimetype, f)
+            resource.download()
 
     def create_display(self):
         self.display = Display(self.windows)
