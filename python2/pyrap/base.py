@@ -17,8 +17,7 @@ from dnutils import first, logs
 
 from pyrap.sessions import PyRAPSession, SessionCleanupThread
 from web.webapi import notfound
-from pyrap import locations
-from pyrap.utils import RStorage
+from pyrap import locations, server
 
 routes = (
     '/(.*)/(.*)', 'RequestDispatcher',
@@ -30,7 +29,7 @@ debug = True
 
 dnutils.logs.loggers({
     '/pyrap/session_cleanup': logs.newlogger(logs.console, level=logs.ERROR),
-    '/pyrap/http_msgs': logs.newlogger(logs.console, level=logs.ERROR),
+    '/pyrap/http': logs.newlogger(logs.console, level=logs.DEBUG),
     '/pyrap/main': logs.newlogger(logs.console, level=logs.INFO)
 })
 
@@ -44,7 +43,7 @@ class PyRAPServer(web.application):
             logger.info('starting pyrap server')
             for path, app in _registry.items():
                 logger.info('http://%s:%s/%s/' % (bindip, port, app.config.path))
-            web.httpserver.runbasic(self.wsgifunc(*middleware), (bindip, port))
+            server.runbasic(self.wsgifunc(*middleware), (bindip, port))
         except (ThreadInterrupt, KeyboardInterrupt):
             logger.info('received ctrl-c')
         logger.info('goodbye.')

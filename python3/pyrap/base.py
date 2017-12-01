@@ -1,8 +1,8 @@
-"""
+'''
 Created on Aug 1, 2015
 
 @author: nyga
-"""
+'''
 import dnutils
 import sys
 
@@ -13,11 +13,11 @@ from dnutils.threads import ThreadInterrupt
 import web
 from dnutils import expose, first, logs
 
-from pyrap.sessions import PyRAPSession, SessionCleanupThread
+from .sessions import PyRAPSession, SessionCleanupThread
 from web.webapi import notfound
 from pyrap import locations
+from pyrap import server
 import urllib.parse 
-from pyrap.utils import RStorage
 
 
 routes = (
@@ -30,7 +30,7 @@ debug = True
 
 dnutils.logs.loggers({
     '/pyrap/session_cleanup': logs.newlogger(logs.console, level=logs.ERROR),
-    '/pyrap/http_msgs': logs.newlogger(logs.console, level=logs.ERROR),
+    '/pyrap/http': logs.newlogger(logs.console, level=logs.DEBUG),
     '/pyrap/main': logs.newlogger(logs.console, level=logs.INFO)
 })
 
@@ -44,7 +44,7 @@ class PyRAPServer(web.application):
             logger.info('starting pyrap server')
             for path, app in _registry.items():
                 logger.info('http://%s:%s/%s/' % (bindip, port, app.config.path))
-            web.httpserver.runbasic(self.wsgifunc(*middleware), (bindip, port))
+            server.runbasic(self.wsgifunc(*middleware), (bindip, port))
         except (ThreadInterrupt, KeyboardInterrupt):
             logger.info('received ctrl-c')
         logger.info('goodbye.')
@@ -85,7 +85,7 @@ _registry = ApplicationRegistry()
 
 def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme=None, icon=None,
                  requirejs=None, requirecss=None, rcpath='rwt-resources'):
-    """
+    '''
     Register a new PyRAP app.
     
     :param clazz:        the main class of the application of which a new instance
@@ -113,8 +113,8 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
 
     :param icon:         image path under which the application's icon can
                          be found.
-    """
-    config = RStorage({'clazz': clazz,
+    '''
+    config = web.Storage({'clazz': clazz,
                       'path': path,
                       'name': name,
                       'entrypoints': dict(entrypoints),
@@ -132,7 +132,7 @@ def register_app(clazz, path, name, entrypoints, setup=None, default=None, theme
 register = register_app
 
 
-def run(port=8080, admintool=False):
+def run(bindip='127.0.0.1', port=8080, admintool=False):
     if admintool:
         sys.path.append(os.path.join(locations.pyrap_path, 'examples', 'pyrap-admin'))
         from admin import PyRAPAdmin
@@ -140,7 +140,7 @@ def run(port=8080, admintool=False):
                  path='admin',
                  entrypoints={'start': PyRAPAdmin.main},
                  name='pyRAP Administration')
-    _server.run(port=port)
+    _server.run(bindip=bindip, port=port)
 
 
 class RequestDispatcher(object):
