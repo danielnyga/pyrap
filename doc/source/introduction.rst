@@ -10,7 +10,7 @@ Checkout the git repository at ::
 
 Make sure that the pyrap source directory directory is in your ``PYTHONPATH`` variable. Depending on
 whether you use Python 2 or Python 3, choose either ``pyrap/python2`` or ``pyrap/python3``. You may
-additionally the dependencies from ``requirements.txt``: ::
+additionally want to install the dependencies from ``requirements.txt``: ::
 
     pip install -r requirements.txt
 
@@ -62,7 +62,7 @@ like so:
 .. figure:: _static/helloworld.png
 
    Screenshot of the ``helloworld.py`` pyRAP app.
-   
+
 Before stepping into details of our example, it is worth stopping for a 
 moment and making yourself familiar with the result. Given that our app 
 comprises only a few lines of code, it already provides quite some 
