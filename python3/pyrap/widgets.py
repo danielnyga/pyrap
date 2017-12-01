@@ -2735,6 +2735,7 @@ class Table(Widget):
         self._columns = []
         self._items = []
         self._selection = []
+        self._sortedby = None
 
     def create_content(self):
         if RWT.NOSCROLL not in self.style:
