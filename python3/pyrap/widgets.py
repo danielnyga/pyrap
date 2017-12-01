@@ -1774,7 +1774,7 @@ class TabFolder(Composite):
         container.layout = CellLayout(halign='fill', valign='fill')
         item.control = container
         self.items.append(item)
-        return container
+        return item
 
     @property
     def items(self):
@@ -1793,11 +1793,11 @@ class TabFolder(Composite):
         if type(item) is int:
             item = self.items[item]
         if not isinstance(item, TabItem): raise TypeError('Expected type %s, got %s.' % (TabItem.__name__, type(item).__name__))
-        self._selected = item.id
+        self._selected = item
         for i in self.items:
             i.selected = 0
         item.selected = 1
-        session.runtime << RWTSetOperation(self.id, {'selection': self._selected})
+        session.runtime << RWTSetOperation(self.id, {'selection': self._selected.id})
 
     def compute_size(self):
         width, height = Composite.compute_size(self)
@@ -1918,6 +1918,10 @@ class TabItem(Widget):
     def img(self, img):
         self._img = img
         session.runtime << RWTSetOperation(self.id, {'image': self._get_rwt_img(self.img)})
+
+    @property
+    def content(self):
+        return self._control
 
     @property
     def control(self):
