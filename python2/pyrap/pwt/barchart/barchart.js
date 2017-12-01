@@ -124,6 +124,7 @@ pwt_barchart.BarChart.prototype = {
      * redraws the bar chart with the updated data
      */
     update : function () {
+        this.w = this._parentDIV.offsetWidth;
         this.h = this.barChartData.length * 1.2 * this.barHeight;
 
         this._svgContainer
@@ -134,7 +135,6 @@ pwt_barchart.BarChart.prototype = {
         var x = d3.scale.linear()
             .range([0, this.w - this.yBarWidth - 5*this.fontpixels])
             .domain([0, 1]);
-//            .domain([0, d3.max(this.barChartData, function (d) { return d.value; })]);
 
         var y = d3.scale.ordinal()
             .rangeRoundBands([this.h, 0])
