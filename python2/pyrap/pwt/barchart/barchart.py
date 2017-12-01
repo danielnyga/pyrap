@@ -51,7 +51,6 @@ class BarChart(Widget):
         self._data = []
 
     def data(self, data):
-        out('setting data', data)
         session.runtime << RWTSetOperation(self.id, {'data': data})
         self._data = data
 
