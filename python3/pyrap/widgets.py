@@ -1461,7 +1461,17 @@ class Edit(Widget):
     def text(self, text):
         self._text = text
         session.runtime << RWTSetOperation(self.id, {'text': text})
-        
+
+    @property
+    def message(self):
+        return self._message
+
+    @message.setter
+    @checkwidget
+    def message(self, message):
+        self._message = message
+        session.runtime << RWTSetOperation(self.id, {'message': message})
+
     def _handle_notify(self, op):
         events = {'Modify': self.on_modify}
         if op.event not in events:
@@ -2403,6 +2413,7 @@ class Menu(Widget):
             parent.children.remove(self)
 
 
+
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         if RWT.DROP_DOWN in self.style:
@@ -2542,6 +2553,8 @@ class MenuItem(Widget):
     @checkwidget
     def text(self, text):
         self._text = text
+        session.runtime << RWTSetOperation(self.id, {'text': text})
+
 
 
 class List(Widget):
@@ -2593,7 +2606,7 @@ class List(Widget):
 
     def setitemheight(self):
         h = self._computeitemheight()
-        session.runtime << RWTSetOperation(self.id, {'itemDimensions': [self.bounds[2].value, h.value]})
+        session.runtime << RWTSetOperation(self.id, {'itemDimensions': [max(0, self.bounds[2].value), h.value]})
 
     def _computeitemheight(self):
         if self.itemheight is None:
@@ -2607,7 +2620,7 @@ class List(Widget):
         padding = self.theme.item_padding
         if padding:
             h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
-        return h
+        return max(0, h)
 
 
     def create_content(self):
