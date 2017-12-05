@@ -245,15 +245,16 @@ class FocusEventData(EventData):
 
 class SelectionEventData(EventData):
     
-    def __init__(self, widget, button, ctrl, alt, shift, x=None, y=None):
+    def __init__(self, widget, button, ctrl, alt, shift, item=None, x=None, y=None):
         EventData.__init__(self, widget)
         self.button = button
         self.ctrl = ctrl
         self.alt = alt
         self.shift = shift
+        self.item = item
         self.x = x
         self.y = y
-        
+
 class MouseEventData(EventData):
     
     def __init__(self, widget, button, ctrl, alt, shift, timestamp, x, y):
@@ -271,7 +272,7 @@ class MouseEventData(EventData):
         return (self.x, self.y)
     
 def _rwt_selection_event(op):
-        return SelectionEventData(session.runtime.windows[op.target], op.args.get('button'), op.args.ctrlKey, op.args.altKey, op.args.shiftKey, x=op.args.get('x'), y=op.args.get('y'))
+        return SelectionEventData(session.runtime.windows[op.target], op.args.get('button'), op.args.ctrlKey, op.args.altKey, op.args.shiftKey, item=op.args.get('item'), x=op.args.get('x'), y=op.args.get('y'))
     
 def _rwt_mouse_event(op):
     return MouseEventData(session.runtime.windows[op.target], op.args.button, op.args.ctrlKey, op.args.altKey, op.args.shiftKey, op.args.time, op.args.x, op.args.y)
