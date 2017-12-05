@@ -24,7 +24,8 @@ from events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished
 from exceptions import WidgetDisposedError
-from layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout
+from layout import Layout, CellLayout, StackLayout, materialize_adapters, \
+    ColumnLayout, RowLayout, GridLayout
 from ptypes import px, BitField, BoolVar, NumVar, Color,\
     parse_value, toint, Image
 from pyrap.themes import ToggleTheme
@@ -680,12 +681,12 @@ class Combo(Widget):
     def __init__(self, parent, items=None, editable=True, **options):
         Widget.__init__(self, parent, **options)
         self.theme = ComboTheme(self, session.runtime.mngr.theme)
-        self._items = ifnone(items, [])
+        self._items = []
+        self._editable = editable
         self._setitems(ifnone(items, []))
         self._text = None
         self.on_select = OnSelect(self)
         self.on_modify = OnModify(self)
-        self._editable = editable
         self._selidx = -1
 
     def _create_rwt_widget(self):
@@ -694,7 +695,6 @@ class Combo(Widget):
         options.style.append("DROP_DOWN")
         options.editable = self._editable
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
-
 
     def compute_size(self):
         w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX', self.shell())
@@ -709,17 +709,23 @@ class Combo(Widget):
         return w, h
 
     def _setitems(self, items):
-        if items is None:
-            items = []
-        if isinstance(items, dict):
-            if not all([type(i) is str for i in items]):
-                raise TypeError('All keys in an item dictionary must be strings.')
-            if type(items) is dict:
-                self._items = OrderedDict(((k, items[k]) for k in sorted(items)))
-        elif type(items) in (list, tuple):
-            items = OrderedDict(((str(i), i) for i in items))
-        else: raise TypeError('Invalid type for List items: %s' % type(items))
-        self._items = items
+        if self._editable:
+            if isinstance(items, list):
+                self._items = items
+            else:
+                raise TypeError('Items must be of type list in editable combo!')
+        else:
+            if items is None:
+                items = []
+            if isinstance(items, dict):
+                if not all([type(i) is str for i in items]):
+                    raise TypeError('All keys in an item dictionary must be strings.')
+                if type(items) is dict:
+                    self._items = OrderedDict(((k, items[k]) for k in sorted(items)))
+            elif type(items) in (list, tuple):
+                items = OrderedDict(((str(i), i) for i in items))
+            else: raise TypeError('Invalid type for List items: %s' % type(items))
+            self._items = items
 
     def _handle_set(self, op):
         Widget._handle_set(self, op)
@@ -755,17 +761,33 @@ class Combo(Widget):
 
     @property
     def selection(self):
-        return self.items[self.items.keys()[self._selidx]]
+        if self._editable:
+            return self.items[self._selidx]
+        else:
+            return self.items[self.items.keys()[self._selidx]]
 
     @selection.setter
     def selection(self, sel):
-        sel = self._items.values().index(sel) if sel is not None else None
-        self._selidx = sel
-        session.runtime << RWTSetOperation(self.id, {'selectionIndex': sel, 'text': self.items.keys()[sel]})
+        if self._editable:
+            self._selidx = self._items.index(sel) if sel is not None else None
+            txt = self._items[self._selidx]
+        else:
+            self._selidx = self._items.values().index(sel) if sel is not None else None
+            txt = self._items.keys()[self._selidx]
+        session.runtime << RWTSetOperation(self.id, {'selectionIndex': self._selidx, 'text': txt})
 
     @property
     def selidx(self):
         return self._selidx
+
+    @selidx.setter
+    def selidx(self, idx):
+        self._selidx = idx
+        if self._editable:
+            txt = self._items[self._selidx]
+        else:
+            txt = self._items.values()[self._selidx]
+        session.runtime << RWTSetOperation(self.id, {'selectionIndex': self._selidx, 'text': txt})
 
     @property
     def items(self):
@@ -774,7 +796,11 @@ class Combo(Widget):
     @items.setter
     def items(self, items):
         self._setitems(items)
-        session.runtime << RWTSetOperation(self.id, {'items': self.items.keys()})
+        if self._editable:
+            items = self.items
+        else:
+            items = self.items.keys()
+        session.runtime << RWTSetOperation(self.id, {'items': items})
 
 
 class DropDown(Widget):
@@ -784,7 +810,7 @@ class DropDown(Widget):
 
 
     @constructor('DropDown')
-    def __init__(self, parent, items='', markupEnabled=False, visible=False, visibleItemCount=5, **options):
+    def __init__(self, parent, items='', markupEnabled=True, visible=False, visibleItemCount=5, **options):
         Widget.__init__(self, parent, **options)
         self.theme = DropDownTheme(self, session.runtime.mngr.theme)
         self._items = items
@@ -899,7 +925,6 @@ class Label(Widget):
             options.customVariant = 'variant_markup'
         if RWT.WRAP in self.style:
             options.style.append('WRAP')
-
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
 
     @property
@@ -913,6 +938,13 @@ class Label(Widget):
             raise ValueError('Illegal text alignment: %s' % align)
         self._textalign = align
         session.runtime << RWTSetOperation(self.id, {'alignment': self._textalign})
+
+    def _get_rwt_img(self, img):
+        if img is not None:
+            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
+            img = [res.location, img.width.value, img.height.value]
+        else: img = None
+        return img
 
     @property
     def img(self):
@@ -1017,7 +1049,6 @@ class Link(Widget):
         self._txtids.append([text[sidx:], None])
 
     def _handle_set(self, op):
-        out('handleset')
         Widget._handle_set(self, op)
         for key, value in op.args.iteritems():
             if key == 'selectionIndex':
@@ -1315,7 +1346,6 @@ class Toggle(Checkbox, Button):
     def _update_text(self, *_):
         if self._texts:
             checked = 1 if self.checked else 0
-            out(checked)
             self.text = self._texts[checked]
 
     @checkwidget
@@ -1454,7 +1484,17 @@ class Edit(Widget):
     def text(self, text):
         self._text = text
         session.runtime << RWTSetOperation(self.id, {'text': text})
-        
+
+    @property
+    def message(self):
+        return self._message
+
+    @message.setter
+    @checkwidget
+    def message(self, message):
+        self._message = message
+        session.runtime << RWTSetOperation(self.id, {'message': message})
+
     def _handle_notify(self, op):
         events = {'Modify': self.on_modify}
         if op.event not in events:
@@ -1691,7 +1731,7 @@ class ScrolledComposite(Composite):
         session.runtime << RWTSetOperation(self.id, {'content': content.id})
 
     def compute_size(self):
-        width, height = 0, 0
+        width, height = Widget.compute_size(self)
         if RWT.HSCROLL in self.style:
             width += self._hbar.theme.minheight
             height += self._hbar.theme.width
@@ -1759,6 +1799,15 @@ class TabFolder(Composite):
         else:
             options.style.append('BOTTOM')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+        self.on_select += self._select
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_selection_event(op))
+        return True
 
     @checkwidget
     def addtab(self, title='', img=None, idx=None):
@@ -1775,6 +1824,9 @@ class TabFolder(Composite):
 
     def rmitem(self, idx):
         self.items.pop(idx).dispose()
+
+    def _select(self, args):
+        self.selected = session.runtime.windows[args.item]
 
     @property
     def selected(self):
@@ -2259,8 +2311,7 @@ class Group(Composite):
 
         # width, height = self.compute_size()
         # return width, height
-    
-    
+
     def viewport(self):
         x = y = 0
         # border
@@ -2536,6 +2587,8 @@ class MenuItem(Widget):
     @checkwidget
     def text(self, text):
         self._text = text
+        session.runtime << RWTSetOperation(self.id, {'text': text})
+
 
 
 class List(Widget):
@@ -2601,7 +2654,7 @@ class List(Widget):
         padding = self.theme.item_padding
         if padding:
             h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
-        return h
+        return max(0, h)
 
 
     def create_content(self):
