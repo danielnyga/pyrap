@@ -8,6 +8,8 @@ import json
 from collections import OrderedDict
 
 import sys
+
+import web
 from dnutils import out
 from dnutils.threads import sleep, ThreadInterrupt
 from dnutils.tools import ifnone
@@ -59,7 +61,7 @@ class ControlsDemo():
         #=======================================================================
         header = Composite(outer)
         header.layout = ColumnLayout(halign='fill', minheight='90px', flexcols=1)
-        header.bgimg = Image('images/background-green.jpg')
+        header.bgimg = Image('images/background-blue.jpg')
         header.css = 'header'
         
         #=======================================================================
@@ -248,6 +250,15 @@ class ControlsDemo():
         return tab
 
     def create_cookies_page(self, parent):
+
+        def check_cookies(_):
+            if self.navigation.selection is parent:
+                if not session.client.data.get('allow_cookies', False):
+                    session.client.data.allow_cookies = (ask_yesno(self.shell, 'Cookies', 'This page will save cookies on your local machine.\n\nDo you agree?') == 'yes')
+                update_client_data()
+
+        self.navigation.on_select += check_cookies
+
         parent.layout.flexrows = {2: 1}
         top = Composite(parent, layout=ColumnLayout(halign='left'))
         Label(top, 'Use <tt>session.client.data</tt> to permanently store data on the client machine.', markup=True, halign='left')
@@ -255,9 +266,7 @@ class ControlsDemo():
         clear = Button(top, 'Clear')
 
         def cleardata(_):
-            # for item in table.items:
-            #     table.rmitem(item)
-            session.client.data = {}
+            session.client.data = web.Storage()
             update_client_data()
 
         table = Table(parent, valign='fill', halign='fill')
@@ -299,13 +308,19 @@ class ControlsDemo():
             ok = Button(dlg.content, 'OK', halign='right')
 
             def doadd(_):
+                if not session.client.data.get('allow_cookies', False):
+                    msg_err(self.shell, 'Unable to add client data', 'You must agree to accept cookies on you machine first.')
+                    return
                 type_ = str
+                value = editValue.text
                 if opt_num.checked:
                     type_ = float
                 if opt_bool.checked:
                     type_ = bool
-                session.client.data[editKey.text] = type_(editValue.text)
+                    value = {'true': True, 'false': False}[value.lower()]
+                session.client.data[editKey.text] = type_()
                 update_client_data()
+                dlg.close()
 
             ok.on_select += doadd
             dlg.show(pack=True)
@@ -314,6 +329,18 @@ class ControlsDemo():
         insert = MenuItem(m, 'Insert...')
         insert.on_select += additem
         table.menu = m
+
+        remove = MenuItem(m, 'Remove')
+
+        def rmitem(_):
+            sel = table.selection
+            if sel:
+                try:
+                    del session.client.data[sel]
+                except KeyError: pass
+            update_client_data()
+
+        remove.on_select += rmitem
 
     def create_sash_page(self, parent):
         container = Composite(parent, layout=ColumnLayout(halign='fill', valign='fill', flexcols=[0,2]))
