@@ -35,6 +35,7 @@ class Images:
     IMG_WHITE = Image('images/icons/bullet_white.png')
 
 
+
 class ControlsDemo():
     
     @staticmethod
@@ -247,10 +248,25 @@ class ControlsDemo():
         return tab
 
     def create_cookies_page(self, parent):
+        parent.layout.flexrows = {2: 1}
+        top = Composite(parent, layout=ColumnLayout(halign='left'))
+        Label(top, 'Use <tt>session.client.data</tt> to permanently store data on the client machine.', markup=True, halign='left')
+
+        clear = Button(top, 'Clear')
+
+        def cleardata(_):
+            # for item in table.items:
+            #     table.rmitem(item)
+            session.client.data = {}
+            update_client_data()
+
         table = Table(parent, valign='fill', halign='fill')
+
         table.addcol('Key', width=100)
         table.addcol('Value', width=200)
         table.addcol('Type', width=100)
+
+        clear.on_select += cleardata
         data = session.client.data
 
         def update_client_data():
