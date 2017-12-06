@@ -3,7 +3,11 @@ Created on Oct 27, 2015
 
 @author: nyga
 '''
+import base64
 import datetime
+import json
+import re
+
 import os
 import re
 import time
@@ -197,6 +201,16 @@ class PyRAPSession(object):
         client.ip = web.ctx.ip
         client.orig_ip = web.ctx.env.get('HTTP_X_FORWARDED_FOR', web.ctx.ip)
         client.useragent = web.ctx.env['HTTP_USER_AGENT']
+        # load the client data from the pyrap cookie, if set
+        client.data = Storage()
+        cookie = web.cookies().get('pyrap')
+        if cookie is not None:
+            cookie = base64.b64decode(cookie)
+            cookie = json.loads(cookie.decode('utf8'))
+            try:  # load the cookie if we have one
+                client.data = Storage(cookie)
+            except (KeyError, AttributeError):
+                pass
         self.__sessiondata.client = client
 
     def disconnect_client(self):

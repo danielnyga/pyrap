@@ -71,29 +71,9 @@ class PyRAPSession(object):
     def _prepare_thread(self, handler):
         request = Storage()
         request.query = {str(k): str(v) for k, v in urllib.parse.parse_qsl(web.ctx.query[1:], keep_blank_values=True)}
-        cookie = web.cookies().get('pyrap')
-        if cookie is not None:
-            cookie = base64.b64decode(cookie)
-            cookie = json.loads(cookie.decode('utf8'))
-            try: # load the cookie if we have one
-                self.client.data = Storage(cookie)
-            except (KeyError, AttributeError):
-                pass
         # get the session or create a new one if necessary
         self.__locals['session_id'] = request.query.get('cid')  # web.cookies().get(cookie_name)
-        try:
-            return handler()
-        finally:
-            self._postprocess()
-
-    def _postprocess(self):
-        try:
-            if self.client is not None:
-                cookie = json.dumps(self.client.data)
-                cookie = base64.b64encode(cookie.encode('utf8'))
-                web.setcookie('pyrap', cookie.decode('ascii'), path='/%s' % self.app.config.path)
-        except KeyError:
-            pass
+        return handler()
 
     @property
     def __lock(self):
@@ -222,7 +202,16 @@ class PyRAPSession(object):
         client.ip = web.ctx.ip
         client.orig_ip = web.ctx.env.get('HTTP_X_FORWARDED_FOR', web.ctx.ip)
         client.useragent = web.ctx.env['HTTP_USER_AGENT']
+        # load the client data from the pyrap cookie, if set
         client.data = Storage()
+        cookie = web.cookies().get('pyrap')
+        if cookie is not None:
+            cookie = base64.b64decode(cookie)
+            cookie = json.loads(cookie.decode('utf8'))
+            try:  # load the cookie if we have one
+                client.data = Storage(cookie)
+            except (KeyError, AttributeError):
+                pass
         self.__sessiondata.client = client
 
     def disconnect_client(self):
