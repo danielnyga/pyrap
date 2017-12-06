@@ -72,7 +72,19 @@ class PyRAPSession(object):
         request.query = {str(k): str(v) for k, v in urlparse.parse_qsl(web.ctx.query[1:], keep_blank_values=True)}
         # get the session or create a new one if necessary
         self.__locals['session_id'] = request.query.get('cid')  # web.cookies().get(cookie_name)
-        return handler()
+        try:
+            return handler()
+        finally:
+            self._postprocess()
+
+    def _postprocess(self):
+        try:
+            if self.client is not None:
+                cookie = json.dumps(self.client.data)
+                cookie = base64.b64encode(cookie.encode('utf8'))
+                web.setcookie('pyrap', cookie.decode('ascii'), path='/%s' % self.app.config.path)
+        except KeyError:
+            pass
 
     @property
     def __lock(self):
