@@ -17,13 +17,13 @@ from pyrap import session
 from pyrap.dialogs import msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, \
     ask_okcancel, open_progress, ask_color
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout
-from pyrap.ptypes import BoolVar, Color, px, Image, Font
+from pyrap.ptypes import BoolVar, Color, px, Image, Font, NumVar
 # from pyrap.pwt.cluster.cluster import Cluster
 # from pyrap.pwt.radar.radar import RadarChart
 # from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
     Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
-    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle, DropDown, Combo
+    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle, DropDown, Combo, Option
 
 
 class Images:
@@ -215,6 +215,10 @@ class ControlsDemo():
         self.create_sash_page(page)
         self.pages['Sash'] = page
 
+        page = self.create_page_template('Cookies Demo')
+        self.create_cookies_page(page)
+        self.pages['Cookies'] = page
+
         #=======================================================================
         # create radar chart
         #=======================================================================
@@ -242,6 +246,59 @@ class ControlsDemo():
         header.css = 'headline'#font = header.font.modify(size='16px', bf=1)
         return tab
 
+    def create_cookies_page(self, parent):
+        table = Table(parent, valign='fill', halign='fill')
+        table.addcol('Key', width=100)
+        table.addcol('Value', width=200)
+        table.addcol('Type', width=100)
+        data = session.client.data
+
+        def update_client_data():
+            for item in table.items:
+                table.rmitem(item)
+            for key, value in data.items():
+                table.additem(texts=[str(key), str(value), type(value).__name__])
+
+        update_client_data()
+
+        def additem(_):
+            dlg = Shell(parent=self.shell, title='Add new user data')
+            dlg.content.layout = GridLayout(cols=2, padding=20)
+            Label(dlg.content, 'Key:')
+            editKey = Edit(dlg.content, minwidth=200, halign='fill')
+            Label(dlg.content, 'Value:')
+            editValue = Edit(dlg.content, minwidth=200, halign='fill')
+
+            Label(dlg.content, 'Type:')
+
+            type_comp = Composite(dlg.content, layout=ColumnLayout())
+
+            opt_str = Option(type_comp, 'String')
+            opt_str.checked = True
+            opt_num = Option(type_comp, 'Number')
+            opt_bool = Option(type_comp, 'Bool')
+
+            Label(dlg.content)
+
+            ok = Button(dlg.content, 'OK', halign='right')
+
+            def doadd(_):
+                type_ = str
+                if opt_num.checked:
+                    type_ = float
+                if opt_bool.checked:
+                    type_ = bool
+                session.client.data[editKey.text] = type_(editValue.text)
+                update_client_data()
+
+            ok.on_select += doadd
+            dlg.show(pack=True)
+
+        m = Menu(table, popup=True)
+        insert = MenuItem(m, 'Insert...')
+        insert.on_select += additem
+        table.menu = m
+
     def create_sash_page(self, parent):
         container = Composite(parent, layout=ColumnLayout(halign='fill', valign='fill', flexcols=[0,2]))
 
@@ -261,6 +318,7 @@ class ControlsDemo():
             self.shell.dolayout()
 
         sash.on_select += apply_sash
+
 
     def create_table_page(self, parent):
         table = Table(parent, halign='fill', valign='fill', headervisible=True, colsmoveable=True, check=True)
