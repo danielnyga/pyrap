@@ -39,7 +39,44 @@ pyRAP Controls Demo
 
       https://www.pyrap.org/showroom/controls
 
+pracmln -- Markov Logic Networks in Python
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. container:: twocol
+
+   .. container:: leftside
+
+      .. figure:: _static/pracmln.png
+         :width: 300pt
+
+   .. container:: rightside
+
+      `pracmln` is a artificial intelligence toolbox for statistical relational
+      learning developed at the University of Bremen. It provides a web interface
+      to the learning and reasoning algorithms for Markov logic networks, which
+      is entirely written in `pyRAP`. For further information about `pracmln`,
+      please visit the `project webpage <http://www.pracmln.org>`_.
+
+      https://pracmln.open-ease.org
+
+PRAC -- Probabilistic Action Cores
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. container:: twocol
+
+   .. container:: leftside
+
+      .. figure:: _static/pracapp.jpg
+         :width: 300pt
+
+   .. container:: rightside
+
+        `PRAC` is a natural-language interpreter for robotic applications. It is
+        being developed by the Institute for Artificial Intelligence  at the University
+        of Bremen and can be accessed via a web interface written in `pyRAP`.
+        For further infromation about `PRAC`, we refer to the project `web page <http://www.actioncores.org>`_.
+
+      https://prac.open-ease.org
 
 
 
