@@ -9,7 +9,6 @@ from collections import OrderedDict
 
 import sys
 
-import web
 from dnutils import out
 from dnutils.threads import sleep, ThreadInterrupt
 from dnutils.tools import ifnone
@@ -26,7 +25,7 @@ from pyrap.ptypes import BoolVar, Color, px, Image, Font, NumVar
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
     Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
     Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle, DropDown, Combo, Option
-
+import web
 
 class Images:
     IMG_UP = Image('images/icons/up.gif')
