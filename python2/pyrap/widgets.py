@@ -236,7 +236,7 @@ class Widget(object):
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = map(px, bounds)
-        if self.decorator is not None:
+        if self.decorator is not None and not self.decorator.disposed:
             b_ = self.decorator.compute_relpos(self.bounds)
             self.decorator.bounds = b_
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
@@ -985,7 +985,7 @@ class Label(Widget):
         if self.img is not None:
             w, h = self.img.size
         elif RWT.WRAP not in self.style:
-            lines = self._text.split('\n')
+            lines = self._text.split('\n' if RWT.MARKUP not in self.style else '<br>')
             w += max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
             h *= len(lines)
@@ -2825,7 +2825,7 @@ class Table(Widget):
 
     @property
     def items(self):
-        return self._items
+        return list(self._items)
 
     @items.setter
     @checkwidget
@@ -2926,18 +2926,18 @@ class Table(Widget):
 
     def additem(self, texts, index=None, **options):
         item = TableItem(self, idx=index, texts=texts, **options)
-        session.runtime << RWTSetOperation(self.id, {'itemCount': len(self.items)})
+        session.runtime << RWTSetOperation(self.id, {'itemCount': len(self._items)})
         return item
 
     def rmitem(self, item):
         if type(item) is int:
-            item = self.items[item]
+            item = self._items[item]
         item.dispose()
-        self.items.remove(item)
+        self._items.remove(item)
         try:
             self._selection.remove(item.idx)
         except ValueError: pass
-        for i in self.items[item.idx:]:
+        for i in self._items[item.idx:]:
             i._setidx(i.idx - 1)
             if i.idx + 1 in self._selection:
                 self._selection.remove(i.idx + 1)
@@ -3041,7 +3041,7 @@ class TableItem(Widget):
         self._images = images
         if self in parent.children:
             parent.children.remove(self)
-        self.parent.items.insert(self._idx, self)
+        self.parent._items.insert(self._idx, self)
         self.data = data
 
     def _create_rwt_widget(self):
