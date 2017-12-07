@@ -197,6 +197,7 @@ and ::
 
     flexrows = {1: 1, 2: 2, 3: 3, 4:4}
 
+and see what happens to the layout of the buttons.
 
 ColumnLayout
 ------------
