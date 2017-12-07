@@ -4,22 +4,24 @@ Introduction
 Installation
 ~~~~~~~~~~~~
 
-Checkout the git repository at ::
+Checkout the git repository from ::
 
     git clone https://github.com/danielnyga/pyrap.git
 
-Make sure that the pyrap source directory directory is in your ``PYTHONPATH`` variable. Depending on
-whether you use Python 2 or Python 3, choose either ``pyrap/python2`` or ``pyrap/python3``. You may
-additionally want to install the dependencies from ``requirements.txt``: ::
+Make sure that the `pyRAP` source directory is in your ``PYTHONPATH`` variable. Depending on
+whether you use Python 2 or Python 3, choose either ``pyrap/python2`` or ``pyrap/python3``. ::
 
-    pip install -r requirements.txt
+    export PYTHONPATH=/path/to/pyrap/(python2|pythoon3):$PYTHONPATH
+
+You may additionally want to install the dependencies from the ``requirements.txt``: ::
+
+    pip install -r (python2|python3)/requirements.txt
 
 
 Hello, pyRAP!
 ~~~~~~~~~~~~~
 
-pyRAP has been designed to keep the amount of boilerplate code that
-you have to write at a mininum. A minimalistic example application
+pyRAP has been designed to keep the amount of boilerplate code at a mininum. A minimalistic example application
 is the following.
 
 .. code-block:: python
