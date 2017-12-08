@@ -255,8 +255,6 @@ class ControlsDemo():
         clear = Button(top, 'Clear')
 
         def cleardata(_):
-            # for item in table.items:
-            #     table.rmitem(item)
             session.client.data = {}
             update_client_data()
 
@@ -267,12 +265,11 @@ class ControlsDemo():
         table.addcol('Type', width=100)
 
         clear.on_select += cleardata
-        data = session.client.data
 
         def update_client_data():
             for item in table.items:
                 table.rmitem(item)
-            for key, value in data.items():
+            for key, value in session.client.data.items():
                 table.additem(texts=[str(key), str(value), type(value).__name__])
 
         update_client_data()
