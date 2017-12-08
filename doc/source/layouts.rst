@@ -199,14 +199,86 @@ and ::
 
 and see what happens to the layout of the buttons.
 
+.. note::
+
+    When a composite is defined to ``halign='fill'`` or ``valign='fill'``, and neither ``flexcols`` or ``flexrows``
+    nor ``equalwidths`` or ``equalheight`` are specified, `pyRAP` will raise a :class:`LayoutError` with a
+    message like ::
+
+        "Layout is underdetermined: I was told to fill <Composite ...> horizontally, but I do not have any flexcols/flexrows."
+
+    When you encounter this message, it is likely that you forgot to specify ``flexcols`` or ``flexrows`` in
+    your grid layout.
+
+Layout Dimensions
+~~~~~~~~~~~~~~~~~
+
+Besides the alignment parameters, the :class:`GridLayout` provides a couple of additional
+parameters that let us control the dimensions and appearance of widgets in the grid. They are illustrated
+in :ref:`gridlayout` Every grid layout
+may have specified a horizontal and vertical space that is put between the columns and rows.
+The respective parameters are called ``hspace`` and ``vspace``. By default, all grid layouts have
+an ``hspace`` and ``vspace`` of 5 pixels, so there is a "vacuum" of 5 pizels between all grid cells
+vertically and horizontally. The the figure, thay are indicated by the white space between the
+light gray grid cells.
+
+In addition, any grid cell has a margin that further constrains the effective available space of the cell.
+In the figure, they are illustrated by the dashed black lines and they define an absolute offset within a
+grid cell the respective widget is separated by from the cell border. The parameter names to set the offsets
+are ``padding_top``, ``padding_right``, ``padding_bottom`` and ``padding_left``. If only ``padding`` is specified,
+this number is applied to all the four ``padding_*`` parameters.
+
+.. _gridlayout:
+.. figure:: _static/grid-layout.svg
+
+    Examples and description of the :class:`GridLayout` parameters.
+
+The width and height of a grid cell itself are given by the parameters ``cell_width`` and ``cell_height``.
+However, as the dimensions of a grid cell are computed by the layout managers, ``cell_width`` and ``cell_height``
+cannot be directly assigned a fixed value. Instead, it is possible to define their ``cell_minwidth`` and ``cell_minheight``
+values, which define lower bounds for the cell width and height.
+
+Similarly, the actual width and height of the widget residing in a grid cell are given by the parameters ``width``
+and ``height``. Like ``cell_width`` and ``cell_height``, however, the dimensions of the widget are either automatically determined by
+the dimensions of the surrounding grid cell (in the case of ``(h|v)align='fill'``) or the shape of the widget
+itself (e.g. the sizes of its control elements of text dimensions) they cannot be directly manipulated.
+The ``minwidth`` and ``minheight`` parameters, however, allow to specify lower bounds for the widget dimensions.
+Widgets are illustrated as dark gray boxes in the figure.
+
 ColumnLayout
 ------------
+
+The :class:`ColumnLayout` is a special case of the :class:`GridLayout`, with ``rows`` is predefined as ``rows=1``
+and ``flexrows=0``. The :class:`ColumnLayout` consequently is a :class:`GridLayout` with only one single row, which
+will be stretched if ``valign='fill'`` is specified. Widgets therefore will be aligned from left to right
+in one single infinite row.
 
 RowLayout
 ---------
 
+Analogously, :class:`RowLayout` is a :class:`GridLayout` with ``cols=1`` and ``flexcols=0``, such that widgets
+are align in a single column from top to bottom.
+
 CellLayout
 ----------
 
+The :class:`CellLayout` is the simplest layout, which consists of only one single grid cell. Consequently,
+it may maximally hold one single widget. It will raise a :class:`LayoutError` if multiple widgets are
+being added to it.
+
 StackLayout
 -----------
+
+.. container:: twocol
+
+   .. container:: left
+
+      .. figure:: _static/stack-layout.svg
+
+         Visualization of the :class:`StackLayout`
+
+   .. container:: right
+
+   The :class:`StackLayout` works the same as the :class:`GridLayout` and its derivatives. Its cells, however, are not
+   aligned in a grid, but in a "virtual" stack "depth layers". At any time, one layer ("grid cell") can be
+   brought to top and thus made visible. All others, are invisible at that time.
