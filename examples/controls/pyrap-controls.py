@@ -8,6 +8,7 @@ import json
 from collections import OrderedDict
 
 import sys
+
 from dnutils import out
 from dnutils.threads import sleep, ThreadInterrupt
 from dnutils.tools import ifnone
@@ -23,8 +24,8 @@ from pyrap.ptypes import BoolVar, Color, px, Image, Font, NumVar
 # from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
     Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
-    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle, DropDown, Combo, Option
-
+    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle, DropDown, Combo, Option, error
+import web
 
 class Images:
     IMG_UP = Image('images/icons/up.gif')
@@ -42,6 +43,7 @@ class ControlsDemo():
     def setup(application): pass
 
     def desktop(self, **kwargs):
+        page = kwargs.get('page', 'Scale')
         self.shell = Shell(maximized=True, titlebar=False)
         self.shell.on_resize += self.shell.dolayout
         shell = self.shell
@@ -59,7 +61,7 @@ class ControlsDemo():
         #=======================================================================
         header = Composite(outer)
         header.layout = ColumnLayout(halign='fill', minheight='90px', flexcols=1)
-        header.bgimg = Image('images/background-green.jpg')
+        header.bgimg = Image('images/background-blue.jpg')
         header.css = 'header'
         
         #=======================================================================
@@ -110,7 +112,7 @@ class ControlsDemo():
         footer.bgimg = Image('images/background_grey.png')
         footer.bg = 'light grey'
         pyversion = '.'.join(map(str, sys.version_info[:3]))
-        Label(footer, halign='left', valign='bottom', text='powered by pyRAP v%s on Python %s' % (pyrap.__version__, pyversion)).bg = 'transp'
+        Label(footer, halign='left', valign='bottom', text='Session ID: %s\nPowered by pyRAP v%s on Python %s' % (session.id, pyrap.__version__, pyversion)).bg = 'transp'
 
         #=======================================================================
         # content area
@@ -118,7 +120,7 @@ class ControlsDemo():
         self.content = StackedComposite(main, halign='fill', valign='fill')
         self.create_pages()
         self.navigation.on_select += self.switch_page
-        self.navigation.selection = self.pages['Tables']
+        self.navigation.selection = self.pages[page]
         self.switch_page()
 
         self.shell.show(True)
@@ -248,19 +250,31 @@ class ControlsDemo():
         return tab
 
     def create_cookies_page(self, parent):
+
+        def check_cookies(_):
+            if self.navigation.selection is parent:
+                if not session.client.data.get('allow_cookies', False):
+                    if ask_yesno(self.shell, 'Cookies', 'This page will save cookies on your local machine.\n\nDo you agree?') == 'yes':
+                        session.client.data.allow_cookies = True
+                update_client_data()
+
+        self.navigation.on_select += check_cookies
+
         parent.layout.flexrows = {2: 1}
         top = Composite(parent, layout=ColumnLayout(halign='left'))
-        Label(top, 'Use <tt>session.client.data</tt> to permanently store data on the client machine.', markup=True, halign='left')
+        Label(top, ('Use <tt>session.client.data</tt> to permanently store data on the client ' +
+                   'machine.<br>Right-click to add new data and check that they persist also over <a target="_blank" href="/controls/?page=Cookies">different sessions</a>.'), markup=True, halign='left')
 
         clear = Button(top, 'Clear')
+        clear.tooltip = 'Delete all client data'
 
         def cleardata(_):
-            session.client.data = {}
+            session.client.data = web.Storage()
             update_client_data()
 
         table = Table(parent, valign='fill', halign='fill')
 
-        table.addcol('Key', width=100)
+        table.addcol('Key', width=200)
         table.addcol('Value', width=200)
         table.addcol('Type', width=100)
 
@@ -270,7 +284,13 @@ class ControlsDemo():
             for item in table.items:
                 table.rmitem(item)
             for key, value in session.client.data.items():
-                table.additem(texts=[str(key), str(value), type(value).__name__])
+                i = table.additem(texts=[str(key), str(value), type(value).__name__], data=(key, value))
+            if not session.client.data.get('allow_cookies', False):
+                clear.decorator = error('You must accept cookies to use this feature')
+                clear.enabled = False
+            else:
+                clear.decorator = None
+                clear.enabled = True
 
         update_client_data()
 
@@ -296,13 +316,19 @@ class ControlsDemo():
             ok = Button(dlg.content, 'OK', halign='right')
 
             def doadd(_):
+                if not session.client.data.get('allow_cookies', False):
+                    msg_err(self.shell, 'Unable to add client data', 'You must agree to accept cookies on you machine first.')
+                    return
                 type_ = str
+                value = editValue.text
                 if opt_num.checked:
                     type_ = float
                 if opt_bool.checked:
                     type_ = bool
-                session.client.data[editKey.text] = type_(editValue.text)
+                    value = {'true': True, 'false': False}[value.lower()]
+                session.client.data[editKey.text] = type_(value)
                 update_client_data()
+                dlg.close()
 
             ok.on_select += doadd
             dlg.show(pack=True)
@@ -311,6 +337,18 @@ class ControlsDemo():
         insert = MenuItem(m, 'Insert...')
         insert.on_select += additem
         table.menu = m
+
+        remove = MenuItem(m, 'Remove')
+
+        def rmitem(_):
+            sel = table.selection
+            if sel:
+                try:
+                    del session.client.data[sel.data[0]]
+                except KeyError: pass
+            update_client_data()
+
+        remove.on_select += rmitem
 
     def create_sash_page(self, parent):
         container = Composite(parent, layout=ColumnLayout(halign='fill', valign='fill', flexcols=[0,2]))
