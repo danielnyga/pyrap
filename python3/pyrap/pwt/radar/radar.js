@@ -132,8 +132,10 @@ pwt_radar.RadarChart.prototype = {
 
     setBounds: function( args ) {
 
-        this._cfg.w = Math.min(args[2],args[3]) - 100;
-        this._cfg.h = this._cfg.w;
+        if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
+            this._cfg.w = Math.min(args[2],args[3]) - 100;
+            this._cfg.h = this._cfg.w;
+        }
         this._svg.select('svg')
             .attr('transform', 'translate('+ this._cfg.w +',0)');
 
@@ -459,7 +461,7 @@ pwt_radar.RadarChart.prototype = {
             legendsvg = this._svg.select('svg.radarlegend');
 
             legendsvg
-                .attr('transform', 'translate('+ this._cfg.w +',0)')
+                .attr('transform', 'translate('+ that._cfg.w +',0)')
                 .append('svg:g')
                 .attr('transform', 'translate(0, 40)');
 
