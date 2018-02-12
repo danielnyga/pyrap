@@ -5,7 +5,6 @@ from pyrap import session
 from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
 from pyrap.themes import WidgetTheme
-from pyrap.utils import ifnone
 from pyrap.widgets import Widget, constructor, checkwidget
 
 
