@@ -1,7 +1,4 @@
 import os
-from time import sleep, time
-
-import datetime
 
 from dnutils.tools import ifnone
 from pyrap import session, locations

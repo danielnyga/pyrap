@@ -3,12 +3,15 @@
 // for extra information
 pwt_radar = {};
 
-pwt_radar.RadarChart = function( parent, cssid, legendtext, radaroptions) {
+pwt_radar.RadarChart = function( parent, options) {
+
+    legendtext = options.legendtext;
+    radaroptions = options.radaroptions;
 
     this._cfg = {
          radius: 5,
-         w: 600,
-         h: 600,
+         w: 300,
+         h: 300,
          factor: 1,
          factorLegend: .85,
          levels: 6,
@@ -29,8 +32,7 @@ pwt_radar.RadarChart = function( parent, cssid, legendtext, radaroptions) {
 
     this._parentDIV = this.createElement(parent);
     this._colorscale = d3.scale.category10();
-    this._tooltip;
-    this._data = [];
+    this._data = {};
     this._allAxis = [];
     this._total = this._allAxis.length;
     this._legendopts = [];
@@ -48,9 +50,6 @@ pwt_radar.RadarChart = function( parent, cssid, legendtext, radaroptions) {
 	}
 
     this._svg = d3.select(this._parentDIV).append("svg");
-    if (cssid) {
-        this._svg.attr('id', cssid);
-    }
 
     this._svgContainer = this._svg.select('g.radar');
 
@@ -93,21 +92,18 @@ pwt_radar.RadarChart.prototype = {
         this._svg
             .append('svg')
             .attr('class', 'radarlegend')
-            .attr("width", "100%")
-            .attr("height", "100%")
+            .attr('width', "300px")
+            .attr('height', "300px")
+            .attr('transform', 'translate('+ this._cfg.w +',0)')// move legend svg to the top right corner
             .append("text")
             .attr("class", "legendtitle")
-            .attr('transform', 'translate(90,0)')
-            .attr("x", 500)
+            .attr("x", 0)
             .attr("y", 15)
             .attr("font-size", "12px")
             .attr("fill", "#404040")
             .text(this._legendtext)
             .call(this.wraptext, 300);
 
-        this._svg.select('svg')
-            .append("svg:g")
-            .attr('transform', 'translate(90, 40)');
 
         if (this._svgContainer.empty()) {
             this._svg
@@ -130,19 +126,23 @@ pwt_radar.RadarChart.prototype = {
         element.style.top = clientarea[1];
         element.style.width = clientarea[2];
         element.style.height = clientarea[3];
-        this._cfg.w = clientarea[2];
-        this._cfg.h = clientarea[3];
         parent.append( element );
         return element;
     },
 
     setBounds: function( args ) {
+
+        if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
+            this._cfg.w = Math.min(args[2],args[3]) - 100;
+            this._cfg.h = this._cfg.w;
+        }
+        this._svg.select('svg')
+            .attr('transform', 'translate('+ this._cfg.w +',0)');
+
         this._parentDIV.style.left = args[0] + "px";
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
-//        this._cfg.w = args[2];
-//        this._cfg.h = args[3];
         this.update();
     },
 
@@ -180,6 +180,7 @@ pwt_radar.RadarChart.prototype = {
 			return d3.format(Math.round(value) == value ? '' : '.1f')(value) + unit;
 		}
     },
+
 
     /**
      * split long legend text into multiple lines
@@ -279,7 +280,7 @@ pwt_radar.RadarChart.prototype = {
 
 	    var targetclass = dragtarget.attr('class');
 
-	    var tclass = targetclass.split('-')[0];
+	    var tclass = targetclass.split(/[ -]/)[0];
 
         switch(tclass) {
             case 'circle':
@@ -309,17 +310,20 @@ pwt_radar.RadarChart.prototype = {
 
 	            var selectiontype = tclass;
                 var dataset = d;
-                var newdata = linearScale(l);
+                var newdata = Math.round(linearScale(l) * 100) / 100;
         }
-		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'type': selectiontype, 'dataset': dataset, 'data': newdata } );
+		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'func': 'dragend', 'type': selectiontype, 'dataset': dataset, 'data': newdata } );
 	},
 
     /**
-     * removes data points from chart
+     * returns a copy (by value) of given dict d
      */
-    clear : function () {
-        this._data.splice(0, this._data.length);
-        this.update();
+    _cpdict : function( d ) {
+        var cp = {};
+        for (var k in d) {
+            cp[k] = d[k];
+        }
+        return cp;
     },
 
     /**
@@ -334,34 +338,107 @@ pwt_radar.RadarChart.prototype = {
      * adds an axis to the radar chart
      */
     addAxis : function ( axis ) {
+        // add axis to list of axes
         this._allAxis.push(axis);
         this._total = this._allAxis.length;
+
+        // add min and max values for the new axis
+        this._cfg.minValues[axis.name] = (typeof axis.limits[0]) !== 'undefined' ? axis.limits[0]: 0;
+        this._cfg.maxValues[axis.name] = (typeof axis.limits[1]) !== 'undefined' ? axis.limits[1]: 100;
+
+        // update
+        this.update();
     },
+
+    /**
+     * removes an axis from the radar chart
+     */
+    remAxis : function ( axis ) {
+        // TODO: move this to python
+        var tmpdata = this._cpdict(this._data);
+        var tmpaxes = this._allAxis.slice();
+        this.clear();
+
+        function findaxis(a) { return a.name == axis.name; }
+
+        var remaxes = tmpaxes.filter(findaxis);
+        for (var x = 0; x<remaxes.length; x++) {
+            var idx = tmpaxes.indexOf(remaxes[x])
+            if (idx > -1) {
+                tmpaxes.splice(idx, 1);
+                Object.keys(tmpdata).forEach(function(key, i) {
+                   tmpdata[key].splice(idx, 1);
+                }, this);
+            }
+        }
+        this._allAxis = tmpaxes;
+        this._total = this._allAxis.length;
+
+        // restore min/max values for axes
+        for (var a in this._allAxis) {
+            this._cfg.minValues[this._allAxis[a].name] = (typeof this._allAxis[a].limits[0]) !== 'undefined' ? this._allAxis[a].limits[0]: 0;
+            this._cfg.maxValues[this._allAxis[a].name] = (typeof this._allAxis[a].limits[1]) !== 'undefined' ? this._allAxis[a].limits[1]: 100;
+        }
+
+        this.setData(tmpdata);
+        rwt.remote.Connection.getInstance().getRemoteObject( this ).notify( "Selection", { 'type': 'remaxis', 'dataset': axis, 'data': this._data } );
+    },
+
+    /**
+     * removes all axes from the radar chart
+     */
+    clear : function ( ) {
+        // clear legend
+        this._legendopts.splice(0, this._legendopts.length);
+
+        // clear graph polygons and circles
+        Object.keys(this._data).forEach(function(key, idx) {
+            this._svgContainer.selectAll(".polygon-"+key).remove();
+            this._svgContainer.selectAll(".circle-"+key).remove();
+        }, this);
+
+        // clear axes
+        this._allAxis.splice(0, this._allAxis.length);
+        this._total = this._allAxis.length;
+
+        // clear min and max values
+        this._cfg.minValues = {};
+        this._cfg.maxValues = {};
+
+        // clear data
+        this.setData( {} );
+    },
+
 
     /**
      * updates data options
      */
-    updateData : function ( data ) {
-
+    setData : function ( data ) {
         // clear old data
         this._legendopts.splice(0, this._legendopts.length);
         Object.keys(this._data).forEach(function(key, idx) {
-            this._data[key] = [];
             this._svgContainer.selectAll(".polygon-"+key).remove();
             this._svgContainer.selectAll(".circle-"+key).remove();
         }, this);
-        this.update();
+        this._data = data;
+        this.updateData();
+    },
+
+
+    /**
+     * updates data options
+     */
+    updateData : function ( ) {
 
         // determine min and max values for each axis
-        for (var x in data) {
+        // by updating with (possibly available) data
+        for (var x in this._data) {
             this._legendopts.push(x);
-            for (var y = 0; y < data[x].length; y++) {
-                this._cfg.minValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[0] !== 'undefined') ? this._allAxis[y].limits[0] : (typeof this._cfg.minValues[this._allAxis[y].name] !== 'undefined') ? Math.min(this._cfg.minValues[this._allAxis[y].name], data[x][y]) : data[x][y];
-                this._cfg.maxValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[1] !== 'undefined') ? this._allAxis[y].limits[1] : (typeof this._cfg.maxValues[this._allAxis[y].name] !== 'undefined') ? Math.max(this._cfg.maxValues[this._allAxis[y].name], data[x][y]) : data[x][y];
+            for (var y = 0; y < this._data[x].length; y++) {
+                this._cfg.minValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[0] !== 'undefined') ? this._allAxis[y].limits[0] : (typeof this._cfg.minValues[this._allAxis[y].name] !== 'undefined') ? Math.min(this._cfg.minValues[this._allAxis[y].name], this._data[x][y]) : this._data[x][y];
+                this._cfg.maxValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[1] !== 'undefined') ? this._allAxis[y].limits[1] : (typeof this._cfg.maxValues[this._allAxis[y].name] !== 'undefined') ? Math.max(this._cfg.maxValues[this._allAxis[y].name], this._data[x][y]) : this._data[x][y];
             }
 	    }
-
-        this._data = data;
         this.update();
     },
 
@@ -383,25 +460,35 @@ pwt_radar.RadarChart.prototype = {
             var that = this;
             legendsvg = this._svg.select('svg.radarlegend');
 
-            // initialize legendtitle
-            var legendtitle = legendsvg.select('legendtitle');
-            legendtitle
-                .text(this._legendtext);
+            legendsvg
+                .attr('transform', 'translate('+ that._cfg.w +',0)')
+                .append('svg:g')
+                .attr('transform', 'translate(0, 40)');
 
-            //Create colour squares
-            var legendrect = legendsvg.select('g').selectAll('rect').data(this._legendopts);
+            // initialize legendtitle
+            var legendtitle = legendsvg.select('.legendtitle');
+            legendtitle
+                .text(this._legendtext)
+                .call(this.wraptext, 300);
+
+            //Create color squares
+            var legendrect = legendsvg.select('g').selectAll('.legendopt').data(this._legendopts);
             legendrect
+                .attr("x", 10)
                 .attr("y", function(d, i){ return i * 20;})
-                .style("fill", function(d, i){return that._cfg.color(i);});
+                .attr("width", 10)
+                .attr("height", 10)
+                .style("fill", function(d, i){ return that._cfg.color(i);});
 
             legendrect
                 .enter()
                 .append("rect")
-                .attr("x", 510)
+                .attr('class', 'legendopt')
+                .attr("x", 10)
                 .attr("y", function(d, i){ return i * 20;})
                 .attr("width", 10)
                 .attr("height", 10)
-                .style("fill", function(d, i){return that._cfg.color(i);});
+                .style("fill", function(d, i){ return that._cfg.color(i);});
 
             legendrect.exit().remove();
 
@@ -415,7 +502,7 @@ pwt_radar.RadarChart.prototype = {
             legendtext
                 .enter()
                 .append("text")
-                .attr("x", 525)
+                .attr("x", 25)
                 .attr("y", function(d, i){ return i * 20 + 9;})
                 .attr("font-size", "11px")
                 .attr("fill", "#737373")
@@ -426,14 +513,14 @@ pwt_radar.RadarChart.prototype = {
 
 
         ////////////////////////////////////////////////////////////////////////
-        ///                       UPDATE RADAR CHART                         ///
+        ///                       UPDATE LEVELS                              ///
         ////////////////////////////////////////////////////////////////////////
 
         // prepare dataset such that levellines and leveltexts can be drawn
         // within one enter() call
         var newaxis = [];
         for(var j = 0; j < this._cfg.levels; j++) {
-            for (var x = 0; x < this._allAxis.length; x++){
+            for (var x in this._allAxis){
                 var levelFactorLine = this._cfg.factor*this._cfg.w/2*((j+1)/this._cfg.levels);
                 var levelFactorText = this._cfg.factor*this._cfg.h/2*((j)/this._cfg.levels);
                 var value = (j)*(this._cfg.maxValues[this._allAxis[x].name]-this._cfg.minValues[this._allAxis[x].name])/this._cfg.levels + this._cfg.minValues[this._allAxis[x].name];
@@ -443,6 +530,16 @@ pwt_radar.RadarChart.prototype = {
 
         // draw circular segments for the levels
         var levellines = this._svgContainer.selectAll(".levelline").data(newaxis);
+
+        levellines
+            .attr("x1", function(d, i){return d[0]*(1-that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));})
+            .attr("y1", function(d, i){return d[0]*(1-that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));})
+            .attr("x2", function(d, i){return d[0]*(1-that._cfg.factor*Math.sin((i+1)*that._cfg.radians/that._total));})
+            .attr("y2", function(d, i){return d[0]*(1-that._cfg.factor*Math.cos((i+1)*that._cfg.radians/that._total));})
+            .attr("transform", function(d, i){
+                return "translate(" + (that._cfg.w/2-d[0]) + ", " + (that._cfg.h/2-d[0]) + ")";
+            });
+
         levellines.enter()
             .append("svg:line")
             .attr("x1", function(d, i){return d[0]*(1-that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));})
@@ -461,6 +558,17 @@ pwt_radar.RadarChart.prototype = {
 
         // draw text indicating at what value each level is
         var leveltext = this._svgContainer.selectAll(".leveltext").data(newaxis);
+
+        leveltext
+            .attr("x", function(d, i){return d[1]*(1-that._cfg.factor*Math.sin((i)*that._cfg.radians/that._total));})
+            .attr("y", function(d, i){return d[1]*(1-that._cfg.factor*Math.cos((i)*that._cfg.radians/that._total));})
+            .attr("transform", function(d, i){
+                return "translate(" + (that._cfg.w/2-d[1] + that._cfg.ToRight) + ", " + (that._cfg.h/2-d[1]) + ")";
+            })
+            .text(function(d, i) {
+                return that.Format(that._allAxis[i%that._allAxis.length].unit, isNaN(d[2]) ? 0 : d[2]);
+            });
+
         leveltext.enter()
             .append("svg:text")
             .attr("x", function(d, i){return d[1]*(1-that._cfg.factor*Math.sin((i)*that._cfg.radians/that._total));})
@@ -473,20 +581,30 @@ pwt_radar.RadarChart.prototype = {
             })
             .attr("fill", "#737373")
             .text(function(d, i) {
-                return that.Format(that._allAxis[i%that._allAxis.length].unit, d[2]);
+                return that.Format(that._allAxis[i%that._allAxis.length].unit, isNaN(d[2]) ? 0 : d[2]);
             });
 
         leveltext.exit().remove();
 
-        // draw axes
-        var axis = that._svgContainer.selectAll(".axis")
-            .data(this._allAxis);
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE AXES                                ///
+        ////////////////////////////////////////////////////////////////////////
+        var axis = that._svgContainer.selectAll(".axis").data(this._allAxis);
 
+        // create axis group
         var axisenter = axis
             .enter()
             .append("g")
             .attr("class", "axis");
 
+        // update axes
+        axis.select('.line')
+            .attr("x1", this._cfg.w/2)
+            .attr("y1", this._cfg.h/2)
+            .attr("x2", function(d, i){return that._cfg.w/2*(1-that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));})
+            .attr("y2", function(d, i){return that._cfg.h/2*(1-that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));})
+
+        // create axes
         axisenter.append("line")
             .attr("x1", this._cfg.w/2)
             .attr("y1", this._cfg.h/2)
@@ -496,6 +614,14 @@ pwt_radar.RadarChart.prototype = {
             .style("stroke", "grey")
             .style("stroke-width", "1px");
 
+        // update axis texts
+        axis.select('.legend')
+            .text(function(d){ return d.name; })
+            .attr("transform", function(d, i){return "translate(0, -10)"})
+            .attr("x", function(d, i){return that._cfg.w/2*(1-that._cfg.factorLegend*Math.sin(i*that._cfg.radians/that._total))-60*Math.sin(i*that._cfg.radians/that._total);})
+            .attr("y", function(d, i){return that._cfg.h/2*(1-Math.cos(i*that._cfg.radians/that._total))-20*Math.cos(i*that._cfg.radians/that._total);});
+
+        // create axis texts
         axisenter.append("text")
             .attr("class", "legend")
             .text(function(d){ return d.name; })
@@ -505,169 +631,322 @@ pwt_radar.RadarChart.prototype = {
             .attr("dy", "1.5em")
             .attr("transform", function(d, i){return "translate(0, -10)"})
             .attr("x", function(d, i){return that._cfg.w/2*(1-that._cfg.factorLegend*Math.sin(i*that._cfg.radians/that._total))-60*Math.sin(i*that._cfg.radians/that._total);})
-            .attr("y", function(d, i){return that._cfg.h/2*(1-Math.cos(i*that._cfg.radians/that._total))-20*Math.cos(i*that._cfg.radians/that._total);});
+            .attr("y", function(d, i){return that._cfg.h/2*(1-Math.cos(i*that._cfg.radians/that._total))-20*Math.cos(i*that._cfg.radians/that._total);})
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
 
-        // draw intervals (only if required)
-//        if('undefined' !== typeof this._cfg.intervals) {
-            axisenter.append("rect")
-                .attr("class", function(d, i) { return "interval-"+d.name.split(' ').join('_'); } )
-                .attr("x", function(d, i){return that._cfg.w/2;})
-                .attr("y", function(d, i){
-                    var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2 + linearScale(d.interval[0]);
-                })
-                .attr("transform", function(d, i){
-                    var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
-                    return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth/2 + ", 0)";
-                })
-                .attr("fill", that._cfg.intCol)
-                .style("fill-opacity", that._cfg.opacityArea)
-                .attr("width", that._cfg.intWidth)
-                .attr("height", function(d, i) {
-                    var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return linearScale(d.interval[1])-linearScale(d.interval[0]);
-                })
-                .on('mouseover', function (d){
-                    var coordinates = [0, 0];
-                    coordinates = d3.event;
-                    var x = coordinates.layerX;
-                    var y = coordinates.layerY;
-                    tooltip
-                        .attr('x', x-70)
-                        .attr('y', y-20)
-                        .text("[" + d.interval[0] + ', ' + d.interval[1] +']')
-                        .transition(200)
-                        .style('opacity', 1);
-                })
-                .on('mouseout', function(){
-                    tooltip
-                        .transition(200)
-                        .style('opacity', 0);
-                });
+                tooltip
+                    .transition(200)
+                    .style("display", "inline");
+            })
+            .on('mouseout', function(){
+                tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function() {
+                var absoluteMousePos = d3.mouse(this);
+                var newX = (absoluteMousePos[0] + 100);
+                var newY = (absoluteMousePos[1] + 50);
 
-            // draw endpoints of intervals to be dragged
-            axisenter.append("rect")
-                .attr("class", function(d, i) { return "mininterval-"+d.name.split(' ').join('_'); } )
-                .attr("x", function(d, i){return that._cfg.w/2;})
-                .attr("y", function(d, i){
-                    var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2 + linearScale(d.interval[0]);
-                })
-                .attr("transform", function(d, i){
-                    var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
-                    return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
-                })
-                .attr("fill", 'grey')
-                .style("fill-opacity", 1)
-                .attr("width", 2*that._cfg.intWidth)
-                .attr("height", 5)
-                .on('mouseover', function(d) {
-                    d3.select(this).style("cursor", "pointer");
-                })
-                .on('mouseout', function(d) {
-                    d3.select(this).style("cursor", "default");
-                })
-                .call(d3.behavior.drag()
-                                .origin(Object)
-                                .on("drag", function(d, i) {
-                                    var data = that.dragmove(d, i);
+                tooltip
+                    .text('Click to remove axis "' + d3.select(this).text() + '"')
+                    .attr('x', (newX) + "px")
+                    .attr('y', (newY) + "px");
 
-                                    var lenx = data[0] - that._cfg.w/2;
-                                    var leny = data[1] - that._cfg.h/2;
-
-                                    var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
-
-                                    //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                                    var maxy = d3.select(".maxinterval-"+d.name.split(' ').join('_')).attr('y');
-                                    var dragTarget = d3.select(this);
-                                    dragTarget
-                                        .attr("y", function(d, i){
-                                            return Math.min(that._cfg.h/2 + l, maxy);
-                                        });
-
-                                    // update actual interval
-                                    d3.select(".interval-"+d.name.split(' ').join('_'))
-                                        .attr("y", function(d, i){
-                                            return that._cfg.h/2 + l;
-                                        })
-                                        .attr("height", function(d, i){
-                                            return maxy - (that._cfg.h/2 + l);
-                                        });
-                                    d.interval[0] = Math.round(data[2] * 100) / 100;
-                                })
-                                .on('dragend', function(d, i) {
-
-                                    var _this = this;
-                                    that.dragend(d, i, _this, that);
-                                })
-                );
-
-            axisenter.append("rect")
-                .attr("class", function(d, i) { return "maxinterval-"+d.name.split(' ').join('_'); } )
-                .attr("x", function(d, i){ return that._cfg.w/2; } )
-                .attr("y", function(d, i){
-                    var linearScale = d3.scale.linear()
-                        .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
-                        .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2 + linearScale(d.interval[1]);
-                })
-                .attr("transform", function(d, i){
-                    var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
-                    return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
-                })
-                .attr("fill", 'grey')
-                .style("fill-opacity", 1)
-                .attr("width", 2*that._cfg.intWidth)
-                .attr("height", 5)
-                .on('mouseover', function(d) {
-                    d3.select(this).style("cursor", "pointer");
-                })
-                .on('mouseout', function(d) {
-                    d3.select(this).style("cursor", "default");
-                })
-                .call(d3.behavior.drag()
-                                .origin(Object)
-                                .on("drag", function(d, i) {
-                                    var data = that.dragmove(d, i);
-
-                                    var lenx = data[0] - that._cfg.w/2;
-                                    var leny = data[1] - that._cfg.h/2;
-
-                                    var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
-
-                                    //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                                    var miny = d3.select(".mininterval-"+d.name.split(' ').join('_')).attr('y')
-                                    var dragTarget = d3.select(this);
-                                    dragTarget
-                                        .attr("y", function(d, i){
-                                            return Math.max(miny, that._cfg.h/2 + l);
-                                        });
-
-                                    // update actual interval
-                                    d3.select(".interval-"+d.name.split(' ').join('_'))
-                                        .attr("height", function(d, i){
-                                            return (that._cfg.h/2 + l) - miny;
-                                        });
-                                    d.interval[1] = Math.round(data[2] * 100) / 100;
-                                })
-                                .on('dragend', function(d, i) {
-                                    var _this = this;
-                                    that.dragend(d, i, _this, that);
-                                })
-                );
+            })
+            .on('click', function(d) {
+                tooltip
+                    .transition(200)
+                    .style("display", "none");
+                that.remAxis({ 'name': d3.select(this).text() });
+            });
 
 
-//        }// end if intervals
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE INTERVALS                           ///
+        ////////////////////////////////////////////////////////////////////////
+
+        // update interval rectangles
+        axis.select(".interval")
+            .attr("class", function(d, i) { return "interval interval-"+d.name.split(' ').join('_'); })
+            .attr("x", function(d, i){return that._cfg.w/2;})
+            .attr("y", function(d,i){
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return that._cfg.h/2 + linearScale(d.interval[0]);
+            })
+            .attr("transform", function(d, i){
+                var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth/2 + ", 0)";
+            })
+            .attr("height", function(d, i) {
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return linearScale(d.interval[1])-linearScale(d.interval[0]);
+            });
+
+
+        // create interval rectangles
+        axisenter.append("rect")
+            .attr("class", function(d, i) { return "interval interval-"+d.name.split(' ').join('_'); } )
+            .attr("x", function(d, i){return that._cfg.w/2;})
+            .attr("y", function(d, i){
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return that._cfg.h/2 + linearScale(d.interval[0]);
+            })
+            .attr("transform", function(d, i){
+                var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth/2 + ", 0)";
+            })
+            .attr("fill", that._cfg.intCol)
+            .style("fill-opacity", that._cfg.opacityArea)
+            .attr("width", that._cfg.intWidth)
+            .attr("height", function(d, i) {
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return linearScale(d.interval[1])-linearScale(d.interval[0]);
+            })
+            .on('mouseover', function(d) {
+                tooltip
+                    .transition(200)
+                    .style("display", "inline");
+            })
+            .on('mouseout', function(){
+                tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function(d) {
+                var absoluteMousePos = d3.mouse(axis.node());
+                var newX = (absoluteMousePos[0] + 100);
+                var newY = (absoluteMousePos[1] + 50);
+                tooltip
+                    .text("[" + d.interval[0] + ', ' + d.interval[1] +']')
+                    .attr('x', (newX) + "px")
+                    .attr('y', (newY) + "px");
+
+            });
+
+        // update mininterval rectangles
+        axis.select(".mininterval")
+            .attr("class", function(d, i) { return "mininterval mininterval-"+d.name.split(' ').join('_'); } )
+            .attr("x", function(d, i){return that._cfg.w/2;})
+            .attr("y", function(d, i){
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return that._cfg.h/2 + linearScale(d.interval[0]);
+            })
+            .attr("transform", function(d, i){
+                var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
+            })
+            .call(d3.behavior.drag()
+                            .origin(Object)
+                            .on("drag", function(d, i) {
+                                var data = that.dragmove(d, i);
+
+                                var lenx = data[0] - that._cfg.w/2;
+                                var leny = data[1] - that._cfg.h/2;
+
+                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+
+                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                var maxy = that._svgContainer.select(".maxinterval-"+d.name.split(' ').join('_')).attr('y');
+                                var dragTarget = d3.select(this);
+                                dragTarget
+                                    .attr("y", function(d, i){
+                                        return Math.min(that._cfg.h/2 + l, maxy);
+                                    });
+
+                                // update actual interval
+                                that._svgContainer.select(".interval-"+d.name.split(' ').join('_'))
+                                    .attr("y", function(d, i){
+                                        return that._cfg.h/2 + l;
+                                    })
+                                    .attr("height", function(d, i){
+                                        return maxy - (that._cfg.h/2 + l);
+                                    });
+                                d.interval[0] = Math.round(data[2] * 100) / 100;
+                            })
+                            .on('dragend', function(d, i) {
+
+                                var _this = this;
+                                that.dragend(d, i, _this, that);
+                            })
+            );
+
+        // create mininterval rectangles
+        axisenter.append("rect")
+            .attr("class", function(d, i) { return "mininterval mininterval-"+d.name.split(' ').join('_'); } )
+            .attr("x", function(d, i){return that._cfg.w/2;})
+            .attr("y", function(d, i){
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return that._cfg.h/2 + linearScale(d.interval[0]);
+            })
+            .attr("transform", function(d, i){
+                var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
+            })
+            .attr("fill", 'grey')
+            .style("fill-opacity", 1)
+            .attr("width", 2*that._cfg.intWidth)
+            .attr("height", 5)
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+            })
+            .on('mouseout', function(d) {
+                d3.select(this).style("cursor", "default");
+            })
+            .call(d3.behavior.drag()
+                            .origin(Object)
+                            .on("drag", function(d, i) {
+                                var data = that.dragmove(d, i);
+
+                                var lenx = data[0] - that._cfg.w/2;
+                                var leny = data[1] - that._cfg.h/2;
+
+                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+
+                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                var maxy = that._svgContainer.select(".maxinterval-"+d.name.split(' ').join('_')).attr('y');
+                                var dragTarget = d3.select(this);
+                                dragTarget
+                                    .attr("y", function(d, i){
+                                        return Math.min(that._cfg.h/2 + l, maxy);
+                                    });
+
+                                // update actual interval
+                                that._svgContainer.select(".interval-"+d.name.split(' ').join('_'))
+                                    .attr("y", function(d, i){
+                                        return that._cfg.h/2 + l;
+                                    })
+                                    .attr("height", function(d, i){
+                                        return maxy - (that._cfg.h/2 + l);
+                                    });
+                                d.interval[0] = Math.round(data[2] * 100) / 100;
+                            })
+                            .on('dragend', function(d, i) {
+
+                                var _this = this;
+                                that.dragend(d, i, _this, that);
+                            })
+            );
+
+        // update maxinterval rectangles
+        axis.select(".maxinterval")
+            .attr("class", function(d, i) { return "maxinterval maxinterval-"+d.name.split(' ').join('_'); } )
+            .attr("x", function(d, i){ return that._cfg.w/2; } )
+            .attr("y", function(d, i){
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return that._cfg.h/2 + linearScale(d.interval[1]);
+            })
+            .attr("transform", function(d, i){
+                var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
+            })
+            .call(d3.behavior.drag()
+                            .origin(Object)
+                            .on("drag", function(d, i) {
+                                var data = that.dragmove(d, i);
+
+                                var lenx = data[0] - that._cfg.w/2;
+                                var leny = data[1] - that._cfg.h/2;
+
+                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+
+                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                var miny = that._svgContainer.select(".mininterval-"+d.name.split(' ').join('_')).attr('y')
+                                var dragTarget = d3.select(this);
+                                dragTarget
+                                    .attr("y", function(d, i){
+                                        return Math.max(miny, that._cfg.h/2 + l);
+                                    });
+
+                                // update actual interval
+                                that._svgContainer.select(".interval-"+d.name.split(' ').join('_'))
+                                    .attr("height", function(d, i){
+                                        return (that._cfg.h/2 + l) - miny;
+                                    });
+                                d.interval[1] = Math.round(data[2] * 100) / 100;
+                            })
+                            .on('dragend', function(d, i) {
+                                var _this = this;
+                                that.dragend(d, i, _this, that);
+                            })
+            );
+
+
+        // create maxinterval rectangles
+        axisenter.append("rect")
+            .attr("class", function(d, i) { return "maxinterval maxinterval-"+d.name.split(' ').join('_'); })
+            .attr("x", function(d, i){ return that._cfg.w/2; } )
+            .attr("y", function(d, i){
+                var linearScale = d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                return that._cfg.h/2 + linearScale(d.interval[1]);
+            })
+            .attr("transform", function(d, i){
+                var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
+                return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
+            })
+            .attr("fill", 'grey')
+            .style("fill-opacity", 1)
+            .attr("width", 2*that._cfg.intWidth)
+            .attr("height", 5)
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+            })
+            .on('mouseout', function(d) {
+                d3.select(this).style("cursor", "default");
+            })
+            .call(d3.behavior.drag()
+                            .origin(Object)
+                            .on("drag", function(d, i) {
+                                var data = that.dragmove(d, i);
+
+                                var lenx = data[0] - that._cfg.w/2;
+                                var leny = data[1] - that._cfg.h/2;
+
+                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+
+                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                var miny = that._svgContainer.select(".mininterval-"+d.name.split(' ').join('_')).attr('y')
+                                var dragTarget = d3.select(this);
+                                dragTarget
+                                    .attr("y", function(d, i){
+                                        return Math.max(miny, that._cfg.h/2 + l);
+                                    });
+
+                                // update actual interval
+                                that._svgContainer.select(".interval-"+d.name.split(' ').join('_'))
+                                    .attr("height", function(d, i){
+                                        return (that._cfg.h/2 + l) - miny;
+                                    });
+                                d.interval[1] = Math.round(data[2] * 100) / 100;
+                            })
+                            .on('dragend', function(d, i) {
+                                var _this = this;
+                                that.dragend(d, i, _this, that);
+                            })
+            );
 
         axis.exit().remove();
 
-        // calculate positions of data points
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE POLYGONS                            ///
+        ////////////////////////////////////////////////////////////////////////
         var dataValues = []
         Object.keys(this._data).forEach(function(key, idx) {
             dataValues.splice(0, dataValues.length);
@@ -676,16 +955,19 @@ pwt_radar.RadarChart.prototype = {
                     var linearScale = d3.scale.linear()
                         .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
                         .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                    var x = that._cfg.w/2*(1-(parseFloat(linearScale(val))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    var y = that._cfg.h/2*(1-(parseFloat(linearScale(val))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    // if values are NaN, set to center of axis
                     dataValues.push([
-                        that._cfg.w/2*(1-(parseFloat(linearScale(val))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)),
-                        that._cfg.h/2*(1-(parseFloat(linearScale(val))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total))
+                        isNaN(x) ? that._cfg.w/2*(1-(parseFloat(linearScale(val))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)): x,
+                        isNaN(y) ? that._cfg.h/2*(1-(parseFloat(linearScale(val))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total)): y
                     ]);
                 });
             if (typeof dataValues[0] !== 'undefined') {
                 dataValues.push(dataValues[0]); // close polygon
             }
 
-            // draw polygons
+            // select polygons
             var polygons = that._svgContainer.selectAll(".polygon-"+that._legendopts[idx]).data([dataValues]);
 
             // update polygons
@@ -738,12 +1020,36 @@ pwt_radar.RadarChart.prototype = {
 
 
 
-        // draw circles at data point positions
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE CIRCLES                             ///
+        ////////////////////////////////////////////////////////////////////////
         Object.keys(this._data).forEach(function(key, idx) {
+            // select datapoints
             var datapoints = that._svgContainer.selectAll(".circle-"+that._legendopts[idx]).data(this[key]);
             var cdata = this[key];
 
             // update datapoints
+            datapoints
+                .attr("cx", function(cval, i){
+                    var linearScale = d3.scale.linear()
+                        .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
+                        .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                    var cx = that._cfg.w/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    if (isNaN(cx)) {
+                        cx = that._cfg.w/2*(1-(parseFloat(linearScale(cval))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    }
+                    return cx;
+                })
+                .attr("cy", function(cval, i){
+                    var linearScale = d3.scale.linear()
+                        .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
+                        .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
+                    var cy = that._cfg.h/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    if (isNaN(cy)) {
+                        cy = that._cfg.h/2*(1-(parseFloat(linearScale(cval))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    }
+                    return cy;
+                })
 
             // create datapoints
             datapoints.enter()
@@ -755,36 +1061,36 @@ pwt_radar.RadarChart.prototype = {
                     var linearScale = d3.scale.linear()
                         .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
                         .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    dataValues.push([
-                        that._cfg.w/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total)),
-                        that._cfg.h/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total))
-                    ]);
-                    return that._cfg.w/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    var cx = that._cfg.w/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    if (isNaN(cx)) {
+                        cx = that._cfg.w/2*(1-(parseFloat(linearScale(cval))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));
+                    }
+                    return cx;
                 })
                 .attr("cy", function(cval, i){
                     var linearScale = d3.scale.linear()
                         .domain([that._cfg.minValues[that._allAxis[i].name],that._cfg.maxValues[that._allAxis[i].name]])
                         .range([0, Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2)]);
-                    return that._cfg.h/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    var cy = that._cfg.h/2*(1-(parseFloat(linearScale(cval))/linearScale(that._cfg.maxValues[that._allAxis[i].name]))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    if (isNaN(cy)) {
+                        cy = that._cfg.h/2*(1-(parseFloat(linearScale(cval))/Math.abs(that._cfg.h/2*(1-that._cfg.factor) - that._cfg.h/2))*that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));
+                    }
+                    return cy;
                 })
                 .attr("data-id", function(j){return key})
                 .style("fill", that._cfg.color(idx)).style("fill-opacity", .9)
-                .on('mouseover', function (d,i){
+                .on('mouseover', function(d) {
                     d3.select(this).style("cursor", "pointer");
-                    newX =  parseFloat(d3.select(this).attr('cx')) - 10;
-                    newY =  parseFloat(d3.select(this).attr('cy')) - 5;
-
                     tooltip
-                        .attr('x', newX)
-                        .attr('y', newY)
-                        .text(that.Format(that._allAxis[i].unit, d))
                         .transition(200)
-                        .style('opacity', 1);
+                        .style("display", "inline");
 
                     z = "polygon."+d3.select(this).attr("class");
+
                     that._svgContainer.selectAll("polygon")
                         .transition(200)
                         .style("fill-opacity", 0.1);
+
                     that._svgContainer.selectAll(z)
                         .transition(200)
                         .style("fill-opacity", .7);
@@ -793,10 +1099,21 @@ pwt_radar.RadarChart.prototype = {
                     d3.select(this).style("cursor", "default");
                     tooltip
                         .transition(200)
-                        .style('opacity', 0);
+                        .style("display", "none");
+
                     that._svgContainer.selectAll("polygon")
                         .transition(200)
                         .style("fill-opacity", that._cfg.opacityArea);
+                })
+                .on('mousemove', function(d, i) {
+                    var absoluteMousePos = d3.mouse(axis.node());
+                    var newX = (absoluteMousePos[0] + 100);
+                    var newY = (absoluteMousePos[1] + 50);
+                    tooltip
+                        .text(that.Format(that._allAxis[i].unit, d))
+                        .attr('x', (newX) + "px")
+                        .attr('y', (newY) + "px");
+
                 })
                 .call(d3.behavior.drag()
                                 .origin(Object)
@@ -824,19 +1141,22 @@ pwt_radar.RadarChart.prototype = {
         }, this._data);
 
         // tooltip
-        tooltip = this._svgContainer.selectAll(".tooltip").data([1]);
+        var tooltip = this._svg.selectAll(".tooltip").data([1]);
 
         // create tooltip
         tooltip
             .enter()
             .append('text')
             .attr('class', 'tooltip')
-            .style('opacity', 0)
+            .style('display', 'none')
+            .style('fill', 'steelblue')
+            .style('z-index', 1000000)
             .style('font-family', 'sans-serif')
-            .style('font-size', '13px');
+            .style('font-size', '13px')
+            .style('font-weight', 'bold');
 
         tooltip.exit().remove();
-    },
+    }
 };
 
 // Type handler
@@ -844,14 +1164,14 @@ rap.registerTypeHandler( 'pwt.customs.RadarChart', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    return new pwt_radar.RadarChart( parent, properties.cssid, properties.legendtext, properties.options);
+    return new pwt_radar.RadarChart( parent, properties);
   },
 
   destructor: 'destroy',
 
-  properties: [ 'remove', 'width', 'height'],
+  properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
 
-  methods : [ 'updateData', 'addAxis', ],
+  methods : [ 'updateData', 'addAxis', 'remAxis', 'clear'],
 
   events: [ 'Selection' ]
 
