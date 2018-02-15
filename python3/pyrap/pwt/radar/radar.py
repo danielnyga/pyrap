@@ -72,6 +72,12 @@ class RadarChart(Widget):
                 idx = next(index for (index, d) in enumerate(self._axes) if d.name == op.args['dataset']['name'])
                 self._axes.pop(idx)
                 self._data = op.args['data']
+            elif op.args.get('type', None) == 'mininterval':
+                axis = self.axisbyname(op.args.get('dataset')['name'])
+                axis.intervalmin = op.args.get('dataset')['interval'][0]
+            elif op.args.get('type', None) == 'maxinterval':
+                axis = self.axisbyname(op.args.get('dataset')['name'])
+                axis.intervalmax = op.args.get('dataset')['interval'][1]
             events[op.event].notify(_rwt_event(op))
         return True
 
@@ -114,6 +120,10 @@ class RadarChart(Widget):
                                                                      'interval': [intervalmin, intervalmax]})
             return r
 
+    def axisbyname(self, name):
+        for a in self._axes:
+            if a.name == name:
+                return a
 
     @property
     def axes(self):
@@ -231,7 +241,7 @@ class RadarAxis(object):
         return 'Axis {}({}), limits: [{},{}], interval: [{},{}]'.format(self.name, self.unit, self.minval, self.maxval, self.intervalmin, self.intervalmin)
 
     def __repr__(self):
-        return '<Axis name={} at 0x{}>'.format(self.name, hash(self))
+        return '<Axis name={} at 0x{}>'.format(self.name, 'blbu')
 
     def __eq__(self, other):
         if self.name != other.name: return False
