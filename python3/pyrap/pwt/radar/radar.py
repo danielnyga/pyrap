@@ -26,7 +26,7 @@ class RadarChart(Widget):
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
             cnt = d3wrapper.format(**{'d3content': f.read()})
-            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js')
+            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
         self._axes = []
         self._data = {}
         self._opts = opts

@@ -1,0 +1,38 @@
+{
+  "name":"Do cash transfer improve access to education?",
+  "children":[
+    {
+      "name":"Should transfers be conditional?",
+      "url":"https://www.bing.com",
+      "children":[
+        {
+          "name":"Yes",
+          "children":[
+            {
+              "name":"What conditions?",
+              "size":3938,
+              "url":"https://www.google.com"
+            },
+            {
+              "name":"How to communicate conditions?",
+              "size":3812
+            },
+            {
+              "name":"How to monitor conditions?",
+              "size":6714
+            }
+          ]
+        },
+        {
+          "name":"No"
+        }
+      ]
+    },
+    {
+      "name":"What design options can enhance the CTs?"
+    },
+    {
+      "name":"What complementary interventions can maximize the productivity of CTs?"
+    }
+  ]
+}

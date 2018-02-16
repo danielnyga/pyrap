@@ -9,6 +9,10 @@ from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor, checkwidget
 
+d3wrapper = '''if (typeof d3 === 'undefined') {{
+    {d3content}
+}}'''
+
 
 class RadarChart(Widget):
 
@@ -20,7 +24,9 @@ class RadarChart(Widget):
         Widget.__init__(self, parent, **options)
         self.theme = RadarTheme(self, session.runtime.mngr.theme)
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
-        session.runtime.ensurejsresources(self._requiredjs)
+        with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
+            cnt = d3wrapper.format(**{'d3content': f.read()})
+            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
         self._axes = []
         self._data = {}
         self._opts = opts
