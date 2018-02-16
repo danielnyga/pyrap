@@ -22,9 +22,13 @@ from pyrap.ptypes import BoolVar, Color, px, Image, Font, NumVar
 # from pyrap.pwt.cluster.cluster import Cluster
 # from pyrap.pwt.radar.radar import RadarChart
 # from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
+from pyrap.pwt.cluster.cluster import Cluster
+from pyrap.pwt.radar.radar import RadarChart
+from pyrap.pwt.tree.tree import Tree
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
     Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
-    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle, DropDown, Combo, Option, error
+    Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle, \
+    DropDown, Combo, Option, error
 import web
 
 class Images:
@@ -225,17 +229,24 @@ class ControlsDemo():
         #=======================================================================
         # create radar chart
         #=======================================================================
-        # page  = self.create_page_template('Radar Chart Demo')
-        # self.create_radar_page(page)
-        # self.pages['Radar'] = page
+        page  = self.create_page_template('Radar Chart Demo')
+        self.create_radar_page(page)
+        self.pages['Radar'] = page
 
         #=======================================================================
         # create D3 cluster chart
         #=======================================================================
-        # page = self.create_page_template('D3 Cluster')
-        # self.create_cluster_page(page)
-        # self.pages['Cluster'] = page
-        
+        page = self.create_page_template('D3 Cluster')
+        self.create_cluster_page(page)
+        self.pages['Cluster'] = page
+
+        #=======================================================================
+        # create D3 tree
+        #=======================================================================
+        page = self.create_page_template('D3 Tree')
+        self.create_tree_page(page)
+        self.pages['Tree'] = page
+
         for page in [self.pages[k] for k in sorted(self.pages.keys())][1:]:
             page.layout.exclude = True
         self.navigation.items = self.pages
@@ -796,6 +807,25 @@ class ControlsDemo():
 
 
         btn.on_select += highlight
+
+    def create_tree_page(self, parent):
+        grp = Group(parent, text='Radar')
+        grp.layout = CellLayout(halign='fill', valign='fill')
+
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+
+        # comp_cluster = Composite(comp_body)
+        # comp_cluster.layout = CellLayout(halign='fill', valign='fill')
+        # comp_cluster.bg = Color('black')
+
+        tree = Tree(comp_body, halign='fill', valign='fill')
+        tree.bg = Color('black')
+
+        with open('resources/treedata.json') as f:
+            data = json.load(f)
+            tree.setdata(data)
+
 
     def open_browser(self, data):
         dlg = Shell(title='pyRAP Browser', minwidth=500, minheight=400)
