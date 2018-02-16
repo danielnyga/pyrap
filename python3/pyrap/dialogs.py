@@ -35,8 +35,8 @@ def ask_question(parent, title, text, buttons):
     msg.on_close.wait()
     return msg.answer
 
-def ask_input(parent, title, multiline=False):
-    msg = InputBox(parent, title, multiline=multiline)
+def ask_input(parent, title, multiline=False, password=False):
+    msg = InputBox(parent, title, multiline=multiline, password=password)
     msg.show(True)
     msg.on_close.wait()
     return msg.answer
@@ -52,6 +52,9 @@ def ask_yesnocancel(parent, title, text):
 
 def ask_textinput(parent, title):
     return ask_input(parent, title)
+
+def ask_passwordinput(parent, title):
+    return ask_input(parent, title, password=True)
 
 def ask_yesno(parent, title, text):
     return ask_question(parent, title, text, ['yes', 'no'])
@@ -239,7 +242,7 @@ class InputBox(Shell):
 
 
     @constructor('InputBox')
-    def __init__(self, parent, title, icon=None, multiline=False, modal=True, resize=False,
+    def __init__(self, parent, title, icon=None, multiline=False, password=True, modal=True, resize=False,
                  btnclose=True):
         Shell.__init__(self, parent=parent, title=title, titlebar=True, border=True,
                        btnclose=btnclose, resize=resize, modal=modal)
@@ -250,6 +253,7 @@ class InputBox(Shell):
                      DLG.ERROR: self.icontheme.icon_error}.get(icon)
         self.answer = None
         self.multiline = multiline
+        self.password = password
 
     def answer_and_close(self, a):
         self.answer = a
@@ -265,7 +269,7 @@ class InputBox(Shell):
 
         textarea = Composite(mainarea)
         textarea.layout = RowLayout()
-        self.inputfield = Edit(textarea, multiline=self.multiline, valign='fill', halign='fill')
+        self.inputfield = Edit(textarea, multiline=self.multiline, password=self.password, valign='fill', halign='fill')
 
         buttons = Composite(textarea)
         buttons.layout = ColumnLayout(equalwidths=True, halign='right',

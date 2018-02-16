@@ -1,29 +1,35 @@
 import os
-from dnutils import ifnone, out
+from dnutils import ifnone
 
 from pyrap import session, locations
-from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
-    RWTCallOperation
+from pyrap.communication import RWTCreateOperation, RWTSetOperation
+from pyrap.events import _rwt_event, OnSelect
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.widgets import Widget, constructor, checkwidget
+from pyrap.widgets import Widget, constructor
 
 d3wrapper = '''if (typeof d3 === 'undefined') {{
     {d3content}
 }}'''
 
-class BarChart(Widget):
 
-    _rwt_class_name = 'pwt.customs.BarChart'
+class Tree(Widget):
+
+    _rwt_class_name = 'pwt.customs.Tree'
     _defstyle_ = BitField(Widget._defstyle_)
 
-    @constructor('BarChart')
+    @constructor('Tree')
     def __init__(self, parent, **options):
         Widget.__init__(self, parent, **options)
-        self.theme = BarChartTheme(self, session.runtime.mngr.theme)
+        self.theme = TreeTheme(self, session.runtime.mngr.theme)
+        self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
             cnt = d3wrapper.format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
+        with open(os.path.join(locations.pwt_loc, 'tree', 'tree.css')) as fi:
+            session.runtime.requirecss(fi)
+        self.on_select = OnSelect(self)
+
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -46,27 +52,33 @@ class BarChart(Widget):
 
         return w, h
 
-    def clear(self):
-        session.runtime << RWTCallOperation(self.id, 'clear', {})
-        self._data = []
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_event(op))
+        return True
 
-    def data(self, data):
-        session.runtime << RWTSetOperation(self.id, {'data': data})
+
+    def setdata(self, data):
         self._data = data
+        session.runtime << RWTSetOperation(self.id, {'data': data})
 
-class BarChartTheme(WidgetTheme):
+
+class TreeTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
-        WidgetTheme.__init__(self, widget, theme, 'BarChart')
+        WidgetTheme.__init__(self, widget, theme, 'Tree')
 
     @property
     def borders(self):
-        return [self._theme.get_property('border-%s' % b, 'BarChart', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+        return [self._theme.get_property('border-%s' % b, 'Tree', self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
     @property
     def bg(self):
         if self._bg: return self._bg
-        return self._theme.get_property('background-color', 'BarChart', self.styles(), self.states())
+        return self._theme.get_property('background-color', 'Tree', self.styles(), self.states())
 
     @bg.setter
     def bg(self, color):
@@ -74,11 +86,11 @@ class BarChartTheme(WidgetTheme):
 
     @property
     def padding(self):
-        return self._theme.get_property('padding', 'BarChart', self.styles(), self.states())
+        return self._theme.get_property('padding', 'Tree', self.styles(), self.states())
 
     @property
     def font(self):
-        return self._theme.get_property('font', 'BarChart', self.styles(), self.states())
+        return self._theme.get_property('font', 'Tree', self.styles(), self.states())
 
     @property
     def margin(self):

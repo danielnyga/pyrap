@@ -1,7 +1,4 @@
 import os
-from time import sleep, time
-
-import datetime
 
 from dnutils.tools import ifnone
 from pyrap import session, locations
@@ -29,7 +26,7 @@ class RadarChart(Widget):
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
             cnt = d3wrapper.format(**{'d3content': f.read()})
-            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js')
+            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
         self._axes = []
         self._data = {}
         self._opts = opts
@@ -75,6 +72,12 @@ class RadarChart(Widget):
                 idx = next(index for (index, d) in enumerate(self._axes) if d.name == op.args['dataset']['name'])
                 self._axes.pop(idx)
                 self._data = op.args['data']
+            elif op.args.get('type', None) == 'mininterval':
+                axis = self.axisbyname(op.args.get('dataset')['name'])
+                axis.intervalmin = op.args.get('dataset')['interval'][0]
+            elif op.args.get('type', None) == 'maxinterval':
+                axis = self.axisbyname(op.args.get('dataset')['name'])
+                axis.intervalmax = op.args.get('dataset')['interval'][1]
             events[op.event].notify(_rwt_event(op))
         return True
 
@@ -99,14 +102,28 @@ class RadarChart(Widget):
         session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
 
     def addaxis(self, name, minval=None, maxval=None, unit='%', intervalmin=None, intervalmax=None):
-        r = RadarAxis(name, minval=minval, maxval=maxval, unit=unit, intervalmin=intervalmin, intervalmax=intervalmax)
-        self._axes.append(r)
-        session.runtime << RWTCallOperation(self.id, 'addAxis', {'name': name,
-                                                                 'limits': [minval, maxval],
-                                                                 'unit': unit,
-                                                                 'interval': [intervalmin, intervalmax]})
-        return r
+        if isinstance(name, RadarAxis):
+            if name in self._axes: return
+            self._axes.append(name)
+            session.runtime << RWTCallOperation(self.id, 'addAxis', {'name': name.name,
+                                                                     'limits': [name.minval, name.maxval],
+                                                                     'unit': name.unit,
+                                                                     'interval': [name.intervalmin, name.intervalmax]})
+            return name
+        else:
+            r = RadarAxis(name, minval=minval, maxval=maxval, unit=unit, intervalmin=intervalmin, intervalmax=intervalmax)
+            if r in self._axes: return
+            self._axes.append(r)
+            session.runtime << RWTCallOperation(self.id, 'addAxis', {'name': name,
+                                                                     'limits': [minval, maxval],
+                                                                     'unit': unit,
+                                                                     'interval': [intervalmin, intervalmax]})
+            return r
 
+    def axisbyname(self, name):
+        for a in self._axes:
+            if a.name == name:
+                return a
 
     @property
     def axes(self):
@@ -120,9 +137,16 @@ class RadarChart(Widget):
 
     def remaxis(self, axis):
         self._axes.remove(axis)
-        session.runtime << RWTCallOperation(self.id, 'remAxis', axis)
+        session.runtime << RWTCallOperation(self.id, 'remAxis', {'name': axis.name})
         return True
 
+    def remaxisbyname(self, axisname):
+        for a in self._axes:
+            if a.name == axisname:
+                # self._axes.remove(a)
+                session.runtime << RWTCallOperation(self.id, 'remAxis', {'name': axisname})
+                return True
+        return False
 
     def clear(self):
         self._axes = []
@@ -217,7 +241,20 @@ class RadarAxis(object):
         return 'Axis {}({}), limits: [{},{}], interval: [{},{}]'.format(self.name, self.unit, self.minval, self.maxval, self.intervalmin, self.intervalmin)
 
     def __repr__(self):
-        return '<Axis name={} at 0x{}>'.format(self.name, hash(self))
+        return '<Axis name={} at 0x{}>'.format(self.name, 'blbu')
+
+    def __eq__(self, other):
+        if self.name != other.name: return False
+        if self.intervalmin != other.intervalmin: return False
+        if self.intervalmax != other.intervalmax: return False
+        if self.minval != other.minval: return False
+        if self.maxval != other.maxval: return False
+        if self.unit != other.unit: return False
+        return True
+
+    def __neq_(self, other):
+        return not self == other
+
 
 
 class RadarTheme(WidgetTheme):

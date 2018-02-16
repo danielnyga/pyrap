@@ -13,6 +13,7 @@ d3wrapper = '''if (typeof d3 === 'undefined') {{
     {d3content}
 }}'''
 
+
 class Cluster(Widget):
 
     _rwt_class_name = 'pwt.customs.Cluster'

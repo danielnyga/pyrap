@@ -949,12 +949,16 @@ class Image(object):
         if self.filepath is None:
             if self._cnt is not None:
                 try:
-                    self._content = base64.b64decode(self._cnt)
-                    self._img = PILImage.open(BytesIO(self._content))
-                except Exception:
+                    self._img = PILImage.open(BytesIO(self._cnt))
                     self._content = self._cnt
-                    self._img = SVG().load(self._cnt)
-                    self._mimetype = 'image/svg+xml'
+                except Exception:
+                    try:
+                        self._content = base64.b64decode(self._cnt)
+                        self._img = PILImage.open(BytesIO(self._content))
+                    except:
+                        self._content = self._cnt
+                        self._img = SVG().load(self._cnt)
+                        self._mimetype = 'image/svg+xml'
                 return self
             else:
                 raise Exception('Unable to load Image without filepath or content!')

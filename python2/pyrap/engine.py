@@ -524,12 +524,10 @@ class SessionRuntime(object):
                 files = self.mngr.config.requirejs
             for p in files:
                 if os.path.isfile(p):
-                    with open(p) as fi:
-                        self.requirejs(fi)
+                    self.requirejs(p)
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
-                        with open(f) as fi:
-                            self.requirejs(fi)
+                        self.requirejs(f)
         if self.mngr.config.requirecss:
             if not isinstance(self.mngr.config.requirecss, list):
                 files = [self.mngr.config.requirecss]
@@ -537,8 +535,7 @@ class SessionRuntime(object):
                 files = self.mngr.config.requirecss
             for p in files:
                 if os.path.isfile(p):
-                    with open(p) as fi:
-                        self.requirecss(fi)
+                    self.requirecss(p)
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.css')]:
                         self.requirecss(f)
@@ -556,7 +553,7 @@ class SessionRuntime(object):
                         self.requirejs(fi, force=force)
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.js')]:
-                        with open(f, encoding='utf8') as fi:
+                        with open(f) as fi:
                             self.requirejs(fi, force=force)
                 else:
                     try:
@@ -685,8 +682,11 @@ class ResourceManager(object):
                                 specified number of downloads has been reached.
         '''
         c = stream.read()
-        # if type(c) is str:
-        #     c = c.encode('utf8')
+        if isinstance(c, str):
+            try:
+                c = c.encode('utf8')
+            except:
+                print('Could not encode, passing on') #TODO check if this is critical
         return self.registerc(name, content_type, c, force=force, limit=limit)
 
     def registerc(self, name, content_type, content, force=False, limit=inf):
@@ -706,7 +706,7 @@ class ResourceManager(object):
             return resource
 
     def unregister(self, rc):
-        if isinstance(rc, basestring):
+        if isinstance(rc, str):
             rc = self.get(rc)
         del self.resources[rc.name]
 
