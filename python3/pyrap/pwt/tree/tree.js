@@ -24,7 +24,6 @@ pwt_tree.Tree = function( parent, options) {
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g');
-    this._defs = this._svgContainer.select('defs');
 
     this._initialized = false;
     this._needsRender = true;
@@ -55,10 +54,6 @@ pwt_tree.Tree.prototype = {
                 .append( "svg:g" )
                 .attr("transform", "translate(" + this._cfg.TranslateX + "," + this._cfg.TranslateY + ")");
             this._svgContainer = this._svg.select('g');
-        }
-
-        if (this._defs.empty()) {
-            this._defs = this._svgContainer.append("defs");
         }
 
         this.update(this._data);

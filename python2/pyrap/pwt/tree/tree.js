@@ -186,6 +186,27 @@ pwt_tree.Tree.prototype = {
             .on("click", function(d, i) {
                 var _this = this;
                 that.click(d, that);
+            })
+            .on("mouseover", function(d) {
+                tooltip
+                    .transition(200)
+                    .style("display", "inline");
+            })
+            .on('mousemove', function(d) {
+                var absoluteMousePos = d3.mouse(this);
+                var absoluteMousePos = d3.mouse(that._svgContainer.node());
+                var newX = (absoluteMousePos[0] + 20);
+                var newY = (absoluteMousePos[1] - 20);
+                tooltip
+                    .text('Properties after ' + d.process + ': ' + d.props)
+                    .attr('x', (newX) + "px")
+                    .attr('y', (newY) + "px");
+
+            })
+            .on("mouseout", function(d) {
+                tooltip
+                    .transition(200)
+                    .style("display", "none");
             });
 
         nodeEnter.append("circle")
@@ -194,9 +215,8 @@ pwt_tree.Tree.prototype = {
 
         nodeEnter.append("svg:a")
             .attr("target", "E2B")
-            .attr("xlink:href", function(d) { return d.url; });
-
-        nodeEnter.append("text")
+            .attr("xlink:href", function(d) { return d.url; })
+            .append("text")
             .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
             .attr("dy", ".35em")
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
@@ -232,12 +252,61 @@ pwt_tree.Tree.prototype = {
             .data(links, function(d) { return d.target.id; });
 
         // Enter any new links at the parent's previous position.
-        link.enter().insert("path", "g")
+        var linkEnter = link.enter().insert("path", "g")
             .attr("class", "link")
             .attr("d", function(d) {
                 var o = {x: source.x0, y: source.y0};
                 return that._diagonal({source: o, target: o});
+            })
+            .attr("id", function(d) { return d.source.name + '-' + d.target.name; });
+
+        var thing = this._svgContainer.selectAll("g.thing")
+            .data(links, function(d) { return d.target.id; });
+
+        // Enter any new nodes at the parent's previous position.
+        var thingEnter = thing.enter().append("g")
+            .attr("class", "thing")
+
+        thingEnter.append("text")
+            .style("font-size", "20px")
+            .append("textPath")
+            .attr("xlink:href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
+            .text(function(d) { return '______' + d.target.process; }) // TODO: fix text thing
+            .on("mouseover", function(d) {
+                tooltip
+                    .transition(200)
+                    .style("display", "inline");
+            })
+            .on('mousemove', function(d) {
+                var absoluteMousePos = d3.mouse(this);
+                var absoluteMousePos = d3.mouse(that._svgContainer.node());
+                var newX = (absoluteMousePos[0] + 20);
+                var newY = (absoluteMousePos[1] - 20);
+                tooltip
+                    .text('Coloring:' + d.target.process)
+                    .attr('x', (newX) + "px")
+                    .attr('y', (newY) + "px");
+
+            })
+            .on("mouseout", function(d) {
+                tooltip
+                    .transition(200)
+                    .style("display", "none");
             });
+
+        thingEnter.append("use")
+            .attr("xlink:href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
+            .style("stroke", "black")
+            .style("fill", "none");
+
+        // TODO: update does not work properly -> toomany textpath elements created
+//        thing
+//            .append("textPath")
+//            .style("font-size", "20px")
+//            .attr("xlink:href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
+//            .text(function(d) { return '______' + d.target.process; });
+
+        thing.exit();
 
         // Transition links to their new position.
         link.transition()
@@ -258,6 +327,23 @@ pwt_tree.Tree.prototype = {
             d.x0 = d.x;
             d.y0 = d.y;
         });
+
+        // tooltip
+        var tooltip = this._svg.selectAll(".tooltip").data([1]);
+
+        // create tooltip
+        tooltip
+            .enter()
+            .append('text')
+            .attr('class', 'tooltip')
+            .style('display', 'none')
+            .style('fill', '#89a35c')
+            .style('z-index', 1000000)
+            .style('font-family', 'sans-serif')
+            .style('font-size', '13px')
+            .style('font-weight', 'bold');
+
+        tooltip.exit().remove();
 
     }
 };
