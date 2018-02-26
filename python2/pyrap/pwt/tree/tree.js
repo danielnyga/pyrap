@@ -2,7 +2,7 @@ pwt_tree = {};
 
 pwt_tree.Tree = function( parent, options) {
 
-    var margin = {top: 10, right: 120, bottom: 10, left: 120};
+    var margin = {top: 10, right: 120, bottom: 10, left: 200};
 
     this._cfg = {
         TranslateX: margin.left,
