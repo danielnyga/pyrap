@@ -117,11 +117,9 @@ pwt_tree.Tree.prototype = {
      */
     setData : function ( data ) {
         // clear old data
-        console.log('this._cfg.h', this._cfg.h);
         this._data = data;
         this._data.x0 = this._cfg.h / 2;
         this._data.y0 = 0;
-        console.log(this._data);
 
         function collapse(d) {
             if(d.children) {
@@ -211,7 +209,8 @@ pwt_tree.Tree.prototype = {
 
         nodeEnter.append("circle")
             .attr("r", 1e-6)
-            .style("fill", function(d) { return d._children ? "steelblue" : "#fff"; });
+            .style("fill", function(d) { return d._children ? "steelblue" : "#fff"; })
+            .style("stroke", function(d) { return d.highlight ? "green" : "steelblue"; });
 
         nodeEnter.append("svg:a")
             .attr("target", "E2B")
@@ -254,6 +253,7 @@ pwt_tree.Tree.prototype = {
         // Enter any new links at the parent's previous position.
         var linkEnter = link.enter().insert("path", "g")
             .attr("class", "link")
+            .style('stroke', function(d) { console.log('highlight', d.target.highlight);return d.target.highlight ? "green" : "black"; })
             .attr("d", function(d) {
                 var o = {x: source.x0, y: source.y0};
                 return that._diagonal({source: o, target: o});
@@ -268,7 +268,7 @@ pwt_tree.Tree.prototype = {
             .attr("class", "thing")
 
         thingEnter.append("text")
-            .style("font-size", "20px")
+            .style("font-size", "15px")
             .append("textPath")
             .attr("xlink:href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
             .style('text-anchor', "middle")
@@ -283,7 +283,7 @@ pwt_tree.Tree.prototype = {
                 var newX = (d3.event.pageX + 20);
                 var newY = (d3.event.pageY - 20);
                 that._tooltip
-                    .html(d.target.transitiontext)
+                    .html(d.target.transitiontooltip)
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
