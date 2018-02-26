@@ -2,7 +2,7 @@ pwt_tree = {};
 
 pwt_tree.Tree = function( parent, options) {
 
-    var margin = {top: 20, right: 120, bottom: 20, left: 120};
+    var margin = {top: 10, right: 120, bottom: 10, left: 120};
 
     this._cfg = {
         TranslateX: margin.left,
@@ -19,7 +19,6 @@ pwt_tree.Tree = function( parent, options) {
     });
 
     this._parentDIV = this.createElement(parent);
-    this._colorscale = d3.scale.category10();
     this._data = {};
 
     this._svg = d3.select(this._parentDIV).append("svg");
@@ -161,10 +160,11 @@ pwt_tree.Tree.prototype = {
      * )
      */
     update : function (source) {
+        // resize tree
+        this._tree.size([this._cfg.w, this._cfg.h]);
+
         // no update before graph has been initialized
         if ( typeof source === 'undefined') { return; }
-        if (!this._initialized) { return; }
-
         var that = this;
 
 
@@ -198,7 +198,7 @@ pwt_tree.Tree.prototype = {
                 var newX = (absoluteMousePos[0] + 20);
                 var newY = (absoluteMousePos[1] - 20);
                 tooltip
-                    .text('Properties after ' + d.process + ': ' + d.props)
+                    .text(d.props)
                     .attr('x', (newX) + "px")
                     .attr('y', (newY) + "px");
 
@@ -263,7 +263,7 @@ pwt_tree.Tree.prototype = {
         var thing = this._svgContainer.selectAll("g.thing")
             .data(links, function(d) { return d.target.id; });
 
-        // Enter any new nodes at the parent's previous position.
+        // Enter any new linktexts at the parent's previous position.
         var thingEnter = thing.enter().append("g")
             .attr("class", "thing")
 
@@ -271,7 +271,9 @@ pwt_tree.Tree.prototype = {
             .style("font-size", "20px")
             .append("textPath")
             .attr("xlink:href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
-            .text(function(d) { return '______' + d.target.process; }) // TODO: fix text thing
+            .style('text-anchor', "middle")
+            .attr("startOffset", "50%")
+            .text(function(d) { return d.target.transitiontext; })
             .on("mouseover", function(d) {
                 tooltip
                     .transition(200)
@@ -283,7 +285,7 @@ pwt_tree.Tree.prototype = {
                 var newX = (absoluteMousePos[0] + 20);
                 var newY = (absoluteMousePos[1] - 20);
                 tooltip
-                    .text('Coloring:' + d.target.process)
+                    .text(d.target.transitiontext)
                     .attr('x', (newX) + "px")
                     .attr('y', (newY) + "px");
 
@@ -299,14 +301,18 @@ pwt_tree.Tree.prototype = {
             .style("stroke", "black")
             .style("fill", "none");
 
-        // TODO: update does not work properly -> toomany textpath elements created
-//        thing
-//            .append("textPath")
-//            .style("font-size", "20px")
-//            .attr("xlink:href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
-//            .text(function(d) { return '______' + d.target.process; });
+        var thingUpdate = thing.transition()
+            .duration(0.2*this._cfg.duration);
 
-        thing.exit();
+        thingUpdate.select("text")
+            .style("fill-opacity", 1);
+
+        var thingExit = thing.exit().transition()
+            .duration(0.2*this._cfg.duration)
+            .remove();
+
+        thingExit.select("text")
+            .style("fill-opacity", 1e-6);
 
         // Transition links to their new position.
         link.transition()
