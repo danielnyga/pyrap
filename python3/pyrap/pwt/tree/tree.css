@@ -22,3 +22,14 @@ text {
   stroke: #ccc;
   stroke-width: 1.5px;
 }
+
+.treetooltip {
+  display: none;
+  position: fixed;
+  overflow: hidden;
+  color: steelblue;
+  font: 13px monospace, arial, sans-serif;
+  font-weight: bold;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+  background-color: #fff;
+}

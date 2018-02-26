@@ -21,6 +21,9 @@ pwt_tree.Tree = function( parent, options) {
     this._parentDIV = this.createElement(parent);
     this._data = {};
 
+    this._tooltip = d3.select(this._parentDIV).append("div")
+            .attr('class', 'treetooltip')
+            .style('z-index', 1000000);
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g');
 
@@ -188,23 +191,20 @@ pwt_tree.Tree.prototype = {
                 that.click(d, that);
             })
             .on("mouseover", function(d) {
-                tooltip
+                that._tooltip
                     .transition(200)
-                    .style("display", "inline");
+                    .style('display', 'block');
             })
             .on('mousemove', function(d) {
-                var absoluteMousePos = d3.mouse(this);
-                var absoluteMousePos = d3.mouse(that._svgContainer.node());
-                var newX = (absoluteMousePos[0] + 20);
-                var newY = (absoluteMousePos[1] - 20);
-                tooltip
-                    .text(d.props)
-                    .attr('x', (newX) + "px")
-                    .attr('y', (newY) + "px");
-
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+                that._tooltip
+                    .html(d.props)
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
             })
             .on("mouseout", function(d) {
-                tooltip
+                that._tooltip
                     .transition(200)
                     .style("display", "none");
             });
@@ -275,23 +275,20 @@ pwt_tree.Tree.prototype = {
             .attr("startOffset", "50%")
             .text(function(d) { return d.target.transitiontext; })
             .on("mouseover", function(d) {
-                tooltip
+                that._tooltip
                     .transition(200)
-                    .style("display", "inline");
+                    .style('display', 'block');
             })
             .on('mousemove', function(d) {
-                var absoluteMousePos = d3.mouse(this);
-                var absoluteMousePos = d3.mouse(that._svgContainer.node());
-                var newX = (absoluteMousePos[0] + 20);
-                var newY = (absoluteMousePos[1] - 20);
-                tooltip
-                    .text(d.target.transitiontext)
-                    .attr('x', (newX) + "px")
-                    .attr('y', (newY) + "px");
-
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+                that._tooltip
+                    .html(d.target.transitiontext)
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
             })
             .on("mouseout", function(d) {
-                tooltip
+                that._tooltip
                     .transition(200)
                     .style("display", "none");
             });
@@ -333,24 +330,6 @@ pwt_tree.Tree.prototype = {
             d.x0 = d.x;
             d.y0 = d.y;
         });
-
-        // tooltip
-        var tooltip = this._svg.selectAll(".tooltip").data([1]);
-
-        // create tooltip
-        tooltip
-            .enter()
-            .append('text')
-            .attr('class', 'tooltip')
-            .style('display', 'none')
-            .style('fill', '#89a35c')
-            .style('z-index', 1000000)
-            .style('font-family', 'sans-serif')
-            .style('font-size', '13px')
-            .style('font-weight', 'bold');
-
-        tooltip.exit().remove();
-
     }
 };
 
