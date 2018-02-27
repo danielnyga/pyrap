@@ -667,7 +667,7 @@ class ResourceManager(object):
     def __getitem__(self, name):
         return self.get(name)
 
-    def registerf(self, name, content_type, stream, force=False, limit=inf):
+    def registerf(self, name, content_type, stream, force=False, limit=inf, encode=True):
         '''
         Make a file available for download under the given path.
         
@@ -680,13 +680,16 @@ class ResourceManager(object):
         :param limit:           limit the number of downloads to the specified amount.
                                 the resource will be unregistered after the
                                 specified number of downloads has been reached.
+        :param encode:          by default, it is assumed that the file content should be encoded
+                                in UTF-8. Set to False for binary files such as videos.
         '''
         c = stream.read()
-        if isinstance(c, str):
-            try:
-                c = c.encode('utf8')
-            except:
-                print('Could not encode, passing on') #TODO check if this is critical
+        if encode:
+            if type(c) is str:
+                try:
+                    c = c.encode('utf8')
+                except:
+                    print('Could not encode, passing on') #TODO check if this is critical
         return self.registerc(name, content_type, c, force=force, limit=limit)
 
     def registerc(self, name, content_type, content, force=False, limit=inf):
