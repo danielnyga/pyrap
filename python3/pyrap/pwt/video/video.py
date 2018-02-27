@@ -63,11 +63,14 @@ class Video(Widget):
 
     def addsrc(self, src):
         self._sources.append(src)
-        with open(os.path.abspath(src['source'])) as fi:
-            print('trying to register', src['source'], 'as', os.path.basename(src['source']), src['type'])
-            resource = session.runtime.mngr.resources.registerf(os.path.basename(src['source']), src['type'], fi)
+        with open(os.path.abspath(src['source']), "rb") as f:
+            byte = f.read(1)
+            cnt = byte
+            while byte:
+                byte = f.read(1)
+                cnt = cnt + byte
+            resource = session.runtime.mngr.resources.registerc(os.path.basename(src['source']), src['type'], cnt)
         session.runtime << RWTCallOperation(self.id, 'addSrc', {'source': resource.location, 'type': src['type']})
-
 
 class VideoTheme(WidgetTheme):
 
