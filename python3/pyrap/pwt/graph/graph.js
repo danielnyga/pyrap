@@ -407,24 +407,20 @@ pwt_d3.Graph.prototype = {
         // create nodes
         circleEnter.append("svg:circle")
             .on("mouseover", function(d) {
-                tooltip
+                that._tooltip
                     .transition(200)
-                    .style("display", "inline");
+                    .style("display", "block");
             })
             .on('mousemove', function(d) {
-                var absoluteMousePos = d3.mouse(this);
-                var absoluteMousePos = d3.mouse(that._svgContainer.node());
-                var newX = (absoluteMousePos[0] + 20);
-                var newY = (absoluteMousePos[1] - 20);
-
-                tooltip
-                    .text(d.text)
-                    .attr('x', (newX) + "px")
-                    .attr('y', (newY) + "px");
-
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+                that._tooltip
+                    .html(d.text)
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
             })
             .on("mouseout", function(d) {
-                tooltip
+                that._tooltip
                     .transition(200)
                     .style("display", "none");
             })
@@ -541,24 +537,6 @@ pwt_d3.Graph.prototype = {
             .on("tick", tick)
             .gravity( this._gravity )
             .start();
-
-        // tooltip
-        var tooltip = this._svg.selectAll(".tooltip").data([1]);
-
-        // create tooltip
-        tooltip
-            .enter()
-            .append('text')
-            .attr('class', 'tooltip')
-            .style('display', 'none')
-            .style('fill', '#89a35c')
-            .style('z-index', 1000000)
-            .style('font-family', 'sans-serif')
-            .style('font-size', '13px')
-            .style('font-weight', 'bold');
-
-        tooltip.exit().remove();
-
     }
 };
 

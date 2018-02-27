@@ -281,6 +281,7 @@ rwt/remote/handler/DropDownHandler.js
 {code_base}/pyrap/pwt/radar/radar.js
 {code_base}/pyrap/pwt/radar_redesign/radar_redesign.js
 {code_base}/pyrap/pwt/tree/tree.js
+{code_base}/pyrap/pwt/video/video.js
 {code_base}/pyrap/pwt/cluster/cluster.js
 appearances.js'''.format(code_base=code_base)
 
