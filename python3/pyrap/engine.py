@@ -16,9 +16,6 @@ import urllib.request, urllib.parse, urllib.error
 import dnutils
 import web
 from datetime import datetime
-
-from pyrap.utils import RStorage
-from web.session import SessionExpired
 from web.utils import storify, Storage
 from web.webapi import notfound, badrequest, seeother, notmodified
 
@@ -36,7 +33,6 @@ from pyrap.ptypes import Image
 from pyrap.sessions import SessionError
 from pyrap.themes import Theme, FontMetrics
 from pyrap.widgets import Display
-import collections
 
 
 class ApplicationManager(object):
@@ -536,10 +532,12 @@ class SessionRuntime(object):
                 files = self.mngr.config.requirecss
             for p in files:
                 if os.path.isfile(p):
-                    self.requirecss(p)
+                    with open(p) as fi:
+                        self.requirecss(fi)
                 elif os.path.isdir(p):
                     for f in [x for x in os.listdir(p) if x.endswith('.css')]:
-                        self.requirecss(f)
+                        with open(f) as fi:
+                            self.requirecss(fi)
         self.create_display()
 
     def ensurejsresources(self, jsfiles, name=None, force=False):

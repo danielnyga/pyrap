@@ -13,6 +13,9 @@ pwt_d3.Graph = function( parent, options ) {
     this._markertypes = ["red", "green", "black", "blue"];
 
     this._parentDIV = this.createElement(parent);
+    this._tooltip = d3.select(this._parentDIV).append("div")
+        .attr('class', 'graphtooltip')
+        .style('z-index', 1000000);
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.graph');
