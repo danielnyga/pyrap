@@ -764,7 +764,7 @@ class Combo(Widget):
         if self._editable:
             return self.items[self._selidx]
         else:
-            return self.items[self.items.keys()[self._selidx]]
+            return self.items[list(self.items.keys())[self._selidx]]
 
     @selection.setter
     def selection(self, sel):
@@ -772,8 +772,8 @@ class Combo(Widget):
             self._selidx = self._items.index(sel) if sel is not None else None
             txt = self._items[self._selidx]
         else:
-            self._selidx = self._items.values().index(sel) if sel is not None else None
-            txt = self._items.keys()[self._selidx]
+            self._selidx = list(self._items.keys()).index(sel) if sel is not None else None
+            txt = list(self._items.keys())[self._selidx]
         session.runtime << RWTSetOperation(self.id, {'selectionIndex': self._selidx, 'text': txt})
 
     @property
