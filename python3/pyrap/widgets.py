@@ -235,7 +235,7 @@ class Widget(object):
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = list(map(px, bounds))
-        if self.decorator is not None:
+        if self.decorator is not None and not self.decorator.disposed:
             b_ = self.decorator.compute_relpos(self.bounds)
             self.decorator.bounds = b_
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
@@ -985,7 +985,7 @@ class Label(Widget):
         if self.img is not None:
             w, h = self.img.size
         elif RWT.WRAP not in self.style:
-            lines = self._text.split('\n')
+            lines = self._text.split('\n' if RWT.MARKUP not in self.style else '<br>')
             w += max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
             h *= len(lines)
@@ -1244,6 +1244,7 @@ class Checkbox(Widget):
             options.selection = self.checked
         options.grayed = True if (self.checked is None) else False
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+        self.on_checked += lambda *_: True
 
     def bind(self, var):
         if not type(var) in (NumVar, BoolVar):
@@ -2588,7 +2589,6 @@ class MenuItem(Widget):
     def text(self, text):
         self._text = text
         session.runtime << RWTSetOperation(self.id, {'text': text})
-
 
 
 class List(Widget):

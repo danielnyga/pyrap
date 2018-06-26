@@ -1244,6 +1244,7 @@ class Checkbox(Widget):
             options.selection = self.checked
         options.grayed = True if (self.checked is None) else False
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+        self.on_checked += lambda *_: True
 
     def bind(self, var):
         if not type(var) in (NumVar, BoolVar):
@@ -2590,7 +2591,6 @@ class MenuItem(Widget):
         session.runtime << RWTSetOperation(self.id, {'text': text})
 
 
-
 class List(Widget):
     _rwt_class_name = 'rwt.widgets.List'
     _styles_ = Widget._styles_ + {'multi': RWT.MULTI,
@@ -2640,7 +2640,7 @@ class List(Widget):
 
     def setitemheight(self):
         h = self._computeitemheight()
-        session.runtime << RWTSetOperation(self.id, {'itemDimensions': [self.bounds[2].value, h.value]})
+        session.runtime << RWTSetOperation(self.id, {'itemDimensions': [max(0, self.bounds[2].value), h.value]})
 
     def _computeitemheight(self):
         if self.itemheight is None:

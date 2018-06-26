@@ -93,7 +93,7 @@ def runbasic(func, server_address=("0.0.0.0", 8080)):
         do_DELETE = run_wsgi_app
 
         def log_message(self, format, *args):
-            msg = ''.join(filter(lambda c: c in printables, ' - '.join(args)))
+            msg = ''.join([c for c in ''.join(' - '.join(map(str, args))) if c in printables])
             getlogger('/pyrap/http').debug('[%s] %s' % (self.client_address[0], msg))
 
         def do_GET(self):
