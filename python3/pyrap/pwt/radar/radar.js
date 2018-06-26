@@ -1025,20 +1025,20 @@ pwt_radar.RadarChart.prototype = {
                 .style("fill", function(j, i){return that._cfg.color(idx)})
                 .style("fill-opacity", that._cfg.opacityArea)
                 .on('mouseover', function (d){
-                    z = "polygon."+d3.select(this).attr("class");
+                    z = "polygon."+ d3.select(this).attr("class");
+
                     that._svgContainer.selectAll("polygon")
                         .transition(200)
                         .style("fill-opacity", 0.1);
                     that._svgContainer.selectAll(z)
                         .transition(200)
                         .style("fill-opacity", .7);
-                    d3.select(this).moveToBack();
                 })
                 .on('mouseout', function(){
                     that._svgContainer.selectAll("polygon")
                         .transition(200)
                         .style("fill-opacity", that._cfg.opacityArea);
-                    d3.select(this).moveToFront();
+                    d3.select(this).moveToBack();
                 });
 
             // remove old polygons
@@ -1112,7 +1112,7 @@ pwt_radar.RadarChart.prototype = {
                         .transition(200)
                         .style("display", "block");
 
-                    z = "polygon."+d3.select(this).attr("class");
+                    z = "polygon.polygon-"+d3.select(this).attr("class").split('-')[1];
 
                     that._svgContainer.selectAll("polygon")
                         .transition(200)
@@ -1135,11 +1135,11 @@ pwt_radar.RadarChart.prototype = {
                 .on('mousemove', function(d, i) {
                     var newX = (d3.event.pageX + 20);
                     var newY = (d3.event.pageY - 20);
+
                     that._tooltip
                         .html(that.Format(that._allAxis[i].unit, d))
-                        .attr('left', (newX) + "px")
-                        .attr('top', (newY) + "px");
-
+                        .style('left', (newX) + "px")
+                        .style('top', (newY) + "px");
                 })
                 .call(d3.behavior.drag()
                                 .origin(Object)
