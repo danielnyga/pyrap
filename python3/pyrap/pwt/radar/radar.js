@@ -420,6 +420,26 @@ pwt_radar.RadarChart.prototype = {
 
 
     /**
+     * sorts incoming data such that legend is easier to read
+     */
+    sortOnKeys : function(dict) {
+
+        var sorted = [];
+        for(var key in dict) {
+            sorted[sorted.length] = key;
+        }
+        sorted.sort();
+
+        var tempDict = {};
+        for(var i = 0; i < sorted.length; i++) {
+            tempDict[sorted[i]] = dict[sorted[i]];
+        }
+
+        return tempDict;
+    },
+
+
+    /**
      * updates data options
      */
     setData : function ( data ) {
@@ -429,7 +449,7 @@ pwt_radar.RadarChart.prototype = {
             this._svgContainer.selectAll(".polygon-"+key).remove();
             this._svgContainer.selectAll(".circle-"+key).remove();
         }, this);
-        this._data = data;
+        this._data = this.sortOnKeys(data);
         this.updateData();
     },
 
