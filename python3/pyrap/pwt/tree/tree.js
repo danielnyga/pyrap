@@ -197,7 +197,7 @@ pwt_tree.Tree.prototype = {
                 var newX = (d3.event.pageX + 20);
                 var newY = (d3.event.pageY - 20);
                 that._tooltip
-                    .html(d.props)
+                    .html(d.nodetooltip)
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
@@ -219,7 +219,7 @@ pwt_tree.Tree.prototype = {
             .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
             .attr("dy", ".35em")
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) { return d.name; })
+            .text(function(d) { return d.nodetext; })
             .style("fill-opacity", 1e-6);
 
         // Transition nodes to their new position.
@@ -258,7 +258,7 @@ pwt_tree.Tree.prototype = {
                 var o = {x: source.x0, y: source.y0};
                 return that._diagonal({source: o, target: o});
             })
-            .attr("id", function(d) { return d.source.name + '-' + d.target.name; });
+            .attr("id", function(d) { return d.source.nodetext + '-' + d.target.nodetext; });
 
         var thing = this._svgContainer.selectAll("g.thing")
             .data(links, function(d) { return d.target.id; });
@@ -270,10 +270,10 @@ pwt_tree.Tree.prototype = {
         thingEnter.append("text")
             .style("font-size", "15px")
             .append("textPath")
-            .attr("xlink:href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
+            .attr("xlink:href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
             .style('text-anchor', "middle")
             .attr("startOffset", "50%")
-            .text(function(d) { return d.target.transitiontext; })
+            .text(function(d) { return d.target.edgetext; })
             .on("mouseover", function(d) {
                 that._tooltip
                     .transition(200)
@@ -283,7 +283,7 @@ pwt_tree.Tree.prototype = {
                 var newX = (d3.event.pageX + 20);
                 var newY = (d3.event.pageY - 20);
                 that._tooltip
-                    .html(d.target.transitiontooltip)
+                    .html(d.target.edgetooltip)
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
@@ -294,7 +294,7 @@ pwt_tree.Tree.prototype = {
             });
 
         thingEnter.append("use")
-            .attr("xlink:href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
+            .attr("xlink:href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
             .style("stroke", "black")
             .style("fill", "none");
 
