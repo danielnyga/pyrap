@@ -24,7 +24,7 @@ from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished
 from .exceptions import WidgetDisposedError
-from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout
+from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout, GridLayout
 from .ptypes import px, BitField, BoolVar, NumVar, Color,\
     parse_value, toint, Image
 from .themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme, \
@@ -235,7 +235,7 @@ class Widget(object):
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = list(map(px, bounds))
-        if self.decorator is not None:
+        if self.decorator is not None and not self.decorator.disposed:
             b_ = self.decorator.compute_relpos(self.bounds)
             self.decorator.bounds = b_
         session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
@@ -695,7 +695,6 @@ class Combo(Widget):
         options.editable = self._editable
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
 
-
     def compute_size(self):
         w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX', self.shell())
         for padding in (self.theme.padding, self.theme.itempadding):
@@ -764,7 +763,7 @@ class Combo(Widget):
         if self._editable:
             return self.items[self._selidx]
         else:
-            return self.items[self.items.keys()[self._selidx]]
+            return self.items[list(self.items.keys())[self._selidx]]
 
     @selection.setter
     def selection(self, sel):
@@ -772,8 +771,8 @@ class Combo(Widget):
             self._selidx = self._items.index(sel) if sel is not None else None
             txt = self._items[self._selidx]
         else:
-            self._selidx = self._items.values().index(sel) if sel is not None else None
-            txt = self._items.keys()[self._selidx]
+            self._selidx = list(self._items.keys()).index(sel) if sel is not None else None
+            txt = list(self._items.keys())[self._selidx]
         session.runtime << RWTSetOperation(self.id, {'selectionIndex': self._selidx, 'text': txt})
 
     @property
@@ -985,7 +984,7 @@ class Label(Widget):
         if self.img is not None:
             w, h = self.img.size
         elif RWT.WRAP not in self.style:
-            lines = self._text.split('\n')
+            lines = self._text.split('\n' if RWT.MARKUP not in self.style else '<br>')
             w += max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
             h *= len(lines)
@@ -1244,6 +1243,7 @@ class Checkbox(Widget):
             options.selection = self.checked
         options.grayed = True if (self.checked is None) else False
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+        self.on_checked += lambda *_: True
 
     def bind(self, var):
         if not type(var) in (NumVar, BoolVar):
@@ -2588,7 +2588,6 @@ class MenuItem(Widget):
     def text(self, text):
         self._text = text
         session.runtime << RWTSetOperation(self.id, {'text': text})
-
 
 
 class List(Widget):
