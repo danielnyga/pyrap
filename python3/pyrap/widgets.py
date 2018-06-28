@@ -24,7 +24,7 @@ from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished
 from .exceptions import WidgetDisposedError
-from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout
+from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout, GridLayout
 from .ptypes import px, BitField, BoolVar, NumVar, Color,\
     parse_value, toint, Image
 from .themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme, \
@@ -694,7 +694,6 @@ class Combo(Widget):
         options.style.append("DROP_DOWN")
         options.editable = self._editable
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
-
 
     def compute_size(self):
         w, h = session.runtime.textsize_estimate(self.theme.font, 'XXX', self.shell())

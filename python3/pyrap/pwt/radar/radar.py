@@ -4,7 +4,7 @@ from dnutils.tools import ifnone
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
     RWTSetOperation
-from pyrap.events import OnSelect, _rwt_selection_event, _rwt_event
+from pyrap.events import OnSelect, _rwt_selection_event, _rwt_event, _rwt_mouse_event
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor, checkwidget
@@ -69,18 +69,14 @@ class RadarChart(Widget):
         events = {'Selection': self.on_select}
         if op.event not in events:
             return Widget._handle_notify(self, op)
-        else:
-            if op.args.get('type', None) == 'remaxis':  # TODO: find a pretty solution for this
-                idx = next(index for (index, d) in enumerate(self._axes) if d.name == op.args['dataset']['name'])
-                self._axes.pop(idx)
-                self._data = op.args['data']
-            elif op.args.get('type', None) == 'mininterval':
-                axis = self.axisbyname(op.args.get('dataset')['name'])
-                axis.intervalmin = op.args.get('dataset')['interval'][0]
-            elif op.args.get('type', None) == 'maxinterval':
-                axis = self.axisbyname(op.args.get('dataset')['name'])
-                axis.intervalmax = op.args.get('dataset')['interval'][1]
-            events[op.event].notify(_rwt_event(op))
+        else: # must be selection event
+            if op.args.args.get('type', None) == 'mininterval':
+                axis = self.axisbyname(op.args['args'].get('dataset')['name'])
+                axis.intervalmin = op.args['args'].get('dataset')['interval'][0]
+            elif op.args.args.get('type', None) == 'maxinterval':
+                axis = self.axisbyname(op.args['args'].get('dataset')['name'])
+                axis.intervalmax = op.args['args'].get('dataset')['interval'][1]
+            events[op.event].notify(_rwt_selection_event(op))
         return True
 
     @property
@@ -157,22 +153,23 @@ class RadarChart(Widget):
         session.runtime << RWTCallOperation(self.id, 'clear', { })
 
     def interval(self, axis, minval=None, maxval=None):
+        x = self.axisbyname(axis)
         if minval is not None:
-            axis.intervalmin = minval
+            x.intervalmin = minval
         if maxval is not None:
-            axis.intervalmax = maxval
-        session.runtime << RWTCallOperation(self.id, 'updateAxis',{'axis': axis })
+            x.intervalmax = maxval
+        session.runtime << RWTCallOperation(self.id, 'updateAxis', {'axis': x.json() })
 
     def limits(self, axis, minval=None, maxval=None):
         if minval is not None:
             axis.minval = minval
         if maxval is not None:
             axis.maxval = maxval
-        session.runtime << RWTCallOperation(self.id, 'updateAxis',{'axis': axis })
+        session.runtime << RWTCallOperation(self.id, 'updateAxis', {'axis': axis.json() })
 
     def unit(self, axis, unit):
         axis.unit = unit
-        session.runtime << RWTCallOperation(self.id, 'updateAxis',{'axis': axis })
+        session.runtime << RWTCallOperation(self.id, 'updateAxis', {'axis': axis.json() })
 
     def setdata(self, data):
         self._data = data
@@ -243,7 +240,7 @@ class RadarAxis(object):
         return 'Axis {}({}), limits: [{},{}], interval: [{},{}]'.format(self.name, self.unit, self.minval, self.maxval, self.intervalmin, self.intervalmin)
 
     def __repr__(self):
-        return '<Axis name={} at 0x{}>'.format(self.name, 'blbu')
+        return '<Axis name={} at 0x{}>'.format(self.name, '')
 
     def __eq__(self, other):
         if self.name != other.name: return False
@@ -254,9 +251,14 @@ class RadarAxis(object):
         if self.unit != other.unit: return False
         return True
 
-    def __neq_(self, other):
+    def __ne__(self, other):
         return not self == other
 
+    def json(self):
+        return {'name': self.name,
+                'limits': [self.minval, self.maxval],
+                'unit': self.unit,
+                'interval': [self.intervalmin, self.intervalmax]}
 
 
 class RadarTheme(WidgetTheme):

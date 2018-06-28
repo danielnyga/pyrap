@@ -772,7 +772,7 @@ class Combo(Widget):
             self._selidx = self._items.index(sel) if sel is not None else None
             txt = self._items[self._selidx]
         else:
-            self._selidx = self._items.values().index(sel) if sel is not None else None
+            self._selidx = self._items.keys().index(sel) if sel is not None else None
             txt = self._items.keys()[self._selidx]
         session.runtime << RWTSetOperation(self.id, {'selectionIndex': self._selidx, 'text': txt})
 
