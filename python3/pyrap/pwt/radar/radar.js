@@ -18,7 +18,7 @@ pwt_radar.RadarChart = function( parent, options) {
          maxValues: {},// mapping axis name to max value
          minValues: {},// mapping axis name to min value
          radians: 2 * Math.PI,
-         intWidth: 10,
+         intWidth: 15,
          intCol: 'red',
          opacityArea: 0.5,
          ToRight: 5,
@@ -26,7 +26,7 @@ pwt_radar.RadarChart = function( parent, options) {
          TranslateY: 30,
          ExtraWidthX: 100,
          ExtraWidthY: 100,
-         color: d3.scale.category10()
+         color: d3.scale.category20()
 	};
 
 
@@ -841,9 +841,24 @@ pwt_radar.RadarChart.prototype = {
             .attr("height", 5)
             .on('mouseover', function(d) {
                 d3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
             })
             .on('mouseout', function(d) {
                 d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+
+                that._tooltip
+                    .html("[" + d.interval[0] + ', ' + d.interval[1] +']')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
             })
             .call(d3.behavior.drag()
                             .origin(Object)
@@ -946,9 +961,24 @@ pwt_radar.RadarChart.prototype = {
             .attr("height", 5)
             .on('mouseover', function(d) {
                 d3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
             })
             .on('mouseout', function(d) {
                 d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+
+                that._tooltip
+                    .html("[" + d.interval[0] + ', ' + d.interval[1] +']')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
             })
             .call(d3.behavior.drag()
                             .origin(Object)
