@@ -141,8 +141,8 @@ class RadarChart(Widget):
     def remaxisbyname(self, axisname):
         for a in self._axes:
             if a.name == axisname:
-                # self._axes.remove(a)
                 session.runtime << RWTCallOperation(self.id, 'remAxis', {'name': axisname})
+                self._axes.remove(a)
                 return True
         return False
 
