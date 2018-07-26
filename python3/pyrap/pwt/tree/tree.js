@@ -209,7 +209,7 @@ pwt_tree.Tree.prototype = {
 
         nodeEnter.append("circle")
             .attr("r", 1e-6)
-            .style("fill", function(d) { return d._children ? "steelblue" : "#fff"; })
+            .style("fill", function(d) { return (typeof d._children  !== 'undefined' && d._children.length > 0) ? "steelblue" : "white"; })
             .style("stroke", function(d) { return d.highlight ? "green" : "steelblue"; });
 
         nodeEnter.append("svg:a")
@@ -217,9 +217,9 @@ pwt_tree.Tree.prototype = {
             .attr("xlink:href", function(d) { return d.url; })
             .append("text")
             .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-            .attr("dy", ".35em")
+            .attr("dy", "1.2em")
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) { return d.nodetext; })
+            .text(function(d) { return d.shownodetext ? d.nodetext : ''; })
             .style("fill-opacity", 1e-6);
 
         // Transition nodes to their new position.
@@ -229,7 +229,7 @@ pwt_tree.Tree.prototype = {
 
         nodeUpdate.select("circle")
             .attr("r", 4.5)
-            .style("fill", function(d) { return d._children ? "steelblue" : "#fff"; });
+            .style("fill", function(d) { return d._children  && d._children.length > 0 ? "steelblue" : "white"; });
 
         nodeUpdate.select("text")
             .style("fill-opacity", 1);

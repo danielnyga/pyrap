@@ -687,7 +687,7 @@ pwt_radar.RadarChart.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html(d.name + ' (' + d.unit + ')<br>limits: [' + d.limits + ']<br>interval: [' + d.interval + ']')
+                    .html('<b>' + d.name + '</b> (' + d.unit + ')<br><b>limits:</b> [' + d.limits + ']<br><b>interval:</b> [' + d.interval + ']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
 
