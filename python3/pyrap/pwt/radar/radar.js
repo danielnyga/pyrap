@@ -724,11 +724,14 @@ pwt_radar.RadarChart.prototype = {
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
+
+                d3.select(this).moveToFront();
             })
             .on('mouseout', function(){
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
+                d3.select(this).moveToBack();
             })
             .on('mousemove', function(d) {
                 var newX = (d3.event.pageX + 20);
