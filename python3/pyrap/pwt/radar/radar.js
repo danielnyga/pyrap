@@ -18,7 +18,7 @@ pwt_radar.RadarChart = function( parent, options) {
          maxValues: {},// mapping axis name to max value
          minValues: {},// mapping axis name to min value
          radians: 2 * Math.PI,
-         intWidth: 10,
+         intWidth: 15,
          intCol: 'red',
          opacityArea: 0.5,
          ToRight: 5,
@@ -26,7 +26,7 @@ pwt_radar.RadarChart = function( parent, options) {
          TranslateY: 30,
          ExtraWidthX: 100,
          ExtraWidthY: 100,
-         color: d3.scale.category10()
+         color: d3.scale.category20()
 	};
 
 
@@ -134,9 +134,10 @@ pwt_radar.RadarChart.prototype = {
     setBounds: function( args ) {
 
         if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
-            this._cfg.w = Math.min(args[2],args[3]) - 100;
-            this._cfg.h = this._cfg.w;
+            this._cfg.w = Math.min(args[2],args[3]) - 80;
+            this._cfg.h = Math.min(args[2],args[3]) - 80;
         }
+
         this._svg.select('svg')
             .attr('transform', 'translate('+ this._cfg.w +',0)');
 
@@ -144,6 +145,7 @@ pwt_radar.RadarChart.prototype = {
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
+
         this.update();
     },
 
@@ -321,7 +323,7 @@ pwt_radar.RadarChart.prototype = {
                 var dataset = d;
                 var newdata = Math.round(linearScale(l) * 100) / 100;
         }
-		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'func': 'dragend', 'type': selectiontype, 'dataset': dataset, 'data': newdata } );
+		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { args: {'func': 'dragend', 'type': selectiontype, 'dataset': dataset, 'data': newdata} } );
 	},
 
     /**
@@ -339,7 +341,15 @@ pwt_radar.RadarChart.prototype = {
      * updates an axis of the radar chart
      */
     updateAxis : function ( data ) {
-        console.log('updateAxis');
+        for (var x = 0; x < this._allAxis.length; x++) {
+            if (this._allAxis[x].name == data.axis.name) {
+                this._allAxis[x].unit = data.axis.unit;
+                this._allAxis[x].interval = data.axis.interval;
+                this._allAxis[x].limits = data.axis.limits;
+                break;
+            }
+        }
+        this.update();
 
     },
 
@@ -390,7 +400,6 @@ pwt_radar.RadarChart.prototype = {
         }
 
         this.setData(tmpdata);
-        rwt.remote.Connection.getInstance().getRemoteObject( this ).notify( "Selection", { 'type': 'remaxis', 'dataset': axis, 'data': this._data } );
     },
 
     /**
@@ -420,6 +429,26 @@ pwt_radar.RadarChart.prototype = {
 
 
     /**
+     * sorts incoming data such that legend is easier to read
+     */
+    sortOnKeys : function(dict) {
+
+        var sorted = [];
+        for(var key in dict) {
+            sorted[sorted.length] = key;
+        }
+        sorted.sort();
+
+        var tempDict = {};
+        for(var i = 0; i < sorted.length; i++) {
+            tempDict[sorted[i]] = dict[sorted[i]];
+        }
+
+        return tempDict;
+    },
+
+
+    /**
      * updates data options
      */
     setData : function ( data ) {
@@ -429,7 +458,7 @@ pwt_radar.RadarChart.prototype = {
             this._svgContainer.selectAll(".polygon-"+key).remove();
             this._svgContainer.selectAll(".circle-"+key).remove();
         }, this);
-        this._data = data;
+        this._data = this.sortOnKeys(data);
         this.updateData();
     },
 
@@ -470,9 +499,9 @@ pwt_radar.RadarChart.prototype = {
             legendsvg = this._svg.select('svg.radarlegend');
 
             legendsvg
-                .attr('transform', 'translate('+ that._cfg.w +',0)')
+                .attr('transform', 'translate('+ (that._cfg.w + that._cfg.TranslateX + that._cfg.TranslateX) +',0)')
                 .append('svg:g')
-                .attr('transform', 'translate(0, 40)');
+                .attr('transform', 'translate(0, 25)');
 
             // initialize legendtitle
             var legendtitle = legendsvg.select('.legendtitle');
@@ -658,7 +687,7 @@ pwt_radar.RadarChart.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html('Click to remove axis "' + d3.select(this).text() + '"')
+                    .html('<b>' + d.name + '</b> (' + d.unit + ')<br><b>limits:</b> [' + d.limits + ']<br><b>interval:</b> [' + d.interval + ']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
 
@@ -667,7 +696,10 @@ pwt_radar.RadarChart.prototype = {
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
-                that.remAxis({ 'name': d3.select(this).text() });
+                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'left', args:{'axis': d3.select(this).text(), 'type': 'axis'} } );
+            })
+            .on('contextmenu', function(d) {
+                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'right', args:{'axis': d3.select(this).text(), 'type': 'axis'} } );
             });
 
 
@@ -812,9 +844,24 @@ pwt_radar.RadarChart.prototype = {
             .attr("height", 5)
             .on('mouseover', function(d) {
                 d3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
             })
             .on('mouseout', function(d) {
                 d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+
+                that._tooltip
+                    .html("[" + d.interval[0] + ', ' + d.interval[1] +']')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
             })
             .call(d3.behavior.drag()
                             .origin(Object)
@@ -917,9 +964,24 @@ pwt_radar.RadarChart.prototype = {
             .attr("height", 5)
             .on('mouseover', function(d) {
                 d3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
             })
             .on('mouseout', function(d) {
                 d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+
+                that._tooltip
+                    .html("[" + d.interval[0] + ', ' + d.interval[1] +']')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
             })
             .call(d3.behavior.drag()
                             .origin(Object)
@@ -1008,20 +1070,20 @@ pwt_radar.RadarChart.prototype = {
                 .style("fill", function(j, i){return that._cfg.color(idx)})
                 .style("fill-opacity", that._cfg.opacityArea)
                 .on('mouseover', function (d){
-                    z = "polygon."+d3.select(this).attr("class");
+                    z = "polygon."+ d3.select(this).attr("class");
+
                     that._svgContainer.selectAll("polygon")
                         .transition(200)
                         .style("fill-opacity", 0.1);
                     that._svgContainer.selectAll(z)
                         .transition(200)
                         .style("fill-opacity", .7);
-                    d3.select(this).moveToBack();
                 })
                 .on('mouseout', function(){
                     that._svgContainer.selectAll("polygon")
                         .transition(200)
                         .style("fill-opacity", that._cfg.opacityArea);
-                    d3.select(this).moveToFront();
+                    d3.select(this).moveToBack();
                 });
 
             // remove old polygons
@@ -1095,7 +1157,7 @@ pwt_radar.RadarChart.prototype = {
                         .transition(200)
                         .style("display", "block");
 
-                    z = "polygon."+d3.select(this).attr("class");
+                    z = "polygon.polygon-"+d3.select(this).attr("class").split('-')[1];
 
                     that._svgContainer.selectAll("polygon")
                         .transition(200)
@@ -1118,11 +1180,11 @@ pwt_radar.RadarChart.prototype = {
                 .on('mousemove', function(d, i) {
                     var newX = (d3.event.pageX + 20);
                     var newY = (d3.event.pageY - 20);
+
                     that._tooltip
                         .html(that.Format(that._allAxis[i].unit, d))
-                        .attr('left', (newX) + "px")
-                        .attr('top', (newY) + "px");
-
+                        .style('left', (newX) + "px")
+                        .style('top', (newY) + "px");
                 })
                 .call(d3.behavior.drag()
                                 .origin(Object)
@@ -1163,7 +1225,7 @@ rap.registerTypeHandler( 'pwt.customs.RadarChart', {
 
   properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
 
-  methods : [ 'updateData', 'addAxis', 'remAxis', 'clear'],
+  methods : [ 'updateData', 'updateAxis', 'addAxis', 'remAxis', 'clear'],
 
   events: [ 'Selection' ]
 

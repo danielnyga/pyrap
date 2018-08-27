@@ -35,8 +35,8 @@ def ask_question(parent, title, text, buttons):
     msg.on_close.wait()
     return msg.answer
 
-def ask_input(parent, title, multiline=False, password=False):
-    msg = InputBox(parent, title, multiline=multiline, password=password)
+def ask_input(parent, title, message=False, multiline=False, password=False):
+    msg = InputBox(parent, title, message=message, multiline=multiline, password=password)
     msg.show(True)
     msg.on_close.wait()
     return msg.answer
@@ -160,7 +160,7 @@ class OptionsDialog(Shell):
 
     @constructor('OptionsDialog')
     def __init__(self, parent, options):
-        Shell.__init__(self, parent=parent, titlebar=False, border=True, resize=False, modal=True, minwidth=.9*session.runtime.display.width, minheight=.4*session.runtime.display.height)
+        Shell.__init__(self, parent=parent, titlebar=False, border=True, resize=False, modal=True)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
         self.answer = None
         self._options = None
@@ -187,7 +187,7 @@ class OptionsDialog(Shell):
         Shell.create_content(self)
 
         # calculate and set options field size
-        mainarea = ScrolledComposite(self.content, padding=px(40), hscroll=True, vscroll=True, halign='fill', valign='fill')
+        mainarea = ScrolledComposite(self.content, padding=px(40), hscroll=True, vscroll=True, halign='fill', valign='fill', minwidth=300, minheight=100)
         mainarea.content.layout = CellLayout(halign='fill', valign='fill')
 
         optionslist = Composite(mainarea.content)
@@ -242,7 +242,7 @@ class InputBox(Shell):
 
 
     @constructor('InputBox')
-    def __init__(self, parent, title, icon=None, multiline=False, password=True, modal=True, resize=False,
+    def __init__(self, parent, title, icon=None, message=False, multiline=False, password=True, modal=True, resize=False,
                  btnclose=True):
         Shell.__init__(self, parent=parent, title=title, titlebar=True, border=True,
                        btnclose=btnclose, resize=resize, modal=modal)
@@ -252,6 +252,7 @@ class InputBox(Shell):
                      DLG.WARNING: self.icontheme.icon_warning,
                      DLG.ERROR: self.icontheme.icon_error}.get(icon)
         self.answer = None
+        self.message = message
         self.multiline = multiline
         self.password = password
 
@@ -269,7 +270,7 @@ class InputBox(Shell):
 
         textarea = Composite(mainarea)
         textarea.layout = RowLayout()
-        self.inputfield = Edit(textarea, multiline=self.multiline, password=self.password, valign='fill', halign='fill')
+        self.inputfield = Edit(textarea, message=self.message, multiline=self.multiline, password=self.password, valign='fill', halign='fill')
 
         buttons = Composite(textarea)
         buttons.layout = ColumnLayout(equalwidths=True, halign='right',

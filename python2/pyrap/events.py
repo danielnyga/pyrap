@@ -4,7 +4,6 @@ Created on Nov 23, 2015
 @author: nyga
 '''
 import dnutils
-from dnutils import out
 from dnutils.threads import current_thread, SuspendableThread, RLock
 
 from pyrap.base import session
@@ -245,8 +244,8 @@ class FocusEventData(EventData):
 
 class SelectionEventData(EventData):
     
-    def __init__(self, widget, button, ctrl, alt, shift, item=None, x=None, y=None):
-        EventData.__init__(self, widget)
+    def __init__(self, widget, button, ctrl, alt, shift, args=None, item=None, x=None, y=None):
+        EventData.__init__(self, widget, args)
         self.button = button
         self.ctrl = ctrl
         self.alt = alt
@@ -272,10 +271,10 @@ class MouseEventData(EventData):
         return (self.x, self.y)
     
 def _rwt_selection_event(op):
-        return SelectionEventData(session.runtime.windows[op.target], op.args.get('button'), op.args.ctrlKey, op.args.altKey, op.args.shiftKey, item=op.args.get('item'), x=op.args.get('x'), y=op.args.get('y'))
+    return SelectionEventData(session.runtime.windows[op.target], op.args.get('button'), op.args.get('ctrlKey'), op.args.get('altKey'), op.args.get('shiftKey'), args=op.args.get('args'), item=op.args.get('item'), x=op.args.get('x'), y=op.args.get('y'))
     
 def _rwt_mouse_event(op):
-    return MouseEventData(session.runtime.windows[op.target], op.args.button, op.args.ctrlKey, op.args.altKey, op.args.shiftKey, op.args.time, op.args.x, op.args.y)
+    return MouseEventData(session.runtime.windows[op.target], op.args.get('button'), op.args.get('ctrlKey'), op.args.get('altKey'), op.args.get('shiftKey'), op.args.get('time'), op.args.get('x'), op.args.get('y'))
 
 def _rwt_event(op):
     return EventData(session.runtime.windows[op.target], op.args)
