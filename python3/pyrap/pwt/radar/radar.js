@@ -188,7 +188,7 @@ pwt_radar.RadarChart.prototype = {
         if (unit == '%') {
 			return d3.format('%')(value);
 		} else {
-			return d3.format(Math.round(value) == value ? '' : '.1f')(value) + unit;
+            return (value >= 0.1 ? d3.format(".2f")(value) : d3.format(".2e")(value)) + unit;
 		}
     },
 
@@ -770,7 +770,7 @@ pwt_radar.RadarChart.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html("[" + d.interval[0] + ', ' + d.interval[1] +']')
+                    .html("[" + (d.interval[0] >= 0.1 ? d.interval[0] : d.interval[0].toExponential()) + ', ' + (d.interval[1] >= 0.1 ? d.interval[1] : d.interval[1].toExponential()) +']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             });
@@ -859,7 +859,7 @@ pwt_radar.RadarChart.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html("[" + d.interval[0] + ', ' + d.interval[1] +']')
+                    .html("[" + (d.interval[0] >= 0.1 ? d.interval[0] : d.interval[0].toExponential()) + ', ' + (d.interval[1] >= 0.1 ? d.interval[1] : d.interval[1].toExponential()) +']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
@@ -979,7 +979,7 @@ pwt_radar.RadarChart.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html("[" + d.interval[0] + ', ' + d.interval[1] +']')
+                    .html("[" + (d.interval[0] >= 0.1 ? d.interval[0] : d.interval[0].toExponential()) + ', ' + (d.interval[1] >= 0.1 ? d.interval[1] : d.interval[1].toExponential()) +']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
