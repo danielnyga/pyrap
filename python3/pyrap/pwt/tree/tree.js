@@ -10,7 +10,8 @@ pwt_tree.Tree = function( parent, options) {
         duration: 750,
         i: 0,
         w: 960 - margin.right - margin.left,
-        h: 800 - margin.top - margin.bottom
+        h: 800 - margin.top - margin.bottom,
+        radius: 10
     };
 
     this._tree = d3.layout.tree().size([this._cfg.w, this._cfg.h]);
@@ -209,7 +210,7 @@ pwt_tree.Tree.prototype = {
 
         nodeEnter.append("circle")
             .attr("r", 1e-6)
-            .style("fill", function(d) { return d._children ? "steelblue" : "#fff"; })
+            .style("fill", function(d) { return (typeof d._children  !== 'undefined' && d._children.length > 0) ? d.highlight ? "green" : "steelblue" : "white"; })
             .style("stroke", function(d) { return d.highlight ? "green" : "steelblue"; });
 
         nodeEnter.append("svg:a")
@@ -217,9 +218,9 @@ pwt_tree.Tree.prototype = {
             .attr("xlink:href", function(d) { return d.url; })
             .append("text")
             .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-            .attr("dy", ".35em")
+            .attr("dy", "1.2em")
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) { return d.nodetext; })
+            .text(function(d) { return d.shownodetext ? d.nodetext : ''; })
             .style("fill-opacity", 1e-6);
 
         // Transition nodes to their new position.
@@ -228,8 +229,8 @@ pwt_tree.Tree.prototype = {
             .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
         nodeUpdate.select("circle")
-            .attr("r", 4.5)
-            .style("fill", function(d) { return d._children ? "steelblue" : "#fff"; });
+            .attr("r", this._cfg.radius)
+            .style("fill", function(d) { return d._children  && d._children.length > 0 ? d.highlight ? "green" : "steelblue" : "white"; });
 
         nodeUpdate.select("text")
             .style("fill-opacity", 1);
@@ -253,7 +254,7 @@ pwt_tree.Tree.prototype = {
         // Enter any new links at the parent's previous position.
         var linkEnter = link.enter().insert("path", "g")
             .attr("class", "link")
-            .style('stroke', function(d) { console.log('highlight', d.target.highlight);return d.target.highlight ? "green" : "black"; })
+            .style('stroke', function(d) { return d.target.highlight ? "green" : "steelblue"; })
             .attr("d", function(d) {
                 var o = {x: source.x0, y: source.y0};
                 return that._diagonal({source: o, target: o});

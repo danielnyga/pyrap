@@ -18,7 +18,7 @@ pwt_radar.RadarChart = function( parent, options) {
          maxValues: {},// mapping axis name to max value
          minValues: {},// mapping axis name to min value
          radians: 2 * Math.PI,
-         intWidth: 10,
+         intWidth: 15,
          intCol: 'red',
          opacityArea: 0.5,
          ToRight: 5,
@@ -26,7 +26,7 @@ pwt_radar.RadarChart = function( parent, options) {
          TranslateY: 30,
          ExtraWidthX: 100,
          ExtraWidthY: 100,
-         color: d3.scale.category10()
+         color: d3.scale.category20()
 	};
 
 
@@ -188,7 +188,7 @@ pwt_radar.RadarChart.prototype = {
         if (unit == '%') {
 			return d3.format('%')(value);
 		} else {
-			return d3.format(Math.round(value) == value ? '' : '.1f')(value) + unit;
+            return (value >= 0.1 ? d3.format(".2f")(value) : d3.format(".2e")(value)) + unit;
 		}
     },
 
@@ -687,7 +687,7 @@ pwt_radar.RadarChart.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html(d.name + ' (' + d.unit + ')<br>limits: [' + d.limits + ']<br>interval: [' + d.interval + ']')
+                    .html('<b>' + d.name + '</b> (' + d.unit + ')<br><b>limits:</b> [' + d.limits + ']<br><b>interval:</b> [' + d.interval + ']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
 
@@ -756,18 +756,21 @@ pwt_radar.RadarChart.prototype = {
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
+
+                d3.select(this).moveToFront();
             })
             .on('mouseout', function(){
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
+                d3.select(this).moveToBack();
             })
             .on('mousemove', function(d) {
                 var newX = (d3.event.pageX + 20);
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html("[" + d.interval[0] + ', ' + d.interval[1] +']')
+                    .html("[" + (d.interval[0] >= 0.1 ? d.interval[0] : d.interval[0].toExponential()) + ', ' + (d.interval[1] >= 0.1 ? d.interval[1] : d.interval[1].toExponential()) +']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             });
@@ -841,9 +844,24 @@ pwt_radar.RadarChart.prototype = {
             .attr("height", 5)
             .on('mouseover', function(d) {
                 d3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
             })
             .on('mouseout', function(d) {
                 d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+
+                that._tooltip
+                    .html("[" + (d.interval[0] >= 0.1 ? d.interval[0] : d.interval[0].toExponential()) + ', ' + (d.interval[1] >= 0.1 ? d.interval[1] : d.interval[1].toExponential()) +']')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
             })
             .call(d3.behavior.drag()
                             .origin(Object)
@@ -946,9 +964,24 @@ pwt_radar.RadarChart.prototype = {
             .attr("height", 5)
             .on('mouseover', function(d) {
                 d3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
             })
             .on('mouseout', function(d) {
                 d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+
+                that._tooltip
+                    .html("[" + (d.interval[0] >= 0.1 ? d.interval[0] : d.interval[0].toExponential()) + ', ' + (d.interval[1] >= 0.1 ? d.interval[1] : d.interval[1].toExponential()) +']')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
             })
             .call(d3.behavior.drag()
                             .origin(Object)
