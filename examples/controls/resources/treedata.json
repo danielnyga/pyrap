@@ -31,7 +31,7 @@
               "edgetext": "a",
               "edgetooltip": "ett one",
               "url": "https://www.google.de",
-              "highlight": true,
+              "highlight": false,
               "shownodetext": true
             },
             {
@@ -49,7 +49,7 @@
               "edgetext": "c",
               "edgetooltip": "ett three",
               "url": "https://www.google.de",
-              "highlight": true,
+              "highlight": false,
               "shownodetext": true
             }
           ]
