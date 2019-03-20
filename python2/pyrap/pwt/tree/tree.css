@@ -1,5 +1,5 @@
 text {
-  font: 15px monospace, arial, sans-serif;
+  font: 13px monospace, arial, sans-serif;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
 
@@ -14,7 +14,7 @@ text {
 }
 
 .node text {
-  font: 15px monospace, arial, sans-serif;
+  font: 13px monospace, arial, sans-serif;
 }
 
 .link {

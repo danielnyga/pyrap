@@ -1,38 +1,87 @@
 {
-  "name":"Do cash transfer improve access to education?",
+  "nodetext":"root splitting criterion",
+  "nodetooltip": "root tooltip text",
+  "edgetext": "root edgetext - should nowhere to be seen",
+  "edgetooltip": "root edgetooltip - should nowhere to be seen",
+  "url": "https://www.google.de",
+  "highlight": true,
+  "shownodetext": true,
   "children":[
     {
-      "name":"Should transfers be conditional?",
-      "url":"https://www.bing.com",
+      "nodetext":"next splitting criterion",
+      "nodetooltip": "second tooltip text",
+      "edgetext": "option 1",
+      "edgetooltip": "this is a fancy edge tooltip",
+      "url": "https://www.google.de",
+      "highlight": true,
+      "shownodetext": true,
       "children":[
         {
-          "name":"Yes",
+        "nodetext":"another splitting criterion",
+        "nodetooltip": "third tooltip text",
+        "edgetext": "yes",
+        "edgetooltip": "this is a fancy edge tooltip",
+        "url": "https://www.google.de",
+        "highlight": true,
+        "shownodetext": true,
           "children":[
             {
-              "name":"What conditions?",
-              "size":3938,
-              "url":"https://www.google.com"
+              "nodetext":"one",
+              "nodetooltip": "ntt one",
+              "edgetext": "a",
+              "edgetooltip": "ett one",
+              "url": "https://www.google.de",
+              "highlight": false,
+              "shownodetext": true
             },
             {
-              "name":"How to communicate conditions?",
-              "size":3812
+              "nodetext":"two",
+              "nodetooltip": "ntt two",
+              "edgetext": "b",
+              "edgetooltip": "ett two",
+              "url": "https://www.google.de",
+              "highlight": true,
+              "shownodetext": true
             },
             {
-              "name":"How to monitor conditions?",
-              "size":6714
+              "nodetext":"three",
+              "nodetooltip": "ntt three",
+              "edgetext": "c",
+              "edgetooltip": "ett three",
+              "url": "https://www.google.de",
+              "highlight": false,
+              "shownodetext": true
             }
           ]
         },
         {
-          "name":"No"
+        "nodetext":"and yet another end node",
+        "nodetooltip": "blubbel",
+        "edgetext": "no",
+        "edgetooltip": "tooltip",
+        "url": "https://www.google.de",
+        "highlight": false,
+        "shownodetext": true
         }
       ]
     },
     {
-      "name":"What design options can enhance the CTs?"
+      "nodetext":"end node 1",
+      "nodetooltip": "tt end node 1",
+      "edgetext": "option 2",
+      "edgetooltip": "this is another fancy edge tooltip",
+      "url": "https://www.google.de",
+      "highlight": false,
+      "shownodetext": true
     },
     {
-      "name":"What complementary interventions can maximize the productivity of CTs?"
+      "nodetext":"end node 2",
+      "nodetooltip": "tt end node 2",
+      "edgetext": "option 3",
+      "edgetooltip": "this is a not so fancy",
+      "url": "https://www.google.de",
+      "highlight": false,
+      "shownodetext": true
     }
   ]
 }

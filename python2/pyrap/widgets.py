@@ -2836,6 +2836,7 @@ class Table(Widget):
             item._setidx(i)
         self._items = items
         session.runtime << RWTCallOperation(self.id, 'update', {})
+        session.runtime << RWTSetOperation(self.id, {'itemCount': len(self._items)})
 
     @property
     def cols(self):
