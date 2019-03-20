@@ -22,6 +22,7 @@ from pyrap.ptypes import BoolVar, Color, px, Image, Font, NumVar
 # from pyrap.pwt.cluster.cluster import Cluster
 # from pyrap.pwt.radar.radar import RadarChart
 # from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
+from pyrap.pwt.bubblyclusters.bubblyclusters import BubblyClusters
 from pyrap.pwt.cluster.cluster import Cluster
 from pyrap.pwt.radar.radar import RadarChart
 from pyrap.pwt.tree.tree import Tree
@@ -40,14 +41,13 @@ class Images:
     IMG_WHITE = Image('images/icons/bullet_white.png')
 
 
-
 class ControlsDemo():
     
     @staticmethod
     def setup(application): pass
 
     def desktop(self, **kwargs):
-        page = kwargs.get('page', 'Scale')
+        page = kwargs.get('page', 'Bubbly Clusters')
         self.shell = Shell(maximized=True, titlebar=False)
         self.shell.on_resize += self.shell.dolayout
         shell = self.shell
@@ -239,6 +239,13 @@ class ControlsDemo():
         page = self.create_page_template('D3 Cluster')
         self.create_cluster_page(page)
         self.pages['Cluster'] = page
+
+        #=======================================================================
+        # create D3 bubbly clusters chart
+        #=======================================================================
+        page = self.create_page_template('D3 Bubbly Clusters')
+        self.create_bubblycluster_page(page)
+        self.pages['Bubbly Clusters'] = page
 
         #=======================================================================
         # create D3 tree
@@ -807,6 +814,20 @@ class ControlsDemo():
 
 
         btn.on_select += highlight
+
+    def create_bubblycluster_page(self, parent):
+        grp = Group(parent, text='Radar')
+        grp.layout = CellLayout(halign='fill', valign='fill')
+
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+
+        cluster = BubblyClusters(comp_body, halign='fill', valign='fill')
+        cluster.bg = Color('black')
+
+        with open('resources/bubbly.json') as f:
+            data = json.load(f)
+            cluster.setdata(data)
 
     def create_tree_page(self, parent):
         grp = Group(parent, text='Radar')

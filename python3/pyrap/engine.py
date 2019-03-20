@@ -578,6 +578,9 @@ class SessionRuntime(object):
     def executejs(self, code):
         self << RWTCallOperation('rwt.client.JavaScriptExecutor', 'execute', {'content': code})
 
+    def toclipboard(self, text):
+        self << RWTCallOperation('rwt.client.CopyToClipboard', 'copy', {'text': text})
+
     def download(self, path, mimetype):
         with open(path, 'r') as f:
             resource = session.runtime.mngr.resources.registerf(os.path.basename(path), mimetype, f)

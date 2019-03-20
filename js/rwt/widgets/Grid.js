@@ -550,8 +550,10 @@ rwt.qx.Class.define( "rwt.widgets.Grid", {
     _checkAndProcessHyperlink : function( event ) {
       var hyperlink = null;
       var target = event.getOriginalTarget();
+
+
+      hyperlink = this._findHyperlink( event );
       if( this._config.markupEnabled && target instanceof rwt.widgets.base.GridRowContainer ) {
-        hyperlink = this._findHyperlink( event );
         if( hyperlink !== null && this._isRWTHyperlink( hyperlink ) ) {
           event.setDefaultPrevented( true );
           if( event.getType() === "click" ) {
@@ -595,6 +597,25 @@ rwt.qx.Class.define( "rwt.widgets.Grid", {
       //       item is re-rendered on mousedown which prevents the dom-event.
       var doubleClick = this._isDoubleClicked( event, item );
       if( doubleClick ) {
+        // this selects the text within the cell but it cannot
+        // be copied.. right click might interfere with selection handlers
+//        var range = document.createRange();
+//        range.selectNode(targetNode);
+//        window.getSelection().addRange(range);
+
+        // save text to clipboard
+        var targetNode = event.getDomTarget();
+        var text = targetNode.innerHTML;
+        var el = document.createElement('textarea');
+        el.value = text;
+        el.setAttribute('readonly', '');
+        el.style = {position: 'absolute', left: '-9999px'};
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        // end save text to clipboard
+
         this._fireSelectionChanged( item, "defaultSelection" );
       } else if( !this._hasMultiSelection ) {
         this._singleSelectItem( event, item );
