@@ -87,7 +87,6 @@ pwt_cluster.Cluster.prototype = {
     },
 
     createElement: function( parent ) {
-        console.log('parent', parent);
         var clientarea = parent.getClientArea();
         var element = document.createElement( "div" );
         element.style.position = "absolute";

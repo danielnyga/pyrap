@@ -15,7 +15,6 @@ pwt_ros3d.Simulation = function(parent, cssid, url, port, data) {
         that.setBounds( parent.getClientArea() );
     } );
     this.setBounds( parent.getClientArea() );
-
 };
 
 pwt_ros3d.Simulation.prototype = {

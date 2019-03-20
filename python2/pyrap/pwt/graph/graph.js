@@ -468,7 +468,7 @@ pwt_d3.Graph.prototype = {
             .attr("dx", function (d) { return 5; }) // move inside rect
             .attr("dy", function (d) { return 15; }) // move inside rect
             .text( function(d) { return d.id; } )
-            .style("opacity", function(d) { console.log(d); return d.show ? 1 : 0; });
+            .style("opacity", function(d) { return d.show ? 1 : 0; });
 
         // create node labels
         circleEnter.append("svg:text")
@@ -476,7 +476,7 @@ pwt_d3.Graph.prototype = {
             .attr("dx", function (d) { return 5; }) // move inside rect
             .attr("dy", function (d) { return 15; }) // move inside rect
             .text( function(d) { return d.id; } )
-            .style("opacity", function(d) { console.log(d); return d.show ? 1 : 0; });
+            .style("opacity", function(d) { return d.show ? 1 : 0; });
 
         // remove old nodes
         circles.exit().remove();

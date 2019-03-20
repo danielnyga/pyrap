@@ -102,7 +102,6 @@ pwt.SVG.prototype = {
 
             var that = this;
             var sel = function(event) {
-                console.log('mousedown on', event.target.id);
                 rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'mousedown': event.target.id } );
             };
 

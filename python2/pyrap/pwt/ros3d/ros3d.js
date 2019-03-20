@@ -1,11 +1,11 @@
 pwt_ros3d = {};
 
-pwt_ros3d.Simulation = function(parent, url, port, data) {
+pwt_ros3d.Simulation = function(parent, cssid, url, port, data) {
     this._urdfnodeDiv = this.createElement(parent);
     this._w = 800;
     this._h = 600;
 
-    this._urdfnodeDiv.setAttribute('id', 'urdf');
+    this._urdfnodeDiv.setAttribute('id', cssid ? cssid : 'urdf');
     this._rosliburl = url ? url : 'ws://prac.open-ease.org';
     this._roslibport = port ? port : '9090';
     this._urdfdata = data ? data : [];
@@ -21,12 +21,10 @@ pwt_ros3d.Simulation.prototype = {
 
     createElement: function( parent ) {
         var clientarea = parent.getClientArea();
-        var element = document.createElement( "div" );
-        element.style.position = "absolute";
+        var element = document.createElement( 'div' );
+        element.style.position = 'absolute';
         element.style.left = clientarea[0];
         element.style.top = clientarea[1];
-        element.style.width = clientarea[2];
-        element.style.height = clientarea[3];
         parent.append( element );
         return element;
     },
@@ -36,10 +34,10 @@ pwt_ros3d.Simulation.prototype = {
     },
 
     setBounds: function( args ) {
-        this._urdfnodeDiv.style.left = args[0] + "px";
-        this._urdfnodeDiv.style.top = args[1] + "px";
-        this._urdfnodeDiv.style.width = args[2] + "px";
-        this._urdfnodeDiv.style.height = args[3] + "px";
+        this._urdfnodeDiv.style.left = args[0] + 'px';
+        this._urdfnodeDiv.style.top = args[1] + 'px';
+        this._urdfnodeDiv.style.width = args[2] + 'px';
+        this._urdfnodeDiv.style.height = args[3] + 'px';
         if (typeof this._simulation_viewer != 'undefined') {
             this._simulation_viewer.resize(args[2], args[3]);
         }
