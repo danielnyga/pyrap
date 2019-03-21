@@ -321,7 +321,7 @@ pwt_radar.RadarChart.prototype = {
 
 	            var selectiontype = tclass;
                 var dataset = d;
-                var newdata = Math.round(linearScale(l) * 100) / 100;
+                var newdata = linearScale(l) * 100. / 100.;
         }
 		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { args: {'func': 'dragend', 'type': selectiontype, 'dataset': dataset, 'data': newdata} } );
 	},
@@ -770,7 +770,7 @@ pwt_radar.RadarChart.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html("[" + (d.interval[0] >= 0.1 ? d.interval[0] : d.interval[0].toExponential()) + ', ' + (d.interval[1] >= 0.1 ? d.interval[1] : d.interval[1].toExponential()) +']')
+                    .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             });
@@ -788,41 +788,7 @@ pwt_radar.RadarChart.prototype = {
             .attr("transform", function(d, i){
                 var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
                 return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
-            })
-            .call(d3.behavior.drag()
-                            .origin(Object)
-                            .on("drag", function(d, i) {
-                                var data = that.dragmove(d, i);
-
-                                var lenx = data[0] - that._cfg.w/2;
-                                var leny = data[1] - that._cfg.h/2;
-
-                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
-
-                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                                var maxy = that._svgContainer.select(".maxinterval-"+that.replAxisname(d.name)).attr('y');
-                                var dragTarget = d3.select(this);
-                                dragTarget
-                                    .attr("y", function(d, i){
-                                        return Math.min(that._cfg.h/2 + l, maxy);
-                                    });
-
-                                // update actual interval
-                                that._svgContainer.select(".interval-"+that.replAxisname(d.name))
-                                    .attr("y", function(d, i){
-                                        return that._cfg.h/2 + l;
-                                    })
-                                    .attr("height", function(d, i){
-                                        return maxy - (that._cfg.h/2 + l);
-                                    });
-                                d.interval[0] = Math.round(data[2] * 100) / 100;
-                            })
-                            .on('dragend', function(d, i) {
-
-                                var _this = this;
-                                that.dragend(d, i, _this, that);
-                            })
-            );
+            });
 
         // create mininterval rectangles
         axisenter.append("rect")
@@ -859,7 +825,7 @@ pwt_radar.RadarChart.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html("[" + (d.interval[0] >= 0.1 ? d.interval[0] : d.interval[0].toExponential()) + ', ' + (d.interval[1] >= 0.1 ? d.interval[1] : d.interval[1].toExponential()) +']')
+                    .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
@@ -889,7 +855,7 @@ pwt_radar.RadarChart.prototype = {
                                     .attr("height", function(d, i){
                                         return maxy - (that._cfg.h/2 + l);
                                     });
-                                d.interval[0] = Math.round(data[2] * 100) / 100;
+                                d.interval[0] = data[2] * 100. / 100.;
                             })
                             .on('dragend', function(d, i) {
 
@@ -911,37 +877,7 @@ pwt_radar.RadarChart.prototype = {
             .attr("transform", function(d, i){
                 var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
                 return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth + ", 0)";
-            })
-            .call(d3.behavior.drag()
-                            .origin(Object)
-                            .on("drag", function(d, i) {
-                                var data = that.dragmove(d, i);
-
-                                var lenx = data[0] - that._cfg.w/2;
-                                var leny = data[1] - that._cfg.h/2;
-
-                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
-
-                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                                var miny = that._svgContainer.select(".mininterval-"+that.replAxisname(d.name)).attr('y')
-                                var dragTarget = d3.select(this);
-                                dragTarget
-                                    .attr("y", function(d, i){
-                                        return Math.max(miny, that._cfg.h/2 + l);
-                                    });
-
-                                // update actual interval
-                                that._svgContainer.select(".interval-"+that.replAxisname(d.name))
-                                    .attr("height", function(d, i){
-                                        return (that._cfg.h/2 + l) - miny;
-                                    });
-                                d.interval[1] = Math.round(data[2] * 100) / 100;
-                            })
-                            .on('dragend', function(d, i) {
-                                var _this = this;
-                                that.dragend(d, i, _this, that);
-                            })
-            );
+            });
 
 
         // create maxinterval rectangles
@@ -979,7 +915,7 @@ pwt_radar.RadarChart.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html("[" + (d.interval[0] >= 0.1 ? d.interval[0] : d.interval[0].toExponential()) + ', ' + (d.interval[1] >= 0.1 ? d.interval[1] : d.interval[1].toExponential()) +']')
+                    .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
@@ -1006,7 +942,7 @@ pwt_radar.RadarChart.prototype = {
                                     .attr("height", function(d, i){
                                         return (that._cfg.h/2 + l) - miny;
                                     });
-                                d.interval[1] = Math.round(data[2] * 100) / 100;
+                                d.interval[1] = data[2] * 100. / 100.;
                             })
                             .on('dragend', function(d, i) {
                                 var _this = this;
@@ -1198,7 +1134,7 @@ pwt_radar.RadarChart.prototype = {
                                         .attr("cy", function() { return data[1]; });
 
                                     //Updating the data of the circle with the new value
-                                    cdata[i] = Math.round(data[2] * 100) / 100;
+                                    cdata[i] = data[2] * 100. / 100.;
                                     that.update();
                                 })
                                 .on('dragend', function(d, i) {

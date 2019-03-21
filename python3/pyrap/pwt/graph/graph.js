@@ -158,10 +158,10 @@ pwt_d3.Graph.prototype = {
         this.clear();
         for (var dataIndex = 0; dataIndex < data.length; dataIndex++) {
             if (this.findNodeIndex(data[dataIndex].source.name) === -1) {
-                this.addNode(data[dataIndex].source.name, data[dataIndex].source.text, data[dataIndex].source.type);
+                this.addNode(data[dataIndex].source.name, data[dataIndex].source.text, data[dataIndex].source.type, data[dataIndex].source.show);
             }
             if (this.findNodeIndex(data[dataIndex].target.name) === -1) {
-                this.addNode(data[dataIndex].target.name, data[dataIndex].target.text, data[dataIndex].target.type);
+                this.addNode(data[dataIndex].target.name, data[dataIndex].target.text, data[dataIndex].target.type, data[dataIndex].target.show);
             }
             this.links.push({"source": this.findNode(data[dataIndex].source),"target": this.findNode(data[dataIndex].target),"value": data[dataIndex].value, "arcStyle":data[dataIndex].arcStyle});
         }
@@ -171,8 +171,8 @@ pwt_d3.Graph.prototype = {
     /**
      * adds a node with the given id to the nodes list
      */
-    addNode : function (id, text, type) {
-        this.nodes.push({'id': id, 'text': text, 'type': type});
+    addNode : function (id, text, type, show) {
+        this.nodes.push({'id': id, 'text': text, 'type': type, 'show': show});
         this.update();
     },
 
@@ -195,11 +195,11 @@ pwt_d3.Graph.prototype = {
 
         // if any of the link nodes does not exist, create it
         if (typeof src === 'undefined') {
-            this.addNode(lnk.source.name, lnk.source.text, lnk.source.type);
+            this.addNode(lnk.source.name, lnk.source.text, lnk.source.type, lnk.source.show);
             var src = this.findNode(lnk.source.name);
         }
         if (typeof tgt === 'undefined') {
-            this.addNode(lnk.target.name, lnk.target.text, lnk.target.type);
+            this.addNode(lnk.target.name, lnk.target.text, lnk.target.type, lnk.target.show);
             var tgt = this.findNode(lnk.target.name);
         }
 
@@ -207,7 +207,7 @@ pwt_d3.Graph.prototype = {
         var index = this.findLinkIndex(src, tgt);
         if (index == -1) {
             // if not, create it
-            this.links.push({"source": this.findNode(lnk.source.name),"target": this.findNode(lnk.target.name),"value": [lnk.value], "arcStyle": lnk.arcStyle});
+            this.links.push({"source": this.findNode(lnk.source.name),"target": this.findNode(lnk.target.name),"value": [lnk.value], "arcStyle": lnk.arcStyle, 'tttext': lnk.tttext ? lnk.tttext : ''});
         } else {
             // otherwise update link text
             this.links[index].value.push(lnk.value);
@@ -361,7 +361,25 @@ pwt_d3.Graph.prototype = {
             .attr("marker-end", function(d) {
                 var split = d.arcStyle.split(' ');
                 var as = split[split.length-1];
-                return "url(#" + as + ")"; });
+                return "url(#" + as + ")"; })
+            .on("mouseover", function(d) {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+                that._tooltip
+                    .html(d.tttext)
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .on("mouseout", function(d) {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            });
 
         // remove old links
         links.exit().remove();
@@ -449,14 +467,16 @@ pwt_d3.Graph.prototype = {
         circles.select('.textClass')
             .attr("dx", function (d) { return 5; }) // move inside rect
             .attr("dy", function (d) { return 15; }) // move inside rect
-            .text( function(d) { return d.id; } );
+            .text( function(d) { return d.id; } )
+            .style("opacity", function(d) { return d.show ? 1 : 0; });
 
         // create node labels
         circleEnter.append("svg:text")
             .attr("class","textClass")
             .attr("dx", function (d) { return 5; }) // move inside rect
             .attr("dy", function (d) { return 15; }) // move inside rect
-            .text( function(d) { return d.id; } );
+            .text( function(d) { return d.id; } )
+            .style("opacity", function(d) { return d.show ? 1 : 0; });
 
         // remove old nodes
         circles.exit().remove();

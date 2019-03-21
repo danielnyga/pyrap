@@ -1,0 +1,1002 @@
+[
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 9.044812830342483
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 5.260766015029567
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "text",
+    "radius": 15.019022743353908
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "text 4",
+    "radius": 6.74121930604305
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "text 6",
+    "radius": 10.41968064978494
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 9.267651821393052
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 10.450755293246548
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 6.444327415615949
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 1.4760874169098508
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 7.6024074296865916
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 9.911006208994756
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 3.373798975318941
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 9.208021546632313
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 10.179698138437706
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 9.423343419077014
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 6.259474277238429
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 4.225223377487512
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 5.138946541655375
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 3.2005415288319545
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 6.627207438820048
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 5.4580611245594035
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 10.09964863355874
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 6.58304499326908
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 5.0859470418953885
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 3.6962620902746064
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 4.009310867511565
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 5.423845269726714
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 4.632190868425519
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 0.3167200207414576
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 9.155370261078106
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 4.887446734612817
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 13.112795955494049
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 11.683638372047422
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 5.387769023705299
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 10.252741708625031
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 4.455797525838321
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 5.55839044259201
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 5.451597629223176
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 5.998438208085638
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 7.2668528420245195
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 14.645909613288026
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 4.190182254948616
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 3.4876877840674823
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 6.585837809513438
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 3.9694748567865714
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 2.8382523759366403
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 6.512123290239208
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 3.9916921272610346
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 4.5469746442746
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 0.5376116941128722
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 3.099419078626048
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 5.018202353927244
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 6.575732010998022
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 0.8570694837226276
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 6.9148843998610205
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 8.378843053082154
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 3.870545268767586
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 2.255280896237418
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 6.922094770240615
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 3.4961685484862253
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 4.392962536385174
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 8.081180585732737
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 2.993697453505726
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 5.258204232536877
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 4.298424163407913
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 5.271107873196062
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 6.806669659509684
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 7.115150070147214
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 8.30772711294502
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 15.04364328607332
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 9.332270869846848
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 17.560995707558355
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 12.967297906451765
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 0.9969755849892317
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 4.318482658434527
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 7.4642271807148175
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 2.2785106230236085
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 10.02733287386036
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 6.734441553360934
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 14.829986832165812
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 15.863880614664772
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 4.969646879265924
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 3.8548069269131187
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 8.733177109007123
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 13.570289213751977
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 15.33136875496739
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 15.533110235267843
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 25.634064311136996
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 6.342318341609916
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 11.037733422319794
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 6.010163168042899
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 5.480596094183055
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 1.4528721537149911
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 3.628277881328806
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 3.512668467117514
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 6.099920053726583
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 4.609653016991227
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 4.185344445548912
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 6.432246132071979
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 6.7031846180833945
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 4.711520755897109
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 9.182359474099668
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 4.321661714534672
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 4.843808808116975
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 2.1902914262171
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 10.109876037920838
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 4.193161481443286
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 7.2271711184566385
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 10.481993186841686
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 13.043143809473914
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 13.528883551838732
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 0.6604241043778027
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 3.1921788888006644
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 10.29318699750371
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 12.53179033203234
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 1.6890591682942597
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 6.1844523235953
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 6.437234919065846
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 7.637199078062055
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 1.8432728724374572
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 9.455879350990314
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 3.9731412164414532
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 7.252724205173262
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 10.224884654942034
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 8.628312469455224
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 16.658491038845323
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 7.925620098929668
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 2.391810689707594
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 12.59283918022703
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 4.169404537509461
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 6.19751652000585
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 7.59112141574524
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 7.471448054431018
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 9.283689919929182
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 3.1816330351768336
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 4.631431702074969
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 12.354551583028254
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 9.034244490376956
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 6.193624318600303
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 4.830114001923029
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 4.391712943345196
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 11.93677526387191
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 1.5176751170135505
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 5.757037733758682
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 3.3476837300808304
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 1.3066625946402204
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 3.7472761010181532
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 2.003019094488703
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 6.640476443494408
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 2.1268376892029344
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 7.925835820123568
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 7.31287332665649
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 13.272580214831171
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 10.175667064066886
+  },
+  {
+    "cluster": 2,
+    "tooltip" : "Cluster  2",
+    "radius": 1.6131490718520514
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 8.184787528380394
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 1.3507066976491655
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 5.027662146010445
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 8.423909303368276
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 9.37062973979109
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 20.700829003621255
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 6.691095455195896
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 6.686250985563062
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 6.2342893990921056
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 2.1142916825148723
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 2.9392444474589294
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 4.480982503198076
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 6.038104865532285
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 3.8797173551071147
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 11.205427403820618
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 6.20708572898106
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 10.124412173549613
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 7.499762004532674
+  },
+  {
+    "cluster": 7,
+    "tooltip" : "Cluster  7",
+    "radius": 4.657731510524252
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 2.94169810578314
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 6.59057169290212
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 17.030126496335107
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 6.611854749258114
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 10.357062719832845
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 2.312926739109387
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 18.33759669083929
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 2.656147402722728
+  },
+  {
+    "cluster": 4,
+    "tooltip" : "Cluster  4",
+    "radius": 10.829532179950093
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 11.96131159893951
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 4.374683488707125
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 1.7687292222475262
+  },
+  {
+    "cluster": 6,
+    "tooltip" : "Cluster  6",
+    "radius": 4.135420711664504
+  },
+  {
+    "cluster": 8,
+    "tooltip" : "Cluster  8",
+    "radius": 5.229198875146329
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 9.437256513908604
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 10.542423691497273
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 3.7784605423505004
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 2.595645306557703
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 6.1559675558034606
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 5.538410896012308
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 5.45259860864112
+  },
+  {
+    "cluster": 9,
+    "tooltip" : "Cluster  9",
+    "radius": 10.508276967670687
+  },
+  {
+    "cluster": 1,
+    "tooltip" : "Cluster  1",
+    "radius": 6.261338645129555
+  },
+  {
+    "cluster": 3,
+    "tooltip" : "Cluster  3",
+    "radius": 2.1390562120532826
+  },
+  {
+    "cluster": 0,
+    "tooltip" : "Cluster  0",
+    "radius": 3.410085597031026
+  },
+  {
+    "cluster": 5,
+    "tooltip" : "Cluster  5",
+    "radius": 11.961041252816146
+  }
+]

@@ -672,6 +672,7 @@ class Shell(Widget):
             top += self.theme.title_height
         return top, right, bottom, left
 
+
 class Combo(Widget):
 
     _rwt_class_name_ = 'rwt.widgets.Combo'
@@ -720,12 +721,33 @@ class Combo(Widget):
             if isinstance(items, dict):
                 if not all([type(i) is str for i in items]):
                     raise TypeError('All keys in an item dictionary must be strings.')
-                if type(items) is dict:
+                else:
                     self._items = OrderedDict(((k, items[k]) for k in sorted(items)))
             elif type(items) in (list, tuple):
                 items = OrderedDict(((str(i), i) for i in items))
             else: raise TypeError('Invalid type for List items: %s' % type(items))
             self._items = items
+
+    def additems(self, items):
+        if self._editable:
+            if isinstance(items, list):
+                self.items.extend(items)
+            else:
+                raise TypeError('Items must be of type list in editable combo!')
+        else:
+            if isinstance(items, dict):
+                if not all([type(i) is str for i in items]):
+                    raise TypeError('All keys in an item dictionary must be strings.')
+                else:
+                    _items = dict(self._items)
+                    _items.update(items)
+                    self.items = _items
+            elif type(items) in (list, tuple):
+                _items = dict(self._items)
+                _items.update({k: k for k in items})
+                self.items = _items
+            else:
+                raise TypeError('Invalid type for dictionary items: %s' % type(items))
 
     def _handle_set(self, op):
         Widget._handle_set(self, op)
@@ -734,7 +756,6 @@ class Combo(Widget):
                 self._selidx = value
             if key == 'text':
                 self._text = value
-
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select, 'Modify': self.on_modify}
@@ -799,7 +820,8 @@ class Combo(Widget):
         if self._editable:
             items = self.items
         else:
-            items = self.items.keys()
+            # cast to list as dict_keys object is not jsonifiable
+            items = list(self.items.keys())
         session.runtime << RWTSetOperation(self.id, {'items': items})
 
 
@@ -807,7 +829,6 @@ class DropDown(Widget):
 
     _rwt_class_name_ = 'rwt.widgets.DropDown'
     _defstyle_ = BitField(Widget._defstyle_)
-
 
     @constructor('DropDown')
     def __init__(self, parent, items='', markupEnabled=True, visible=False, visibleItemCount=5, **options):
@@ -1604,7 +1625,8 @@ class Grid(Composite):
     @constructor
     def __init__(self, parent, **options):
         Composite.__init__(self, parent, cols=None, rows=None, **options)
-        self.layout = GridLayout(cols=cols, rows=rows,
+        self.layout = GridLayout(cols=options.get('cols'),
+                                 rows=options.get('rows'),
                                  minwidth=options.get('minwidth'),
                                  maxwidth=options.get('maxwidth'),
                                  minheight=options.get('minheight'),
@@ -2836,6 +2858,7 @@ class Table(Widget):
             item._setidx(i)
         self._items = items
         session.runtime << RWTCallOperation(self.id, 'update', {})
+        session.runtime << RWTSetOperation(self.id, {'itemCount': len(self._items)})
 
     @property
     def cols(self):

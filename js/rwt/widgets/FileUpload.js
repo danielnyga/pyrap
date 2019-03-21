@@ -99,7 +99,7 @@ rwt.qx.Class.define( "rwt.widgets.FileUpload", {
         this._inputElement.setAttribute( "multiple", "multiple" );
       }
       if( this._acceptedtypes.length > 0 ) {
-        this._inputElement.setAttribute( "accept", this._acceptedtypes.join());
+        this._inputElement.setAttribute( "accept", this._acceptedtypes);
       }
       this._inputElement.style.cursor = this._cursor;
       this._inputElement.onchange = this.__onValueChange;

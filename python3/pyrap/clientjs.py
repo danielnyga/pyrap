@@ -274,6 +274,8 @@ rwt/widgets/util/TemplateRenderer.js
 rwt/widgets/DropDown.js
 rwt/widgets/util/DropDownSynchronizer.js
 rwt/remote/handler/DropDownHandler.js
+rwt/client/CopyToClipboard.js
+rwt/remote/handler/CopyToClipboardHandler.js
 {code_base}/pyrap/pwt/graph/graph.js
 {code_base}/pyrap/pwt/barchart/barchart.js
 {code_base}/pyrap/pwt/svg/svg.js
@@ -283,6 +285,7 @@ rwt/remote/handler/DropDownHandler.js
 {code_base}/pyrap/pwt/tree/tree.js
 {code_base}/pyrap/pwt/video/video.js
 {code_base}/pyrap/pwt/cluster/cluster.js
+{code_base}/pyrap/pwt/bubblyclusters/bubblyclusters.js
 appearances.js'''.format(code_base=code_base)
 
 
