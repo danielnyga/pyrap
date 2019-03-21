@@ -205,6 +205,12 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
                     .transition(200)
                     .style("display", "none");
             })
+            .on("click", function(d) {
+                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'left', args:{} } );
+            })
+            .on("contextmenu", function (d) {
+                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'right', args:{} } );
+            })
             .transition()
             .duration(750)
             .delay(function(d, i) { return i * 5; })
@@ -280,7 +286,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
         this._force
             .nodes(this._nodes)
             .size([this._cwidth, this._cheight])
-            .gravity(.03)
+            .gravity(.02)
             .charge(0)
             .on("tick", tick)
             .start();

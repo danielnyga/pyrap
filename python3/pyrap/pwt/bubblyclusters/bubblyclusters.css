@@ -14,4 +14,5 @@ text.textClass {
   font-weight: bold;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
   background-color: #fff;
+  border-radius: 5px;
 }
