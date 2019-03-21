@@ -117,7 +117,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
     setData : function ( data ) {
         this._nodes = data;
         this._clusters = new Array(this.distinct(this._nodes));
-        this._color = d3.scale.category10().domain(d3.range(this._clusters.length));
+        this._color = d3.scale.category20().domain(d3.range(this._clusters.length));
         this._cwidth = this._w > 0 ? this._w : 960;
         this._cheight = this._h > 0 ? this._h : 600;
 
