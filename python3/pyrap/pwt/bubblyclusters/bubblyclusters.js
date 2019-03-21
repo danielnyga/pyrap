@@ -12,6 +12,7 @@ pwt_bubblyclusters.BubblyClusters = function( parent ) {
     this._padding = 1.5; // separation between same-color nodes
     this._clusterPadding = 6; // separation between different-color nodes
     this._maxRadius = 12;
+    this._force = d3.layout.force();
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.bubblyclusters');
@@ -143,7 +144,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
                 clusters[cnt[1]] = cls[i];
             }
         }
-        clusters.sort((a,b) => a.cluster > b.cluster ? 1 : b.cluster > a.cluster ? -1 : 0);
+        clusters = clusters.sort((a,b) => a.cluster > b.cluster ? 1 : b.cluster > a.cluster ? -1 : 0);
         return clusters;
     },
 
@@ -176,7 +177,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
             return d;
         });
 
-        this._force = d3.layout.force()
+        this._force
             .nodes(this._nodes)
             .size([this._cwidth, this._cheight])
             .gravity(.02)
@@ -217,7 +218,6 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
 
         // Move d to be adjacent to the cluster node.
         function cluster(alpha) {
-            console.log('cluster alpha', alpha);
             return function(d) {
                 var cluster = that._clusters[d.cluster];
                 if (cluster === d) return;
