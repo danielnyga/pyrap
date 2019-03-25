@@ -794,6 +794,7 @@ class Combo(Widget):
         else:
             self._selidx = list(self._items.keys()).index(sel) if sel is not None else None
             txt = list(self._items.keys())[self._selidx]
+        self._text = txt
         session.runtime << RWTSetOperation(self.id, {'selectionIndex': self._selidx, 'text': txt})
 
     @property
@@ -1169,7 +1170,6 @@ class Separator(Widget):
         if RWT.HORIZONTAL in self.style:
             return 0, line
         else: return line, 0
-        
         
 
 class Button(Widget):
@@ -3765,7 +3765,7 @@ class Spinner(Widget):
 
 class FileUpload(Widget):
     _rwt_class_name_ = 'rwt.widgets.FileUpload'
-    _styles_ = Widget._styles_ + {'multi': RWT.MULTI,}
+    _styles_ = Widget._styles_ + {'multi': RWT.MULTI}
     _defstyle_ = BitField(Widget._defstyle_)
 
 
@@ -3791,10 +3791,10 @@ class FileUpload(Widget):
             options.style.append('MULTI')
         if self._text:
             options.text = self._text
+        options.style.append('PUSH')
         options.accepted = self._accepted
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
         self.on_select += self._upload
-#         self.on_finished += self.finished
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select, 'Finished': self.on_finished}

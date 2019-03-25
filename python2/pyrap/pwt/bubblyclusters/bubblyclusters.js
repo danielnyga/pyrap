@@ -44,8 +44,6 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
             this._svg
                 .attr('width', "100%")
                 .attr('height', "100%")
-                // .attr('width', 960)
-                // .attr('height', 600)
                 .append( "svg:g" )
                 .attr('class', 'bubblyclusters')
                 .attr("transform", "translate(" + (this._wwidth/2) + "," + (this._wheight/2) + ")");
@@ -67,11 +65,6 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
     },
 
     setBounds: function( args ) {
-        if (this._svgContainer.node() !== null ) {
-            var bbox = this._svgContainer.node().getBBox();
-            this._svgContainer
-                .attr("transform", "translate(" + (bbox.width/2) + "," + (bbox.height/2) + ")");
-        }
         this._parentDIV.style.left = args[0] + "px";
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
@@ -129,7 +122,6 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
             if (!that._clusters[n.cluster] || (n.radius > that._clusters[n.cluster].radius)) that._clusters[n.cluster] = n;
         });
 
-        console.log(this._nodes);
         this._dataloaded = true;
         this.update();
     },
@@ -303,7 +295,7 @@ rap.registerTypeHandler( 'pwt.customs.BubblyClusters', {
 
     destructor: 'destroy',
     properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
-    methods : [ 'updateData', 'clear', 'highlight'],
+    methods : [ 'updateData', 'clear'],
     events: [ 'Selection' ]
 
 } );
