@@ -897,7 +897,6 @@ class DropDown(Widget):
         self._visible = visible
         session.runtime << RWTSetOperation(self.id, {'visible': self.visible})
 
-
     @property
     def selected(self):
         return self.items[self._selidx]
@@ -907,7 +906,6 @@ class DropDown(Widget):
         for key, value in op.args.items():
             if key == 'selectionIndex':
                 self._selidx = value
-
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select}
@@ -1171,10 +1169,10 @@ class Separator(Widget):
         else: return line, 0
         
         
-
 class Button(Widget):
     
     _rwt_class_name_ = 'rwt.widgets.Button'
+    _styles_ = Widget._styles_ + {'markup': RWT.MARKUP}
     _defstyle_ = BitField(Widget._defstyle_)
     
     @constructor('Button')
@@ -1184,6 +1182,7 @@ class Button(Widget):
         self.on_select = OnSelect(self)
         self._text = text
         self._img = img
+        self.compute_textsize = True
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1192,6 +1191,9 @@ class Button(Widget):
         options.text = self.text
         options.style.append('PUSH')
         options.tabIndex = 1
+        if RWT.MARKUP in self.style:
+            options.markupEnabled = True
+            options.customVariant = 'variant_markup'
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
 
     def _get_rwt_img(self, img):
@@ -1230,7 +1232,10 @@ class Button(Widget):
     
     def compute_size(self):
         width, height = Widget.compute_size(self)
-        tw, th = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
+        if self.compute_textsize:
+            tw, th = session.runtime.textsize_estimate(self.theme.font, self._text.replace('\n', '<br>'), self.shell())
+        else:
+            tw, th = 0, 0
         width += tw
         height += th
         if self.img is not None:
