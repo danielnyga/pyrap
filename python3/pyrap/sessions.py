@@ -80,7 +80,6 @@ class PyRAPSession(object):
             if 'location' in store:  # Get the public location of the app from the referer
                 loc = urlparse(store.location)
                 store.location = loc.path
-                out(store.location)
                 store.host = loc.netloc
         except SessionError:
             pass
@@ -95,7 +94,7 @@ class PyRAPSession(object):
                 cookie = json.dumps(self.client.data)
                 cookie = base64.b64encode(cookie.encode('utf8'))
                 if 'location' in self.__sessiondata:
-                    web.setcookie('pyrap', cookie.decode('ascii'), path=self.location)  # '/%s' % self.app.config.path)
+                    web.setcookie('pyrap', cookie.decode('ascii'), path=self.location, domain=self.host)  # '/%s' % self.app.config.path)
         except KeyError:
             pass
 
