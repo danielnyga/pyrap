@@ -35,7 +35,7 @@ _defconf = utils.storage({
     'ignore_change_ip': True,
     'secret_key': 'fLjUfxqXtfNoIldA0A0J',
     'expired_message': 'Session expired',
-    'httponly': True,
+    'httponly': False,
     'secure': False
 })
 
