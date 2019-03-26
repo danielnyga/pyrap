@@ -128,7 +128,6 @@ pwt_radar_red.RadarChartRed.prototype = {
         var feMergeNode_1 = feMerge.append('feMergeNode').attr('in','coloredBlur');
         var feMergeNode_2 = feMerge.append('feMergeNode').attr('in','SourceGraphic');
 
-        this.update();
     },
 
     createElement: function( parent ) {

@@ -113,8 +113,6 @@ pwt_radar.RadarChart.prototype = {
                 .attr("transform", "translate(" + this._cfg.TranslateX + "," + this._cfg.TranslateY + ")");
             this._svgContainer = this._svg.select('g.radar');
         }
-
-        this.update();
     },
 
     createElement: function( parent ) {

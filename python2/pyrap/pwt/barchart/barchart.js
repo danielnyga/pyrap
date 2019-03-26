@@ -56,8 +56,6 @@ pwt_barchart.BarChart.prototype = {
 
         this._svgContainer.append("g")
             .attr("class", "y axis");
-
-        this.update();
     },
 
     createElement: function( parent ) {
@@ -124,6 +122,10 @@ pwt_barchart.BarChart.prototype = {
      * redraws the bar chart with the updated data
      */
     update : function () {
+
+        // no update before graph has been initialized
+        if (!this._initialized) { return; }
+
         this.w = this._parentDIV.offsetWidth;
         this.h = this.barChartData.length * 1.2 * this.barHeight;
 

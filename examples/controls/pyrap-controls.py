@@ -774,40 +774,47 @@ class ControlsDemo():
         browser.on_select += self.open_browser
 
     def create_radar_page(self, parent):
-        grp = Group(parent, text='Radar')
-        grp.layout = CellLayout(halign='fill', valign='fill')
-        comp_pracgraph = Composite(grp)
-        comp_pracgraph.layout = CellLayout(halign='fill', valign='fill')
-        comp_pracgraph.bg = Color('white')
+        grp = Group(parent, text='Bubbly Cluster')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
 
-        # user-defined configuration of the number of radar levels, min and max
-        # values of the respective axes, intervals (can be understood as 'acceptable range of
-        # values' the respective datapoint should take), and the units of the
-        # axes. If no units are given, all values are assumed to be percentages,
-        # so make sure the values of the datapoints as well as min/max/interval
-        # values are in [0,1]
-        mycfg = {
-            'w': 500,
-            'h': 500,
-            'levels': 6,
-            'ExtraWidthX': 300
-        }
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
 
-        # radar_req = RadarChartRed(comp_pracgraph, opts=mycfg, legendtext='The material properties in relation to the property intervals of the requirement profile', halign='fill', valign='fill')
-        radar_req = RadarChart(comp_pracgraph, opts=mycfg, legendtext='The material properties in relation to the property intervals of the requirement profile', halign='fill', valign='fill')
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
 
-        # the legend title and names of the data sets (in the same order as
-        # the data point lists are given)
-        radar_req.addaxis('ElasticModulus', minval=150, maxval=250, unit='GPa', intervalmin=200, intervalmax=220)
-        radar_req.addaxis('YieldStrength', minval=220, maxval=2500, unit='MPa', intervalmin=500, intervalmax=900)
-        radar_req.addaxis('TensileStrength', minval=300, maxval=2500, unit='MPa', intervalmin=700, intervalmax=2200)
-        radar_req.addaxis('CorrosionBehavior', minval=-2, maxval=2, unit='', intervalmin=-1, intervalmax=1)
-        radar_req.addaxis('Hardness', minval=100, maxval=1000, unit='HV', intervalmin=200, intervalmax=700)
-        radar_req.addaxis('FatigueStrength', minval=150, maxval=1000, unit='MPa', intervalmin=200, intervalmax=500)
-        radar_req.addaxis('ElongationAtBreak', minval=0., maxval=1., unit='%', intervalmin=.1, intervalmax=.2)
-        radar_req.addaxis('NotchImpactEnergy', minval=5, maxval=45, unit='J', intervalmin=15, intervalmax=30)
+        data = {}
+        with open('resources/radar.json') as f:
+            data = json.load(f)
 
-        radar_req.setdata({'test': [170, 500, 700, 0, 900, 170, .3, 15]})
+        def clear(*_):
+            for c in comp_body.children:
+                c.dispose()
+
+        def reload(*_):
+            if comp_body.children:
+                clear()
+
+            radar = RadarChart(comp_body, legendtext=data.get('legendtext', ''), halign='fill', valign='fill')
+
+            for i, axis in enumerate(data.get('axes', [])):
+                radar.addaxis(name=axis.get("name", "Axis {}".format(i)),
+                              minval=axis.get("limits", [0, 1])[0],
+                              maxval=axis.get("limits", [0, 1])[1],
+                              unit=axis.get("unit", '%'),
+                              intervalmin=axis.get("interval", [.4, .6])[0],
+                              intervalmax=axis.get("interval", [.4, .6])[1],
+                              )
+
+            radar.setdata(data.get('data', {}))
+
+            self.shell.dolayout()
+
+        reload()
+        btn_clear.on_select += clear
+        btn_reload.on_select += reload
 
 
     def create_cluster_page(self, parent):
@@ -824,14 +831,9 @@ class ControlsDemo():
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
 
-        cluster = RadialDendrogramm(comp_body, halign='fill', valign='fill')
-        cluster.bg = Color('black')
-
         data = []
         with open('resources/materials.json') as f:
             data = json.load(f)
-
-        cluster.setdata(data)
 
         def highlight(*_):
             comp_body.children[-1].highlight(txt.text)
@@ -841,11 +843,15 @@ class ControlsDemo():
                 c.dispose()
 
         def reload(*_):
+            if comp_body.children:
+                clear()
+
             cluster = RadialDendrogramm(comp_body, halign='fill', valign='fill')
             cluster.setdata(data)
 
             self.shell.dolayout()
 
+        reload()
         btn.on_select += highlight
         btn_clear.on_select += clear
         btn_reload.on_select += reload
@@ -862,25 +868,24 @@ class ControlsDemo():
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
 
-        cluster = BubblyClusters(comp_body, halign='fill', valign='fill')
-        cluster.bg = Color('black')
-
         data = []
         with open('resources/bubbly.json') as f:
             data = json.load(f)
-
-        cluster.setdata(data)
 
         def clear(*_):
             for c in comp_body.children:
                 c.dispose()
 
         def reload(*_):
+            if comp_body.children:
+                clear()
+
             cluster = BubblyClusters(comp_body, halign='fill', valign='fill')
             cluster.setdata(data)
 
             self.shell.dolayout()
 
+        reload()
         btn_clear.on_select += clear
         btn_reload.on_select += reload
 
@@ -896,25 +901,24 @@ class ControlsDemo():
         comp_body = Composite(grp)
         comp_body.layout = CellLayout(halign='fill', valign='fill')
 
-        tree = Tree(comp_body, halign='fill', valign='fill')
-        tree.bg = Color('black')
-
         data = []
         with open('resources/treedata.json') as f:
             data = json.load(f)
-
-        tree.setdata(data)
 
         def clear(*_):
             for c in comp_body.children:
                 c.dispose()
 
         def reload(*_):
+            if comp_body.children:
+                clear()
+
             tree = Tree(comp_body, halign='fill', valign='fill')
             tree.setdata(data)
 
             self.shell.dolayout()
 
+        reload()
         btn_clear.on_select += clear
         btn_reload.on_select += reload
 
@@ -930,22 +934,18 @@ class ControlsDemo():
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
 
-        plot = Scatterplot(comp_body, halign='fill', valign='fill')
-        plot.bg = Color('black')
-
         data = []
         with open('resources/scatter.json') as f:
             data = json.load(f)
-
-        plot.axeslabels('X-Axis', 'Y-Axis')
-        plot.formats(xformat=['', ".2%", ''], yformat=['', ".2%", ''])
-        plot.setdata(data)
 
         def clear(*_):
             for c in comp_body.children:
                 c.dispose()
 
         def reload(*_):
+            if comp_body.children:
+                clear()
+
             plot = Scatterplot(comp_body, halign='fill', valign='fill')
             plot.axeslabels('X-Axis', 'Y-Axis')
             plot.formats(xformat=['', ".2%", ''], yformat=['', ".2%", ''])
@@ -953,6 +953,7 @@ class ControlsDemo():
 
             self.shell.dolayout()
 
+        reload()
         btn_clear.on_select += clear
         btn_reload.on_select += reload
 
@@ -963,30 +964,29 @@ class ControlsDemo():
         comp_btn = Composite(grp)
         comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
         btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
-        btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Load', halign='fill', valign='fill')
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
 
-        graph = Graph(comp_body, halign='fill', valign='fill')
-        graph.bg = Color('black')
-
         data = []
         with open('resources/graph.json') as f:
             data = json.load(f)
-
-        graph.updatedata(data)
 
         def clear(*_):
             for c in comp_body.children:
                 c.dispose()
 
         def reload(*_):
+            if comp_body.children:
+                clear()
+
             graph = Graph(comp_body, halign='fill', valign='fill')
             graph.updatedata(data)
 
-            # self.shell.dolayout()
+            self.shell.dolayout()
 
+        reload()
         btn_clear.on_select += clear
         btn_reload.on_select += reload
 

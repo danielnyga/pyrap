@@ -489,7 +489,21 @@ pwt_d3.Graph.prototype = {
         };
 
         var rotatelabel = function (d) {
-            var bbox = this.getBBox();
+            var bbox = {};
+            try {
+                bbox = this.getBBox();
+                // For Chrome
+                if (!ie && !bbox.x && !bbox.y && !bbox.height && !bbox.width) {
+                    bbox.x = this.attr('x');
+                    bbox.y = this.attr('y');
+                }
+            } catch(e) {
+            // Firefox 3.0.x plays badly here
+            } finally {
+                bbox = bbox || {};
+
+            }
+
             var rx = bbox.x+bbox.width/2;
             var ry = bbox.y+bbox.height/2;
             var dX = d.target.x - d.source.x;
@@ -537,12 +551,38 @@ pwt_d3.Graph.prototype = {
         };
 
         var transformLabelX = function (d) {
-            var bbox = this.getBBox();
+            var bbox = {};
+            try {
+                bbox = this.getBBox();
+                // For Chrome
+                if (!ie && !bbox.x && !bbox.y && !bbox.height && !bbox.width) {
+                    bbox.x = this.attr('x');
+                    bbox.y = this.attr('y');
+                }
+            } catch(e) {
+            // Firefox 3.0.x plays badly here
+            } finally {
+                bbox = bbox || {};
+
+            }
             return calcLabelPos(d, bbox).x;
         };
 
         var transformLabelY = function (d) {
-            var bbox = this.getBBox();
+            var bbox = {};
+            try {
+                bbox = this.getBBox();
+                // For Chrome
+                if (!ie && !bbox.x && !bbox.y && !bbox.height && !bbox.width) {
+                    bbox.x = this.attr('x');
+                    bbox.y = this.attr('y');
+                }
+            } catch(e) {
+            // Firefox 3.0.x plays badly here
+            } finally {
+                bbox = bbox || {};
+
+            }
             return calcLabelPos(d, bbox).y;
         };
 
