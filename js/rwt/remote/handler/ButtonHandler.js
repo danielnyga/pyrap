@@ -81,7 +81,7 @@ rwt.remote.HandlerRegistry.add( "rwt.widgets.Button", {
     }
   } ),
 
-  events : [ "Selection" ],
+  events : [ "Selection", 'LongClick' ],
 
   listeners : rwt.remote.HandlerUtil.extendControlListeners( [] ),
 

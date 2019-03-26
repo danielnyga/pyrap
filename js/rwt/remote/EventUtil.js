@@ -42,6 +42,7 @@ rwt.remote.EventUtil = {
   _ctrlKey : false,
   _altKey : false,
   _metaKey : false,
+  // _longSelect : false,
   _button : rwt.event.MouseEvent.C_BUTTON_NONE,
 
   eventTimestamp : function() {
@@ -73,6 +74,14 @@ rwt.remote.EventUtil = {
       var connection = rwt.remote.Connection.getInstance();
       var properties = self._createSelectionProperties.apply( this, arguments );
       connection.getRemoteObject( target ).notify( "Selection", properties );
+    }
+  },
+
+  notifyLongClick : function( target ) {
+    if( !self.getSuspended() && !target.isDisposed() ) {
+      var connection = rwt.remote.Connection.getInstance();
+      var properties = self._createSelectionProperties.apply( this, arguments );
+      connection.getRemoteObject( target ).notify( "LongClick", properties );
     }
   },
 

@@ -141,21 +141,30 @@ class OnSelect(RWTEvent):
     def _notify(self, listener, data): listener(data)
 
 
+class OnLongClick(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'LongClick', widget)
+
+    def _create_subscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'LongClick': True})
+
+    def _create_unsubscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'LongClick': False})
+
+    def _notify(self, listener, data): listener(data)
+
+
 class OnNavigate(RWTEvent):
     def __init__(self, widget):
         RWTEvent.__init__(self, 'Navigation', widget)
 
-
     def _create_subscribe_msg(self):
         return RWTListenOperation(self.widget.id, {'Navigation': True})
-
 
     def _create_unsubscribe_msg(self):
         return RWTListenOperation(self.widget.id, {'Navigation': False})
 
-
     def _notify(self, listener, data): listener(data)
-
 
 
 class OnClose(RWTEvent):
@@ -227,11 +236,11 @@ class OnDispose(Event):
     def _notify(self, listener): listener()
     
 
-
 class EventData(object):
     def __init__(self, widget, *args):
         self.widget = widget
         self.args = args
+
 
 class FocusEventData(EventData):
     def __init__(self, widget, gained):
@@ -254,6 +263,7 @@ class SelectionEventData(EventData):
         self.x = x
         self.y = y
 
+
 class MouseEventData(EventData):
     
     def __init__(self, widget, button, ctrl, alt, shift, timestamp, x, y):
@@ -268,13 +278,43 @@ class MouseEventData(EventData):
         
     @property
     def location(self):
-        return (self.x, self.y)
-    
+        return self.x, self.y
+
+
 def _rwt_selection_event(op):
-    return SelectionEventData(session.runtime.windows[op.target], op.args.get('button'), op.args.get('ctrlKey'), op.args.get('altKey'), op.args.get('shiftKey'), args=op.args.get('args'), item=op.args.get('item'), x=op.args.get('x'), y=op.args.get('y'))
-    
+    return SelectionEventData(session.runtime.windows[op.target],
+                              op.args.get('button'),
+                              op.args.get('ctrlKey'),
+                              op.args.get('altKey'),
+                              op.args.get('shiftKey'),
+                              args=op.args.get('args'),
+                              item=op.args.get('item'),
+                              x=op.args.get('x'),
+                              y=op.args.get('y'))
+
+
+def _rwt_longlick_event(op):
+    return SelectionEventData(session.runtime.windows[op.target],
+                              op.args.get('button'),
+                              op.args.get('ctrlKey'),
+                              op.args.get('altKey'),
+                              op.args.get('shiftKey'),
+                              args=op.args.get('args'),
+                              item=op.args.get('item'),
+                              x=op.args.get('x'),
+                              y=op.args.get('y'))
+
+
 def _rwt_mouse_event(op):
-    return MouseEventData(session.runtime.windows[op.target], op.args.get('button'), op.args.get('ctrlKey'), op.args.get('altKey'), op.args.get('shiftKey'), op.args.get('time'), op.args.get('x'), op.args.get('y'))
+    return MouseEventData(session.runtime.windows[op.target],
+                          op.args.get('button'),
+                          op.args.get('ctrlKey'),
+                          op.args.get('altKey'),
+                          op.args.get('shiftKey'),
+                          op.args.get('time'),
+                          op.args.get('x'),
+                          op.args.get('y'))
+
 
 def _rwt_event(op):
     return EventData(session.runtime.windows[op.target], op.args)

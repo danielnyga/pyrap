@@ -178,6 +178,11 @@ rwt.qx.Class.define( "rwt.widgets.Button", {
     // overwritten:
     _notifySelected : function() {
       rwt.remote.EventUtil.notifySelected( this );
+    },
+
+    // overwritten:
+    _notifyLongClick : function() {
+      rwt.remote.EventUtil.notifyLongClick( this );
     }
 
   }

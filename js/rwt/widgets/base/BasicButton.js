@@ -13,6 +13,8 @@ rwt.qx.Class.define( "rwt.widgets.base.BasicButton", {
 
   extend : rwt.widgets.base.MultiCellWidget,
 
+  LONG_CLICK_TIME: 1500,
+
   construct : function( buttonType, noKeyControl ) {
     this.base( arguments, this._CELLORDER );
     this._selected = false;
@@ -174,6 +176,17 @@ rwt.qx.Class.define( "rwt.widgets.base.BasicButton", {
       // subclasses may overwrite
     },
 
+    _notifyLongClick : function() {
+      // subclasses may override
+    },
+
+    _triggerLongClick : function() {
+       if (this.hasState( "pressed" ) && this.hasState( "over" )) {
+         this.removeState( "pressed" );
+         this._notifyLongClick();
+       }
+    },
+
     _onMouseOver : function( event ) {
       // [tb] Firefox can sometimes fire false "over" events.
       if ( event.getTarget() == this && !this.hasState( "over" ) ) {
@@ -204,6 +217,7 @@ rwt.qx.Class.define( "rwt.widgets.base.BasicButton", {
       if ( event.getTarget() == this && event.isLeftButtonPressed() ) {
         this.removeState( "abandoned" );
         this.addState( "pressed" );
+        rwt.client.Timer.once(this._triggerLongClick, this, this.LONG_CLICK_TIME)
       }
     },
 
@@ -217,7 +231,7 @@ rwt.qx.Class.define( "rwt.widgets.base.BasicButton", {
       if ( hasAbandoned ) {
         this.removeState( "abandoned" );
       }
-      if ( !hasAbandoned ) {
+      if ( !hasAbandoned && hasPressed) {
         this.addState( "over" );
         this._updateButtonImage();
         if ( hasPressed ) {
