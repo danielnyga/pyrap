@@ -127,7 +127,7 @@ class ApplicationManager(object):
         application `clazz` in from the config and attaching it to the HTTP session.
         '''
         session.new()
-        session.on_kill += lambda *_: out('killed', session.id)
+        session.on_kill += lambda *_: self.log.info('killed', session.id)
         session._PyRAPSession__sessiondata.app = self
         session._PyRAPSession__sessiondata.runtime = SessionRuntime(self, self.config.clazz())
 
