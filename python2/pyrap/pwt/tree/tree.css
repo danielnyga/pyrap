@@ -3,21 +3,21 @@ text {
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
 
-.node {
+.treenode {
   cursor: pointer;
 }
 
-.node circle {
+.treenode circle {
   fill: #fff;
   stroke: steelblue;
   stroke-width: 1.5px;
 }
 
-.node text {
+.treenode text {
   font: 13px monospace, arial, sans-serif;
 }
 
-.link {
+.treelink {
   fill: none;
   stroke: #ccc;
   stroke-width: 1.5px;

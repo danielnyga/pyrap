@@ -19,11 +19,10 @@ from pyrap.dialogs import msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel,
     ask_okcancel, open_progress, ask_color
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout
 from pyrap.ptypes import BoolVar, Color, px, Image, Font, NumVar
-# from pyrap.pwt.cluster.cluster import Cluster
-# from pyrap.pwt.radar.radar import RadarChart
-# from pyrap.pwt.radar_redesign.radar_redesign import RadarChartRed
 from pyrap.pwt.bubblyclusters.bubblyclusters import BubblyClusters
-from pyrap.pwt.cluster.cluster import Cluster
+from pyrap.pwt.radialdendrogramm.radialdendrogramm import RadialDendrogramm
+from pyrap.pwt.graph.graph import Graph
+from pyrap.pwt.plot.plot import Scatterplot
 from pyrap.pwt.radar.radar import RadarChart
 from pyrap.pwt.tree.tree import Tree
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
@@ -47,7 +46,7 @@ class ControlsDemo():
     def setup(application): pass
 
     def desktop(self, **kwargs):
-        page = kwargs.get('page', 'Bubbly Clusters')
+        page = kwargs.get('page', 'Directed Graph')
         self.shell = Shell(maximized=True, titlebar=False)
         self.shell.on_resize += self.shell.dolayout
         shell = self.shell
@@ -208,20 +207,29 @@ class ControlsDemo():
         self.pages['TabFolders'] = page
 
         # =======================================================================
-        # create tab folders
+        # create scrolled composite
         # =======================================================================
         page = self.create_page_template('Scrolled Composite')
         self.create_scrolled_page(page)
         self.pages['Scrolled'] = page
 
+        # =======================================================================
+        # create table demo
+        # =======================================================================
         page = self.create_page_template('Table Demo')
         self.create_table_page(page)
         self.pages['Tables'] = page
 
+        # =======================================================================
+        # create sash demo
+        # =======================================================================
         page = self.create_page_template('Sash Demo')
         self.create_sash_page(page)
         self.pages['Sash'] = page
 
+        # =======================================================================
+        # create cookies demo
+        # =======================================================================
         page = self.create_page_template('Cookies Demo')
         self.create_cookies_page(page)
         self.pages['Cookies'] = page
@@ -234,11 +242,11 @@ class ControlsDemo():
         self.pages['Radar'] = page
 
         #=======================================================================
-        # create D3 cluster chart
+        # create D3 radial dendrogramm
         #=======================================================================
-        page = self.create_page_template('D3 Cluster')
+        page = self.create_page_template('D3 Radial Dendrogramm')
         self.create_cluster_page(page)
-        self.pages['Cluster'] = page
+        self.pages['Radial Dendrogramm'] = page
 
         #=======================================================================
         # create D3 bubbly clusters chart
@@ -253,6 +261,20 @@ class ControlsDemo():
         page = self.create_page_template('D3 Tree')
         self.create_tree_page(page)
         self.pages['Tree'] = page
+
+        #=======================================================================
+        # create D3 scatterplot
+        #=======================================================================
+        page = self.create_page_template('D3 Scatterplot')
+        self.create_scatterplot_page(page)
+        self.pages['Scatterplot'] = page
+
+        #=======================================================================
+        # create D3 graph
+        #=======================================================================
+        page = self.create_page_template('D3 Graph')
+        self.create_graph_page(page)
+        self.pages['Directed Graph'] = page
 
         for page in [self.pages[k] for k in sorted(self.pages.keys())][1:]:
             page.layout.exclude = True
@@ -789,31 +811,44 @@ class ControlsDemo():
 
 
     def create_cluster_page(self, parent):
-        grp = Group(parent, text='Cluster')
-        grp.layout = CellLayout(halign='fill', valign='fill')
+        grp = Group(parent, text='Bubbly Cluster')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
+        txt = Edit(comp_btn, text='28Mn6', halign='fill', valign='fill')
+        btn = Button(comp_btn, text='Highlight', halign='fill', valign='fill')
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
 
-        # comp_cluster = Composite(comp_body)
-        # comp_cluster.layout = CellLayout(halign='fill', valign='fill')
-        # comp_cluster.bg = Color('black')
-
-        cluster = Cluster(comp_body, halign='fill', valign='fill')
+        cluster = RadialDendrogramm(comp_body, halign='fill', valign='fill')
         cluster.bg = Color('black')
 
+        data = []
         with open('resources/materials.json') as f:
             data = json.load(f)
-            cluster.setdata(data)
 
-        txt = Edit(comp_body, text='28Mn6', halign='fill', valign='fill')
-        btn = Button(comp_body, text='Highlight', halign='fill', valign='fill')
+        cluster.setdata(data)
 
         def highlight(*_):
-            cluster.highlight(txt.text)
+            comp_body.children[-1].highlight(txt.text)
 
+        def clear(*_):
+            for c in comp_body.children:
+                c.dispose()
+
+        def reload(*_):
+            cluster = RadialDendrogramm(comp_body, halign='fill', valign='fill')
+            cluster.setdata(data)
+
+            self.shell.dolayout()
 
         btn.on_select += highlight
+        btn_clear.on_select += clear
+        btn_reload.on_select += reload
 
     def create_bubblycluster_page(self, parent):
         grp = Group(parent, text='Bubbly Cluster')
@@ -883,6 +918,78 @@ class ControlsDemo():
         btn_clear.on_select += clear
         btn_reload.on_select += reload
 
+    def create_scatterplot_page(self, parent):
+        grp = Group(parent, text='Scatterplot')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
+
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+
+        plot = Scatterplot(comp_body, halign='fill', valign='fill')
+        plot.bg = Color('black')
+
+        data = []
+        with open('resources/scatter.json') as f:
+            data = json.load(f)
+
+        plot.axeslabels('X-Axis', 'Y-Axis')
+        plot.formats(xformat=['', ".2%", ''], yformat=['', ".2%", ''])
+        plot.setdata(data)
+
+        def clear(*_):
+            for c in comp_body.children:
+                c.dispose()
+
+        def reload(*_):
+            plot = Scatterplot(comp_body, halign='fill', valign='fill')
+            plot.axeslabels('X-Axis', 'Y-Axis')
+            plot.formats(xformat=['', ".2%", ''], yformat=['', ".2%", ''])
+            plot.setdata(data)
+
+            self.shell.dolayout()
+
+        btn_clear.on_select += clear
+        btn_reload.on_select += reload
+
+    def create_graph_page(self, parent):
+        grp = Group(parent, text='Graph')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
+
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+
+        graph = Graph(comp_body, halign='fill', valign='fill')
+        graph.bg = Color('black')
+
+        data = []
+        with open('resources/graph.json') as f:
+            data = json.load(f)
+
+        graph.updatedata(data)
+
+        def clear(*_):
+            for c in comp_body.children:
+                c.dispose()
+
+        def reload(*_):
+            graph = Graph(comp_body, halign='fill', valign='fill')
+            graph.updatedata(data)
+
+            # self.shell.dolayout()
+
+        btn_clear.on_select += clear
+        btn_reload.on_select += reload
+
     def open_browser(self, data):
         dlg = Shell(title='pyRAP Browser', minwidth=500, minheight=400)
         dlg.on_resize += dlg.dolayout
@@ -900,7 +1007,6 @@ class ControlsDemo():
         dlg.show(True)
         dlg.on_close.wait()
 
-        
     def mobile(self, shell, **kwargs):
         parent = shell.content
         parent.layout.halign = 'fill'   
@@ -912,7 +1018,6 @@ class ControlsDemo():
         for i in range(200):
             Checkbox(container, text='this is the %d-th item' % (i+1), halign='left', checked=False)
         scroll.content = container
-
 
 if __name__ == '__main__':
 #     pyraplog.level(pyraplog.DEBUG)

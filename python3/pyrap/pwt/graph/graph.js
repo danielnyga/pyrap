@@ -1,6 +1,11 @@
 pwt_d3 = {};
 
-pwt_d3.Graph = function( parent, options ) {
+pwt_d3.Graph = function( parent ) {
+
+    this._parentDIV = this.createElement(parent);
+    this._tooltip = d3.select(this._parentDIV).append("div")
+        .attr('class', 'graphtooltip')
+        .style('z-index', 1000000);
 
     this.WAITMSEC = 200;
     this._linkdistance = 150;
@@ -11,11 +16,6 @@ pwt_d3.Graph = function( parent, options ) {
     this.nodes = this.force.nodes();
     this.links = this.force.links();
     this._markertypes = ["red", "green", "black", "blue"];
-
-    this._parentDIV = this.createElement(parent);
-    this._tooltip = d3.select(this._parentDIV).append("div")
-        .attr('class', 'graphtooltip')
-        .style('z-index', 1000000);
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.graph');
@@ -48,15 +48,13 @@ pwt_d3.Graph.prototype = {
                 .attr('width', "100%")
                 .attr('height', "100%")
                 .append( "svg:g" )
-                .attr('class', 'graph')
+                .attr('class', 'graph');
             this._svgContainer = this._svg.select('g.graph');
         }
 
         if (this._defs.empty()) {
             this._defs = this._svgContainer.append("defs");
         }
-
-        this.update();
     },
 
     createElement: function( parent ) {
@@ -317,6 +315,9 @@ pwt_d3.Graph.prototype = {
      */
     update : function () {
 
+        // no update before graph has been initialized
+        if (!this._initialized) { return; }
+
         var that = this;
 
         this._markers = this._defs.selectAll("marker").data(this._markertypes);
@@ -341,23 +342,23 @@ pwt_d3.Graph.prototype = {
         ////////////////////////////////////////////////////////////////////////
 
         // select links
-        var links = this._svgContainer.selectAll("path.link").data(this.links, function(d) {return d.source.id + "-" + d.target.id;});
+        var graphlinks = this._svgContainer.selectAll("path.graphlink").data(this.links, function(d) {return d.source.id + "-" + d.target.id;});
 
         // update links
-        links
+        graphlinks
             .attr("id", function(d) { return d.source.id + "-" + d.target.id; })
-            .attr("class", function(d) { return "link " + d.arcStyle; })
+            .attr("class", function(d) { return "graphlink " + d.arcStyle; })
             .attr("marker-end", function(d) {
                 var split = d.arcStyle.split(' ');
                 var as = split[split.length-1];
                 return "url(#" + as + ")"; });
 
         // create links
-        links
+        graphlinks
             .enter()
             .append("path")
             .attr("id", function(d) { return d.source.id + "-" + d.target.id; })
-            .attr("class", function(d) { return "link " + d.arcStyle; })
+            .attr("class", function(d) { return "graphlink " + d.arcStyle; })
             .attr("marker-end", function(d) {
                 var split = d.arcStyle.split(' ');
                 var as = split[split.length-1];
@@ -382,51 +383,57 @@ pwt_d3.Graph.prototype = {
             });
 
         // remove old links
-        links.exit().remove();
+        graphlinks.exit().remove();
 
         ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE LINK LABELS                         ///
         ////////////////////////////////////////////////////////////////////////
 
         // select link labels
-        var linklabels = this._svgContainer.selectAll(".linklabel").data(this.links, function(d) {return d.source.id + "-" + d.target.id;});
+        var graphlinklabels = this._svgContainer.selectAll(".graphlinklabel").data(this.links, function(d) {return d.source.id + "-" + d.target.id;});
 
         // update link labels
-        linklabels
+        graphlinklabels
             .text(function(d){ return d.value.join(' / '); });
 
         // create link labels
-        linklabels
+        graphlinklabels
             .enter().append('text')
             .style("pointer-events", "none")
-            .attr('class', 'linklabel')
+            .attr('class', 'graphlinklabel')
             .text(function(d){ return d.value.join(' / '); });
 
         // remove old link labels
-        linklabels.exit().remove();
+        graphlinklabels.exit().remove();
 
         ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE NODES                               ///
         ////////////////////////////////////////////////////////////////////////
 
         // select nodes
-        var circles = this._svgContainer.selectAll("g.node").data(this.nodes, function(d) { return d.id; } );
+        var graphnodes = this._svgContainer.selectAll("g.graphnode").data(this.nodes, function(d) { return d.id; } );
 
         // create nodes group
-        var circleEnter = circles
+        var graphnodesenter = graphnodes
                             .enter()
                             .append("g")
-                            .attr("class", "node")
+                            .attr("class", "graphnode")
                             .call(this.force.drag);
 
         // update nodes
-        circles.select('.circle')
+        graphnodes.select('.graphcircle')
                .attr("dx", function (d) { return 0; }) // move inside rect
                .attr("dy", function (d) { return 0; }) // move inside rect
                .text(function (d) { return d.text; });
 
         // create nodes
-        circleEnter.append("svg:circle")
+        graphnodesenter.append("svg:circle")
+            .attr('class', "graphcircle")
+            .attr("r", function(d) {
+                d.radius = 10;
+                return d.radius;
+            })
+            .attr("id", function(d) { return d.id; } )
             .on("mouseover", function(d) {
                 that._tooltip
                     .transition(200)
@@ -444,19 +451,7 @@ pwt_d3.Graph.prototype = {
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
-            })
-            .attr('class', function(d) {
-                if (typeof(d.type) == 'undefined') {
-                    return 'graphcircle';
-                } else {
-                    return d.type;
-                }
-            })
-            .attr("r", function(d) {
-                d.radius = 10;
-                return d.radius;
-            })
-            .attr("id", function(d) { return d.id; } );
+            });
 
 
         ////////////////////////////////////////////////////////////////////////
@@ -464,37 +459,36 @@ pwt_d3.Graph.prototype = {
         ////////////////////////////////////////////////////////////////////////
 
         // update node labels
-        circles.select('.textClass')
+        graphnodes.select('.graphtext')
             .attr("dx", function (d) { return 5; }) // move inside rect
             .attr("dy", function (d) { return 15; }) // move inside rect
             .text( function(d) { return d.id; } )
             .style("opacity", function(d) { return d.show ? 1 : 0; });
 
         // create node labels
-        circleEnter.append("svg:text")
-            .attr("class","textClass")
+        graphnodesenter.append("svg:text")
+            .attr("class","graphtext")
             .attr("dx", function (d) { return 5; }) // move inside rect
             .attr("dy", function (d) { return 15; }) // move inside rect
             .text( function(d) { return d.id; } )
             .style("opacity", function(d) { return d.show ? 1 : 0; });
 
         // remove old nodes
-        circles.exit().remove();
-
+        graphnodes.exit().remove();
 
         var tick = function () {
-            links.attr("d", linkArc);
+            graphlinks.attr("d", linkArc);
 
-            linklabels
+            graphlinklabels
                 .attr('d', linkArc)
-                .attr('transform', rotateLabel)
+                .attr('transform', rotatelabel)
                 .attr('x', transformLabelX)
                 .attr('y', transformLabelY);
 
-            circles.attr("transform", transform);
+            graphnodes.attr("transform", transform);
         };
 
-        var rotateLabel = function (d) {
+        var rotatelabel = function (d) {
             var bbox = this.getBBox();
             var rx = bbox.x+bbox.width/2;
             var ry = bbox.y+bbox.height/2;
@@ -504,7 +498,6 @@ pwt_d3.Graph.prototype = {
             var deg = -90-rad * (180 / Math.PI);
             return 'rotate(' + deg +' '+rx+' '+ry+')';
         };
-
 
         var linkArc = function (d) {
 
@@ -575,7 +568,7 @@ rap.registerTypeHandler( 'pwt.customs.Graph', {
 
     properties: [ 'remove', 'width', 'height', 'linkdistance', 'circleradius', 'charge', 'gravity', 'bounds', 'arrow'],
 
-    methods : [ 'updateData' ],
+    methods : [ 'updateData', 'clear'],
 
     events: [ 'Selection' ]
 

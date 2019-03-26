@@ -1,0 +1,170 @@
+[
+    {
+      "arcStyle": "strokegreen",
+      "value": "has_pos",
+      "target": {
+        "name": "VB",
+        "show": true,
+        "text": ""
+      },
+      "source": {
+        "name": "Make-1",
+        "show": true,
+        "text": ""
+      }
+    },
+    {
+      "arcStyle": "strokegreen",
+      "value": "compound",
+      "target": {
+        "name": "banana-3",
+        "show": true,
+        "text": ""
+      },
+      "source": {
+        "name": "milkshake-4",
+        "show": true,
+        "text": ""
+      }
+    },
+    {
+      "arcStyle": "strokegreen",
+      "value": "has_pos",
+      "target": {
+        "name": "NN",
+        "show": true,
+        "text": ""
+      },
+      "source": {
+        "name": "milkshake-4",
+        "show": true,
+        "text": ""
+      }
+    },
+    {
+      "arcStyle": "strokegreen",
+      "value": "has_pos",
+      "target": {
+        "name": "DT",
+        "show": true,
+        "text": ""
+      },
+      "source": {
+        "name": "a-2",
+        "show": true,
+        "text": ""
+      }
+    },
+    {
+      "arcStyle": "strokegreen",
+      "value": "root",
+      "target": {
+        "name": "Make-1",
+        "show": true,
+        "text": ""
+      },
+      "source": {
+        "name": "ROOT-0",
+        "show": true,
+        "text": ""
+      }
+    },
+    {
+      "arcStyle": "strokegreen",
+      "value": "has_pos",
+      "target": {
+        "name": "NN",
+        "show": true,
+        "text": ""
+      },
+      "source": {
+        "name": "banana-3",
+        "show": true,
+        "text": ""
+      }
+    },
+    {
+      "arcStyle": "strokegreen",
+      "value": "det",
+      "target": {
+        "name": "a-2",
+        "show": true,
+        "text": ""
+      },
+      "source": {
+        "name": "milkshake-4",
+        "show": true,
+        "text": ""
+      }
+    },
+    {
+      "arcStyle": "strokegreen",
+      "value": "dobj",
+      "target": {
+        "name": "milkshake-4",
+        "show": true,
+        "text": ""
+      },
+      "source": {
+        "name": "Make-1",
+        "show": true,
+        "text": ""
+      }
+    }
+  ,  {
+    "arcStyle": "strokegreen",
+    "value": "has_sense",
+    "target": {
+      "name": "milkshake.n.01",
+      "show": true,
+      "text": "frothy drink of milk and flavoring and sometimes fruit or ice cream"
+    },
+    "source": {
+      "name": "milkshake-4",
+      "show": true,
+        "text": ""
+    }
+  },
+  {
+    "arcStyle": "strokegreen",
+    "value": "has_sense",
+    "target": {
+      "name": "cook.v.02",
+      "text": "prepare for eating by applying heat",
+      "show": true
+    },
+    "source": {
+      "name": "Make-1",
+      "show": true,
+        "text": ""
+    }
+  },
+  {
+    "arcStyle": "strokegreen",
+    "value": "action_verb",
+    "target": {
+      "name": "Cooking",
+      "show": true,
+        "text": ""
+    },
+    "source": {
+      "name": "Make-1",
+      "show": true,
+        "text": ""
+    }
+  },
+  {
+    "arcStyle": "strokegreen",
+    "value": "obj_to_be_cooked",
+    "target": {
+      "name": "Cooking",
+      "show": true,
+        "text": ""
+    },
+    "source": {
+      "name": "milkshake-4",
+      "show": true,
+        "text": ""
+    }
+  }
+  ]

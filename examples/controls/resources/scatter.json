@@ -1,0 +1,80 @@
+[
+  {
+    "name": "Convertible Arbitrage",
+    "y": 0.0770203710991655,
+    "x": 0.0694461870173684,
+    "tooltip": "blub"
+  },
+  {
+    "name": "CTA Global",
+    "y": 0.0767109922711062,
+    "x": 0.0870559916457339,
+    "tooltip": "blub"
+  },
+  {
+    "name": "Distressed Securities",
+    "y": 0.0975096216543971,
+    "x": 0.0635590261337229,
+    "tooltip": "blub"
+  },
+  {
+    "name": "Emerging Markets",
+    "y": 0.0936124939942315,
+    "x": 0.133615370977481,
+    "tooltip": "blub"
+  },
+  {
+    "name": "Equity Market Neutral",
+    "y": 0.0739359541312794,
+    "x": 0.031197069331753,
+    "tooltip": "blub"
+  },
+  {
+    "name": "Event Driven",
+    "y": 0.093190424075422,
+    "x": 0.0635679064016912,
+    "tooltip": "blub"
+  },
+  {
+    "name": "Fixed Income Arbitrage",
+    "y": 0.0506750901161104,
+    "x": 0.0490908049045477,
+    "tooltip": "blub"
+  },
+  {
+    "name": "Global Macro",
+    "y": 0.0942083012167199,
+    "tooltip": "blub",
+    "x": 0.0589577044136273
+  },
+  {
+    "name": "Long Short Equity",
+    "y": 0.0940147333764296,
+    "x": 0.0768123568274029,
+    "tooltip": "blub"
+  },
+  {
+    "name": "Merger Arbitrage",
+    "y": 0.0837211944713991,
+    "x": 0.0386880290509073,
+    "tooltip": "blub"
+  },
+  {
+    "name": "Relative Value",
+    "y": 0.0823165777302135,
+    "x": 0.0457077150038685,
+    "tooltip": "blub"
+  },
+  {
+    "name": "Short Selling",
+    "y": 0.0326542894911763,
+    "x": 0.190869128421505,
+    "tooltip": "blub"
+  },
+  {
+    "name": "Funds of Funds",
+    "y": 0.0712702593390044,
+    "x": 0.0630880736754868,
+    "tooltip": "blub"
+  }
+]

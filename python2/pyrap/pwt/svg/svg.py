@@ -56,13 +56,13 @@ class SVG(Widget):
         # writing the stream to the content will omit leading doc infos
         stream = BytesIO()
         self.tree.write(stream)
-        self._content = str(stream.getvalue())
+        self._content = stream.getvalue().decode('utf8')
         stream.close()
 
         return self._content
 
     def _handle_set(self, op):
-        for key, value in op.args.iteritems():
+        for key, value in op.args.items():
             if key == 'selection':
                 self._selection = value
 

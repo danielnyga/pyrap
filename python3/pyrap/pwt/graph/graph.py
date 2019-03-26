@@ -12,39 +12,32 @@ d3wrapper = '''if (typeof d3 === 'undefined') {{
     {d3content}
 }}'''
 
+
 class Graph(Widget):
 
     _rwt_class_name = 'pwt.customs.Graph'
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('Graph')
-    def __init__(self, parent, cssid=None, **options):
+    def __init__(self, parent, **options):
         Widget.__init__(self, parent, **options)
         self.theme = GraphTheme(self, session.runtime.mngr.theme)
+        self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
             cnt = d3wrapper.format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
         with open(os.path.join(locations.pwt_loc, 'graph', 'graph.css')) as fi:
             session.runtime.requirecss(fi)
-        self._gwidth = None
-        self._gheight = None
         self._links = []
-        self._cssid = cssid
         self._linkdist = None
         self._cradius = None
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        if self._cssid:
-            options.cssid = self._cssid
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
         w, h = Widget.compute_size(self.parent)
-        if self.gwidth is not None:
-            w = self.gwidth
-        if self.gheight is not None:
-            h = self.gheight
 
         padding = self.theme.padding
         if padding:
@@ -57,20 +50,11 @@ class Graph(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-
         return w, h
 
     @property
     def links(self):
         return self._links
-
-    @property
-    def cssid(self):
-        return self._cssid
-
-    @cssid.setter
-    def cssid(self, cssid):
-        self._cssid = cssid
 
     @property
     def linkdist(self):
@@ -130,26 +114,6 @@ class Graph(Widget):
     def charge(self, charge):
         self._charge = charge
         session.runtime << RWTSetOperation(self.id, {'charge': charge})
-
-    @property
-    def gwidth(self):
-        return self._gwidth
-
-    @gwidth.setter
-    @checkwidget
-    def gwidth(self, w):
-        self._gwidth = w
-        session.runtime << RWTSetOperation(self.id, {'width': self.gwidth})
-
-    @property
-    def gheight(self):
-        return self._gheight
-
-    @gheight.setter
-    @checkwidget
-    def gheight(self, h):
-        self._gheight = h
-        session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
 
     def addlink(self, source=None, target=None, value=None):
         tmplink = GraphLink(source=source, target=target, value=value)

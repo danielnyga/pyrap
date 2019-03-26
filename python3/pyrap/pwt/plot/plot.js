@@ -50,7 +50,6 @@ pwt_scatterplot.Scatterplot.prototype = {
                 .attr("transform", "translate("  + this._cfg.margin.left + ',' + this._cfg.margin.top + ")");
             this._svgContainer = this._svg.select('g.scatter');
         }
-        this.update();
     },
 
     createElement: function( parent ) {

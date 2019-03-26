@@ -13,19 +13,22 @@ d3wrapper = '''if (typeof d3 === 'undefined') {{
     {d3content}
 }}'''
 
-class Cluster(Widget):
 
-    _rwt_class_name = 'pwt.customs.Cluster'
+class RadialDendrogramm(Widget):
+
+    _rwt_class_name = 'pwt.customs.RadialDendrogramm'
     _defstyle_ = BitField(Widget._defstyle_)
 
-    @constructor('Cluster')
+    @constructor('RadialDendrogramm')
     def __init__(self, parent, opts=None, **options):
         Widget.__init__(self, parent, **options)
-        self.theme = ClusterTheme(self, session.runtime.mngr.theme)
+        self.theme = RadialDendrogrammTheme(self, session.runtime.mngr.theme)
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
             cnt = d3wrapper.format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
+        with open(os.path.join(locations.pwt_loc, 'radialdendrogramm', 'radialdendrogramm.css')) as fi:
+            session.runtime.requirecss(fi)
         self._data = {}
         self._opts = opts
         self.on_select = OnSelect(self)
@@ -37,7 +40,6 @@ class Cluster(Widget):
         if self._opts:
             options.options = self._opts
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
-        print('clusterid', self.id)
 
     def compute_size(self):
         w, h = Widget.compute_size(self.parent)
@@ -53,7 +55,6 @@ class Cluster(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        print('clustersize', w,h)
         return w, h
 
     def _handle_notify(self, op):
@@ -81,7 +82,7 @@ class Cluster(Widget):
         session.runtime << RWTCallOperation(self.id, 'highlight', {'name': el})
 
 
-class ClusterTheme(WidgetTheme):
+class RadialDendrogrammTheme(WidgetTheme):
 
     def __init__(self, widget, theme):
         WidgetTheme.__init__(self, widget, theme, 'Cluster')

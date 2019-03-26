@@ -1,26 +1,26 @@
-.link {
+.graphlink {
   fill: none;
   stroke-width: 1.5px;
   stroke: black;
 }
 
-.link.red {
+.graphlink.red {
   stroke: red;
 }
 
-.link.green {
+.graphlink.green {
   stroke: #89a35c;
 }
 
-.link.black {
+.graphlink.black {
   stroke: black;
 }
 
-.link.blue {
+.graphlink.blue {
   stroke: blue;
 }
 
-.link.dashed {
+.graphlink.dashed {
   stroke-dasharray: 0,2 1;
 }
 
@@ -44,20 +44,21 @@ marker#blue {
   fill: blue;
 }
 
-circle.graphcircle {
+.graphcircle {
   fill: #bee280;
   stroke: #89a35c;
   stroke-width: 1.5px;
 }
 
-text.textClass {
+.graphtext {
   font: 15px monospace, arial, sans-serif;
   font-weight: bold;
   pointer-events: none;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+  opacity: 1;
 }
 
-text.linklabel {
+.graphlinklabel {
   font: 10px monospace, arial, sans-serif;
   pointer-events: none;
   font-weight: normal;

@@ -100,8 +100,6 @@ pwt_radar.RadarChart.prototype = {
             .attr("class", "legendtitle")
             .attr("x", 0)
             .attr("y", 15)
-            .attr("font-size", "12px")
-            .attr("fill", "#404040")
             .text(this._legendtext)
             .call(this.wraptext, 300);
 
@@ -542,8 +540,6 @@ pwt_radar.RadarChart.prototype = {
                 .append("text")
                 .attr("x", 25)
                 .attr("y", function(d, i){ return i * 20 + 9;})
-                .attr("font-size", "11px")
-                .attr("fill", "#737373")
                 .text(function(d) { return d; });
 
             legendtext.exit().remove();
@@ -612,8 +608,6 @@ pwt_radar.RadarChart.prototype = {
             .attr("x", function(d, i){return d[1]*(1-that._cfg.factor*Math.sin((i)*that._cfg.radians/that._total));})
             .attr("y", function(d, i){return d[1]*(1-that._cfg.factor*Math.cos((i)*that._cfg.radians/that._total));})
             .attr("class", "leveltext")
-            .style("font-family", "sans-serif")
-            .style("font-size", "8px")
             .attr("transform", function(d, i){
                 return "translate(" + (that._cfg.w/2-d[1] + that._cfg.ToRight) + ", " + (that._cfg.h/2-d[1]) + ")";
             })
@@ -663,8 +657,6 @@ pwt_radar.RadarChart.prototype = {
         axisenter.append("text")
             .attr("class", "legend")
             .text(function(d){ return d.name; })
-            .style("font-family", "sans-serif")
-            .style("font-size", "11px")
             .attr("text-anchor", "middle")
             .attr("dy", "1.5em")
             .attr("transform", function(d, i){return "translate(0, -10)"})
@@ -678,6 +670,7 @@ pwt_radar.RadarChart.prototype = {
                     .style("display", "block");
             })
             .on('mouseout', function(d){
+                d3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
@@ -753,6 +746,7 @@ pwt_radar.RadarChart.prototype = {
                 return linearScale(d.interval[1])-linearScale(d.interval[0]);
             })
             .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
@@ -760,6 +754,7 @@ pwt_radar.RadarChart.prototype = {
                 d3.select(this).moveToFront();
             })
             .on('mouseout', function(){
+                d3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");

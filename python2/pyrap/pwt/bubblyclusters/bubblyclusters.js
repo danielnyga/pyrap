@@ -49,7 +49,6 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
                 .attr("transform", "translate(" + (this._wwidth/2) + "," + (this._wheight/2) + ")");
             this._svgContainer = this._svg.select('g.bubblyclusters');
         }
-        this.update();
     },
 
     createElement: function( parent ) {
@@ -172,12 +171,13 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
         this._cheight = this._h > 0 ? this._h : 600;
 
         // select nodes
-        var node = this._svgContainer.selectAll("circle").data(this._nodes);
+        var node = this._svgContainer.selectAll("circle.bubbly").data(this._nodes);
 
         // create nodes
         node
             .enter()
             .append("circle")
+            .attr("class", "bubbly")
             .style("fill", function(d) { return that._color(d.cluster); })
             .on("mouseover", function(d) {
                 that._tooltip
@@ -295,7 +295,7 @@ rap.registerTypeHandler( 'pwt.customs.BubblyClusters', {
 
     destructor: 'destroy',
     properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
-    methods : [ 'updateData', 'clear'],
+    methods : [ 'clear'],
     events: [ 'Selection' ]
 
 } );

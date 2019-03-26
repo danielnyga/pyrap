@@ -1,39 +1,30 @@
 // based on code from https://github.com/alangrafu/radar-chart-d3
 // check http://nbremer.blogspot.nl/2013/09/making-d3-radar-chart-look-bit-better.html
 // for extra information
-pwt_cluster = {};
+pwt_radialdendrogramm = {};
 
-pwt_cluster.Cluster = function( parent, opts) {
+pwt_radialdendrogramm.RadialDendrogramm = function( parent) {
 
     this._parentDIV = this.createElement(parent);
-    this._p = parent;
     this._data = {};
 
-    this._wwidth = window.innerWidth;
-    this._wheight = window.innerHeight;
-    var diameter = Math.min(this._wwidth, this._wheight),
-        radius = diameter / 2,
-        innerRadius = radius - 170;
+    this._w = 800;
+    this._h = 600;
 
     this._cluster = d3.layout.cluster()
-        .separation(function(a, b) { return (a.parent == b.parent ? 1 : 5 ) }) // gap between elements: 1, between groups: 5
-        .size([360, innerRadius])
+        .separation(function(a, b) { return (a.parent === b.parent ? 1 : 5 ) }) // gap between elements: 1, between groups: 5
         .sort(null)
         .value(function(d) { return d.size; });
 
     this._bundle = d3.layout.bundle();
-
     this._line = d3.svg.line.radial()
         .interpolate("bundle")
         .tension(.75)
         .radius(function(d) { return d.y; })
         .angle(function(d) { return d.x / 180 * Math.PI; });
 
-    d3.select(self.frameElement).style("height", diameter + "px");
-
     this._svg = d3.select(this._parentDIV).append("svg");
-
-    this._svgContainer = this._svg.select('g.cluster');
+    this._svgContainer = this._svg.select('g.radialdendrogram');
 
     this._initialized = false;
     this._needsRender = true;
@@ -53,37 +44,19 @@ pwt_cluster.Cluster = function( parent, opts) {
     } );
 };
 
-pwt_cluster.Cluster.prototype = {
+pwt_radialdendrogramm.RadialDendrogramm.prototype = {
 
     initialize: function() {
-
-
-        d3.selection.prototype.moveToFront = function() {
-          return this.each(function(){
-            this.parentNode.appendChild(this);
-          });
-        };
-        d3.selection.prototype.moveToBack = function() {
-            return this.each(function() {
-                var firstChild = this.parentNode.firstChild;
-                if (firstChild) {
-                    this.parentNode.insertBefore(this, firstChild);
-                }
-            });
-        };
-
 
         if (this._svgContainer.empty()) {
             this._svg
                 .attr('width', "100%")
                 .attr('height', "100%")
                 .append( "svg:g" )
-                .attr('class', 'cluster')
-                .attr("transform", "translate(" + (this._wwidth/2) + "," + (this._wheight/2) + ")");
-            this._svgContainer = this._svg.select('g.cluster');
+                .attr('class', 'radialdendrogram')
+                .attr("transform", "translate(" + (this._w/2) + "," + (this._h/2) + ")");
+            this._svgContainer = this._svg.select('g.radialdendrogram');
         }
-
-        this.update();
     },
 
     createElement: function( parent ) {
@@ -99,15 +72,16 @@ pwt_cluster.Cluster.prototype = {
     },
 
     setBounds: function( args ) {
-        if (this._svgContainer.node() !== null ) {
-            var bbox = this._svgContainer.node().getBBox();
-            this._svgContainer
-                .attr("transform", "translate(" + (bbox.width/2) + "," + (bbox.height/2) + ")");
-        }
         this._parentDIV.style.left = args[0] + "px";
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
+        this._w = args[2] ? args[2] : 800;
+        this._h = args[3] ? args[3] : 600;
+        if (this._svgContainer.node() !== null ) {
+            this._svgContainer
+                .attr("transform", "translate(" + (this._w/2) + "," + (this._h/2) + ")");
+        }
         this.update();
     },
 
@@ -188,7 +162,6 @@ pwt_cluster.Cluster.prototype = {
      * removes all axes from the radar chart
      */
     clear : function ( ) {
-        // clear data
         this.setData( {} );
     },
 
@@ -198,8 +171,7 @@ pwt_cluster.Cluster.prototype = {
      */
     setData : function ( data ) {
         this._data = data;
-        this._nodes = this._cluster.nodes(this.nodeHierarchy(data));
-        this._links = this.packageImports(this._nodes);
+        this._root = this.nodeHierarchy(data);
         this.update();
     },
 
@@ -215,12 +187,12 @@ pwt_cluster.Cluster.prototype = {
 
         el = this._nodes.filter(findnode);
 
-        var textTags = document.getElementsByTagName("text");
+        var textTags = this._svgContainer.selectAll(".radialdnode");
         var searchText = hl.name;
         var found;
 
         for (var i = 0; i < textTags.length; i++) {
-            if (textTags[i].textContent == searchText) {
+            if (textTags[i].textContent === searchText) {
                 found = textTags[i];
                 break;
             }
@@ -238,59 +210,58 @@ pwt_cluster.Cluster.prototype = {
 
     mouseover: function (d, _this) {
 
-        this._svgContainer.selectAll(".node")
+        // clear previous highlight
+        this._svgContainer.selectAll(".radialdnode")
             .each(function(n) { n.target = n.source = false; });
 
-        this._svgContainer.selectAll(".link")
-            .classed("link--target", function(l) { if (l.target === d) return l.source.source = true; })
-            .classed("link--source", function(l) { if (l.source === d) return l.target.target = true; })
+        // mark the correct links for highlighting
+        this._svgContainer.selectAll(".radialdlink")
+            .classed("radialdlink--target", function(l) { if (l.target === d) return l.source.source = true; })
+            .classed("radialdlink--source", function(l) { if (l.source === d) return l.target.target = true; })
             .filter(function(l) { return l.target === d || l.source === d; })
             .each(function() { this.parentNode.appendChild(this); });
 
-        this._svgContainer.selectAll(".node")
-            .classed("node--target", function(n) { return n.target; })
-            .classed("node--source", function(n) { return n.source; });
+        // mark the correkt nodes for highlighting
+        this._svgContainer.selectAll(".radialdnode")
+            .classed("radialdnode--target", function(n) { return n.target; })
+            .classed("radialdnode--source", function(n) { return n.source; });
 
         d3.select(_this)
             .style("fill", "steelblue")
-            .attr("font-weight", 700);
+            .style("font-weight", "bold");
 
         // split selections if different colors needed
-        this._svgContainer.selectAll(".node--source, .node--target")
+        this._svgContainer.selectAll(".radialdnode--source, .radialdnode--target")
             .each(function(d) {
                 d3.select(this)
                     .style("fill", "steelblue")
-                    .attr("font-weight", 700);
+                    .style("font-weight", "bold");
             });
 
         // split selections if different colors needed
-        this._svgContainer.selectAll(".link--source, .link--target")
+        this._svgContainer.selectAll(".radialdlink--source, .radialdlink--target")
             .each(function(d) {
                 d3.select(this)
-                    .style("stroke", "steelblue")
                     .style("stroke-opacity", 1)
                     .style("stroke-width", "2px");
             });
     },
 
     mouseout: function (d) {
-        this._svgContainer.selectAll(".link")
-            .classed("link--target", false)
-            .classed("link--source", false)
+        this._svgContainer.selectAll(".radialdlink")
+            .classed("radialdlink--target", false)
+            .classed("radialdlink--source", false)
             .style("fill", "none")
             .style("stroke-opacity", .2)
             .style("stroke-width", "2px");
 
-        this._svgContainer.selectAll(".node")
-            .classed("node--target", false)
-            .classed("node--source", false)
+        this._svgContainer.selectAll(".radialdnode")
+            .classed("radialdnode--target", false)
+            .classed("radialdnode--source", false)
             .style("fill", "#636363")
-            .attr("font-weight", 300);
+            .style("font-weight", "normal");
 
     },
-
-
-
 
     /**
      * redraws the radar chart with the updated datapoints and polygons
@@ -302,24 +273,33 @@ pwt_cluster.Cluster.prototype = {
 
         var that = this;
 
-        var links = this._svgContainer.selectAll(".link").data(this._bundle(this._links));
+        this._radius = Math.min(this._w, this._h) / 2;
+        this._innerradius = this._radius - 150;
+
+        this._nodes = this._cluster
+            .size([360, this._innerradius])
+            .nodes(this._root);
+
+        this._links = this.packageImports(this._nodes);
+
+        var links = this._svgContainer.selectAll(".radialdlink").data(this._bundle(this._links));
 
         links
-            .each(function(d) { d.source = d[0], d.target = d[d.length - 1]; });
+            .each(function(d) { d.source = d[0]; d.target = d[d.length - 1]; })
+            .attr("d", this._line);
 
         links
             .enter()
             .append("path")
-            .each(function(d) { d.source = d[0], d.target = d[d.length - 1]; })
-            .attr("class", "link")
-            .style("stroke", "steelblue")
+            .each(function(d) { d.source = d[0]; d.target = d[d.length - 1]; })
+            .attr("class", "radialdlink")
             .style("stroke-opacity", .5)
             .style("fill", 'none')
             .attr("d", this._line);
 
         links.exit().remove();
 
-        var nodes = this._svgContainer.selectAll(".node").data(this._nodes.filter(function(n) { return !n.children; }));
+        var nodes = this._svgContainer.selectAll(".radialdnode").data(this._nodes.filter(function(n) { return !n.children; }));
 
         nodes
             .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 8) + ",0)" + (d.x < 180 ? "" : "rotate(180)"); })
@@ -329,24 +309,18 @@ pwt_cluster.Cluster.prototype = {
         nodes
             .enter()
             .append("text")
-            .attr("class", "node")
-            .style("font-family", "Helvetica, Arial, sans-serif")
-            .style("font-size", "9px")
-            .attr("font-weight", 300)
-            .style("fill", "#636363")
+            .attr("class", "radialdnode")
             .attr("dy", ".31em")
             .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 8) + ",0)" + (d.x < 180 ? "" : "rotate(180)"); })
             .style("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
             .text(function(d) { return d.key; })
-            .on('mouseover', function(d, i) {
-
-                var _this = this;
-                that.mouseover(d, _this);
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+                that.mouseover(d, this);
             })
             .on('mouseout', function(d, i) {
-
-                var _this = this;
-                that.mouseout(d, _this);
+                d3.select(this).style("cursor", "default");
+                that.mouseout(d, this);
             });
 
         nodes.exit().remove();
@@ -354,19 +328,16 @@ pwt_cluster.Cluster.prototype = {
 };
 
 // Type handler
-rap.registerTypeHandler( 'pwt.customs.Cluster', {
+rap.registerTypeHandler( 'pwt.customs.RadialDendrogramm', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    return new pwt_cluster.Cluster( parent, properties.options);
+    return new pwt_radialdendrogramm.RadialDendrogramm( parent, properties.options);
   },
 
   destructor: 'destroy',
-
-  properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
-
-  methods : [ 'updateData', 'clear', 'highlight'],
-
+  properties: [ 'width', 'height', 'data', 'bounds'],
+  methods : [ 'clear', 'highlight'],
   events: [ 'Selection' ]
 
 } );

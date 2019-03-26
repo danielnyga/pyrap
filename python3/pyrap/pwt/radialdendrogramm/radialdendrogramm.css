@@ -1,0 +1,26 @@
+.radialdendrogrammtooltip {
+  display: none;
+  position: fixed;
+  overflow: hidden;
+  color: #89a35c;
+  font: 13px monospace, arial, sans-serif;
+  font-weight: bold;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+  background-color: #fff;
+}
+
+.radialdlink {
+  stroke: steelblue;
+  font-weight: 300;
+}
+
+.radialdnode {
+  font: 15px monospace, arial, sans-serif;
+  fill: #636363;
+  font-weight: normal;
+
+}
+
+.radialdlink--source, .radialdlink--target {
+  stroke: steelblue;
+}

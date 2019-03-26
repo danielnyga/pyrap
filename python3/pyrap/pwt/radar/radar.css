@@ -8,3 +8,26 @@
   border-radius: 5px;
   padding: 10px;
 }
+
+text {
+  font: 15px monospace, arial, sans-serif;
+  pointer-events: none;
+}
+
+text.leveltext {
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+text.legend {
+  font-size: 11px;
+  fill: #737373;
+  font-weight: bold;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+text.legendtitle {
+  font-size: 12px;
+  fill: #404040;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}

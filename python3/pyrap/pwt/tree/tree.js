@@ -25,8 +25,9 @@ pwt_tree.Tree = function( parent, options) {
     this._tooltip = d3.select(this._parentDIV).append("div")
             .attr('class', 'treetooltip')
             .style('z-index', 1000000);
+
     this._svg = d3.select(this._parentDIV).append("svg");
-    this._svgContainer = this._svg.select('g');
+    this._svgContainer = this._svg.select('g.tree');
 
     this._initialized = false;
     this._needsRender = true;
@@ -55,8 +56,9 @@ pwt_tree.Tree.prototype = {
                 .attr('width', "100%")
                 .attr('height', "100%")
                 .append( "svg:g" )
+                .attr('class', 'tree')
                 .attr("transform", "translate(" + this._cfg.TranslateX + "," + this._cfg.TranslateY + ")");
-            this._svgContainer = this._svg.select('g');
+            this._svgContainer = this._svg.select('g.tree');
         }
 
         this.update(this._data);
@@ -178,12 +180,12 @@ pwt_tree.Tree.prototype = {
         nodes.forEach(function(d) { d.y = d.depth * 180; });
 
         // Update the nodes…
-        var node = this._svgContainer.selectAll("g.node")
+        var node = this._svgContainer.selectAll("g.treenode")
             .data(nodes, function(d) { return d.id || (d.id = ++that._cfg.i); });
 
         // Enter any new nodes at the parent's previous position.
         var nodeEnter = node.enter().append("g")
-            .attr("class", "node")
+            .attr("class", "treenode")
             .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
             .on("click", function(d, i) {
                 var _this = this;
@@ -248,12 +250,12 @@ pwt_tree.Tree.prototype = {
             .style("fill-opacity", 1e-6);
 
         // Update the links…
-        var link = this._svgContainer.selectAll("path.link")
+        var link = this._svgContainer.selectAll("path.treelink")
             .data(links, function(d) { return d.target.id; });
 
         // Enter any new links at the parent's previous position.
         var linkEnter = link.enter().insert("path", "g")
-            .attr("class", "link")
+            .attr("class", "treelink")
             .style('stroke', function(d) { return d.target.highlight ? "green" : "steelblue"; })
             .attr("d", function(d) {
                 var o = {x: source.x0, y: source.y0};
@@ -261,12 +263,12 @@ pwt_tree.Tree.prototype = {
             })
             .attr("id", function(d) { return d.source.nodetext + '-' + d.target.nodetext; });
 
-        var thing = this._svgContainer.selectAll("g.thing")
+        var thing = this._svgContainer.selectAll("g.treething")
             .data(links, function(d) { return d.target.id; });
 
         // Enter any new linktexts at the parent's previous position.
         var thingEnter = thing.enter().append("g")
-            .attr("class", "thing")
+            .attr("class", "treething")
 
         thingEnter.append("text")
             .style("font-size", "15px")
