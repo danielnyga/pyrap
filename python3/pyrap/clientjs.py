@@ -286,6 +286,7 @@ rwt/remote/handler/CopyToClipboardHandler.js
 {code_base}/pyrap/pwt/video/video.js
 {code_base}/pyrap/pwt/cluster/cluster.js
 {code_base}/pyrap/pwt/bubblyclusters/bubblyclusters.js
+{code_base}/pyrap/pwt/plot/plot.js
 appearances.js'''.format(code_base=code_base)
 
 
