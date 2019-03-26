@@ -12,7 +12,8 @@
 
 /* Button property defaults */
 
-Button {
+Button,
+FileUpload {
   font: 14px Arial, sans-serif;
   background-image: none;
   background-repeat: repeat;
@@ -34,17 +35,24 @@ Button {
 Button[PUSH],
 Button[TOGGLE],
 Button[ARROW],
-Button[BORDER] {
+Button[BORDER],
+FileUpload[PUSH],
+FileUpload[TOGGLE],
+FileUpload[ARROW],
+FileUpload[BORDER]{
   border: 1px solid #aaaaaa;
 }
 
-Button[ARROW] {
+Button[ARROW]
+FileUpload[ARROW]{
   padding: 4px;
   border: 1px solid #aaaaaa;
 }
 
 Button[CHECK],
-Button[RADIO] {
+Button[RADIO],
+FileUpload[CHECK],
+FileUpload[RADIO]{
   padding: 3px 3px 3px 3px;
   spacing: 7px;
 }
@@ -85,7 +93,8 @@ Button-ArrowIcon[RIGHT] {
   background-image: url( resource/widget/rap/button/arrow-right.png );
 }
 
-Button-FocusIndicator {
+Button-FocusIndicator,
+FileUpload-FocusIndicator{
   background-color: transparent;
   border: 1px dotted #aaaaaa;
   margin: 2px;
