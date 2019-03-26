@@ -9,8 +9,8 @@ import json
 import re
 
 import os
-import io
 import urllib
+from urllib.parse import urlparse
 
 from dnutils.threads import current_thread, Thread, ThreadInterrupt, sleep, SuspendableThread
 
@@ -35,7 +35,7 @@ _defconf = utils.storage({
     'ignore_change_ip': True,
     'secret_key': 'fLjUfxqXtfNoIldA0A0J',
     'expired_message': 'Session expired',
-    'httponly': True,
+    'httponly': False,
     'secure': False
 })
 
@@ -74,6 +74,15 @@ class PyRAPSession(object):
         # get the session or create a new one if necessary
         self.__locals['session_id'] = request.query.get('cid')  # web.cookies().get(cookie_name)
         try:
+            store = self.__sessiondata
+            store.location = web.ctx.env.get('HTTP_REFERER')
+            if 'location' in store:  # Get the public location of the app from the referer
+                loc = urlparse(store.location)
+                store.location = loc.path
+                store.host = loc.netloc
+        except SessionError:
+            pass
+        try:
             return handler()
         finally:
             self._postprocess()
@@ -83,7 +92,9 @@ class PyRAPSession(object):
             if self.client is not None:
                 cookie = json.dumps(self.client.data)
                 cookie = base64.b64encode(cookie.encode('utf8'))
-                web.setcookie('pyrap', cookie.decode('ascii'), path='/%s' % self.app.config.path)
+                if 'location' in self.__sessiondata:
+                    web.setcookie('pyrap', cookie.decode('ascii'), path=self.location, domain=self.host,
+                                  expires=60 * 60 * 24 * 365 * 2)  # '/%s' % self.app.config.path)
         except KeyError:
             pass
 
@@ -153,6 +164,14 @@ class PyRAPSession(object):
         if not isinstance(e, SessionKilled):
             raise ValueError('on_kill event cannot be set to value %s' % str(e))
         self.__sessiondata.on_kill = e
+
+    @property
+    def location(self):
+        return self.__sessiondata.location
+
+    @property
+    def host(self):
+        return self.__sessiondata.host
 
     @property
     def client(self):

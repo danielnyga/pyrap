@@ -23,23 +23,26 @@ from pyrap.widgets import Shell, constructor, Label, Composite, Button,\
     Option
 
 
-def msg_box(parent, title, text, icon):
-    msg = MessageBox(parent, title, text, icon)
-    msg.show(True)
-    msg.on_close.wait()
-    return msg.answer
-    
-def ask_question(parent, title, text, buttons):
-    msg = QuestionBox(parent, title, text, buttons, DLG.QUESTION)
+def msg_box(parent, title, text, icon, markup=False):
+    msg = MessageBox(parent, title, text, icon, markup=markup)
     msg.show(True)
     msg.on_close.wait()
     return msg.answer
 
-def ask_input(parent, title, message=False, multiline=False, password=False):
-    msg = InputBox(parent, title, message=message, multiline=multiline, password=password)
+
+def ask_question(parent, title, text, buttons, markup=False):
+    msg = QuestionBox(parent, title, text, buttons, DLG.QUESTION, markup=markup)
     msg.show(True)
     msg.on_close.wait()
     return msg.answer
+
+
+def ask_input(parent, title, message=False, multiline=False, password=False, markup=False):
+    msg = InputBox(parent, title, message=message, multiline=multiline, password=password, markup=markup)
+    msg.show(True)
+    msg.on_close.wait()
+    return msg.answer
+
 
 def options_list(parent, options):
     msg = OptionsDialog(parent, options)
@@ -47,22 +50,28 @@ def options_list(parent, options):
     msg.on_close.wait()
     return msg.answer
 
-def ask_yesnocancel(parent, title, text):
-    return ask_question(parent, title, text, ['yes', 'no', 'cancel'])
 
-def ask_textinput(parent, title):
-    return ask_input(parent, title)
+def ask_yesnocancel(parent, title, text, markup=False):
+    return ask_question(parent, title, text, ['yes', 'no', 'cancel'], markup=markup)
 
-def ask_passwordinput(parent, title):
-    return ask_input(parent, title, password=True)
 
-def ask_yesno(parent, title, text):
-    return ask_question(parent, title, text, ['yes', 'no'])
+def ask_textinput(parent, title, markup=False):
+    return ask_input(parent, title, markup=markup)
 
-def ask_okcancel(parent, title, text):
-    return ask_question(parent, title, text, ['ok', 'cancel'])
 
-def msg_ok(parent, title, text):
+def ask_passwordinput(parent, title, markup=False):
+    return ask_input(parent, title, password=True, markup=markup)
+
+
+def ask_yesno(parent, title, text, markup=False):
+    return ask_question(parent, title, text, ['yes', 'no'], markup=markup)
+
+
+def ask_okcancel(parent, title, text, markup=False):
+    return ask_question(parent, title, text, ['ok', 'cancel'], markup=markup)
+
+
+def msg_ok(parent, title, text, markup=False):
     '''
     Displays a message dialog with the given title and text.
 
@@ -76,9 +85,10 @@ def msg_ok(parent, title, text):
 
     :return: None
     '''
-    return msg_box(parent, title, text, DLG.INFORMATION)
+    return msg_box(parent, title, text, DLG.INFORMATION, markup=markup)
 
-def msg_warn(parent, title, text):
+
+def msg_warn(parent, title, text, markup=False):
     '''
     Displays a warning message with the given title and text.
 
@@ -92,9 +102,10 @@ def msg_warn(parent, title, text):
 
     :return: ``None``
     '''
-    return msg_box(parent, title, text, DLG.WARNING)
+    return msg_box(parent, title, text, DLG.WARNING, markup=markup)
 
-def msg_err(parent, title, text):
+
+def msg_err(parent, title, text, markup=False):
     '''
     Displays a error dialog with the given title and text.
 
@@ -108,7 +119,7 @@ def msg_err(parent, title, text):
 
     :return: None
     '''
-    return msg_box(parent, title, text, DLG.ERROR)
+    return msg_box(parent, title, text, DLG.ERROR, markup=markup)
     
 
 class MessageBox(Shell):
@@ -120,7 +131,7 @@ class MessageBox(Shell):
     MSGBOX_MINWIDTH = 400
 
     @constructor('MessageBox')    
-    def __init__(self, parent, title, text, icon=None, modal=True, resize=True, btnclose=True):
+    def __init__(self, parent, title, text, icon=None, modal=True, resize=False, btnclose=False, markup=False):
         Shell.__init__(self, parent=parent, title=title, titlebar=True, border=True,
                        btnclose=btnclose, resize=resize, modal=modal)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
@@ -130,6 +141,7 @@ class MessageBox(Shell):
                      DLG.WARNING: self.icontheme.icon_warning,
                      DLG.ERROR: self.icontheme.icon_error}.get(icon)
         self.answer = None
+        self.markup = markup
         
     def answer_and_close(self, a):
         self.answer = a
@@ -143,7 +155,7 @@ class MessageBox(Shell):
         if self.icon is not None:
             Label(textarea, img=self.icon, valign='top', halign='left')
         textarea.layout = ColumnLayout(hspace=20)
-        Label(textarea, self.text, halign='left', valign='top', cell_minwidth=self.MSGBOX_MINWIDTH)
+        Label(textarea, self.text, halign='left', valign='top', cell_minwidth=self.MSGBOX_MINWIDTH, markup=self.markup)
         buttons = Composite(mainarea)
         buttons.layout = ColumnLayout(equalwidths=True, halign='right', valign='bottom')
         self.create_buttons(buttons)
@@ -216,8 +228,8 @@ class OptionsDialog(Shell):
 class QuestionBox(MessageBox):
     
     @constructor('QuestionBox')
-    def __init__(self, parent, title, text, buttons, modal=True):
-        MessageBox.__init__(self, parent, title, text, icon=DLG.QUESTION)
+    def __init__(self, parent, title, text, buttons, modal=True, markup=False):
+        MessageBox.__init__(self, parent, title, text, icon=DLG.QUESTION, markup=markup)
         self.buttons = buttons
     
     def create_buttons(self, buttons):

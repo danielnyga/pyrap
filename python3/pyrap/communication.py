@@ -149,7 +149,6 @@ class RWTNotifyOperation(RWTOperation):
         return jsonify(['notify', self.target, self.event, ifnone(self.args, {})])
     
     
-    
 class RWTError(RWTMessage):
     '''
     Message for signalizing the client that an error has occurred.
@@ -167,7 +166,7 @@ def rwterror(error):
     Wrapper function for creating a :class:`RWTError` that can be raised.
     '''
     web.header('Content-Type', 'application/json; charset=UTF-8')
-    if error in (RWTError.SESSION_EXPIRED):
+    if error in (RWTError.SESSION_EXPIRED,):
         return forbidden(json.dumps(RWTError(error).json))
     else:
         return internalerror(json.dumps(RWTError(error).json))

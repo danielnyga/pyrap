@@ -2126,7 +2126,7 @@ class FontFaceRule(object):
             delim = ZeroOrMore(' ') + comma + ZeroOrMore(' ')
             fdelim = delim | ZeroOrMore(' ')
             symb = Word(alphas + alphanums + '_' + '-')
-            argsym = Word(alphas + alphanums + '_' + '-' + '/' + ':' + '.' + '-')
+            argsym = Word(alphas + alphanums + '_' + '-' + '/' + ':' + '.' + '-' + '?' + '&' + '=')
             arg = argsym | quotedString.setParseAction(removeQuotes)
             args = arg + ZeroOrMore(comma.suppress() + arg) 
             function = symb + lpar.suppress() + args + rpar.suppress()

@@ -20,9 +20,9 @@ from .base import session
 from .communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
 from .constants import RWT, GCBITS, CURSOR
-from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus,\
+from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus, \
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
-    OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished
+    OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished, OnLongClick
 from .exceptions import WidgetDisposedError
 from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout, GridLayout
 from .ptypes import px, BitField, BoolVar, NumVar, Color,\
@@ -44,6 +44,7 @@ def checkwidget(f, *args):
             raise WidgetDisposedError('Widget wih ID %s is diposed.' % self.id)
         return f(self, *args, **kwargs)
     return check
+
 
 def constructor(cls):
     def outer(f):
@@ -171,7 +172,6 @@ class Widget(object):
         if 'padding_top' in d:
             self.layout.padding_top = d['padding_top']
         
-        
     def _handle_notify(self, op):
         if op.event == 'Resize': self.on_resize.notify()
         elif op.event == 'MouseUp': self.on_mouseup.notify(_rwt_mouse_event(op))
@@ -189,7 +189,6 @@ class Widget(object):
         for key, value in op.args.items():
             if key == 'bounds':
                 self._bounds = list(map(px, value))
-
 
     def _handle_call(self, op):
         pass
@@ -305,7 +304,6 @@ class Widget(object):
         session.runtime.windows.focus = self
         if notify:
             self.on_focus.notify(FocusEventData(self.id, True))
-
 
     @property
     def focused(self):
@@ -843,13 +841,11 @@ class DropDown(Widget):
         if self in parent.children:
             parent.children.remove(self)
 
-
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.items = self._items
         options.markupEnabled = self._markupEnabled
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
-
 
     def compute_size(self):
         w, h = 0,0
@@ -862,11 +858,9 @@ class DropDown(Widget):
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         return w, h
 
-
     @property
     def items(self):
         return self._items
-
 
     @items.setter
     @checkwidget
@@ -874,11 +868,9 @@ class DropDown(Widget):
         self._items = items
         session.runtime << RWTSetOperation(self.id, {'items': self.items})
 
-
     @property
     def visibleitemcount(self):
         return self._visibleitemcount
-
 
     @visibleitemcount.setter
     @checkwidget
@@ -886,18 +878,15 @@ class DropDown(Widget):
         self._visibleitemcount = visibleitemcount
         session.runtime << RWTSetOperation(self.id, {'visibleItemCount': self.visibleitemcount})
 
-
     @property
     def visible(self):
         return self._visible
-
 
     @visible.setter
     @checkwidget
     def visible(self, visible):
         self._visible = visible
         session.runtime << RWTSetOperation(self.id, {'visible': self.visible})
-
 
     @property
     def selected(self):
@@ -908,7 +897,6 @@ class DropDown(Widget):
         for key, value in op.args.items():
             if key == 'selectionIndex':
                 self._selidx = value
-
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select}
@@ -1024,7 +1012,6 @@ class Link(Widget):
     _rwt_class_name_ = 'rwt.widgets.Link'
     _styles_ = Widget._styles_ + {'wrap': RWT.WRAP}
     _defstyle_ = BitField(Widget._defstyle_)
-
 
     @constructor('Link')
     def __init__(self, parent, text='', img=None, **options):
@@ -1171,10 +1158,11 @@ class Separator(Widget):
             return 0, line
         else: return line, 0
         
-
+        
 class Button(Widget):
     
     _rwt_class_name_ = 'rwt.widgets.Button'
+    _styles_ = Widget._styles_ + {'markup': RWT.MARKUP}
     _defstyle_ = BitField(Widget._defstyle_)
     
     @constructor('Button')
@@ -1182,8 +1170,10 @@ class Button(Widget):
         Widget.__init__(self, parent, **options)
         self.theme = ButtonTheme(self, session.runtime.mngr.theme)
         self.on_select = OnSelect(self)
+        self.on_long_click = OnLongClick(self)
         self._text = text
         self._img = img
+        self.compute_textsize = True
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -1192,6 +1182,9 @@ class Button(Widget):
         options.text = self.text
         options.style.append('PUSH')
         options.tabIndex = 1
+        if RWT.MARKUP in self.style:
+            options.markupEnabled = True
+            options.customVariant = 'variant_markup'
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
 
     def _get_rwt_img(self, img):
@@ -1222,15 +1215,19 @@ class Button(Widget):
         session.runtime << RWTSetOperation(self.id, {'text': self._text})
         
     def _handle_notify(self, op):
-        events = {'Selection': self.on_select}
+        events = {'Selection': self.on_select, 'LongClick': self.on_long_click}
         if op.event not in events:
             return Widget._handle_notify(self, op)
-        else: events[op.event].notify(_rwt_selection_event(op))
+        else:
+            events[op.event].notify(_rwt_selection_event(op))
         return True 
     
     def compute_size(self):
         width, height = Widget.compute_size(self)
-        tw, th = session.runtime.textsize_estimate(self.theme.font, self._text, self.shell())
+        if self.compute_textsize:
+            tw, th = session.runtime.textsize_estimate(self.theme.font, self._text.replace('\n', '<br>'), self.shell())
+        else:
+            tw, th = 0, 0
         width += tw
         height += th
         if self.img is not None:
@@ -3765,7 +3762,7 @@ class Spinner(Widget):
 
 class FileUpload(Widget):
     _rwt_class_name_ = 'rwt.widgets.FileUpload'
-    _styles_ = Widget._styles_ + {'multi': RWT.MULTI}
+    _styles_ = Widget._styles_ + {'multi': RWT.MULTI,}
     _defstyle_ = BitField(Widget._defstyle_)
 
 

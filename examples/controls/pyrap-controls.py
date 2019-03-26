@@ -303,7 +303,7 @@ class ControlsDemo():
         parent.layout.flexrows = {2: 1}
         top = Composite(parent, layout=ColumnLayout(halign='left'))
         Label(top, ('Use <tt>session.client.data</tt> to permanently store data on the client ' +
-                   'machine.<br>Right-click to add new data and check that they persist also over <a target="_blank" href="/controls/?page=Cookies">different sessions</a>.'), markup=True, halign='left')
+                   'machine.<br>Right-click to add new data and check that they persist also over <a target="_blank" href="%s?page=Cookies">different sessions</a>.' % session.location), markup=True, halign='left')
 
         clear = Button(top, 'Clear')
         clear.tooltip = 'Delete all client data'
