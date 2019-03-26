@@ -795,6 +795,7 @@ class Combo(Widget):
         else:
             self._selidx = self._items.keys().index(sel) if sel is not None else None
             txt = self._items.keys()[self._selidx]
+        self._text = txt
         session.runtime << RWTSetOperation(self.id, {'selectionIndex': self._selidx, 'text': txt})
 
     @property
@@ -1170,8 +1171,7 @@ class Separator(Widget):
         if RWT.HORIZONTAL in self.style:
             return 0, line
         else: return line, 0
-        
-        
+
 
 class Button(Widget):
     

@@ -789,7 +789,7 @@ class ControlsDemo():
 
 
     def create_cluster_page(self, parent):
-        grp = Group(parent, text='Radar')
+        grp = Group(parent, text='Cluster')
         grp.layout = CellLayout(halign='fill', valign='fill')
 
         comp_body = Composite(grp)
@@ -816,8 +816,13 @@ class ControlsDemo():
         btn.on_select += highlight
 
     def create_bubblycluster_page(self, parent):
-        grp = Group(parent, text='Radar')
-        grp.layout = CellLayout(halign='fill', valign='fill')
+        grp = Group(parent, text='Bubbly Cluster')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -825,28 +830,58 @@ class ControlsDemo():
         cluster = BubblyClusters(comp_body, halign='fill', valign='fill')
         cluster.bg = Color('black')
 
+        data = []
         with open('resources/bubbly.json') as f:
             data = json.load(f)
+
+        cluster.setdata(data)
+
+        def clear(*_):
+            for c in comp_body.children:
+                c.dispose()
+
+        def reload(*_):
+            cluster = BubblyClusters(comp_body, halign='fill', valign='fill')
             cluster.setdata(data)
 
+            self.shell.dolayout()
+
+        btn_clear.on_select += clear
+        btn_reload.on_select += reload
+
     def create_tree_page(self, parent):
-        grp = Group(parent, text='Radar')
-        grp.layout = CellLayout(halign='fill', valign='fill')
+        grp = Group(parent, text='Tree')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
 
         comp_body = Composite(grp)
-        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
-
-        # comp_cluster = Composite(comp_body)
-        # comp_cluster.layout = CellLayout(halign='fill', valign='fill')
-        # comp_cluster.bg = Color('black')
+        comp_body.layout = CellLayout(halign='fill', valign='fill')
 
         tree = Tree(comp_body, halign='fill', valign='fill')
         tree.bg = Color('black')
 
+        data = []
         with open('resources/treedata.json') as f:
             data = json.load(f)
+
+        tree.setdata(data)
+
+        def clear(*_):
+            for c in comp_body.children:
+                c.dispose()
+
+        def reload(*_):
+            tree = Tree(comp_body, halign='fill', valign='fill')
             tree.setdata(data)
 
+            self.shell.dolayout()
+
+        btn_clear.on_select += clear
+        btn_reload.on_select += reload
 
     def open_browser(self, data):
         dlg = Shell(title='pyRAP Browser', minwidth=500, minheight=400)
