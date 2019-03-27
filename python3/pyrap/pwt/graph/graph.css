@@ -53,14 +53,12 @@ marker#blue {
 .graphtext {
   font: 15px monospace, arial, sans-serif;
   font-weight: bold;
-  pointer-events: none;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
   opacity: 1;
 }
 
 .graphlinklabel {
   font: 10px monospace, arial, sans-serif;
-  pointer-events: none;
   font-weight: normal;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
