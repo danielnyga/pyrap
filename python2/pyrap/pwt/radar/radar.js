@@ -94,7 +94,7 @@ pwt_radar.RadarChart.prototype = {
             .append('svg')
             .attr('class', 'radarlegend')
             .attr('width', "300px")
-            .attr('height', "300px")
+            .attr('height', "100%")
             .attr('transform', 'translate('+ this._cfg.w +',0)')// move legend svg to the top right corner
             .append("text")
             .attr("class", "legendtitle")
@@ -536,6 +536,36 @@ pwt_radar.RadarChart.prototype = {
             legendtext
                 .enter()
                 .append("text")
+                .on('click', function(d) {
+                    that._svgContainer.selectAll("polygon")
+                        .transition(200)
+                        .style("fill-opacity", 0.1);
+                    that._svgContainer.select(".polygon-"+that.replAxisname(d))
+                        .transition(200)
+                        .style("fill-opacity", .7);
+                })
+                .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+                    that._tooltip
+                        .transition(200)
+                        .style("display", "block");
+                })
+                .on('mouseout', function(d){
+                    d3.select(this).style("cursor", "default");
+                    that._tooltip
+                        .transition(200)
+                        .style("display", "none");
+                })
+                .on('mousemove', function(d) {
+                    var newX = (d3.event.pageX + 20);
+                    var newY = (d3.event.pageY - 20);
+
+                    that._tooltip
+                        .html('Click to highlight')
+                        .style("left", (newX) + "px")
+                        .style("top", (newY) + "px");
+
+                })
                 .attr("x", 25)
                 .attr("y", function(d, i){ return i * 20 + 9;})
                 .text(function(d) { return d; });
