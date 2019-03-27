@@ -174,21 +174,7 @@ class SVG(Widget):
         stream.close()
 
     def compute_size(self):
-        # prefer user given size, otherwise try to obtain size from svg content
-        # if still not successful, use parent size
-        w = self.gwidth or self._vbwidth
-        h = self.gheight or self._vbheight
-
-        if self.gwidth is None and self._ratio is not None and self.gheight is not None:
-            w = self.gheight * self._ratio
-        elif self.gheight is None and self._ratio is not None and self.gwidth is not None:
-            h = self.gwidth / self._ratio
-        elif w is None and self._ratio is not None and h is not None:
-            w = h * self._ratio
-        elif h is None and self._ratio is not None and w is not None:
-            h = w / self._ratio
-        elif w is None and h is None:
-            w, h = Widget.compute_size(self)
+        w, h = Widget.compute_size(self.parent)
 
         padding = self.theme.padding
         if padding:

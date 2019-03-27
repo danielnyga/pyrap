@@ -1,48 +1,64 @@
-pwt = {};
+pwt_SVG = {};
 svgNS = 'http://www.w3.org/2000/svg';
 
-pwt.SVG = function(parent, cssid, svg) {
+pwt_SVG.SVG = function(parent, cssid, svg) {
 
     this._parentDIV = this.createElement(parent);
 
     if (svg) {
         this._parentDIV.innerHTML = svg;
-        this.svg = this._parentDIV.childNodes[this._parentDIV.childNodes.length-1];
+        this._svg = this._parentDIV.childNodes[this._parentDIV.childNodes.length-1];
     } else {
-        this.svg = document.createElementNS(svgNS, 'svg');
-        this.svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
-        this.svg.setAttribute('encoding', 'utf-8');
+        this._svg = document.createElementNS(svgNS, 'svg');
+        this._svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        this._svg.setAttribute('encoding', 'utf-8');
 
-        this._parentDIV.append( this.svg );
+        this._parentDIV.append( this._svg );
     }
-    this.svg.setAttribute('width', "100%");
-    this.svg.setAttribute('height', "100%");
 
     if (cssid) {
-        this.svg.setAttribute('id', cssid);
+        this._svg.setAttribute('id', cssid);
     }
 
+    this._initialized = false;
+    this._needsRender = true;
     var that = this;
-    parent.addListener( 'Resize', function() {
+    rap.on( "render", function() {
+        if( that._needsRender ) {
+            if( !that._initialized) {
+                that.initialize( that );
+                that._initialized = true;
+            }
+            that._needsRender = false;
+        }
+    } );
+    parent.addListener( "Resize", function() {
         that.setBounds( parent.getClientArea() );
     } );
-    this.setBounds( parent.getClientArea() );
 };
 
-pwt.SVG.prototype = {
+pwt_SVG.SVG.prototype = {
+
+    initialize: function() {
+
+        this._svg.setAttribute('width', "100%");
+        this._svg.setAttribute('height', "100%");
+    },
 
     createElement: function( parent ) {
         var clientarea = parent.getClientArea();
-        var element = document.createElement( 'div' );
-        element.style.position = 'absolute';
+        var element = document.createElement( "div" );
+        element.style.position = "absolute";
         element.style.left = clientarea[0];
         element.style.top = clientarea[1];
+        element.style.width = clientarea[2];
+        element.style.height = clientarea[3];
         parent.append( element );
         return element;
     },
 
     getcontainer: function() {
-        return this.svg;
+        return this._svg;
     },
 
     setZIndex : function(index) {
@@ -51,19 +67,19 @@ pwt.SVG.prototype = {
 
     setSvg : function( svgcontent ) {
         this._parentDIV.innerHTML = svgcontent;
-        this.svg = this._parentDIV.childNodes[this._parentDIV.childNodes.length-1];
-        this.svg.setAttribute('width', "100%");
-        this.svg.setAttribute('height', "100%");
+        this._svg = this._parentDIV.childNodes[this._parentDIV.childNodes.length-1];
+        this._svg.setAttribute('width', "100%");
+        this._svg.setAttribute('height', "100%");
     },
 
     elAttribute : function( args ) {
-        if (this.svg.getElementById(args.id)) {
-            this.svg.getElementById(args.id).setAttribute(args.attribute, args.value);
+        if (this._svg.getElementById(args.id)) {
+            this._svg.getElementById(args.id).setAttribute(args.attribute, args.value);
         }
     },
 
     attribute : function( args ) {
-        this.svg.setAttribute(args.attribute, args.value);
+        this._svg.setAttribute(args.attribute, args.value);
     },
 
     highlight : function ( args ) {
@@ -83,10 +99,10 @@ pwt.SVG.prototype = {
     },
 
      setBounds: function( args ) {
-        this._parentDIV.style.left = args[0] + 'px';
-        this._parentDIV.style.top = args[1] + 'px';
-        this._parentDIV.style.width = args[2] + 'px';
-        this._parentDIV.style.height = args[3] + 'px';
+        this._parentDIV.style.left = args[0] + "px";
+        this._parentDIV.style.top = args[1] + "px";
+        this._parentDIV.style.width = args[2] + "px";
+        this._parentDIV.style.height = args[3] + "px";
      },
 
     destroy: function() {
@@ -117,7 +133,7 @@ rap.registerTypeHandler( 'pwt.customs.SVG', {
 
   factory: function( properties ) {
     var parent = rap.getObject( properties.parent );
-    return new pwt.SVG( parent, properties.cssid, properties.svg );
+    return new pwt_SVG.SVG( parent, properties.cssid, properties.svg );
   },
 
   destructor: 'destroy',
