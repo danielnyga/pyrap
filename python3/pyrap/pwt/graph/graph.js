@@ -399,7 +399,6 @@ pwt_d3.Graph.prototype = {
         // create link labels
         graphlinklabels
             .enter().append('text')
-            .style("pointer-events", "none")
             .attr('class', 'graphlinklabel')
             .text(function(d){ return d.value.join(' / '); });
 
