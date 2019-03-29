@@ -22,6 +22,18 @@ GCBITS = BitMask('DRAW_MNEMONIC', 'DRAW_DELIMITER', 'DRAW_TAB', 'ALIGN_CENTERX',
 
 DLG = BitMask('INFORMATION', 'QUESTION', 'WARNING', 'ERROR')
 
+d3wrapper = '''if (typeof d3 === 'undefined') {{
+    {d3content}
+}}'''
+
+style = '''
+<style type="text/css">
+  <![CDATA[
+    {}
+  ]]>
+</style>'''
+
+
 class CURSOR:
     DEFAULT      = 1 << 0
     POINTER      = 1 << 1

@@ -135,6 +135,46 @@ pwt_scatterplot.Scatterplot.prototype = {
     },
 
     /**
+     * retrieves the svg as text to save it to a file
+     */
+    retrievesvg : function ( data ) {
+        var attrs = this._svg.node().attributes;
+
+        // saving old attributes
+        var orig = {};
+        for (var i=0; i<attrs.length; i++)
+            orig[attrs[i].name] = attrs[i].value;
+
+        // updating attributes for export
+        this._svg
+            .attr('width', data.width + 'px')
+            .attr('height', data.height + 'px')
+            .attr('viewBox', [0, 0, data.width, data.height].join(' '));
+
+        // adding css styles
+        if (data.defs) {
+            if (!this._defs) {
+                this._defs = this._svgContainer.append("defs");
+            }
+            this._defs.html(this._defs.node().innerHTML + data.defs);
+
+        }
+        rwt.remote.Connection.getInstance().getRemoteObject( this ).set( 'svg', this._svg.node().outerHTML );
+
+        // removing set attributes
+        this._svg
+            .attr('width', null)
+            .attr('height', null)
+            .attr('viewBox', null);
+
+        // restoring original attributes
+        for (var key in orig) {
+            this._svg
+                .attr(key, orig[key]);
+        }
+    },
+
+    /**
      * redraws the plot with the updated data
      */
     update : function () {
@@ -272,7 +312,7 @@ rap.registerTypeHandler( 'pwt.customs.Scatterplot', {
 
     destructor: 'destroy',
     properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
-    methods : [ 'clear', 'axes', 'formats' ],
+    methods : [ 'clear', 'axes', 'formats', 'retrievesvg'],
     events: [ 'Selection' ]
 
 } );

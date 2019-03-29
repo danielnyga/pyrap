@@ -2,15 +2,12 @@ import os
 from dnutils import ifnone
 
 from pyrap import session, locations
-from pyrap.communication import RWTCreateOperation, RWTSetOperation
-from pyrap.events import _rwt_event, OnSelect
+from pyrap.communication import RWTCreateOperation, RWTSetOperation, RWTCallOperation
+from pyrap.events import _rwt_event, OnSelect, OnSet
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor
-
-d3wrapper = '''if (typeof d3 === 'undefined') {{
-    {d3content}
-}}'''
+from pyrap.constants import style, d3wrapper
 
 
 class Tree(Widget):
@@ -29,7 +26,15 @@ class Tree(Widget):
         with open(os.path.join(locations.pwt_loc, 'tree', 'tree.css')) as fi:
             session.runtime.requirecss(fi)
         self.on_select = OnSelect(self)
+        self.on_set = OnSet(self)
+        self.svg = None
 
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.items():
+            if key == 'svg':
+                self.svg = value
+        self.on_set.notify(_rwt_event(op))
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -60,10 +65,16 @@ class Tree(Widget):
             events[op.event].notify(_rwt_event(op))
         return True
 
-
     def setdata(self, data):
         self._data = data
         session.runtime << RWTSetOperation(self.id, {'data': data})
+
+    def retrievesvg(self):
+        with open(os.path.join(locations.pwt_loc, 'tree', 'tree.css')) as fi:
+            s= style.format(fi.read())
+            session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'width': self.bounds[2].value,
+                                                                         'height': self.bounds[3].value,
+                                                                         'defs': s})
 
 
 class TreeTheme(WidgetTheme):

@@ -1,16 +1,15 @@
 import os
-from dnutils import ifnone, out
+from dnutils import ifnone
 
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
+from pyrap.events import OnSelect, OnSet, _rwt_event
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.widgets import Widget, constructor, checkwidget
+from pyrap.widgets import Widget, constructor
+from pyrap.constants import d3wrapper
 
-d3wrapper = '''if (typeof d3 === 'undefined') {{
-    {d3content}
-}}'''
 
 class BarChart(Widget):
 
@@ -24,6 +23,24 @@ class BarChart(Widget):
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
             cnt = d3wrapper.format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
+        self._data = []
+        self.on_select = OnSelect(self)
+        self.on_set = OnSet(self)
+        self.svg = None
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        events[op.event].notify(_rwt_event(op))
+        return True
+
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.items():
+            if key == 'svg':
+                self.svg = value
+        self.on_set.notify(_rwt_event(op))
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -53,6 +70,10 @@ class BarChart(Widget):
     def data(self, data):
         session.runtime << RWTSetOperation(self.id, {'data': data})
         self._data = data
+
+    def retrievesvg(self):
+        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'width': self.bounds[2].value, 'height': self.bounds[3].value})
+
 
 class BarChartTheme(WidgetTheme):
 

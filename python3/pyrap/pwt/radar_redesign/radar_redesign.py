@@ -9,11 +9,7 @@ from pyrap.events import OnSelect, _rwt_event
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor, checkwidget
-
-
-d3wrapper = '''if (typeof d3 === 'undefined') {{
-    {d3content}
-}}'''
+from pyrap.constants import d3wrapper
 
 
 class RadarChartRed(Widget):

@@ -4,14 +4,11 @@ from dnutils.tools import ifnone
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
     RWTSetOperation
-from pyrap.events import OnSelect, _rwt_event
+from pyrap.events import OnSelect, _rwt_event, OnSet
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.widgets import Widget, constructor, checkwidget
-
-d3wrapper = '''if (typeof d3 === 'undefined') {{
-    {d3content}
-}}'''
+from pyrap.widgets import Widget, constructor
+from pyrap.constants import style, d3wrapper
 
 
 class BubblyClusters(Widget):
@@ -32,8 +29,8 @@ class BubblyClusters(Widget):
         self._data = {}
         self._opts = opts
         self.on_select = OnSelect(self)
-        self._gwidth = None
-        self._gheight = None
+        self.on_set = OnSet(self)
+        self.svg = None
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -61,9 +58,15 @@ class BubblyClusters(Widget):
         events = {'Selection': self.on_select}
         if op.event not in events:
             return Widget._handle_notify(self, op)
-        else:
-            events[op.event].notify(_rwt_event(op))
+        events[op.event].notify(_rwt_event(op))
         return True
+
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.items():
+            if key == 'svg':
+                self.svg = value
+        self.on_set.notify(_rwt_event(op))
 
     @property
     def data(self):
@@ -77,6 +80,13 @@ class BubblyClusters(Widget):
     def setdata(self, data):
         self._data = data
         session.runtime << RWTSetOperation(self.id, {'data': data})
+
+    def retrievesvg(self):
+        with open(os.path.join(locations.pwt_loc, 'bubblyclusters', 'bubblyclusters.css')) as fi:
+            s= style.format(fi.read())
+            session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'width': self.bounds[2].value,
+                                                                         'height': self.bounds[3].value,
+                                                                         'defs': s})
 
 
 class BubblyClustersTheme(WidgetTheme):

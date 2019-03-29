@@ -5,6 +5,7 @@ Created on Oct 2, 2015
 '''
 import base64
 import json
+import os
 from collections import OrderedDict
 
 import sys
@@ -18,7 +19,7 @@ from pyrap import session
 from pyrap.dialogs import msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, \
     ask_okcancel, open_progress, ask_color
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout
-from pyrap.ptypes import BoolVar, Color, px, Image, Font, NumVar
+from pyrap.ptypes import BoolVar, Color, px, Image, Font, NumVar, SVG
 from pyrap.pwt.bubblyclusters.bubblyclusters import BubblyClusters
 from pyrap.pwt.radialdendrogramm.radialdendrogramm import RadialDendrogramm
 from pyrap.pwt.graph.graph import Graph
@@ -44,6 +45,17 @@ class ControlsDemo():
     
     @staticmethod
     def setup(application): pass
+
+    @staticmethod
+    def gotsvg(args):
+        svgfile = os.path.join('/tmp', 'tmpviz.svg')
+        svg = SVG()
+        svg.load(args.args[0]['svg'])
+        with open(svgfile, 'wb') as f:
+            svg.save(f)
+
+        # download as SVG
+        session.runtime.download(svgfile, 'image/svg+xml', force=True)
 
     def desktop(self, **kwargs):
         page = kwargs.get('page', 'Directed Graph')
@@ -781,6 +793,13 @@ class ControlsDemo():
         comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
         btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
         btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+
+        def download(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.on_set += self.gotsvg
+                v.retrievesvg()
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -815,7 +834,7 @@ class ControlsDemo():
         reload()
         btn_clear.on_select += clear
         btn_reload.on_select += reload
-
+        btn_download.on_select += download
 
     def create_cluster_page(self, parent):
         grp = Group(parent, text='Bubbly Cluster')
@@ -827,6 +846,13 @@ class ControlsDemo():
         btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
         txt = Edit(comp_btn, text='28Mn6', halign='fill', valign='fill')
         btn = Button(comp_btn, text='Highlight', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+
+        def download(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.on_set += self.gotsvg
+                v.retrievesvg()
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -855,6 +881,7 @@ class ControlsDemo():
         btn.on_select += highlight
         btn_clear.on_select += clear
         btn_reload.on_select += reload
+        btn_download.on_select += download
 
     def create_bubblycluster_page(self, parent):
         grp = Group(parent, text='Bubbly Cluster')
@@ -864,6 +891,13 @@ class ControlsDemo():
         comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
         btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
         btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+
+        def download(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.on_set += self.gotsvg
+                v.retrievesvg()
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -888,6 +922,7 @@ class ControlsDemo():
         reload()
         btn_clear.on_select += clear
         btn_reload.on_select += reload
+        btn_download.on_select += download
 
     def create_tree_page(self, parent):
         grp = Group(parent, text='Tree')
@@ -897,6 +932,13 @@ class ControlsDemo():
         comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
         btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
         btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+
+        def download(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.on_set += self.gotsvg
+                v.retrievesvg()
 
         comp_body = Composite(grp)
         comp_body.layout = CellLayout(halign='fill', valign='fill')
@@ -921,6 +963,7 @@ class ControlsDemo():
         reload()
         btn_clear.on_select += clear
         btn_reload.on_select += reload
+        btn_download.on_select += download
 
     def create_scatterplot_page(self, parent):
         grp = Group(parent, text='Scatterplot')
@@ -930,6 +973,13 @@ class ControlsDemo():
         comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
         btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
         btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+
+        def download(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.on_set += self.gotsvg
+                v.retrievesvg()
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -956,6 +1006,7 @@ class ControlsDemo():
         reload()
         btn_clear.on_select += clear
         btn_reload.on_select += reload
+        btn_download.on_select += download
 
     def create_graph_page(self, parent):
         grp = Group(parent, text='Graph')
@@ -965,6 +1016,13 @@ class ControlsDemo():
         comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
         btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
         btn_reload = Button(comp_btn, text='Load', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+
+        def download(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.on_set += self.gotsvg
+                v.retrievesvg()
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -989,6 +1047,7 @@ class ControlsDemo():
         reload()
         btn_clear.on_select += clear
         btn_reload.on_select += reload
+        btn_download.on_select += download
 
     def open_browser(self, data):
         dlg = Shell(title='pyRAP Browser', minwidth=500, minheight=400)

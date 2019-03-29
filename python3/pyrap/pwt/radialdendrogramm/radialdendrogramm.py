@@ -4,14 +4,11 @@ from dnutils.tools import ifnone
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
     RWTSetOperation
-from pyrap.events import OnSelect, _rwt_event
+from pyrap.events import OnSelect, _rwt_event, OnSet
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.widgets import Widget, constructor, checkwidget
-
-d3wrapper = '''if (typeof d3 === 'undefined') {{
-    {d3content}
-}}'''
+from pyrap.widgets import Widget, constructor
+from pyrap.constants import style, d3wrapper
 
 
 class RadialDendrogramm(Widget):
@@ -32,8 +29,15 @@ class RadialDendrogramm(Widget):
         self._data = {}
         self._opts = opts
         self.on_select = OnSelect(self)
-        self._gwidth = None
-        self._gheight = None
+        self.on_set = OnSet(self)
+        self.svg = None
+
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.items():
+            if key == 'svg':
+                self.svg = value
+        self.on_set.notify(_rwt_event(op))
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -80,6 +84,13 @@ class RadialDendrogramm(Widget):
 
     def highlight(self, el):
         session.runtime << RWTCallOperation(self.id, 'highlight', {'name': el})
+
+    def retrievesvg(self):
+        with open(os.path.join(locations.pwt_loc, 'radialdendrogramm', 'radialdendrogramm.css')) as fi:
+            s= style.format(fi.read())
+            session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'width': self.bounds[2].value,
+                                                                         'height': self.bounds[3].value,
+                                                                         'defs': s})
 
 
 class RadialDendrogrammTheme(WidgetTheme):

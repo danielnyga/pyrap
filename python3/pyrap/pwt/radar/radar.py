@@ -4,14 +4,11 @@ from dnutils.tools import ifnone
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
     RWTSetOperation
-from pyrap.events import OnSelect, _rwt_selection_event, _rwt_event, _rwt_mouse_event
+from pyrap.events import OnSelect, _rwt_selection_event, _rwt_event, OnSet
 from pyrap.ptypes import BitField
 from pyrap.themes import WidgetTheme
-from pyrap.widgets import Widget, constructor, checkwidget
-
-d3wrapper = '''if (typeof d3 === 'undefined') {{
-    {d3content}
-}}'''
+from pyrap.widgets import Widget, constructor
+from pyrap.constants import style, d3wrapper
 
 
 class RadarChart(Widget):
@@ -34,8 +31,15 @@ class RadarChart(Widget):
         self._opts = opts
         self._legendtext = legendtext
         self.on_select = OnSelect(self)
-        self._gwidth = None
-        self._gheight = None
+        self.on_set = OnSet(self)
+        self.svg = None
+
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.items():
+            if key == 'svg':
+                self.svg = value
+        self.on_set.notify(_rwt_event(op))
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -46,10 +50,6 @@ class RadarChart(Widget):
 
     def compute_size(self):
         w, h = Widget.compute_size(self.parent)
-        if self.gwidth is not None:
-            w = self.gwidth
-        if self.gheight is not None:
-            h = self.gheight
 
         padding = self.theme.padding
         if padding:
@@ -62,7 +62,6 @@ class RadarChart(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-
         return w, h
 
     def _handle_notify(self, op):
@@ -78,26 +77,6 @@ class RadarChart(Widget):
                 axis.intervalmax = op.args['args'].get('dataset')['interval'][1]
             events[op.event].notify(_rwt_selection_event(op))
         return True
-
-    @property
-    def gwidth(self):
-        return self._gwidth
-
-    @gwidth.setter
-    @checkwidget
-    def gwidth(self, w):
-        self._gwidth = w
-        session.runtime << RWTSetOperation(self.id, {'width': self.gwidth})
-
-    @property
-    def gheight(self):
-        return self._gheight
-
-    @gheight.setter
-    @checkwidget
-    def gheight(self, h):
-        self._gheight = h
-        session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
 
     def addaxis(self, name, minval=None, maxval=None, unit='%', intervalmin=None, intervalmax=None):
         if isinstance(name, RadarAxis):
@@ -127,11 +106,9 @@ class RadarChart(Widget):
     def axes(self):
         return self._axes
 
-
     @property
     def data(self):
         return self._data
-
 
     def remaxis(self, axis):
         self._axes.remove(axis)
@@ -174,6 +151,13 @@ class RadarChart(Widget):
     def setdata(self, data):
         self._data = data
         session.runtime << RWTSetOperation(self.id, {'data': data})
+
+    def retrievesvg(self):
+        with open(os.path.join(locations.pwt_loc, 'radar', 'radar.css')) as fi:
+            s= style.format(fi.read())
+            session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'width': self.bounds[2].value,
+                                                                         'height': self.bounds[3].value,
+                                                                         'defs': s})
 
 
 class RadarAxis(object):
