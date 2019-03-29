@@ -108,3 +108,6 @@ ENV/
 
 env.sh
 apps/
+
+# auto-generated manifest file
+MANIFEST
