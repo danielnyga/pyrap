@@ -2,7 +2,7 @@ import os
 
 from . import locations
 
-from _version import __version__
+from ._version import __version__
 
 import mimetypes
 mimetypes.init([os.path.join(locations.pyrap_path, 'etc', 'mime.types')] + mimetypes.knownfiles)
