@@ -52,6 +52,7 @@ rwt.remote.MessageWriter.prototype = {
     appendSet : function( targetId, property, value ) {
       var properties = this._getPropertiesObjectFor( targetId );
       properties[ property ] = value;
+      this._operations.push( [ "set", targetId, properties ] );
     },
 
     appendNotify : function( targetId, eventName, properties ) {

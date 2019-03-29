@@ -880,7 +880,16 @@ class SVG(object):
 
     def load(self, cnt):
         self.root = ET.fromstring(cnt)
-        w, h = self.root.attrib['viewBox'].split()[-2:]
+        if 'viewBox' in self.root.attrib:
+            w, h = self.root.attrib['viewBox'].split()[-2:]
+        else:
+            self.root.attrib.update({'width': '900px',
+                                     'height': '600px',
+                                     'viewBox': "0.0 0.0 900.0 600.0"})
+            w, h = (800, 600)
+        if 'xmlns' not in self.root.attrib:
+            self.root.attrib.update({'xmlns': "http://www.w3.org/2000/svg",
+                                     'xmlns:xlink': "http://www.w3.org/1999/xlink"})
         self._width = int(float(w))
         self._height = int(float(h))
         stream = BytesIO()
@@ -927,7 +936,7 @@ class SVG(object):
         return self
 
     def save(self, stream=None):
-        stream.write(ET.tostring(self.root))
+        stream.write(ET.tostring(self.root, encoding='utf-8'))
 
 
 class Image(object):

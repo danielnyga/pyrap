@@ -581,9 +581,9 @@ class SessionRuntime(object):
     def toclipboard(self, text):
         self << RWTCallOperation('rwt.client.CopyToClipboard', 'copy', {'text': text})
 
-    def download(self, path, mimetype):
-        with open(path, 'r') as f:
-            resource = session.runtime.mngr.resources.registerf(os.path.basename(path), mimetype, f)
+    def download(self, path, mimetype, force=False):
+        with open(path, 'rb') as f:
+            resource = session.runtime.mngr.resources.registerf(os.path.basename(path), mimetype, f, force=force)
             resource.download()
 
     def create_display(self):

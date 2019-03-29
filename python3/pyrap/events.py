@@ -141,6 +141,19 @@ class OnSelect(RWTEvent):
     def _notify(self, listener, data): listener(data)
 
 
+class OnSet(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'Set', widget)
+
+    def _create_subscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'Set': True})
+
+    def _create_unsubscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'Set': False})
+
+    def _notify(self, listener, data): listener(data)
+
+
 class OnLongClick(RWTEvent):
     def __init__(self, widget):
         RWTEvent.__init__(self, 'LongClick', widget)
