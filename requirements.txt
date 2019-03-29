@@ -1,4 +1,4 @@
-Pillow==3.3.1
+Pillow
 cssutils
 colored
 pyparsing

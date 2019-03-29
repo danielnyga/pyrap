@@ -20,9 +20,13 @@ class SayHello:
         shell.show(True)
 
 
-if __name__ == '__main__':
+def main():
     pyrap.register(clazz=SayHello,
                    entrypoints={'sayhello': SayHello.main},
                    path='helloworld',
                    name='My First pyRAP app!')
     pyrap.run(admintool=True)
+
+
+if __name__ == '__main__':
+    main()

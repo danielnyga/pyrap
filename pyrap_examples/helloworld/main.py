@@ -19,9 +19,13 @@ class HelloWorld:
         shell.show(True)
 
 
-if __name__ == '__main__':
+def main():
     pyrap.register(clazz=HelloWorld,
                    entrypoints={'start': HelloWorld.main},
                    path='helloworld',
                    name='My First pyRAP app!')
     pyrap.run()
+
+
+if __name__ == '__main__':
+    main()

@@ -14,16 +14,14 @@ from urllib.parse import urlparse
 
 from dnutils.threads import current_thread, Thread, ThreadInterrupt, sleep, SuspendableThread
 
-import web
 import time
 
 from dnutils import Lock, out, RLock, ifnone, logs
 import dnutils
-from web.session import sha1
+from pyrap.web import utils, Storage
+from pyrap.web.session import sha1
 
-from pyrap import threads
-from web.utils import Storage
-from web import utils
+from pyrap import threads, web
 from pyrap.ptypes import Event
 
 _defconf = utils.storage({

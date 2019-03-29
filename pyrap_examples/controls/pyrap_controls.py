@@ -30,7 +30,7 @@ from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, 
     Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
     Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle, \
     DropDown, Combo, Option, error
-import web
+import pyrap.web
 
 class Images:
     IMG_UP = Image('images/icons/up.gif')
@@ -1078,14 +1078,17 @@ class ControlsDemo():
             Checkbox(container, text='this is the %d-th item' % (i+1), halign='left', checked=False)
         scroll.content = container
 
-if __name__ == '__main__':
-#     pyraplog.level(pyraplog.DEBUG)
-    pyrap.register_app(clazz=ControlsDemo, 
-                       path='controls', 
-                       name='pyRAP Controls Demo', 
+
+def main():
+    pyrap.register_app(clazz=ControlsDemo,
+                       path='controls',
+                       name='pyRAP Controls Demo',
                        entrypoints={'desktop': ControlsDemo.desktop},
                                     # 'mobile': ControlsDemo.mobile},
                        theme='mytheme.css',
                        setup=ControlsDemo.setup)#, default=lambda: 'mobile' if 'mobile' in pyrap.session.client.useragent else 'desktop')
     pyrap.run(admintool=True)
 
+
+if __name__ == '__main__':
+    main()

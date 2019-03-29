@@ -13,6 +13,9 @@ __all__ = [
     '__version__'
 ]
 
+APPNAME = 'pyrap'
+APPAUTHOR = 'pyrap.org'
+
 VERSION_MAJOR = 0
 VERSION_MINOR = 1
 VERSION_PATCH = 0

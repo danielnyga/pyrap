@@ -14,13 +14,12 @@ import traceback
 import urllib.request, urllib.parse, urllib.error
 
 import dnutils
-import web
 from datetime import datetime
-from web.utils import storify, Storage
-from web.webapi import notfound, badrequest, seeother, notmodified
+from pyrap.web.utils import storify, Storage
+from pyrap.web.webapi import notfound, badrequest, seeother, notmodified
 
 from dnutils import out, Relay, getlogger, RLock, first, ifnone, logs, Lock, Event
-from pyrap import locations, threads
+from pyrap import locations, threads, web
 from pyrap.base import session
 from pyrap.clientjs import gen_clientjs
 from pyrap.communication import RWTMessage, RWTNotifyOperation, RWTSetOperation, RWTCallOperation, RWTOperation, \

@@ -41,10 +41,14 @@ class GridLayoutExample:
         shell.show(True)
 
 
-if __name__ == '__main__':
+def main():
     pyrap.register(clazz=GridLayoutExample,
                    entrypoints={'dimensions': GridLayoutExample.dimensions,
                                 'stretch': GridLayoutExample.stretch},
                    path='grid',
                    name='GridLayout - Examples!')
     pyrap.run()
+
+
+if __name__ == '__main__':
+    main()

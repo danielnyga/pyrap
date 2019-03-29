@@ -99,9 +99,13 @@ class PyRAPAdmin:
             self.push.flush()
 
 
-if __name__ == '__main__':
+def main():
     pyrap.register(clazz=PyRAPAdmin,
                    entrypoints={'main': PyRAPAdmin.main},
                    path='admin',
                    name='pyRAP Administration Tool')
     pyrap.run()
+
+
+if __name__ == '__main__':
+    main()

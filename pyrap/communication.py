@@ -8,12 +8,11 @@ import json
 
 import dnutils
 from dnutils import ifnone
+from pyrap import web
 
-from web.webapi import internalerror
-import web
 from pyrap.exceptions import forbidden
 from pyrap.utils import RStorage, jsonify, rstorify
-
+from pyrap.web import internalerror
 
 logger = dnutils.getlogger(__name__)
 

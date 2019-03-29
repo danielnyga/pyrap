@@ -1,7 +1,6 @@
 import os
 
 from . import locations
-from . import submodules
 
 from _version import __version__
 

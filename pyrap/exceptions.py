@@ -3,7 +3,7 @@ Created on Oct 2, 2015
 
 @author: nyga
 '''
-from web.webapi import HTTPError
+from pyrap.web.webapi import HTTPError
 
 class RWTError(Exception): pass
 

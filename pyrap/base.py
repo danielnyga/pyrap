@@ -10,12 +10,11 @@ import os
 
 from dnutils.threads import ThreadInterrupt
 
-import web
 from dnutils import expose, first, logs
 
+from pyrap.web import notfound
 from .sessions import PyRAPSession, SessionCleanupThread
-from web.webapi import notfound
-from pyrap import locations
+from pyrap import locations, web
 from pyrap import server
 import urllib.parse 
 
@@ -134,8 +133,8 @@ register = register_app
 
 def run(bindip='127.0.0.1', port=8080, admintool=False):
     if admintool:
-        sys.path.append(os.path.join(locations.pyrap_path, 'examples', 'pyrap-admin'))
-        from admin import PyRAPAdmin
+        sys.path.append(os.path.join(locations.pyrap_path, 'examples', 'pyrap_admin'))
+        from pyrap_examples.pyrap_admin.admin import PyRAPAdmin
         register(clazz=PyRAPAdmin,
                  path='admin',
                  entrypoints={'start': PyRAPAdmin.main},

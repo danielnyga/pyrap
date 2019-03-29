@@ -5,7 +5,7 @@ import multipart
 from dnutils.threads import ThreadInterrupt
 from multipart.multipart import parse_options_header
 
-import web
+from pyrap import web
 
 from pyrap import session
 from pyrap.utils import CaseInsensitiveDict
