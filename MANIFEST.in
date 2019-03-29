@@ -1,5 +1,3 @@
-include README
-include LICENSE
 include requirements.txt
-recursive-include 3rdparty/d3 *.js
-
+recursive-exclude 3rdparty/hammerjs *.*
+recursive-exclude 3rdparty/hammertouchemulator *.* LICENSE Makefile
