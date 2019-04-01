@@ -14,6 +14,7 @@ pwt_bubblyclusters.BubblyClusters = function( parent ) {
     this._clusterPadding = 6; // separation between different-color nodes
     this._maxRadius = 12;
     this._force = d3.layout.force();
+    this._sound = new Audio('audio_file.mp3');
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.bubblyclusters');
@@ -94,6 +95,21 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
         this.update();
     },
 
+
+    /**
+     * Play sound
+     */
+    play: function() {
+        this._sound.play();
+    },
+
+    /**
+     * Pause sound
+     */
+    pause: function() {
+        this._sound.pause();
+    }
+    ,
     /**
      * removes all axes from the radar chart
      */
