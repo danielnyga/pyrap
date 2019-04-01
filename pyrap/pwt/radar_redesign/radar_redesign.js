@@ -98,8 +98,8 @@ pwt_radar_red.RadarChartRed.prototype = {
         this._svg
             .append('svg')
             .attr('class', 'radarlegend')
-            .attr('width', "300px")
-            .attr('height', "300px")
+            .attr('width', "100%")
+            .attr('height', "100%")
             .attr('transform', 'translate('+ (this._cfg.w + this._cfg.margin.left) +',0)')// move legend svg to the top right corner
             .append("text")
             .attr("class", "legendtitle")
@@ -419,6 +419,12 @@ pwt_radar_red.RadarChartRed.prototype = {
         this.setData( {} );
     },
 
+    /**
+     * retrieves the svg as text to save it to a file
+     */
+    retrievesvg : function ( args ) {
+        rwt.remote.Connection.getInstance().getRemoteObject( this ).set( args.type, this._svg.node().outerHTML );
+    },
 
     /**
      * updates data options
@@ -1239,7 +1245,7 @@ rap.registerTypeHandler( 'pwt.customs.RadarChartRed', {
 
   properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
 
-  methods : [ 'updateData', 'addAxis', 'remAxis', 'clear'],
+  methods : [ 'updateData', 'addAxis', 'remAxis', 'clear', 'retrievesvg'],
 
   events: [ 'Selection' ]
 

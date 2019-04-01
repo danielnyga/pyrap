@@ -5,8 +5,9 @@ from dnutils.tools import ifnone
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
     RWTSetOperation
-from pyrap.events import OnSelect, _rwt_event
+from pyrap.events import OnSelect, _rwt_event, OnSet
 from pyrap.ptypes import BitField
+from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor, checkwidget
 from pyrap.constants import d3wrapper
@@ -25,13 +26,15 @@ class RadarChartRed(Widget):
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
             cnt = d3wrapper.format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
+        with open(os.path.join(locations.pwt_loc, 'radar_redesign', 'radar_redesign.css')) as fi:
+            session.runtime.requirecss(fi)
         self._axes = []
         self._data = {}
         self._opts = opts
         self._legendtext = legendtext
         self.on_select = OnSelect(self)
-        self._gwidth = None
-        self._gheight = None
+        self.on_set = OnSet(self)
+        self.svg = None
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -43,10 +46,6 @@ class RadarChartRed(Widget):
 
     def compute_size(self):
         w, h = Widget.compute_size(self.parent)
-        if self.gwidth is not None:
-            w = self.gwidth
-        if self.gheight is not None:
-            h = self.gheight
 
         padding = self.theme.padding
         if padding:
@@ -59,8 +58,16 @@ class RadarChartRed(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-
         return w, h
+
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.items():
+            if key == 'svg':
+                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'radar_redesign', 'radar_redesign.css'), name=__class__.__name__)
+            if key == 'pdf':
+                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'radar_redesign', 'radar_redesign.css'), name=__class__.__name__)
+        self.on_set.notify(_rwt_event(op))
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select}
@@ -74,26 +81,6 @@ class RadarChartRed(Widget):
             events[op.event].notify(_rwt_event(op))
         return True
 
-    @property
-    def gwidth(self):
-        return self._gwidth
-
-    @gwidth.setter
-    @checkwidget
-    def gwidth(self, w):
-        self._gwidth = w
-        session.runtime << RWTSetOperation(self.id, {'width': self.gwidth})
-
-    @property
-    def gheight(self):
-        return self._gheight
-
-    @gheight.setter
-    @checkwidget
-    def gheight(self, h):
-        self._gheight = h
-        session.runtime << RWTSetOperation(self.id, {'height': self.gheight})
-
     def addaxis(self, name, minval=None, maxval=None, unit='%', intervalmin=None, intervalmax=None):
         r = RadarRedAxis(name, minval=minval, maxval=maxval, unit=unit, intervalmin=intervalmin, intervalmax=intervalmax)
         self._axes.append(r)
@@ -103,22 +90,18 @@ class RadarChartRed(Widget):
                                                                  'interval': [intervalmin, intervalmax]})
         return r
 
-
     @property
     def axes(self):
         return self._axes
-
 
     @property
     def data(self):
         return self._data
 
-
     def remaxis(self, axis):
         self._axes.remove(axis)
         session.runtime << RWTCallOperation(self.id, 'remAxis', axis)
         return True
-
 
     def clear(self):
         self._axes = []
@@ -147,6 +130,9 @@ class RadarChartRed(Widget):
     def setdata(self, data):
         self._data = data
         session.runtime << RWTSetOperation(self.id, {'data': data})
+
+    def download(self, pdf=False):
+        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'type': 'pdf' if pdf else 'svg'})
 
 
 class RadarRedAxis(object):

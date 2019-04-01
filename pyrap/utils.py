@@ -3,6 +3,7 @@ Created on Nov 10, 2015
 
 @author: nyga
 '''
+import os
 import sys
 
 import collections
@@ -224,6 +225,7 @@ def bind(**kwargs):
             function(*args, **kwargs)
         return traced
     return wrap_f
+
 
 if __name__ == '__main__':
     print(pparti(10, [.2, .2, .1, .5]))

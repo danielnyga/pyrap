@@ -15,7 +15,7 @@ from xml.dom import minidom
 from PIL import Image as PILImage
 
 from dnutils import Condition, ifnone
-from pyrap.constants import FONT
+from pyrap.constants import FONT, style, defs
 from pyrap.utils import BitMask
 from functools import reduce
 
@@ -878,10 +878,20 @@ class SVG(object):
         self._height = None
         self.namespaces = {'svg': "http://www.w3.org/2000/svg"}
 
-    def load(self, cnt):
+    def load(self, cnt, w=None, h=None, css=None):
         self.root = ET.fromstring(cnt)
+
+        if css is not None:
+            with open(css) as fi:
+                s = defs.format(fi.read())
+                defstag = ET.fromstring(s)
+                self.root.append(defstag)
         if 'viewBox' in self.root.attrib:
             w, h = self.root.attrib['viewBox'].split()[-2:]
+        elif w is not None and h is not None:
+            self.root.attrib.update({'width': '{}px'.format(w),
+                                     'height': '{}px'.format(h),
+                                     'viewBox': "0.0 0.0 {} {}".format(w, h)})
         else:
             self.root.attrib.update({'width': '900px',
                                      'height': '600px',
@@ -890,6 +900,7 @@ class SVG(object):
         if 'xmlns' not in self.root.attrib:
             self.root.attrib.update({'xmlns': "http://www.w3.org/2000/svg",
                                      'xmlns:xlink': "http://www.w3.org/1999/xlink"})
+
         self._width = int(float(w))
         self._height = int(float(h))
         stream = BytesIO()
@@ -925,6 +936,12 @@ class SVG(object):
         self._content = str(stream.getvalue())
         stream.close()
         return self
+
+    @property
+    def cnt(self):
+        stream = BytesIO()
+        self.save(stream)
+        return stream.getvalue()
 
     @property
     def size(self):

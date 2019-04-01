@@ -1,6 +1,6 @@
 pwt_video = {};
 
-pwt_video.Video = function( parent, options) {
+pwt_video.Video = function( parent ) {
 
     this._parentDIV = this.createElement(parent);
     this._video = this._parentDIV.getElementsByTagName('video')[0];

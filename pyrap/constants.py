@@ -33,6 +33,9 @@ style = '''
   ]]>
 </style>'''
 
+defs = '''
+<defs>{}</defs>'''.format(style)
+
 
 class CURSOR:
     DEFAULT      = 1 << 0

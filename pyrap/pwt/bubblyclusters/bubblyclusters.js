@@ -3,7 +3,7 @@
 // for extra information
 pwt_bubblyclusters = {};
 
-pwt_bubblyclusters.BubblyClusters = function( parent ) {
+pwt_bubblyclusters.BubblyClusters = function( parent, audio ) {
 
     this._parentDIV = this.createElement(parent);
     this._tooltip = d3.select(this._parentDIV).append("div")
@@ -14,7 +14,12 @@ pwt_bubblyclusters.BubblyClusters = function( parent ) {
     this._clusterPadding = 6; // separation between different-color nodes
     this._maxRadius = 12;
     this._force = d3.layout.force();
-    this._sound = new Audio('audio_file.mp3');
+
+    this._audio = false;
+    if (audio) {
+        this._sound = new Audio(audio);
+        this._audio = true;
+    }
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.bubblyclusters');
@@ -95,19 +100,31 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
         this.update();
     },
 
+    /**
+     * Load audio file
+     */
+    setAudio : function( audiofile ) {
+        this._sound = new Audio(audiofile);
+        this._audio = true;
+    },
 
     /**
      * Play sound
      */
     play: function() {
-        this._sound.play();
+        if (this._audio) {
+            var audioClone = this._sound.cloneNode();
+            audioClone.play();
+        }
     },
 
     /**
      * Pause sound
      */
     pause: function() {
-        this._sound.pause();
+        if (this._audio) {
+            this._sound.pause();
+        }
     }
     ,
     /**
@@ -120,41 +137,8 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
     /**
      * retrieves the svg as text to save it to a file
      */
-    retrievesvg : function ( data ) {
-        var attrs = this._svg.node().attributes;
-
-        // saving old attributes
-        var orig = {};
-        for (var i=0; i<attrs.length; i++)
-            orig[attrs[i].name] = attrs[i].value;
-
-        // updating attributes for export
-        this._svg
-            .attr('width', data.width + 'px')
-            .attr('height', data.height + 'px')
-            .attr('viewBox', [0, 0, data.width, data.height].join(' '));
-
-        // adding css styles
-        if (data.defs) {
-            if (!this._defs) {
-                this._defs = this._svgContainer.append("defs");
-            }
-            this._defs.html(this._defs.node().innerHTML + data.defs);
-
-        }
-        rwt.remote.Connection.getInstance().getRemoteObject( this ).set( 'svg', this._svg.node().outerHTML );
-
-        // removing set attributes
-        this._svg
-            .attr('width', null)
-            .attr('height', null)
-            .attr('viewBox', null);
-
-        // restoring original attributes
-        for (var key in orig) {
-            this._svg
-                .attr(key, orig[key]);
-        }
+    retrievesvg : function ( args ) {
+        rwt.remote.Connection.getInstance().getRemoteObject( this ).set( args.type, this._svg.node().outerHTML );
     },
 
     /**
@@ -208,7 +192,6 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
         return clusters.length;
     },
 
-
     /**
      * redraws the radar chart with the updated datapoints and polygons
      */
@@ -258,8 +241,8 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
                 rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'right', args:{} } );
             })
             .transition()
-            .duration(750)
-            .delay(function(d, i) { return i * 5; })
+            .duration(1000)
+            .delay(function(d, i) { that.play(); return i * 5; })
             .attrTween("r", function(d) {
                 var i = d3.interpolate(0, d.radius);
                 return function(t) {
@@ -348,8 +331,8 @@ rap.registerTypeHandler( 'pwt.customs.BubblyClusters', {
     },
 
     destructor: 'destroy',
-    properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
-    methods : [ 'clear', 'retrievesvg'],
+    properties: [ 'remove', 'width', 'height', 'data', 'bounds', 'audio'],
+    methods : [ 'clear', 'retrievesvg', 'play'],
     events: [ 'Selection' ]
 
 } );

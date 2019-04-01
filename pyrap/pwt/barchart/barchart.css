@@ -1,0 +1,19 @@
+.bar rect {
+  fill: steelblue;
+}
+
+.bar text {
+  fill: black;
+}
+
+.tick line {
+  fill: none;
+  stroke: black;
+}
+
+text {
+  color: black;
+  font: 10px monospace, arial, sans-serif;
+  font-weight: normal;
+  font-weight: bold;
+}

@@ -23,7 +23,6 @@ class Video(Widget):
         self.isPlaying = False
         self.on_select = OnSelect(self)
 
-
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
@@ -64,7 +63,7 @@ class Video(Widget):
     def addsrc(self, src):
         self._sources.append(src)
         with open(os.path.abspath(src['source']), "rb") as f:
-            resource = session.runtime.mngr.resources.registerf(os.path.basename(src['source']), src['type'], f, encode=False)
+            resource = session.runtime.mngr.resources.registerf(os.path.basename(src.get('source')), src.get('type', 'video/mp4'), f, encode=False)
             session.runtime << RWTCallOperation(self.id, 'addSrc', {'source': resource.location, 'type': src['type']})
 
 

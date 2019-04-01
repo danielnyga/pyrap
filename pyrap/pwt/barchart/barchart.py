@@ -6,6 +6,7 @@ from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
 from pyrap.events import OnSelect, OnSet, _rwt_event
 from pyrap.ptypes import BitField
+from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor
 from pyrap.constants import d3wrapper
@@ -23,6 +24,8 @@ class BarChart(Widget):
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
             cnt = d3wrapper.format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
+        with open(os.path.join(locations.pwt_loc, 'barchart', 'barchart.css')) as fi:
+            session.runtime.requirecss(fi)
         self._data = []
         self.on_select = OnSelect(self)
         self.on_set = OnSet(self)
@@ -39,7 +42,9 @@ class BarChart(Widget):
         Widget._handle_set(self, op)
         for key, value in op.args.items():
             if key == 'svg':
-                self.svg = value
+                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'barchart', 'barchart.css'), name=__class__.__name__)
+            if key == 'pdf':
+                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'barchart', 'barchart.css'), name=__class__.__name__)
         self.on_set.notify(_rwt_event(op))
 
     def _create_rwt_widget(self):
@@ -71,8 +76,8 @@ class BarChart(Widget):
         session.runtime << RWTSetOperation(self.id, {'data': data})
         self._data = data
 
-    def retrievesvg(self):
-        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'width': self.bounds[2].value, 'height': self.bounds[3].value})
+    def download(self, pdf=False):
+        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'type': 'pdf' if pdf else 'svg'})
 
 
 class BarChartTheme(WidgetTheme):

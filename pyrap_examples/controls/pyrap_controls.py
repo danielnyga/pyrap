@@ -13,9 +13,10 @@ import sys
 from dnutils import out
 from dnutils.threads import sleep, ThreadInterrupt
 from dnutils.tools import ifnone
+from pyrap.pwt.barchart.barchart import BarChart
 
 import pyrap
-from pyrap import session
+from pyrap import session, locations
 from pyrap.dialogs import msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel, \
     ask_okcancel, open_progress, ask_color
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout
@@ -26,6 +27,7 @@ from pyrap.pwt.graph.graph import Graph
 from pyrap.pwt.plot.plot import Scatterplot
 from pyrap.pwt.radar.radar import RadarChart
 from pyrap.pwt.tree.tree import Tree
+from pyrap.pwt.video.video import Video
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
     Group, ScrolledComposite, Browser, List, Canvas, StackedComposite, Scale, \
     Menu, MenuItem, Spinner, info, FileUpload, TabFolder, Table, Sash, Toggle, \
@@ -46,19 +48,8 @@ class ControlsDemo():
     @staticmethod
     def setup(application): pass
 
-    @staticmethod
-    def gotsvg(args):
-        svgfile = os.path.join('/tmp', 'tmpviz.svg')
-        svg = SVG()
-        svg.load(args.args[0]['svg'])
-        with open(svgfile, 'wb') as f:
-            svg.save(f)
-
-        # download as SVG
-        session.runtime.download(svgfile, 'image/svg+xml', force=True)
-
     def desktop(self, **kwargs):
-        page = kwargs.get('page', 'Directed Graph')
+        page = kwargs.get('page', 'Bubbly Clusters')
         self.shell = Shell(maximized=True, titlebar=False)
         self.shell.on_resize += self.shell.dolayout
         shell = self.shell
@@ -287,6 +278,20 @@ class ControlsDemo():
         page = self.create_page_template('D3 Graph')
         self.create_graph_page(page)
         self.pages['Directed Graph'] = page
+
+        #=======================================================================
+        # create D3 bar chart
+        #=======================================================================
+        page = self.create_page_template('D3 BarChart')
+        self.create_barchart_page(page)
+        self.pages['BarChart'] = page
+
+        # =======================================================================
+        # create video
+        # =======================================================================
+        page = self.create_page_template('Video')
+        self.create_video_page(page)
+        self.pages['Video'] = page
 
         for page in [self.pages[k] for k in sorted(self.pages.keys())][1:]:
             page.layout.exclude = True
@@ -786,7 +791,7 @@ class ControlsDemo():
         browser.on_select += self.open_browser
 
     def create_radar_page(self, parent):
-        grp = Group(parent, text='Bubbly Cluster')
+        grp = Group(parent, text='Radar Chart')
         grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
 
         comp_btn = Composite(grp)
@@ -798,8 +803,7 @@ class ControlsDemo():
         def download(*_):
             if comp_body.children:
                 v = comp_body.children[-1]
-                v.on_set += self.gotsvg
-                v.retrievesvg()
+                v.download(pdf=False)
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -837,7 +841,7 @@ class ControlsDemo():
         btn_download.on_select += download
 
     def create_cluster_page(self, parent):
-        grp = Group(parent, text='Bubbly Cluster')
+        grp = Group(parent, text='Radial Dendrogramm')
         grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
 
         comp_btn = Composite(grp)
@@ -851,8 +855,7 @@ class ControlsDemo():
         def download(*_):
             if comp_body.children:
                 v = comp_body.children[-1]
-                v.on_set += self.gotsvg
-                v.retrievesvg()
+                v.download(pdf=False)
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -891,13 +894,15 @@ class ControlsDemo():
         comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
         btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
         btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
-        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download SVG', halign='fill', valign='fill')
+        btn_play = Button(comp_btn, text='Download PDF', halign='fill', valign='fill')
+
+        audio = os.path.join(locations.rc_loc, 'static', 'audio', 'blob.mp3')
 
         def download(*_):
             if comp_body.children:
                 v = comp_body.children[-1]
-                v.on_set += self.gotsvg
-                v.retrievesvg()
+                v.download(pdf=False)
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -910,11 +915,17 @@ class ControlsDemo():
             for c in comp_body.children:
                 c.dispose()
 
+        def play(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.download(pdf=True)
+
         def reload(*_):
             if comp_body.children:
                 clear()
 
             cluster = BubblyClusters(comp_body, halign='fill', valign='fill')
+            cluster.setaudio(audio)
             cluster.setdata(data)
 
             self.shell.dolayout()
@@ -923,6 +934,7 @@ class ControlsDemo():
         btn_clear.on_select += clear
         btn_reload.on_select += reload
         btn_download.on_select += download
+        btn_play.on_select += play
 
     def create_tree_page(self, parent):
         grp = Group(parent, text='Tree')
@@ -937,8 +949,7 @@ class ControlsDemo():
         def download(*_):
             if comp_body.children:
                 v = comp_body.children[-1]
-                v.on_set += self.gotsvg
-                v.retrievesvg()
+                v.download(pdf=False)
 
         comp_body = Composite(grp)
         comp_body.layout = CellLayout(halign='fill', valign='fill')
@@ -978,8 +989,7 @@ class ControlsDemo():
         def download(*_):
             if comp_body.children:
                 v = comp_body.children[-1]
-                v.on_set += self.gotsvg
-                v.retrievesvg()
+                v.download(pdf=False)
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -1021,8 +1031,7 @@ class ControlsDemo():
         def download(*_):
             if comp_body.children:
                 v = comp_body.children[-1]
-                v.on_set += self.gotsvg
-                v.retrievesvg()
+                v.download(pdf=False)
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
@@ -1048,6 +1057,70 @@ class ControlsDemo():
         btn_clear.on_select += clear
         btn_reload.on_select += reload
         btn_download.on_select += download
+
+    def create_barchart_page(self, parent):
+        grp = Group(parent, text='BarChart')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Load', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+
+        def download(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.download(pdf=False)
+
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+
+        data = []
+        with open('resources/barchart.json') as f:
+            data = json.load(f)
+
+        def clear(*_):
+            for c in comp_body.children:
+                c.dispose()
+
+        def reload(*_):
+            if comp_body.children:
+                clear()
+
+            bc = BarChart(comp_body, halign='fill', valign='fill')
+            bc.data(data)
+
+            self.shell.dolayout()
+
+        reload()
+        btn_clear.on_select += clear
+        btn_reload.on_select += reload
+        btn_download.on_select += download
+
+    def create_video_page(self, parent):
+        grp = Group(parent, text='Video')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_play = Button(comp_btn, text='Play', halign='fill', valign='fill')
+        btn_pause = Button(comp_btn, text='Pause', halign='fill', valign='fill')
+
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+
+        v = Video(comp_body, halign='fill', valign='fill')
+        v.addsrc({'source': 'resources/test.mp4', 'type': 'video/mp4'})
+
+        def play(*_):
+            v.play()
+
+        def pause(*_):
+            v.pause()
+
+        btn_play.on_select += play
+        btn_pause.on_select += pause
 
     def open_browser(self, data):
         dlg = Shell(title='pyRAP Browser', minwidth=500, minheight=400)

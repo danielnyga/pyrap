@@ -1,37 +1,3 @@
-#  -*- coding: utf-8 -*-
-#                                           _..._                       .-'''-.
-#                                        .-'_..._''.           .---.   '   _    \
-#   __  __   ___                       .' .'      '.\          |   | /   /` '.   \
-#  |  |/  `.'   `.                    / .'                     |   |.   |     \  '
-#  |   .-.  .-.   '              .|  . '                       |   ||   '      |  '
-#  |  |  |  |  |  |    __      .' |_ | |                 __    |   |\    \     / /
-#  |  |  |  |  |  | .:--.'.  .'     || |              .:--.'.  |   | `.   ` ..' /
-#  |  |  |  |  |  |/ |   \ |'--.  .-'. '             / |   \ | |   |    '-...-'`
-#  |  |  |  |  |  |`" __ | |   |  |   \ '.          .`" __ | | |   |
-#  |__|  |__|  |__| .'.''| |   |  |    '. `._____.-'/ .'.''| | |   |
-#                  / /   | |_  |  '.'    `-.______ / / /   | |_'---'
-#                  \ \._,\ '/  |   /              `  \ \._,\ '/
-#                   `--'  `"   `'-'                   `--'  `"
-#  (C) 2017 by Mareike Picklum (mareikep@cs.uni-bremen.de)
-#
-#  Permission is hereby granted, free of charge, to any person obtaining
-#  a copy of this software and associated documentation files (the
-#  "Software"), to deal in the Software without restriction, including
-#  without limitation the rights to use, copy, modify, merge, publish,
-#  distribute, sublicense, and/or sell copies of the Software, and to
-#  permit persons to whom the Software is furnished to do so, subject to
-#  the following conditions:
-#  The above copyright notice and this permission notice shall be
-#  included in all copies or substantial portions of the Software.
-#
-#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-#  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-#  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-#  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-#  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-#  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-#  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 import os
 from dnutils import ifnone
 
@@ -40,6 +6,7 @@ from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
 from pyrap.events import OnSelect, _rwt_event, OnSet
 from pyrap.ptypes import BitField
+from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor
 from pyrap.constants import style, d3wrapper
@@ -75,7 +42,9 @@ class Scatterplot(Widget):
         Widget._handle_set(self, op)
         for key, value in op.args.items():
             if key == 'svg':
-                self.svg = value
+                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'plot', 'plot.css'), name=__class__.__name__)
+            if key == 'pdf':
+                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'plot', 'plot.css'), name=__class__.__name__)
         self.on_set.notify(_rwt_event(op))
 
     def _create_rwt_widget(self):
@@ -120,12 +89,8 @@ class Scatterplot(Widget):
         self._data = data
         session.runtime << RWTSetOperation(self.id, {'data': data})
 
-    def retrievesvg(self):
-        with open(os.path.join(locations.pwt_loc, 'plot', 'plot.css')) as fi:
-            s= style.format(fi.read())
-            session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'width': self.bounds[2].value,
-                                                                         'height': self.bounds[3].value,
-                                                                         'defs': s})
+    def download(self, pdf=False):
+        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'type': 'pdf' if pdf else 'svg'})
 
 
 class ScatterTheme(WidgetTheme):

@@ -7,6 +7,7 @@ from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
 from pyrap.constants import style, d3wrapper
 from pyrap.events import OnSelect, OnSet, _rwt_event
 from pyrap.ptypes import BitField
+from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor
 
@@ -48,7 +49,9 @@ class Graph(Widget):
         Widget._handle_set(self, op)
         for key, value in op.args.items():
             if key == 'svg':
-                self.svg = value
+                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'graph', 'graph.css'), name=__class__.__name__)
+            if key == 'pdf':
+                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'graph', 'graph.css'), name=__class__.__name__)
         self.on_set.notify(_rwt_event(op))
 
     def compute_size(self):
@@ -156,12 +159,8 @@ class Graph(Widget):
         self._links = [x for x in self.links if x not in remove] + add
         return remove, add
 
-    def retrievesvg(self):
-        with open(os.path.join(locations.pwt_loc, 'graph', 'graph.css')) as fi:
-            s= style.format(fi.read())
-            session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'width': self.bounds[2].value,
-                                                                         'height': self.bounds[3].value,
-                                                                         'defs': s})
+    def download(self, pdf=False):
+        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'type': 'pdf' if pdf else 'svg'})
 
 
 class GraphLink(object):

@@ -5,7 +5,8 @@ from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
     RWTSetOperation
 from pyrap.events import OnSelect, _rwt_event, OnSet
-from pyrap.ptypes import BitField
+from pyrap.ptypes import BitField, SVG
+from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor
 from pyrap.constants import style, d3wrapper
@@ -65,8 +66,13 @@ class BubblyClusters(Widget):
         Widget._handle_set(self, op)
         for key, value in op.args.items():
             if key == 'svg':
-                self.svg = value
+                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'bubblyclusters', 'bubblyclusters.css'), name=__class__.__name__)
+            if key == 'pdf':
+                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'bubblyclusters', 'bubblyclusters.css'), name=__class__.__name__)
         self.on_set.notify(_rwt_event(op))
+
+    def play(self):
+        session.runtime << RWTCallOperation(self.id, 'play', {})
 
     @property
     def data(self):
@@ -77,16 +83,18 @@ class BubblyClusters(Widget):
         self._opts = []
         session.runtime << RWTCallOperation(self.id, 'clear', {})
 
+    def setaudio(self, audio):
+        self._audio = audio
+        with open(os.path.abspath(audio), "rb") as f:
+            resource = session.runtime.mngr.resources.registerf(os.path.basename(audio), 'audio/mpeg', f, encode=False)
+            session.runtime << RWTSetOperation(self.id, {'audio': resource.location})
+
     def setdata(self, data):
         self._data = data
         session.runtime << RWTSetOperation(self.id, {'data': data})
 
-    def retrievesvg(self):
-        with open(os.path.join(locations.pwt_loc, 'bubblyclusters', 'bubblyclusters.css')) as fi:
-            s= style.format(fi.read())
-            session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'width': self.bounds[2].value,
-                                                                         'height': self.bounds[3].value,
-                                                                         'defs': s})
+    def download(self, pdf=False):
+        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'type': 'pdf' if pdf else 'svg'})
 
 
 class BubblyClustersTheme(WidgetTheme):
