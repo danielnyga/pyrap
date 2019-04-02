@@ -19,6 +19,11 @@ text.scattertext {
   text-shadow: none;
 }
 
+path.scatterline {
+  fill: none;
+  stroke-width: 1.5px;
+}
+
 text {
   font: 15px monospace, arial, sans-serif;
   font-weight: bold;
