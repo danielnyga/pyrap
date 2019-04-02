@@ -2387,7 +2387,6 @@ class Browser(Widget):
         self._url = self._loadurl(url)
         self._FN_TEMPLATE = "(function(){{{}}})();"
 
-
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         options.style.append('NONE')
@@ -2420,8 +2419,9 @@ class Browser(Widget):
             elif session.runtime.mngr.resources.get(url):
                 return session.runtime.mngr.resources.get(url).location
             elif os.path.isfile(os.path.abspath(url)):
-                res = session.runtime.mngr.resources.registerf(url, 'text/html', os.path.abspath(url))
-                return res.location
+                with open(os.path.abspath(url), 'rb') as f:
+                    res = session.runtime.mngr.resources.registerf(url, 'text/html', f)
+                    return res.location
             else:
                 raise Exception('URL "{}" is not a valid url or existing local file!'.format(url))
         else:
