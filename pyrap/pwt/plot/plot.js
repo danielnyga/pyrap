@@ -178,14 +178,24 @@ pwt_scatterplot.Scatterplot.prototype = {
             .ticks(5)
             .orient('left');
 
-        // Circles
-        var circles = this._svgContainer.selectAll('circle.scattercircle').data(this._data);
+        // circle groups selection
+        var circlegroups = this._svgContainer.selectAll('g.scatternode').data(this._data);
+
+        // circle groups creation
+        var circlegroupsenter = circlegroups
+            .enter()
+            .append('g')
+            .attr("class", "scatternode")
+            .attr("transform", function(d){return "translate("+xScale(d.x) + "," + yScale(d.y) + ")"});
+
+        // circle groups update
+        circlegroups
+            .attr("transform", function(d){return "translate("+xScale(d.x) + "," + yScale(d.y) + ")"});
 
         // circle creation
-        circles
-            .enter()
-            .append('circle')
-            .attr('class','scattercircle')
+        circlegroupsenter
+            .append("circle")
+            .attr("class", "scattercircle")
             .attr('fill',function (d,i) { return that._cfg.color(i) })
             .on('mouseover', function () {
                 that._tooltip
@@ -207,12 +217,24 @@ pwt_scatterplot.Scatterplot.prototype = {
             });
 
         // circle update
-        circles
-            .attr('cx',function (d) { return xScale(d.x) })
-            .attr('cy',function (d) { return yScale(d.y) })
+        // update nodes
+        circlegroups.select('.scattercircle')
             .attr('r', 10);
 
-        circles.exit().remove();
+        // circle text creation
+        circlegroupsenter
+            .append("text")
+            .attr("class", "scattertext")
+            .attr("dx", function(d){return 0;})
+            .attr("dy", function(d){return 10;})
+            .text(function(d){return d.tooltip});
+
+        // circle text update
+        circlegroups.select('.scattertext')
+            .text(function(d){return d.name});
+
+        // circlegroups removal
+        circlegroups.exit().remove();
 
         // X-axis
         var xaxis = this._svgContainer.selectAll("g.axis.xaxis").data([0]);
