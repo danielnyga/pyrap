@@ -101,7 +101,8 @@ pwt_scatterplot.Scatterplot.prototype = {
      * updates data options
      */
     setData : function ( data ) {
-        this._data = data;
+        this._scatterdata = data.scatter ? data.scatter : [];
+        this._linedata = data.line ? data.line : {};
         this.update();
     },
 
@@ -142,6 +143,40 @@ pwt_scatterplot.Scatterplot.prototype = {
     },
 
     /**
+     * determines the min and max values for the x/y-axes from the line data
+     */
+    linelimits : function() {
+        var lx = Number.POSITIVE_INFINITY;
+        var ly = Number.POSITIVE_INFINITY;
+        var ux = Number.NEGATIVE_INFINITY;
+        var uy = Number.NEGATIVE_INFINITY;
+        var tmpx, tmpy;
+
+        for (var key in this._linedata){
+
+            for (var i=0; i<this._linedata[key].length; i++) {
+                tmpx = this._linedata[key][i].x;
+                tmpy = this._linedata[key][i].y;
+                lx = tmpx < lx ? tmpx : lx;
+                ux = tmpx > ux ? tmpx : ux;
+                ly = tmpy < ly ? tmpy : ly;
+                uy = tmpy > uy ? tmpy : uy;
+            }
+        }
+        return {'x': [lx, ux], 'y': [ly, uy]};
+    },
+
+    /**
+     * determines the min and max values for the x/y-axes from the scatter data
+     */
+    scatterlimits : function() {
+        return {'x': [d3.min([0, d3.min(this._scatterdata, function (d) { return d.x })]),
+                      d3.max([0, d3.max(this._scatterdata, function (d) { return d.x })])],
+                'y': [d3.min([0, d3.min(this._scatterdata, function (d) { return d.y })]),
+                      d3.max([0, d3.max(this._scatterdata, function (d) { return d.y })])]};
+    },
+
+    /**
      * redraws the plot with the updated data
      */
     update : function () {
@@ -150,42 +185,38 @@ pwt_scatterplot.Scatterplot.prototype = {
 
         var that = this;
 
+        // generate limits for x/y axes from data; prefer scatterdata over line data
+        var limits = typeof this._scatterdata !== 'undefined' && this._scatterdata.length > 0 ? this.scatterlimits() : this.linelimits();
         var xScale = d3.scale.linear()
-            .domain([
-                d3.min([0, d3.min(this._data, function (d) { return d.x })]),
-                d3.max([0, d3.max(this._data, function (d) { return d.x })])
-            ])
+            .domain([limits.x[0], limits.x[1]])
             .range([0, this._w]);
 
         var yScale = d3.scale.linear()
-            .domain([
-                d3.min([0, d3.min(this._data, function (d) { return d.y })]),
-                d3.max([0, d3.max(this._data, function (d) { return d.y })])
-            ])
+            .domain([limits.y[0], limits.y[1]])
             .range([this._h, 0]);
 
-        // X-axis
-        var xAxis = d3.svg.axis()
-            .scale(xScale)
-            .tickFormat(this._xformat)
-            .ticks(5)
-            .orient('bottom');
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE NODES                               ///
+        ////////////////////////////////////////////////////////////////////////
 
-        // Y-axis
-        var yAxis = d3.svg.axis()
-            .scale(yScale)
-            .tickFormat(this._yformat)
-            .ticks(5)
-            .orient('left');
+        // circle groups selection
+        var circlegroups = this._svgContainer.selectAll('g.scatternode').data(this._scatterdata);
 
-        // Circles
-        var circles = this._svgContainer.selectAll('circle.scattercircle').data(this._data);
+        // circle groups creation
+        var circlegroupsenter = circlegroups
+            .enter()
+            .append('g')
+            .attr("class", "scatternode")
+            .attr("transform", function(d){return "translate("+xScale(d.x) + "," + yScale(d.y) + ")"});
+
+        // circle groups update
+        circlegroups
+            .attr("transform", function(d){return "translate("+xScale(d.x) + "," + yScale(d.y) + ")"});
 
         // circle creation
-        circles
-            .enter()
-            .append('circle')
-            .attr('class','scattercircle')
+        circlegroupsenter
+            .append("circle")
+            .attr("class", "scattercircle")
             .attr('fill',function (d,i) { return that._cfg.color(i) })
             .on('mouseover', function () {
                 that._tooltip
@@ -206,13 +237,94 @@ pwt_scatterplot.Scatterplot.prototype = {
                     .style("display", "none");
             });
 
-        // circle update
-        circles
-            .attr('cx',function (d) { return xScale(d.x) })
-            .attr('cy',function (d) { return yScale(d.y) })
+        // update nodes
+        circlegroups.select('.scattercircle')
             .attr('r', 10);
 
-        circles.exit().remove();
+        // circle text creation
+        circlegroupsenter
+            .append("text")
+            .attr("class", "scattertext")
+            .attr("dx", function(d){return 0;})
+            .attr("dy", function(d){return 10;})
+            .text(function(d){return d.tooltip});
+
+        // circle text update
+        circlegroups.select('.scattertext')
+            .text(function(d){return d.name});
+
+        // circlegroups removal
+        circlegroups.exit().remove();
+
+
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE LINES                               ///
+        ////////////////////////////////////////////////////////////////////////
+
+        var color = d3.scale.ordinal()
+            .domain(Object.keys(this._linedata))
+            .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999']);
+
+        var valueline = function (d) {
+            return d3.svg.line()
+                     .x(function(d) { return xScale(d.x); })
+                     .y(function(d) { return yScale(d.y); })
+                     (d)
+        };
+
+        Object.keys(this._linedata).forEach(function(key, idx) {
+            // line groups selection
+            var linegroups = that._svgContainer.selectAll("g.pathnode" + "-" + key).data([0]);
+
+            // line groups creation
+            var linegroupsenter = linegroups
+                .enter()
+                .append('g')
+                .attr("class", "pathnode" + "-" + key);
+
+            // lines creation
+            linegroupsenter
+                .append("path")
+                .attr("stroke", function(d){ return color(key); })
+                .attr("class", "scatterline")
+                .attr("d", function(d){ return valueline(that._linedata[key]);})
+                .on('mouseover', function () {
+                    that._tooltip
+                        .transition(200)
+                        .style("display", "block");
+                })
+                .on('mousemove', function(d) {
+                    var newX = (d3.event.pageX + 20);
+                    var newY = (d3.event.pageY - 20);
+                    that._tooltip
+                        .html(key)
+                        .style("left", (newX) + "px")
+                        .style("top", (newY) + "px");
+                })
+                .on('mouseout', function () {
+                    that._tooltip
+                        .transition(200)
+                        .style("display", "none");
+                });
+
+            // lines update
+            linegroups.select('.scatterline')
+                .attr("d", function(d){ return valueline(that._linedata[key]);});
+
+            // linegroups removal
+            linegroups.exit().remove();
+        });
+
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE AXES                                ///
+        ////////////////////////////////////////////////////////////////////////
+
+        // X-axis ticks
+        var xAxis = d3.svg.axis()
+            .scale(xScale)
+            .tickFormat(this._xformat)
+            .ticks(5)
+            .orient('bottom');
 
         // X-axis
         var xaxis = this._svgContainer.selectAll("g.axis.xaxis").data([0]);
@@ -243,6 +355,13 @@ pwt_scatterplot.Scatterplot.prototype = {
             .attr('x', this._w);
 
         xaxis.exit().remove();
+
+        // Y-axis ticks
+        var yAxis = d3.svg.axis()
+            .scale(yScale)
+            .tickFormat(this._yformat)
+            .ticks(5)
+            .orient('left');
 
         // Y-axis
         var yaxis = this._svgContainer.selectAll("g.axis.yaxis").data([0]);

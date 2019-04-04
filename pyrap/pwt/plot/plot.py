@@ -86,6 +86,35 @@ class Scatterplot(Widget):
         session.runtime << RWTCallOperation(self.id, 'axes', {'labels': self._labels})
 
     def setdata(self, data):
+        '''Expects `data' to be of the form
+        {
+            "scatter": scatterdata,
+            "line": linedata
+        },
+
+        where `scatterdata' is a list of dicts of the form
+
+        {
+            'name': (str),      // the node labels. Leave empty if you do not want to label the scatter nodes.
+            'x': (float),       // the x-coordinate of the scatter node
+            'y': (float),       // the y-coordinate of the scatter node
+            'tooltip': (str)    // the text to appear when hovering over a scatter node
+        }
+
+        and `linedata' is a dictionary of the form
+
+        {
+            <name>: [{'x': (float), 'y': (float)}],
+            <name>: [{'x': (float), 'y': (float)}],
+            ...
+        }
+
+        where the key `<name>' is a string representing the semantic meaning of the line plot (e.g. 'Prediction' and
+        the value is a list of x/y coordinates (float) for the line plot.
+
+        Note: The axes ticks are generated from the scatterdata, so make sure that the x/y coordinates for the line
+        datasets lie within the axes' limits.
+        '''
         self._data = data
         session.runtime << RWTSetOperation(self.id, {'data': data})
 
