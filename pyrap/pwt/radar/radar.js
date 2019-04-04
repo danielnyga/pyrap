@@ -34,7 +34,6 @@ pwt_radar.RadarChart = function( parent, options) {
     this._tooltip = d3.select(this._parentDIV).append("div")
         .attr('class', 'radartooltip')
         .style('z-index', 1000000);
-    this._colorscale = d3.scale.category10();
     this._data = {};
     this._allAxis = [];
     this._total = this._allAxis.length;
@@ -93,7 +92,7 @@ pwt_radar.RadarChart.prototype = {
         this._svg
             .append('svg')
             .attr('class', 'radarlegend')
-            .attr('width', "300px")
+            .attr('width', "100%")
             .attr('height', "100%")
             .attr('transform', 'translate('+ this._cfg.w +',0)')// move legend svg to the top right corner
             .append("text")
@@ -668,7 +667,7 @@ pwt_radar.RadarChart.prototype = {
             .attr("x1", this._cfg.w/2)
             .attr("y1", this._cfg.h/2)
             .attr("x2", function(d, i){return that._cfg.w/2*(1-that._cfg.factor*Math.sin(i*that._cfg.radians/that._total));})
-            .attr("y2", function(d, i){return that._cfg.h/2*(1-that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));})
+            .attr("y2", function(d, i){return that._cfg.h/2*(1-that._cfg.factor*Math.cos(i*that._cfg.radians/that._total));});
 
         // create axes
         axisenter.append("line")

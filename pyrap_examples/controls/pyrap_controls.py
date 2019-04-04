@@ -13,6 +13,7 @@ import sys
 from dnutils import out
 from dnutils.threads import sleep, ThreadInterrupt
 from dnutils.tools import ifnone
+
 from pyrap.pwt.barchart.barchart import BarChart
 
 import pyrap
@@ -22,6 +23,7 @@ from pyrap.dialogs import msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel,
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout
 from pyrap.ptypes import BoolVar, Color, px, Image, Font, NumVar, SVG
 from pyrap.pwt.bubblyclusters.bubblyclusters import BubblyClusters
+from pyrap.pwt.radar_smoothed.radar_smoothed import RadarSmoothed
 from pyrap.pwt.radialdendrogramm.radialdendrogramm import RadialDendrogramm
 from pyrap.pwt.graph.graph import Graph
 from pyrap.pwt.plot.plot import Scatterplot
@@ -49,7 +51,7 @@ class ControlsDemo():
     def setup(application): pass
 
     def desktop(self, **kwargs):
-        page = kwargs.get('page', 'Bubbly Clusters')
+        page = kwargs.get('page', 'RadarSmooth')
         self.shell = Shell(maximized=True, titlebar=False)
         self.shell.on_resize += self.shell.dolayout
         shell = self.shell
@@ -243,6 +245,13 @@ class ControlsDemo():
         page  = self.create_page_template('Radar Chart Demo')
         self.create_radar_page(page)
         self.pages['Radar'] = page
+
+        # =======================================================================
+        # create radar chart -- redesigned
+        # =======================================================================
+        page = self.create_page_template('Radar Chart Demo -- Smoothed')
+        self.create_radarsmoothed_page(page)
+        self.pages['RadarSmooth'] = page
 
         #=======================================================================
         # create D3 radial dendrogramm
@@ -832,6 +841,56 @@ class ControlsDemo():
                               )
 
             radar.setdata(data.get('data', {}))
+
+            self.shell.dolayout()
+
+        reload()
+        btn_clear.on_select += clear
+        btn_reload.on_select += reload
+        btn_download.on_select += download
+
+    def create_radarsmoothed_page(self, parent):
+        grp = Group(parent, text='Radar Chart -- Smoothed')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+
+        def download(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.download(pdf=False)
+
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+
+        data = {}
+        with open('resources/radar2.json') as f:
+            data = json.load(f)
+
+        def clear(*_):
+            for c in comp_body.children:
+                c.dispose()
+
+        def reload(*_):
+            if comp_body.children:
+                clear()
+
+            radar = RadarSmoothed(comp_body, legendtext="Radar Smoothed", halign='fill', valign='fill')
+
+            for i, axis in enumerate([x["axis"] for x in data[0]]):
+                radar.addaxis(name="Axis {}".format(axis),
+                              minval=0,
+                              maxval=1,
+                              unit='%',
+                              intervalmin=.4,
+                              intervalmax=.6,
+                              )
+
+            radar.setdata(data)
 
             self.shell.dolayout()
 
