@@ -868,7 +868,7 @@ class ControlsDemo():
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
 
         data = {}
-        with open('resources/radar2.json') as f:
+        with open('resources/radar.json') as f:
             data = json.load(f)
 
         def clear(*_):
@@ -879,18 +879,18 @@ class ControlsDemo():
             if comp_body.children:
                 clear()
 
-            radar = RadarSmoothed(comp_body, legendtext="Radar Smoothed", halign='fill', valign='fill')
+            radar = RadarSmoothed(comp_body, legendtext=data.get('legendtext', ''), halign='fill', valign='fill')
 
-            for i, axis in enumerate([x["axis"] for x in data[0]]):
-                radar.addaxis(name="Axis {}".format(axis),
-                              minval=0,
-                              maxval=1,
-                              unit='%',
-                              intervalmin=.4,
-                              intervalmax=.6,
+            for i, axis in enumerate(data.get('axes', [])):
+                radar.addaxis(name=axis.get("name", "Axis {}".format(i)),
+                              minval=axis.get("limits", [0, 1])[0],
+                              maxval=axis.get("limits", [0, 1])[1],
+                              unit=axis.get("unit", '%'),
+                              intervalmin=axis.get("interval", [.4, .6])[0],
+                              intervalmax=axis.get("interval", [.4, .6])[1],
                               )
 
-            radar.setdata(data)
+            radar.setdata(data.get('data', {}))
 
             self.shell.dolayout()
 

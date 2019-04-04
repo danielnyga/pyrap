@@ -34,6 +34,7 @@ pwt_radar.RadarChart = function( parent, options) {
     this._tooltip = d3.select(this._parentDIV).append("div")
         .attr('class', 'radartooltip')
         .style('z-index', 1000000);
+
     this._data = {};
     this._allAxis = [];
     this._total = this._allAxis.length;

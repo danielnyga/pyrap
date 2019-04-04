@@ -9,6 +9,7 @@ pwt_radar_smoothed.RadarSmoothed = function( parent, audio ) {
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.radar_smoothed');
+    this._radarlegend = this._svg.select('svg.smoothradarlegend');
 
     this._cfg = {
         w: 800,
@@ -30,13 +31,18 @@ pwt_radar_smoothed.RadarSmoothed = function( parent, audio ) {
         strokeWidth: 2, 		//The width of the stroke around each blob
         roundStrokes: true,	    //If true the area and stroke will follow a round path (cardinal-closed)
         color: d3.scale.ordinal(),
+        // color: d3.scale.category20(),
         defaultformat: d3.format('%'),
         maxValues: {},          // mapping axis name to max value
         minValues: {}           // mapping axis name to min value
 	};
 
+    this._data = {};
     this._allAxis = [];
+    this._allAxisnames = [];
     this._total = this._allAxis.length;
+    this._legendopts = [];
+    this._legendtext = legendtext;
 
     this._initialized = false;
     this._needsRender = true;
@@ -68,6 +74,22 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
                 .attr('class', 'radar_smoothed')
                 .attr("transform", "translate(" + (this._cfg.w/2 + this._cfg.left) + "," + (this._cfg.h/2 + this._cfg.top) + ")");
             this._svgContainer = this._svg.select('g.radar_smoothed');
+
+            this._svg
+                .append('svg')
+                .attr('class', 'smoothradarlegend')
+                .attr('width', "100%")
+                .attr('height', "100%")
+                .attr('transform', 'translate('+ this._cfg.w +',0)')// move legend svg to the top right corner
+                .append("text")
+                .attr("class", "smoothlegendtitle")
+                .attr("x", 0)
+                .attr("y", 15)
+                .attr("dy", "0.35em")
+                .text(this._legendtext)
+                .call(this.wrap, 250);
+            this._radarlegend = this._svg.select('svg.smoothradarlegend');
+
         }
 
         // Glow filter
@@ -93,6 +115,7 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         this._femerge
             .append('feMergeNode')
             .attr('in','SourceGraphic');
+
     },
 
     createElement: function( parent ) {
@@ -161,11 +184,48 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
     },
 
     /**
+     * sorts incoming data such that legend is easier to read
+     */
+    sortOnKeys : function(dict) {
+
+        var sorted = [];
+        for(var key in dict) {
+            sorted[sorted.length] = key;
+        }
+        sorted.sort();
+
+        var tempDict = {};
+        for(var i = 0; i < sorted.length; i++) {
+            tempDict[sorted[i]] = dict[sorted[i]];
+        }
+
+        return tempDict;
+    },
+
+    /**
      * updates data options
      */
     setData : function ( data ) {
-        // preprocess data
-        this._data = data;
+        this._legendopts.splice(0, this._legendopts.length);
+        this._data = this.sortOnKeys(data);
+
+        this.updateData();
+    },
+
+    /**
+     * updates data options
+     */
+    updateData : function ( ) {
+
+        // determine min and max values for each axis
+        // by updating with (possibly available) data
+        for (var x in this._data) {
+            this._legendopts.push(x);
+            for (var y = 0; y < this._data[x].length; y++) {
+                this._cfg.minValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[0] !== 'undefined') ? this._allAxis[y].limits[0] : (typeof this._cfg.minValues[this._allAxis[y].name] !== 'undefined') ? Math.min(this._cfg.minValues[this._allAxis[y].name], this._data[x][y]) : this._data[x][y];
+                this._cfg.maxValues[this._allAxis[y].name] = (typeof this._allAxis[y].limits[1] !== 'undefined') ? this._allAxis[y].limits[1] : (typeof this._cfg.maxValues[this._allAxis[y].name] !== 'undefined') ? Math.max(this._cfg.maxValues[this._allAxis[y].name], this._data[x][y]) : this._data[x][y];
+            }
+	    }
         this.update();
     },
 
@@ -181,12 +241,78 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
 		}
     },
 
+    //Taken from http://bl.ocks.org/mbostock/7555321
+    //Wraps SVG text
+    wrap : function (text, width) {
+        console.log(d3.select(this));
+        text.each(function() {
+        var text = d3.select(this),
+            words = text.text().split(/\s+/).reverse(),
+            word,
+            line = [],
+            lineNumber = 0,
+            lineHeight = 1.4, // ems
+            y = text.attr("y"),
+            x = text.attr("x"),
+            dy = parseFloat(text.attr("dy")),
+            tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+
+            while (word = words.pop()) {
+                line.push(word);
+                tspan.text(line.join(" "));
+                if (tspan.node().getComputedTextLength() > width) {
+                    line.pop();
+                    tspan.text(line.join(" "));
+                    line = [word];
+                    tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+                }
+            }
+        });
+    },
+
+    /**
+     * split long legend text into multiple lines
+     */
+    wraptext : function(text, width) {
+        text.each(function() {
+            var text = d3.select(this),
+            words = text.text().split(/\s+/),
+            y = text.attr("y"),
+            lineHeight = 1.1, // ems
+            l = [],
+            lines = [],
+            curs = '',
+            c = document.createElement("canvas"),
+            ctx = c.getContext("2d");
+            ctx.font = "12px DejaVu Serif";
+
+            for (var x = 0; x<words.length; x++) {
+                l.push(words[x]);
+                if (ctx.measureText(l.join(" ")).width <= width) {
+                    curs = l.join(" ");
+                } else {
+                    l = [words[x]];
+                    lines.push(curs);
+                }
+            }
+            lines.push(curs);
+            text.text('');
+            for (var y = 0; y<lines.length; y++) {
+                text.append("tspan")
+                    .attr("x", text.attr("x"))
+                    .attr("y", text.attr("y"))
+                    .attr("dy", y * lineHeight + parseFloat(text.attr("dy") || 0) + "em")
+                    .text(lines[y]);
+            }
+        });
+    },
+
     /**
      * updates an axis of the radar chart
      */
     updateAxis : function ( data ) {
         for (var x = 0; x < this._allAxis.length; x++) {
-            if (this._allAxis[x].name == data.axis.name) {
+            if (this._allAxis[x].name === data.axis.name) {
                 this._allAxis[x].unit = data.axis.unit;
                 this._allAxis[x].interval = data.axis.interval;
                 this._allAxis[x].limits = data.axis.limits;
@@ -203,6 +329,7 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
     addAxis : function ( axis ) {
         // add axis to list of axes
         this._allAxis.push(axis);
+        this._allAxisnames.push(axis.name);
         this._total = this._allAxis.length;
 
         // add min and max values for the new axis
@@ -213,6 +340,27 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         this.update();
     },
 
+    //Scale for the radius
+    rscale : function (data) {
+        var that = this;
+        return function(x, i) {
+            return d3.scale.linear()
+                .range([0, that._cfg.radius])
+                .domain([0, that._cfg.maxValues[data[2]]])(x);
+        }(data[1]);
+
+    },
+
+    //The radial line function
+    radarline : function (v) {
+        var that = this;
+        return function(x) {
+            return d3.svg.line.radial()
+                .interpolate(that._cfg.roundStrokes ? "cardinal-closed" : "linear-closed")
+                .radius(function(d) {return that.rscale(d); })
+                .angle(function(d,i) {return i*that._cfg.angleslice; })(x);
+        }(v);
+    },
 
     /**
      * redraws the radar chart with the updated datapoints and polygons
@@ -224,12 +372,20 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
 
         var that = this;
 
+        ////////////////////////////////////////////////////////////////////////
+        ///                         UPDATE VARIABLES                         ///
+        ////////////////////////////////////////////////////////////////////////
+
         // update translation of main group
         this._svgContainer
                 .attr("transform", "translate(" + (this._cfg.w/2 + this._cfg.left) + "," + (this._cfg.h/2 + this._cfg.top) + ")");
 
         this._cfg.color
-            .range(["#EDC951","#CC333F","#00A0B0"]);
+            .domain(Object.keys(this._allAxisnames))
+            .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
+                '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
+                '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
+                '#17becf', '#9edae5']);
 
         //If the supplied maxValue is smaller than the actual one, replace by the max in the data
         var maxValue = Math.max(this._cfg.maxValue, d3.max(this._data, function(i){return d3.max(i.map(function(o){return o.value;}))}));
@@ -237,10 +393,97 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         this._cfg.radius = Math.min(this._cfg.w/2, this._cfg.h/2);	//Radius of the outermost circle
         this._cfg.angleslice = Math.PI * 2 / this._total;		                //The width in radians of each "slice"
 
-        //Scale for the radius
-        var rScale = d3.scale.linear()
-            .range([0, this._cfg.radius])
-            .domain([0, maxValue]);
+
+        ////////////////////////////////////////////////////////////////////////
+        ///                         UPDATE LEGEND                            ///
+        ////////////////////////////////////////////////////////////////////////
+        if (typeof this._legendopts !== 'undefined'){
+
+            this._radarlegend
+                .attr('transform', 'translate('+ this._cfg.w +',0)');// move legend svg to the top right corner
+
+            var legendsvg = this._radarlegend.selectAll('g.legendopts').data(this._legendopts);
+            console.log(legendsvg, 'bla');
+
+            // initialize legendtitle
+            var legendtitle = legendsvg.select('.smoothlegendtitle');
+            legendtitle
+                .text(this._legendtext)
+                .call(this.wrap, 250);
+
+            var legendsvgenter = legendsvg
+                .enter()
+                .append('svg:g')
+                .attr('class', 'legendopts')
+                .attr('transform', 'translate(0, 25)');
+
+            //Create color squares
+            var legendrect = legendsvg.select('rect');
+
+            legendrect
+                .attr("y", function(d, i){ console.log(d,i); return i * 20;})
+                .style("fill", function(d, i){ return that._cfg.color(i);});
+
+            legendsvgenter
+                .append("rect")
+                .attr('class', 'lorect')
+                .attr('top', '100px')
+                .attr("x", 10)
+                .attr("y", function(d, i){ return i * 20;})
+                .attr("dy", "0.35em")
+                .attr("width", 10)
+                .attr("height", 10)
+                .style("fill", function(d, i){ return that._cfg.color(i);});
+
+            //Create text next to squares
+            var legendtext = legendsvg.select('text');
+
+            legendtext
+                .attr("y", function(d, i){ console.log(d, i);return i * 20 + 9;})
+                .text(function(d) { return d; });
+
+            legendsvgenter
+                .append("text")
+                .attr('class', 'lotext')
+                .attr("x", 25)
+                .attr("y", function(d, i){ return i * 20 + 9;})
+                .on('click', function(d) {
+                    //Dim all blobs
+                    d3.selectAll(".radarArea")
+                        .transition(200)
+                        .style("fill-opacity", 0.1);
+                    //Bring back the hovered over blob
+                    d3.select('#' + d)
+                        .transition(200)
+                        .style("fill-opacity", 0.7);
+
+                })
+                .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+                    that._tooltip
+                        .transition(200)
+                        .style("display", "block");
+                })
+                .on('mouseout', function(d){
+                    d3.select(this).style("cursor", "default");
+                    that._tooltip
+                        .transition(200)
+                        .style("display", "none");
+                })
+                .on('mousemove', function(d) {
+                    var newX = (d3.event.pageX + 20);
+                    var newY = (d3.event.pageY - 20);
+
+                    that._tooltip
+                        .html('Click to highlight')
+                        .style("left", (newX) + "px")
+                        .style("top", (newY) + "px");
+
+                })
+                .text(function(d) { return d; });
+
+            legendsvg.exit().remove();
+        }
 
 
         /////////////////////////////////////////////////////////
@@ -291,13 +534,13 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
             .attr("class", "radar_smoothedline")
             .attr("x1", 0)
             .attr("y1", 0)
-            .attr("x2", function(d, i){ return rScale(maxValue*1.1) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("y2", function(d, i){ return rScale(maxValue*1.1) * Math.sin(that._cfg.angleslice*i - Math.PI/2); });
+            .attr("x2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name]*1.1, d.name]) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("y2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name]*1.1, d.name]) * Math.sin(that._cfg.angleslice*i - Math.PI/2); });
 
         // update the lines
         axes.select(".radar_smoothedline")
-            .attr("x2", function(d, i){ return rScale(maxValue*1.1) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("y2", function(d, i){ return rScale(maxValue*1.1) * Math.sin(that._cfg.angleslice*i - Math.PI/2); });
+            .attr("x2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name]*1.1, d.name]) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("y2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name]*1.1, d.name]) * Math.sin(that._cfg.angleslice*i - Math.PI/2); });
 
         // append the axis labels
         axisenter
@@ -305,17 +548,17 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
             .attr("class", "radar_smoothedlegend")
             .attr("text-anchor", "middle")
             .attr("dy", "0.35em")
-            .attr("x", function(d, i){ return rScale(maxValue * that._cfg.labelFactor) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("y", function(d, i){ return rScale(maxValue * that._cfg.labelFactor) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("x", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name] * that._cfg.labelFactor, d.name]) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("y", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name] * that._cfg.labelFactor, d.name]) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
             .text(function(d){return d.name})
-            .call(wrap, this._cfg.wrapWidth);
+            .call(this.wrap, this._cfg.wrapWidth);
 
         // update the labels
         axes.select(".radar_smoothedlegend")
-            .attr("x", function(d, i){ return rScale(maxValue * that._cfg.labelFactor) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("y", function(d, i){ return rScale(maxValue * that._cfg.labelFactor) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("x", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name] * that._cfg.labelFactor, d.name]) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("y", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name] * that._cfg.labelFactor, d.name]) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
             .text(function(d){return d.name})
-            .call(wrap, this._cfg.wrapWidth);
+            .call(this.wrap, this._cfg.wrapWidth);
 
         var newaxis = [];
         for(var j = 0; j <= this._cfg.levels; j++) {
@@ -363,18 +606,18 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         ///////////// Draw the radar chart blobs ////////////////
         /////////////////////////////////////////////////////////
 
-        //The radial line function
-        var radarLine = d3.svg.line.radial()
-            .interpolate("linear-closed")
-            .radius(function(d) { return rScale(d.value); })
-            .angle(function(d,i) {	return i*that._cfg.angleslice; });
-
-        if(this._cfg.roundStrokes) {
-            radarLine.interpolate("cardinal-closed");
+        var data = [];
+        var datasetnames = Object.keys(this._data);
+        for (var name = 0; name < datasetnames.length; name++) {
+            var tmp = [];
+            for (var v=this._allAxis.length-1; v >= 0; v--) {
+                tmp.push([datasetnames[name], that._data[datasetnames[name]][v], this._allAxis[v].name]);
+            }
+            data.push(tmp);
         }
 
         //Create a wrapper for the blobs
-        var blobwrapper = this._svgContainer.selectAll(".radarWrapper").data(this._data);
+        var blobwrapper = this._svgContainer.selectAll(".radarWrapper").data(data);
 
         var blobwrapperenter = blobwrapper
             .enter()
@@ -385,7 +628,8 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         blobwrapperenter
             .append("path")
             .attr("class", "radarArea")
-            .attr("d", function(d,i) { return radarLine(d); })
+            .attr("id", function(d,i) { return d[0][0]; })
+            .attr("d", function(d,i) { return that.radarline(d); })
             .style("fill", function(d,i) { return that._cfg.color(i); })
             .style("fill-opacity", this._cfg.opacityArea)
             .on('mouseover', function (d,i){
@@ -407,40 +651,42 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
 
         // update the polygon areas
         blobwrapper.select(".radarArea")
-            .attr("d", function(d,i) { return radarLine(d); })
+            .attr("d", function(d,i) { return that.radarline(d); })
             .style("fill", function(d,i) { return that._cfg.color(i); })
             .style("fill-opacity", this._cfg.opacityArea);
 
         // append the area outlines
-        blobwrapperenter.append("path")
+        blobwrapperenter
+            .append("path")
             .attr("class", "radarStroke")
-            .attr("d", function(d,i) { return radarLine(d); })
+            .attr("d", function(d,i) { return that.radarline(d); })
             .style("stroke-width", this._cfg.strokeWidth + "px")
             .style("stroke", function(d,i) { return that._cfg.color(i); })
             .style("filter" , "url(#glow)");
 
         // update the area outlines
         blobwrapper.select(".radarStroke")
-            .attr("d", function(d,i) { return radarLine(d); })
+            .attr("d", function(d,i) { return that.radarline(d); })
             .style("stroke-width", this._cfg.strokeWidth + "px")
             .style("stroke", function(d,i) { return that._cfg.color(i); });
 
         // append the circles
         blobwrapper.selectAll(".radarCircle")
             .data(function(d,i) { return d; })
-            .enter().append("circle")
+            .enter()
+            .append("circle")
             .attr("class", "radarCircle")
             .attr("r", this._cfg.dotRadius)
-            .attr("cx", function(d,i){ return rScale(d.value) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("cy", function(d,i){ return rScale(d.value) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("cy", function(d,i){ return that.rscale(d) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
             .style("fill", function(d,i,j) { return that._cfg.color(j); })
             .style("fill-opacity", 0.8);
 
         // update the circles
         blobwrapper.selectAll(".radarCircle")
             .attr("r", this._cfg.dotRadius)
-            .attr("cx", function(d,i){ return rScale(d.value) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("cy", function(d,i){ return rScale(d.value) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("cy", function(d,i){ return that.rscale(d) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
             .style("fill", function(d,i,j) { return that._cfg.color(j); });
 
         blobwrapper.exit().remove();
@@ -450,20 +696,22 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         /////////////////////////////////////////////////////////
 
         //Wrapper for the invisible circles on top
-        var blobCircleWrapper = this._svgContainer.selectAll(".radarCircleWrapper")
-            .data(this._data)
+        var blobCircleWrapper = this._svgContainer.selectAll(".radarCircleWrapper").data(data);
+
+        blobCircleWrapper
             .enter().append("g")
             .attr("class", "radarCircleWrapper");
 
         //Append a set of invisible circles on top for the mouseover pop-up
         blobCircleWrapper.selectAll(".radarInvisibleCircle")
             .data(function(d,i) { return d; })
-            .enter().append("circle")
+            .enter()
+            .append("circle")
             .attr("class", "radarInvisibleCircle")
             .attr("r", this._cfg.dotRadius*1.5)
-            .attr("cx", function(d,i){ return rScale(d.value) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("cy", function(d,i){ return rScale(d.value) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
-            .style("fill", "none")
+            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("cy", function(d,i){ return that.rscale(d) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .style("fill", 'none')
             .style("pointer-events", "all")
             .on('mouseover', function(d) {
                 d3.select(this).style("cursor", "pointer");
@@ -482,44 +730,19 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html(that._cfg.defaultformat(d.value))
+                    .html(that.Format(that._allAxis[that._allAxisnames.indexOf(d[2])].unit, isNaN(d[1]) ? 0 : d[1]))
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
 
             });
 
+        blobCircleWrapper.selectAll(".radarInvisibleCircle")
+            .attr("r", this._cfg.dotRadius*1.5)
+            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("cy", function(d,i){ return that.rscale(d) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .style("pointer-events", "all");
 
-        /////////////////////////////////////////////////////////
-        /////////////////// Helper Function /////////////////////
-        /////////////////////////////////////////////////////////
-
-        //Taken from http://bl.ocks.org/mbostock/7555321
-        //Wraps SVG text
-        function wrap(text, width) {
-          text.each(function() {
-            var text = d3.select(this),
-                words = text.text().split(/\s+/).reverse(),
-                word,
-                line = [],
-                lineNumber = 0,
-                lineHeight = 1.4, // ems
-                y = text.attr("y"),
-                x = text.attr("x"),
-                dy = parseFloat(text.attr("dy")),
-                tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
-
-            while (word = words.pop()) {
-              line.push(word);
-              tspan.text(line.join(" "));
-              if (tspan.node().getComputedTextLength() > width) {
-                line.pop();
-                tspan.text(line.join(" "));
-                line = [word];
-                tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-              }
-            }
-          });
-        }//wrap
+        blobCircleWrapper.exit().remove();
     }
 };
 
