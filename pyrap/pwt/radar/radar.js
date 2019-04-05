@@ -19,14 +19,14 @@ pwt_radar.RadarChart = function( parent, options) {
          minValues: {},// mapping axis name to min value
          radians: 2 * Math.PI,
          intWidth: 15,
-         intCol: 'red',
          opacityArea: 0.5,
          ToRight: 5,
          TranslateX: 80,
          TranslateY: 30,
          ExtraWidthX: 100,
          ExtraWidthY: 100,
-         color: d3.scale.category20()
+         // color: d3.scale.category20()
+         color: d3.scale.ordinal()
 	};
 
 
@@ -37,6 +37,7 @@ pwt_radar.RadarChart = function( parent, options) {
 
     this._data = {};
     this._allAxis = [];
+    this._allAxisnames = [];
     this._total = this._allAxis.length;
     this._legendopts = [];
     this._legendtext = legendtext;
@@ -355,6 +356,7 @@ pwt_radar.RadarChart.prototype = {
     addAxis : function ( axis ) {
         // add axis to list of axes
         this._allAxis.push(axis);
+        this._allAxisnames.push(axis.name);
         this._total = this._allAxis.length;
 
         // add min and max values for the new axis
@@ -579,6 +581,13 @@ pwt_radar.RadarChart.prototype = {
             legendtext.exit().remove();
         }
 
+        this._cfg.color
+            .domain(Object.keys(this._allAxisnames))
+            .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
+                '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
+                '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
+                '#17becf', '#9edae5']);
+
 
         ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE LEVELS                              ///
@@ -770,7 +779,7 @@ pwt_radar.RadarChart.prototype = {
                 var angledeg = (Math.PI - i*that._cfg.radians/that._total) * 180/Math.PI;
                 return "rotate(" + angledeg + ", " + that._cfg.w/2 + ", " + that._cfg.h/2 +") translate(-" + that._cfg.intWidth/2 + ", 0)";
             })
-            .attr("fill", that._cfg.intCol)
+            // .attr("fill", that._cfg.intCol)
             .style("fill-opacity", that._cfg.opacityArea)
             .attr("width", that._cfg.intWidth)
             .attr("height", function(d, i) {

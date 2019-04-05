@@ -9,6 +9,10 @@
   padding: 10px;
 }
 
+rect.interval {
+  fill: #98DF8A;
+}
+
 text {
   font: 15px monospace, arial, sans-serif;
 }
