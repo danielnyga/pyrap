@@ -1,22 +1,23 @@
-pwt_radar_smoothed = {};
+pwt_rs_ = {};
 
-pwt_radar_smoothed.RadarSmoothed = function( parent, audio ) {
+pwt_rs_.RadarSmoothed = function( parent, audio ) {
 
     this._parentDIV = this.createElement(parent);
     this._tooltip = d3.select(this._parentDIV).append("div")
-        .attr('class', 'radar_smoothedtooltip')
+        .attr('class', 'rs_tooltip')
         .style('z-index', 1000000);
 
     this._svg = d3.select(this._parentDIV).append("svg");
-    this._svgContainer = this._svg.select('g.radar_smoothed');
-    this._radarlegend = this._svg.select('svg.smoothradarlegend');
+    this._svgContainer = this._svg.select('g.rs');
+    this._radarlegend = this._svg.select('svg.rs_legend');
 
     this._cfg = {
         w: 800,
         h: 600,
         radius: 100,
-        angleslice: Math.PI * 2/3,
+        angleslice: null,
         factorLegend: .85,
+        intervalwidth: 15,
         top: 100,
         right: 100,
         bottom: 110,
@@ -31,7 +32,6 @@ pwt_radar_smoothed.RadarSmoothed = function( parent, audio ) {
         strokeWidth: 2, 		//The width of the stroke around each blob
         roundStrokes: true,	    //If true the area and stroke will follow a round path (cardinal-closed)
         color: d3.scale.ordinal(),
-        // color: d3.scale.category20(),
         defaultformat: d3.format('%'),
         maxValues: {},          // mapping axis name to max value
         minValues: {}           // mapping axis name to min value
@@ -62,7 +62,7 @@ pwt_radar_smoothed.RadarSmoothed = function( parent, audio ) {
     } );
 };
 
-pwt_radar_smoothed.RadarSmoothed.prototype = {
+pwt_rs_.RadarSmoothed.prototype = {
 
     initialize: function() {
 
@@ -71,24 +71,24 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
                 .attr('width', "100%")
                 .attr('height', "100%")
                 .append( "svg:g" )
-                .attr('class', 'radar_smoothed')
-                .attr("transform", "translate(" + (this._cfg.w/2 + this._cfg.left) + "," + (this._cfg.h/2 + this._cfg.top) + ")");
-            this._svgContainer = this._svg.select('g.radar_smoothed');
+                .attr('class', 'rs')
+                .attr("transform", "translate(" + (this._cfg.w/2 + this._cfg.left) + "," + (this._cfg.h/2 + this._cfg.top) + ") scale(1 -1)");
+            this._svgContainer = this._svg.select('g.rs');
 
             this._svg
                 .append('svg')
-                .attr('class', 'smoothradarlegend')
+                .attr('class', 'rs_legend')
                 .attr('width', "100%")
                 .attr('height', "100%")
                 .attr('transform', 'translate('+ this._cfg.w +',0)')// move legend svg to the top right corner
                 .append("text")
-                .attr("class", "smoothlegendtitle")
+                .attr("class", "rs_legendtitle")
                 .attr("x", 0)
                 .attr("y", 15)
                 .attr("dy", "0.35em")
                 .text(this._legendtext)
                 .call(this.wrap, 250);
-            this._radarlegend = this._svg.select('svg.smoothradarlegend');
+            this._radarlegend = this._svg.select('svg.rs_legend');
 
         }
 
@@ -137,7 +137,7 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         }
 
         this._svgContainer
-            .attr("transform", "translate(" + (this._cfg.w/2 + this._cfg.left) + "," + (this._cfg.h/2 + this._cfg.top) + ")");
+            .attr("transform", "translate(" + (this._cfg.w/2 + this._cfg.left) + "," + (this._cfg.h/2 + this._cfg.top) + ") scale(1 -1)");
 
         this._parentDIV.style.left = args[0] + "px";
         this._parentDIV.style.top = args[1] + "px";
@@ -230,6 +230,14 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
     },
 
     /**
+     * generate repl from axisname so it can be used as classname
+     * --> required to avoid dots or empty spaces in class names
+     */
+    replAxisname: function(s){
+        return s.split(' ').join('_').split('.').join('-dot-');
+    },
+
+    /**
      * default format string as percentage, otherwise as float with one
      * decimal place with the unit appended.
      */
@@ -244,7 +252,6 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
     //Taken from http://bl.ocks.org/mbostock/7555321
     //Wraps SVG text
     wrap : function (text, width) {
-        console.log(d3.select(this));
         text.each(function() {
         var text = d3.select(this),
             words = text.text().split(/\s+/).reverse(),
@@ -271,41 +278,119 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
     },
 
     /**
-     * split long legend text into multiple lines
+     * recalculate datapoint positions on drag event
      */
-    wraptext : function(text, width) {
-        text.each(function() {
-            var text = d3.select(this),
-            words = text.text().split(/\s+/),
-            y = text.attr("y"),
-            lineHeight = 1.1, // ems
-            l = [],
-            lines = [],
-            curs = '',
-            c = document.createElement("canvas"),
-            ctx = c.getContext("2d");
-            ctx.font = "12px DejaVu Serif";
+    dragmove : function( d, i ) {
 
-            for (var x = 0; x<words.length; x++) {
-                l.push(words[x]);
-                if (ctx.measureText(l.join(" ")).width <= width) {
-                    curs = l.join(" ");
-                } else {
-                    l = [words[x]];
-                    lines.push(curs);
-                }
-            }
-            lines.push(curs);
-            text.text('');
-            for (var y = 0; y<lines.length; y++) {
-                text.append("tspan")
-                    .attr("x", text.attr("x"))
-                    .attr("y", text.attr("y"))
-                    .attr("dy", y * lineHeight + parseFloat(text.attr("dy") || 0) + "em")
-                    .text(lines[y]);
-            }
-        });
-    },
+        if (typeof d.axis === 'undefined') {
+            var axis = this._allAxis[i];
+        } else {
+            var axis = d.axis;
+        }
+
+	    // endpoint axis
+	    var x0 = this._cfg.w/2*(1-this._cfg.factor*Math.sin(i*this._cfg.angleslice));
+	    var y0 = this._cfg.h/2*(1-this._cfg.factor*Math.cos(i*this._cfg.angleslice));
+        // var x0 = this.rscale([null, this._cfg.maxValues[axis.name], axis.name]) * (Math.cos(this._cfg.angleslice*i + Math.PI/2));
+        // var y0 = this.rscale([null, this._cfg.maxValues[axis.name], axis.name]) * (-Math.sin(this._cfg.angleslice*i + Math.PI/2));
+
+	    // directional vector axis
+	    var dx0 = x0 - this._cfg.w/2;
+	    var dy0 = y0 - this._cfg.h/2;
+	    // var dx0 = x0;
+	    // var dy0 = y0;
+
+	    // x/y coords of mousepointer
+	    coordinates = d3.mouse(this._svgContainer.node());
+		var mx = this._cfg.w/2 + (this._cfg.w/2 - coordinates[0]);
+		var my = this._cfg.h/2 + (this._cfg.h/2 - coordinates[1]);
+		// var mx = -coordinates[0];
+		// var my = -coordinates[1];
+
+	    // insert straight line into plane equation and solve for lambda
+	    var lambda = (dx0 * mx + dy0 * my - dx0 * this._cfg.w/2 - dy0 * this._cfg.h/2)/(Math.pow(dx0, 2) + Math.pow(dy0, 2));
+	    // var lambda = (dx0 * mx + dy0 * my)/(Math.pow(dx0, 2) + Math.pow(dy0, 2));
+	    lambda = Math.max(Math.min(0, lambda), -1);
+
+	    // insert lambda into linear equation to get intersection point of plane with line
+	    var px = lambda * -dx0 + this._cfg.w/2;
+	    var py = lambda * -dy0 + this._cfg.h/2;
+        // var px = lambda * -dx0;
+	    // var py = lambda * -dy0;
+
+	    var linearScale = d3.scale.linear()
+	        .domain([0, Math.sqrt(Math.pow(x0 - this._cfg.w/2, 2) + Math.pow(y0 - this._cfg.h/2, 2))])
+	        .range([this._cfg.minValues[axis.name], this._cfg.maxValues[axis.name]]);
+        // var linearScale = d3.scale.linear()
+	    //     .domain([0, Math.sqrt(Math.pow(x0, 2) + Math.pow(y0, 2))])
+	    //     .range([this._cfg.minValues[axis.name], this._cfg.maxValues[axis.name]]);
+
+		// determine new value for by calculating length from center to (px,py)
+	    var len = Math.sqrt(Math.pow(px - this._cfg.w/2, 2) + Math.pow(py - this._cfg.h/2, 2));
+	    // var len = Math.sqrt(Math.pow(px, 2) + Math.pow(py, 2));
+	    var newValue = linearScale(len);
+	    return [px, py, newValue];
+	},
+
+    /**
+     * set recently dragged datapoint to foreground
+     */
+	dragend : function( d, i, _this, that ) {
+
+        if (typeof d.axis === 'undefined') {
+            var axis = this._allAxis[i];
+        } else {
+            var axis = d.axis;
+        }
+
+        var dragtarget = d3.select(_this);
+
+		dragtarget
+			.attr('opacity', 1);
+
+	    var targetclass = dragtarget.attr('class');
+
+	    var tclass = targetclass.split(/[ -]/)[0];
+
+        switch(tclass) {
+            case 'circle':
+	            var selectiontype = 'circle';
+                var dataset = targetclass.split(selectiontype+'-')[1];
+                var v = (dragtarget.data()[0]).value;
+                var newdata = {'value': dragtarget.data()[0], 'name': this._allAxis[i].name};
+                break;
+            case 'rs_miniv':
+            case 'rs_maxiv':
+                // endpoint axis
+                // var x0 = this._cfg.w/2*(1-Math.sin(i*this._cfg.angleslice));
+                // var y0 = this._cfg.h/2*(1-Math.cos(i*this._cfg.angleslice));
+                var x0 = this.rscale([null, this._cfg.maxValues[axis.name], axis.name]) * (Math.cos(this._cfg.angleslice*i + Math.PI/2));
+                var y0 = this.rscale([null, this._cfg.maxValues[axis.name], axis.name]) * (-Math.sin(this._cfg.angleslice*i + Math.PI/2));
+
+                // new coords
+                var px0 = dragtarget.attr('x');
+                var py0 = dragtarget.attr('y');
+
+                // var linearScale = d3.scale.linear()
+                //     .domain([0, Math.sqrt(Math.pow(x0 - this._cfg.w/2, 2) + Math.pow(y0 - this._cfg.h/2, 2))])
+                //     .range([this._cfg.minValues[axis.name], this._cfg.maxValues[axis.name]]);
+                var linearScale = d3.scale.linear()
+                    .domain([0, Math.sqrt(Math.pow(x0, 2) + Math.pow(y0, 2))])
+                    .range([this._cfg.minValues[axis.name], this._cfg.maxValues[axis.name]]);
+
+                // get length of vector to new position
+                // var lenx = px0 - that._cfg.w/2;
+                // var leny = py0 - that._cfg.h/2;
+                var lenx = px0;
+                var leny = py0;
+                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+
+	            var selectiontype = tclass;
+                var dataset = d;
+                var newdata = linearScale(l) * 100. / 100.;
+        }
+		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { args: {'func': 'dragend', 'type': selectiontype, 'dataset': dataset, 'data': newdata} } );
+	},
 
     /**
      * updates an axis of the radar chart
@@ -346,7 +431,7 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         return function(x, i) {
             return d3.scale.linear()
                 .range([0, that._cfg.radius])
-                .domain([0, that._cfg.maxValues[data[2]]])(x);
+                .domain([that._cfg.minValues[data[2]], that._cfg.maxValues[data[2]]])(x);
         }(data[1]);
 
     },
@@ -358,8 +443,21 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
             return d3.svg.line.radial()
                 .interpolate(that._cfg.roundStrokes ? "cardinal-closed" : "linear-closed")
                 .radius(function(d) {return that.rscale(d); })
-                .angle(function(d,i) {return i*that._cfg.angleslice; })(x);
+                .angle(function(d,i) { console.log('angle', d, i, i*that._cfg.angleslice + Math.PI/2) ;return i*that._cfg.angleslice + Math.PI/2; })(x);
         }(v);
+    },
+
+    linearscale : function(d, idx) {
+      var that = this;
+      return function(x) {
+          return d3.scale.linear()
+                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                    .range([0,Math.abs(that._cfg.h/2)])(x);
+      }(d.interval[idx]);
+    },
+
+    angledeg : function(i) {
+        return (Math.PI - i*this._cfg.angleslice) * 180/Math.PI;
     },
 
     /**
@@ -392,6 +490,7 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
 
         this._cfg.radius = Math.min(this._cfg.w/2, this._cfg.h/2);	//Radius of the outermost circle
         this._cfg.angleslice = Math.PI * 2 / this._total;		                //The width in radians of each "slice"
+        console.log('new angleslice is', this._cfg.angleslice, this._total);
 
 
         ////////////////////////////////////////////////////////////////////////
@@ -402,11 +501,10 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
             this._radarlegend
                 .attr('transform', 'translate('+ this._cfg.w +',0)');// move legend svg to the top right corner
 
-            var legendsvg = this._radarlegend.selectAll('g.legendopts').data(this._legendopts);
-            console.log(legendsvg, 'bla');
+            var legendsvg = this._radarlegend.selectAll('g.rs_legendopts').data(this._legendopts);
 
             // initialize legendtitle
-            var legendtitle = legendsvg.select('.smoothlegendtitle');
+            var legendtitle = legendsvg.select('.rs_legendtitle');
             legendtitle
                 .text(this._legendtext)
                 .call(this.wrap, 250);
@@ -414,19 +512,19 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
             var legendsvgenter = legendsvg
                 .enter()
                 .append('svg:g')
-                .attr('class', 'legendopts')
+                .attr('class', 'rs_legendopts')
                 .attr('transform', 'translate(0, 25)');
 
             //Create color squares
             var legendrect = legendsvg.select('rect');
 
             legendrect
-                .attr("y", function(d, i){ console.log(d,i); return i * 20;})
+                .attr("y", function(d, i){ return i * 20;})
                 .style("fill", function(d, i){ return that._cfg.color(i);});
 
             legendsvgenter
                 .append("rect")
-                .attr('class', 'lorect')
+                .attr('class', 'rs_legendrect')
                 .attr('top', '100px')
                 .attr("x", 10)
                 .attr("y", function(d, i){ return i * 20;})
@@ -439,17 +537,17 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
             var legendtext = legendsvg.select('text');
 
             legendtext
-                .attr("y", function(d, i){ console.log(d, i);return i * 20 + 9;})
+                .attr("y", function(d, i){ return i * 20 + 9;})
                 .text(function(d) { return d; });
 
             legendsvgenter
                 .append("text")
-                .attr('class', 'lotext')
+                .attr('class', 'rs_legendtext')
                 .attr("x", 25)
                 .attr("y", function(d, i){ return i * 20 + 9;})
                 .on('click', function(d) {
                     //Dim all blobs
-                    d3.selectAll(".radarArea")
+                    d3.selectAll(".rs_area")
                         .transition(200)
                         .style("fill-opacity", 0.1);
                     //Bring back the hovered over blob
@@ -489,22 +587,22 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         /////////////////////////////////////////////////////////
         /////////////// Draw the Circular grid //////////////////
         /////////////////////////////////////////////////////////
-        var axisgrid = this._svgContainer.selectAll('g.axisWrapper').data([0]);
+        var axisgrid = this._svgContainer.selectAll('g.rs_levelcircleswrapper').data([0]);
 
         var axisgridenter = axisgrid
             .enter()
             .append('g')
-            .attr('class', 'axisWrapper');
+            .attr('class', 'rs_levelcircleswrapper');
 
         axisgrid.exit().remove();
 
         //Draw the background circles
-        var axislevels = axisgrid.selectAll(".radar_smoothedlevels").data(d3.range(1,(this._cfg.levels+1)).reverse());
+        var axislevels = axisgrid.selectAll(".rs_levelcircle").data(d3.range(1,(this._cfg.levels+1)).reverse());
 
         axislevels
            .enter()
             .append("circle")
-            .attr("class", "radar_smoothedlevels")
+            .attr("class", "rs_levelcircle")
             .attr("r", function(d, i){return that._cfg.radius/that._cfg.levels*d;})
             .style("fill-opacity", this._cfg.opacityCircles)
             .style("filter" , "url(#glow)");
@@ -521,42 +619,44 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         /////////////////////////////////////////////////////////
 
         //Create the straight lines radiating outward from the center
-        var axes = axisgrid.selectAll("g.radar_smoothedaxis").data(this._allAxis);
+        var axes = axisgrid.selectAll("g.rs_axiswrapper").data(this._allAxis);
+
+        axes.exit().remove();
 
         var axisenter = axes
             .enter()
             .append('g')
-            .attr('class', 'radar_smoothedaxis');
+            .attr('class', 'rs_axiswrapper');
 
         // append the lines
         axisenter
             .append("line")
-            .attr("class", "radar_smoothedline")
+            .attr("class", "rs_axisline")
             .attr("x1", 0)
             .attr("y1", 0)
-            .attr("x2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name]*1.1, d.name]) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("y2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name]*1.1, d.name]) * Math.sin(that._cfg.angleslice*i - Math.PI/2); });
+            .attr("x2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
 
         // update the lines
-        axes.select(".radar_smoothedline")
-            .attr("x2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name]*1.1, d.name]) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("y2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name]*1.1, d.name]) * Math.sin(that._cfg.angleslice*i - Math.PI/2); });
+        axes.select(".rs_axisline")
+            .attr("x2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
 
         // append the axis labels
         axisenter
             .append("text")
-            .attr("class", "radar_smoothedlegend")
+            .attr("class", "rs_axisname")
             .attr("text-anchor", "middle")
             .attr("dy", "0.35em")
-            .attr("x", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name] * that._cfg.labelFactor, d.name]) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("y", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name] * that._cfg.labelFactor, d.name]) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("x", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .text(function(d){return d.name})
             .call(this.wrap, this._cfg.wrapWidth);
 
         // update the labels
-        axes.select(".radar_smoothedlegend")
-            .attr("x", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name] * that._cfg.labelFactor, d.name]) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("y", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name] * that._cfg.labelFactor, d.name]) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+        axes.select(".rs_axisname")
+            .attr("x", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .text(function(d){return d.name})
             .call(this.wrap, this._cfg.wrapWidth);
 
@@ -571,12 +671,12 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         }
 
         //Text indicating at what % each level is
-        var axislabels = axes.selectAll(".radar_smoothedaxisLabel").data(newaxis);
+        var axislabels = axes.selectAll(".rs_axislabel").data(newaxis);
 
         axislabels
            .enter()
             .append("text")
-            .attr("class", "radar_smoothedaxisLabel")
+            .attr("class", "rs_axislabel")
             .attr("dy", "0.4em")
             .attr("x", function(d, i){return d[1]*(1-Math.sin((i)*that._cfg.angleslice));})
             .attr("y", function(d, i){return d[1]*(1-Math.cos((i)*that._cfg.angleslice));})
@@ -599,8 +699,221 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
 
         axislabels.exit().remove();
 
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE INTERVALS                           ///
+        ////////////////////////////////////////////////////////////////////////
 
-        axes.exit().remove();
+        // update interval rectangles
+        axes.select(".rs_iv")
+            .attr("class", function(d, i) { return "rs_iv rs_iv-"+that.replAxisname(d.name); })
+            .attr("height", function(d, i) {
+                return that.linearscale(d, 1) - that.linearscale(d, 0);
+            })
+            .attr("x", function(d, i){return 0;})
+            .attr("y", function(d,i){
+                return that.linearscale(d, 0);
+            })
+            .attr("transform", function(d, i){
+                return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth/2 + ", 0) ";
+            });
+
+
+        // create interval rectangles
+        axisenter.append("rect")
+            .attr("class", function(d, i) { return "rs_iv rs_iv-"+that.replAxisname(d.name); } )
+            .attr("x", function(d, i){return 0;})
+            .attr("y", function(d,i){
+                return that.linearscale(d, 0);
+            })
+            .attr("transform", function(d, i){
+                return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth/2 + ", 0) ";
+            })
+            .style("fill-opacity", that._cfg.opacityArea)
+            .attr("width", that._cfg.intervalwidth)
+            .attr("height", function(d, i) {
+                return that.linearscale(d, 1) - that.linearscale(d, 0);
+            })
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
+
+                d3.select(this).moveToFront();
+            })
+            .on('mouseout', function(){
+                d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+                d3.select(this).moveToBack();
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+
+                that._tooltip
+                    .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            });
+
+        // update mininterval rectangles
+        axes.select(".rs_miniv")
+            .attr("class", function(d, i) { return "rs_miniv rs_miniv-"+that.replAxisname(d.name); } )
+            .attr("x", function(d, i){return 0;})
+            .attr("y", function(d,i){
+                return that.linearscale(d, 0);
+            })
+            .attr("transform", function(d, i){
+                return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth + ", 0) ";
+            });
+
+        // create mininterval rectangles
+        axisenter.append("rect")
+            .attr("class", function(d, i) { return "rs_miniv rs_miniv-"+that.replAxisname(d.name); } )
+            .attr("x", function(d, i){return 0;})
+            .attr("y", function(d,i){
+                return that.linearscale(d, 0);
+            })
+            .attr("transform", function(d, i){
+                return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth + ", 0) ";
+            })
+            .attr("fill", 'grey')
+            .style("fill-opacity", 1)
+            .attr("width", 2*that._cfg.intervalwidth)
+            .attr("height", 5)
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
+            })
+            .on('mouseout', function(d) {
+                d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+
+                that._tooltip
+                    .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .call(d3.behavior.drag()
+                            .origin(Object)
+                            .on("drag", function(d, i) {
+                                var data = that.dragmove(d, i);
+
+                                var lenx = data[0] - that._cfg.w/2;
+                                var leny = data[1] - that._cfg.h/2;
+
+                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+
+                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                var maxy = that._svgContainer.select(".rs_maxiv-"+that.replAxisname(d.name)).attr('y');
+                                var dragTarget = d3.select(this);
+                                dragTarget
+                                    .attr("y", function(d, i){
+                                        return Math.min(that._cfg.h/2 + l, maxy);
+                                    });
+
+                                // update actual interval
+                                that._svgContainer.select(".rs_iv-"+that.replAxisname(d.name))
+                                    .attr("y", function(d, i){
+                                        return that._cfg.h/2 + l;
+                                    })
+                                    .attr("height", function(d, i){
+                                        return maxy - (that._cfg.h/2 + l);
+                                    });
+                                d.interval[0] = data[2] * 100. / 100.;
+                            })
+                            .on('dragend', function(d, i) {
+
+                                var _this = this;
+                                that.dragend(d, i, _this, that);
+                            })
+            );
+
+        // update maxinterval rectangles
+        axes.select(".rs_maxiv")
+            .attr("class", function(d, i) { return "rs_maxiv rs_maxiv-"+that.replAxisname(d.name); } )
+            .attr("x", function(d, i){return 0;})
+            .attr("y", function(d,i){
+                return that.linearscale(d, 1);
+            })
+            .attr("transform", function(d, i){
+                return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth + ", 0) ";
+            });
+
+
+        // create maxinterval rectangles
+        axisenter.append("rect")
+            .attr("class", function(d, i) { return "rs_maxiv rs_maxiv-"+that.replAxisname(d.name); })
+            .attr("x", function(d, i){return 0;})
+            .attr("y", function(d,i){
+                return that.linearscale(d, 1);
+            })
+            .attr("transform", function(d, i){
+                return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth + ", 0) ";
+            })
+            .attr("width", 2*that._cfg.intervalwidth)
+            .attr("height", 5)
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
+            })
+            .on('mouseout', function(d) {
+                d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+
+                that._tooltip
+                    .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .call(d3.behavior.drag()
+                            .origin(Object)
+                            .on("drag", function(d, i) {
+                                var data = that.dragmove(d, i);
+
+                                var lenx = data[0] - that._cfg.w/2;
+                                var leny = data[1] - that._cfg.h/2;
+
+                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+
+                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                                var miny = that._svgContainer.select(".rs_miniv-"+that.replAxisname(d.name)).attr('y')
+                                var dragTarget = d3.select(this);
+                                dragTarget
+                                    .attr("y", function(d, i){
+                                        return Math.max(miny, that._cfg.h/2 + l);
+                                    });
+
+                                // update actual interval
+                                that._svgContainer.select(".rs_iv-"+that.replAxisname(d.name))
+                                    .attr("height", function(d, i){
+                                        return (that._cfg.h/2 + l) - miny;
+                                    });
+                                d.interval[1] = data[2] * 100. / 100.;
+                            })
+                            .on('dragend', function(d, i) {
+                                var _this = this;
+                                that.dragend(d, i, _this, that);
+                            })
+            );
 
         /////////////////////////////////////////////////////////
         ///////////// Draw the radar chart blobs ////////////////
@@ -617,24 +930,24 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         }
 
         //Create a wrapper for the blobs
-        var blobwrapper = this._svgContainer.selectAll(".radarWrapper").data(data);
+        var blobwrapper = this._svgContainer.selectAll(".rs_datawrapper").data(data);
 
         var blobwrapperenter = blobwrapper
             .enter()
             .append("g")
-            .attr("class", "radarWrapper");
+            .attr("class", "rs_datawrapper");
 
         // append the polygon areas
         blobwrapperenter
             .append("path")
-            .attr("class", "radarArea")
+            .attr("class", "rs_area")
             .attr("id", function(d,i) { return d[0][0]; })
             .attr("d", function(d,i) { return that.radarline(d); })
             .style("fill", function(d,i) { return that._cfg.color(i); })
             .style("fill-opacity", this._cfg.opacityArea)
             .on('mouseover', function (d,i){
                 //Dim all blobs
-                d3.selectAll(".radarArea")
+                d3.selectAll(".rs_area")
                     .transition().duration(200)
                     .style("fill-opacity", 0.1);
                 //Bring back the hovered over blob
@@ -644,13 +957,13 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
             })
             .on('mouseout', function(){
                 //Bring back all blobs
-                d3.selectAll(".radarArea")
+                d3.selectAll(".rs_area")
                     .transition().duration(200)
                     .style("fill-opacity", that._cfg.opacityArea);
             });
 
         // update the polygon areas
-        blobwrapper.select(".radarArea")
+        blobwrapper.select(".rs_area")
             .attr("d", function(d,i) { return that.radarline(d); })
             .style("fill", function(d,i) { return that._cfg.color(i); })
             .style("fill-opacity", this._cfg.opacityArea);
@@ -658,35 +971,35 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         // append the area outlines
         blobwrapperenter
             .append("path")
-            .attr("class", "radarStroke")
+            .attr("class", "rs_stroke")
             .attr("d", function(d,i) { return that.radarline(d); })
             .style("stroke-width", this._cfg.strokeWidth + "px")
             .style("stroke", function(d,i) { return that._cfg.color(i); })
             .style("filter" , "url(#glow)");
 
         // update the area outlines
-        blobwrapper.select(".radarStroke")
+        blobwrapper.select(".rs_stroke")
             .attr("d", function(d,i) { return that.radarline(d); })
             .style("stroke-width", this._cfg.strokeWidth + "px")
             .style("stroke", function(d,i) { return that._cfg.color(i); });
 
         // append the circles
-        blobwrapper.selectAll(".radarCircle")
+        blobwrapper.selectAll(".rs_datapoint")
             .data(function(d,i) { return d; })
             .enter()
             .append("circle")
-            .attr("class", "radarCircle")
+            .attr("class", "rs_datapoint")
             .attr("r", this._cfg.dotRadius)
-            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("cy", function(d,i){ return that.rscale(d) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
+            .attr("cy", function(d,i){ return that.rscale(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .style("fill", function(d,i,j) { return that._cfg.color(j); })
             .style("fill-opacity", 0.8);
 
         // update the circles
-        blobwrapper.selectAll(".radarCircle")
+        blobwrapper.selectAll(".rs_datapoint")
             .attr("r", this._cfg.dotRadius)
-            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("cy", function(d,i){ return that.rscale(d) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
+            .attr("cy", function(d,i){ return that.rscale(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .style("fill", function(d,i,j) { return that._cfg.color(j); });
 
         blobwrapper.exit().remove();
@@ -696,21 +1009,21 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
         /////////////////////////////////////////////////////////
 
         //Wrapper for the invisible circles on top
-        var blobCircleWrapper = this._svgContainer.selectAll(".radarCircleWrapper").data(data);
+        var blobCircleWrapper = this._svgContainer.selectAll(".rs_invdatapointwrapper").data(data);
 
         blobCircleWrapper
             .enter().append("g")
-            .attr("class", "radarCircleWrapper");
+            .attr("class", "rs_invdatapointwrapper");
 
         //Append a set of invisible circles on top for the mouseover pop-up
-        blobCircleWrapper.selectAll(".radarInvisibleCircle")
+        blobCircleWrapper.selectAll(".rs_invdatapoint")
             .data(function(d,i) { return d; })
             .enter()
             .append("circle")
-            .attr("class", "radarInvisibleCircle")
+            .attr("class", "rs_invdatapoint")
             .attr("r", this._cfg.dotRadius*1.5)
-            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("cy", function(d,i){ return that.rscale(d) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
+            .attr("cy", function(d,i){ return that.rscale(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .style("fill", 'none')
             .style("pointer-events", "all")
             .on('mouseover', function(d) {
@@ -736,10 +1049,10 @@ pwt_radar_smoothed.RadarSmoothed.prototype = {
 
             });
 
-        blobCircleWrapper.selectAll(".radarInvisibleCircle")
+        blobCircleWrapper.selectAll(".rs_invdatapoint")
             .attr("r", this._cfg.dotRadius*1.5)
-            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i - Math.PI/2); })
-            .attr("cy", function(d,i){ return that.rscale(d) * Math.sin(that._cfg.angleslice*i - Math.PI/2); })
+            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
+            .attr("cy", function(d,i){ return that.rscale(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .style("pointer-events", "all");
 
         blobCircleWrapper.exit().remove();
@@ -751,7 +1064,7 @@ rap.registerTypeHandler( 'pwt.customs.RadarSmoothed', {
 
     factory: function( properties ) {
         var parent = rap.getObject( properties.parent );
-        return new pwt_radar_smoothed.RadarSmoothed( parent, properties.options);
+        return new pwt_rs_.RadarSmoothed( parent, properties.options);
     },
 
     destructor: 'destroy',
