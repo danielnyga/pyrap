@@ -207,12 +207,16 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
         this._cwidth = this._w > 0 ? this._w : 960;
         this._cheight = this._h > 0 ? this._h : 600;
 
-        // select nodes
-        var node = this._svgContainer.selectAll("circle.bubbly").data(this._nodes);
+        var node = this._svgContainer.selectAll('g.bubblynode').data(this._nodes);
 
-        // create nodes
-        node
+        // circle groups creation
+        var nodeenter = node
             .enter()
+            .append('g')
+            .attr("class", "bubblynode");
+
+        // circle creation
+        nodeenter
             .append("circle")
             .attr("class", "bubbly")
             .style("fill", function(d) { return that._color(d.cluster); })
@@ -250,17 +254,29 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
                 };
             });
 
-        // update nodes
-        node
+        node.select('.bubbly')
             .call(this._force.drag);
 
+        // node and node text update
         function tick(e) {
-            node
+            node.select('.bubbly')
                 .each(cluster(20 * e.alpha * e.alpha))
                 .each(collide(.5))
                 .attr("cx", function(d) { return d.x; })
                 .attr("cy", function(d) { return d.y; });
+
+            node.select('.bubblytext')
+                .each(cluster(20 * e.alpha * e.alpha))
+                .each(collide(.5))
+                .attr("dx", function(d) { return d.x - 4; })
+                .attr("dy", function(d) { return d.y + 5; });
         }
+
+        // text creation
+        nodeenter
+            .append("text")
+            .attr("class", "bubblytext")
+            .text(function(d){return that._clusters[d.cluster] === d ? d.cluster : ''});
 
         // Move d to be adjacent to the cluster node.
         function cluster(alpha) {
