@@ -31,7 +31,11 @@ pwt_rs_.RadarSmoothed = function( parent, audio ) {
         opacityCircles: 0.1, 	//The opacity of the circles of each blob
         strokeWidth: 2, 		//The width of the stroke around each blob
         roundStrokes: true,	    //If true the area and stroke will follow a round path (cardinal-closed)
-        color: d3.scale.ordinal(),
+        color: d3.scale.ordinal()
+            .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
+                    '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
+                    '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
+                    '#17becf', '#9edae5']),
         defaultformat: d3.format('%'),
         maxValues: {},          // mapping axis name to max value
         minValues: {}           // mapping axis name to min value
@@ -282,54 +286,24 @@ pwt_rs_.RadarSmoothed.prototype = {
      */
     dragmove : function( d, i ) {
 
+        var axis;
         if (typeof d.axis === 'undefined') {
-            var axis = this._allAxis[i];
+            axis = this._allAxis[i];
         } else {
-            var axis = d.axis;
+            axis = d.axis;
         }
-
-	    // endpoint axis
-	    var x0 = this._cfg.w/2*(1-this._cfg.factor*Math.sin(i*this._cfg.angleslice));
-	    var y0 = this._cfg.h/2*(1-this._cfg.factor*Math.cos(i*this._cfg.angleslice));
-        // var x0 = this.rscale([null, this._cfg.maxValues[axis.name], axis.name]) * (Math.cos(this._cfg.angleslice*i + Math.PI/2));
-        // var y0 = this.rscale([null, this._cfg.maxValues[axis.name], axis.name]) * (-Math.sin(this._cfg.angleslice*i + Math.PI/2));
-
-	    // directional vector axis
-	    var dx0 = x0 - this._cfg.w/2;
-	    var dy0 = y0 - this._cfg.h/2;
-	    // var dx0 = x0;
-	    // var dy0 = y0;
 
 	    // x/y coords of mousepointer
 	    coordinates = d3.mouse(this._svgContainer.node());
-		var mx = this._cfg.w/2 + (this._cfg.w/2 - coordinates[0]);
-		var my = this._cfg.h/2 + (this._cfg.h/2 - coordinates[1]);
-		// var mx = -coordinates[0];
-		// var my = -coordinates[1];
-
-	    // insert straight line into plane equation and solve for lambda
-	    var lambda = (dx0 * mx + dy0 * my - dx0 * this._cfg.w/2 - dy0 * this._cfg.h/2)/(Math.pow(dx0, 2) + Math.pow(dy0, 2));
-	    // var lambda = (dx0 * mx + dy0 * my)/(Math.pow(dx0, 2) + Math.pow(dy0, 2));
-	    lambda = Math.max(Math.min(0, lambda), -1);
-
-	    // insert lambda into linear equation to get intersection point of plane with line
-	    var px = lambda * -dx0 + this._cfg.w/2;
-	    var py = lambda * -dy0 + this._cfg.h/2;
-        // var px = lambda * -dx0;
-	    // var py = lambda * -dy0;
-
-	    var linearScale = d3.scale.linear()
-	        .domain([0, Math.sqrt(Math.pow(x0 - this._cfg.w/2, 2) + Math.pow(y0 - this._cfg.h/2, 2))])
-	        .range([this._cfg.minValues[axis.name], this._cfg.maxValues[axis.name]]);
-        // var linearScale = d3.scale.linear()
-	    //     .domain([0, Math.sqrt(Math.pow(x0, 2) + Math.pow(y0, 2))])
-	    //     .range([this._cfg.minValues[axis.name], this._cfg.maxValues[axis.name]]);
+		var mx = coordinates[0];
+		var my = coordinates[1];
 
 		// determine new value for by calculating length from center to (px,py)
-	    var len = Math.sqrt(Math.pow(px - this._cfg.w/2, 2) + Math.pow(py - this._cfg.h/2, 2));
-	    // var len = Math.sqrt(Math.pow(px, 2) + Math.pow(py, 2));
-	    var newValue = linearScale(len);
-	    return [px, py, newValue];
+	    var len = Math.sqrt(Math.pow(mx, 2) + Math.pow(my, 2));
+	    var newValue = this.ptoval(axis, len);
+
+	    // return new x/y position of XXX and new value
+	    return [mx, my, newValue];
 	},
 
     /**
@@ -361,33 +335,13 @@ pwt_rs_.RadarSmoothed.prototype = {
                 break;
             case 'rs_miniv':
             case 'rs_maxiv':
-                // endpoint axis
-                // var x0 = this._cfg.w/2*(1-Math.sin(i*this._cfg.angleslice));
-                // var y0 = this._cfg.h/2*(1-Math.cos(i*this._cfg.angleslice));
-                var x0 = this.rscale([null, this._cfg.maxValues[axis.name], axis.name]) * (Math.cos(this._cfg.angleslice*i + Math.PI/2));
-                var y0 = this.rscale([null, this._cfg.maxValues[axis.name], axis.name]) * (-Math.sin(this._cfg.angleslice*i + Math.PI/2));
-
-                // new coords
-                var px0 = dragtarget.attr('x');
-                var py0 = dragtarget.attr('y');
-
-                // var linearScale = d3.scale.linear()
-                //     .domain([0, Math.sqrt(Math.pow(x0 - this._cfg.w/2, 2) + Math.pow(y0 - this._cfg.h/2, 2))])
-                //     .range([this._cfg.minValues[axis.name], this._cfg.maxValues[axis.name]]);
-                var linearScale = d3.scale.linear()
-                    .domain([0, Math.sqrt(Math.pow(x0, 2) + Math.pow(y0, 2))])
-                    .range([this._cfg.minValues[axis.name], this._cfg.maxValues[axis.name]]);
 
                 // get length of vector to new position
-                // var lenx = px0 - that._cfg.w/2;
-                // var leny = py0 - that._cfg.h/2;
-                var lenx = px0;
-                var leny = py0;
-                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+                var l = Math.sqrt(Math.pow(dragtarget.attr('x'), 2) + Math.pow(dragtarget.attr('y'), 2));
 
 	            var selectiontype = tclass;
                 var dataset = d;
-                var newdata = linearScale(l) * 100. / 100.;
+                var newdata = this.ptoval(d, l);
         }
 		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { args: {'func': 'dragend', 'type': selectiontype, 'dataset': dataset, 'data': newdata} } );
 	},
@@ -425,10 +379,27 @@ pwt_rs_.RadarSmoothed.prototype = {
         this.update();
     },
 
-    //Scale for the radius
-    rscale : function (data) {
+    /**
+     * interpolates a radial line for the given value
+     * @param v
+     */
+    radarline : function (v) {
         var that = this;
-        return function(x, i) {
+        return function(x) {
+            return d3.svg.line.radial()
+                .interpolate(that._cfg.roundStrokes ? "cardinal-closed" : "linear-closed")
+                .radius(function(d) {return that.ptovalt(d); })
+                .angle(function(d,i) { return i*that._cfg.angleslice + Math.PI/2; })(x);
+        }(v);
+    },
+
+    /**
+     * maps a value along the axis to its semantic value. Like ptoval, but accepting a triplet of
+     * [datasetname, value, axisname]] instead of the axis and the value
+     */
+    ptovalt : function (data) {
+        var that = this;
+        return function(x) {
             return d3.scale.linear()
                 .range([0, that._cfg.radius])
                 .domain([that._cfg.minValues[data[2]], that._cfg.maxValues[data[2]]])(x);
@@ -436,26 +407,37 @@ pwt_rs_.RadarSmoothed.prototype = {
 
     },
 
-    //The radial line function
-    radarline : function (v) {
+    /**
+     * maps a value along the axis to its semantic value
+     * @param d   the axis
+     * @param p   the point on the axis to determine its semantic value for
+     */
+    ptoval : function(d, p) {
+        var that = this;
+            return d3.scale.linear()
+                .domain([0, that._cfg.radius])
+                .range([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])(p);
+    },
+
+    /**
+     * maps the semantic value of an axis to its coordinate - the inverse of ptoval
+     * @param d     the axis
+     * @param i     0 if it should select the lower bound of the interval or 1 for the upper bound.
+     */
+    valtop : function(d, v) {
         var that = this;
         return function(x) {
-            return d3.svg.line.radial()
-                .interpolate(that._cfg.roundStrokes ? "cardinal-closed" : "linear-closed")
-                .radius(function(d) {return that.rscale(d); })
-                .angle(function(d,i) { console.log('angle', d, i, i*that._cfg.angleslice + Math.PI/2) ;return i*that._cfg.angleslice + Math.PI/2; })(x);
+            return d3.scale.linear()
+                .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
+                .range([0, that._cfg.radius])(x);
         }(v);
     },
 
-    linearscale : function(d, idx) {
-      var that = this;
-      return function(x) {
-          return d3.scale.linear()
-                    .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
-                    .range([0,Math.abs(that._cfg.h/2)])(x);
-      }(d.interval[idx]);
-    },
-
+    /**
+     * the rotation angle for the given axis
+     * @param i     the index of the axis to determine the angle for
+     * @returns {number}
+     */
     angledeg : function(i) {
         return (Math.PI - i*this._cfg.angleslice) * 180/Math.PI;
     },
@@ -479,19 +461,10 @@ pwt_rs_.RadarSmoothed.prototype = {
                 .attr("transform", "translate(" + (this._cfg.w/2 + this._cfg.left) + "," + (this._cfg.h/2 + this._cfg.top) + ")");
 
         this._cfg.color
-            .domain(Object.keys(this._allAxisnames))
-            .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
-                '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
-                '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
-                '#17becf', '#9edae5']);
-
-        //If the supplied maxValue is smaller than the actual one, replace by the max in the data
-        var maxValue = Math.max(this._cfg.maxValue, d3.max(this._data, function(i){return d3.max(i.map(function(o){return o.value;}))}));
+            .domain(Object.keys(this._allAxisnames));
 
         this._cfg.radius = Math.min(this._cfg.w/2, this._cfg.h/2);	//Radius of the outermost circle
-        this._cfg.angleslice = Math.PI * 2 / this._total;		                //The width in radians of each "slice"
-        console.log('new angleslice is', this._cfg.angleslice, this._total);
-
+        this._cfg.angleslice = Math.PI * 2 / this._total;		            // The width in radians of each "slice"
 
         ////////////////////////////////////////////////////////////////////////
         ///                         UPDATE LEGEND                            ///
@@ -634,13 +607,13 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("class", "rs_axisline")
             .attr("x1", 0)
             .attr("y1", 0)
-            .attr("x2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
-            .attr("y2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
+            .attr("x2", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y2", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
 
         // update the lines
         axes.select(".rs_axisline")
-            .attr("x2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
-            .attr("y2", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
+            .attr("x2", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y2", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
 
         // append the axis labels
         axisenter
@@ -648,16 +621,19 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("class", "rs_axisname")
             .attr("text-anchor", "middle")
             .attr("dy", "0.35em")
-            .attr("x", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
-            .attr("y", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
-            .text(function(d){return d.name})
+            .attr("x", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .text(function(d, i){return d.name + i})
             .call(this.wrap, this._cfg.wrapWidth);
 
         // update the labels
         axes.select(".rs_axisname")
-            .attr("x", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
-            .attr("y", function(d, i){ return that.rscale([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
-            .text(function(d){return d.name})
+            .attr("x", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            // .text(function(d, i){return d.name + i})
+            .text(function(d, i){
+                return d.name + ' ' + i + ' ' + that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * (Math.cos(that._cfg.angleslice*i + Math.PI/2)) + '/' + that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2));
+            })
             .call(this.wrap, this._cfg.wrapWidth);
 
         var newaxis = [];
@@ -707,11 +683,11 @@ pwt_rs_.RadarSmoothed.prototype = {
         axes.select(".rs_iv")
             .attr("class", function(d, i) { return "rs_iv rs_iv-"+that.replAxisname(d.name); })
             .attr("height", function(d, i) {
-                return that.linearscale(d, 1) - that.linearscale(d, 0);
+                return that.valtop(d, d.interval[1]) - that.valtop(d, d.interval[0]);
             })
             .attr("x", function(d, i){return 0;})
             .attr("y", function(d,i){
-                return that.linearscale(d, 0);
+                return that.valtop(d, d.interval[0]);
             })
             .attr("transform", function(d, i){
                 return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth/2 + ", 0) ";
@@ -723,7 +699,7 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("class", function(d, i) { return "rs_iv rs_iv-"+that.replAxisname(d.name); } )
             .attr("x", function(d, i){return 0;})
             .attr("y", function(d,i){
-                return that.linearscale(d, 0);
+                return that.valtop(d, d.interval[0]);
             })
             .attr("transform", function(d, i){
                 return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth/2 + ", 0) ";
@@ -731,7 +707,7 @@ pwt_rs_.RadarSmoothed.prototype = {
             .style("fill-opacity", that._cfg.opacityArea)
             .attr("width", that._cfg.intervalwidth)
             .attr("height", function(d, i) {
-                return that.linearscale(d, 1) - that.linearscale(d, 0);
+                return that.valtop(d, d.interval[1]) - that.valtop(d, d.interval[0]);
             })
             .on('mouseover', function(d) {
                 d3.select(this).style("cursor", "pointer");
@@ -754,6 +730,7 @@ pwt_rs_.RadarSmoothed.prototype = {
 
                 that._tooltip
                     .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
+                    // .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             });
@@ -763,7 +740,7 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("class", function(d, i) { return "rs_miniv rs_miniv-"+that.replAxisname(d.name); } )
             .attr("x", function(d, i){return 0;})
             .attr("y", function(d,i){
-                return that.linearscale(d, 0);
+                return that.valtop(d, d.interval[0]);
             })
             .attr("transform", function(d, i){
                 return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth + ", 0) ";
@@ -774,7 +751,7 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("class", function(d, i) { return "rs_miniv rs_miniv-"+that.replAxisname(d.name); } )
             .attr("x", function(d, i){return 0;})
             .attr("y", function(d,i){
-                return that.linearscale(d, 0);
+                return that.valtop(d, d.interval[0]);
             })
             .attr("transform", function(d, i){
                 return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth + ", 0) ";
@@ -808,6 +785,7 @@ pwt_rs_.RadarSmoothed.prototype = {
                             .origin(Object)
                             .on("drag", function(d, i) {
                                 var data = that.dragmove(d, i);
+                                console.log('data miniv:', data);
 
                                 var lenx = data[0] - that._cfg.w/2;
                                 var leny = data[1] - that._cfg.h/2;
@@ -844,7 +822,7 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("class", function(d, i) { return "rs_maxiv rs_maxiv-"+that.replAxisname(d.name); } )
             .attr("x", function(d, i){return 0;})
             .attr("y", function(d,i){
-                return that.linearscale(d, 1);
+                return that.valtop(d, d.interval[1]);
             })
             .attr("transform", function(d, i){
                 return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth + ", 0) ";
@@ -856,7 +834,7 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("class", function(d, i) { return "rs_maxiv rs_maxiv-"+that.replAxisname(d.name); })
             .attr("x", function(d, i){return 0;})
             .attr("y", function(d,i){
-                return that.linearscale(d, 1);
+                return that.valtop(d, d.interval[1]);
             })
             .attr("transform", function(d, i){
                 return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth + ", 0) ";
@@ -888,26 +866,34 @@ pwt_rs_.RadarSmoothed.prototype = {
                             .origin(Object)
                             .on("drag", function(d, i) {
                                 var data = that.dragmove(d, i);
+                                console.log('got', data);
 
-                                var lenx = data[0] - that._cfg.w/2;
-                                var leny = data[1] - that._cfg.h/2;
+                                // initial length of the interval
+                                var l = Math.sqrt(Math.pow(data[0], 2) + Math.pow(data[1], 2));
 
-                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+                                // the position of the maxiv rect is bound to the axis maximum on the upper side and the
+                                // position of the miniv rect on the lower side
+                                var dragTarget = d3.select(this),
+                                    miny = that._svgContainer.select(".rs_miniv-"+that.replAxisname(d.name)).attr('y'),
+                                    maxy = that.valtop(d, that._cfg.maxValues[d.name]);
 
-                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                                var miny = that._svgContainer.select(".rs_miniv-"+that.replAxisname(d.name)).attr('y')
-                                var dragTarget = d3.select(this);
                                 dragTarget
                                     .attr("y", function(d, i){
-                                        return Math.max(miny, that._cfg.h/2 + l);
+                                        return Math.min(maxy, Math.max(miny, l));
                                     });
+
+                                // the y coord of the interval bar is bound by the limits of the axis and the position
+                                // of the miniv rect
+                                var inty = Math.min(l, dragTarget.attr("y"));
 
                                 // update actual interval
                                 that._svgContainer.select(".rs_iv-"+that.replAxisname(d.name))
                                     .attr("height", function(d, i){
-                                        return (that._cfg.h/2 + l) - miny;
+                                        return (inty) - miny;
                                     });
-                                d.interval[1] = data[2] * 100. / 100.;
+
+                                // update upper interval of axis
+                                d.interval[1] = data[2];
                             })
                             .on('dragend', function(d, i) {
                                 var _this = this;
@@ -990,16 +976,16 @@ pwt_rs_.RadarSmoothed.prototype = {
             .append("circle")
             .attr("class", "rs_datapoint")
             .attr("r", this._cfg.dotRadius)
-            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
-            .attr("cy", function(d,i){ return that.rscale(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("cx", function(d,i){ return that.ptovalt(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
+            .attr("cy", function(d,i){ return that.ptovalt(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .style("fill", function(d,i,j) { return that._cfg.color(j); })
             .style("fill-opacity", 0.8);
 
         // update the circles
         blobwrapper.selectAll(".rs_datapoint")
             .attr("r", this._cfg.dotRadius)
-            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
-            .attr("cy", function(d,i){ return that.rscale(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("cx", function(d,i){ return that.ptovalt(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
+            .attr("cy", function(d,i){ return that.ptovalt(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .style("fill", function(d,i,j) { return that._cfg.color(j); });
 
         blobwrapper.exit().remove();
@@ -1022,8 +1008,8 @@ pwt_rs_.RadarSmoothed.prototype = {
             .append("circle")
             .attr("class", "rs_invdatapoint")
             .attr("r", this._cfg.dotRadius*1.5)
-            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
-            .attr("cy", function(d,i){ return that.rscale(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("cx", function(d,i){ return that.ptovalt(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
+            .attr("cy", function(d,i){ return that.ptovalt(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .style("fill", 'none')
             .style("pointer-events", "all")
             .on('mouseover', function(d) {
@@ -1051,8 +1037,8 @@ pwt_rs_.RadarSmoothed.prototype = {
 
         blobCircleWrapper.selectAll(".rs_invdatapoint")
             .attr("r", this._cfg.dotRadius*1.5)
-            .attr("cx", function(d,i){ return that.rscale(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
-            .attr("cy", function(d,i){ return that.rscale(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("cx", function(d,i){ return that.ptovalt(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
+            .attr("cy", function(d,i){ return that.ptovalt(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .style("pointer-events", "all");
 
         blobCircleWrapper.exit().remove();
