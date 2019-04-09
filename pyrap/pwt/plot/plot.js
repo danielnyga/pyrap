@@ -10,7 +10,16 @@ pwt_scatterplot.Scatterplot = function( parent, options ) {
     this._cfg = {
         margin: { top: 50, right: 50, bottom: 50, left: 50 },
         formatDefault: d3.format(',.2f'),
-        color: d3.scale.category20()
+        scattercolor: d3.scale.ordinal()
+            .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
+                '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
+                '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
+                '#17becf', '#9edae5']),
+        linecolor: d3.scale.ordinal()
+            .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
+                '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
+                '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
+                '#17becf', '#9edae5'])
 	};
 
     this._svg = d3.select(this._parentDIV).append("svg");
@@ -185,6 +194,9 @@ pwt_scatterplot.Scatterplot.prototype = {
 
         var that = this;
 
+        this._cfg.scattercolor
+            .domain([Array(this._scatterdata.length).keys()]);
+
         // generate limits for x/y axes from data; prefer scatterdata over line data
         var limits = typeof this._scatterdata !== 'undefined' && this._scatterdata.length > 0 ? this.scatterlimits() : this.linelimits();
         var xScale = d3.scale.linear()
@@ -217,7 +229,7 @@ pwt_scatterplot.Scatterplot.prototype = {
         circlegroupsenter
             .append("circle")
             .attr("class", "scattercircle")
-            .attr('fill',function (d,i) { return that._cfg.color(i) })
+            .attr('fill',function (d,i) { return that._cfg.scattercolor(i) })
             .on('mouseover', function () {
                 that._tooltip
                     .transition(200)
@@ -261,9 +273,8 @@ pwt_scatterplot.Scatterplot.prototype = {
         ///                       UPDATE LINES                               ///
         ////////////////////////////////////////////////////////////////////////
 
-        var color = d3.scale.ordinal()
-            .domain(Object.keys(this._linedata))
-            .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999']);
+        this._cfg.linecolor
+            .domain(Object.keys(this._linedata));
 
         var valueline = function (d) {
             return d3.svg.line()
@@ -285,7 +296,7 @@ pwt_scatterplot.Scatterplot.prototype = {
             // lines creation
             linegroupsenter
                 .append("path")
-                .attr("stroke", function(d){ return color(key); })
+                .attr("stroke", function(d){ return that._cfg.linecolor(key); })
                 .attr("class", "scatterline")
                 .attr("d", function(d){ return valueline(that._linedata[key]);})
                 .on('mouseover', function () {
