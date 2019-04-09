@@ -14,12 +14,20 @@ pwt_bubblyclusters.BubblyClusters = function( parent, audio ) {
     this._clusterPadding = 6; // separation between different-color nodes
     this._maxRadius = 12;
     this._force = d3.layout.force();
+    this._color = d3.scale.ordinal()
+        .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
+                '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
+                '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
+                '#17becf', '#9edae5']);
 
     this._audio = false;
     if (audio) {
         this._sound = new Audio(audio);
         this._audio = true;
     }
+
+    this._w = 800;
+    this._h = 600;
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.bubblyclusters');
@@ -51,8 +59,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
                 .attr('width', "100%")
                 .attr('height', "100%")
                 .append( "svg:g" )
-                .attr('class', 'bubblyclusters')
-                .attr("transform", "translate(" + (this._wwidth/2) + "," + (this._wheight/2) + ")");
+                .attr('class', 'bubblyclusters');
             this._svgContainer = this._svg.select('g.bubblyclusters');
         }
     },
@@ -74,6 +81,8 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
+        this._w = args[2] ? args[2] : 800;
+        this._h = args[3] ? args[3] : 600;
         this.update();
     },
 
@@ -147,15 +156,13 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
     setData : function ( data ) {
         this._nodes = data;
         this._clusters = new Array(this.distinct(this._nodes));
-        this._color = d3.scale.category20().domain(d3.range(this._clusters.length));
-        this._cwidth = this._w > 0 ? this._w : 960;
-        this._cheight = this._h > 0 ? this._h : 600;
+        this._color.domain(Object.keys(this._clusters));
 
         var that = this;
 
         this._nodes.forEach(function(n) {
-            n.x = Math.cos(n.cluster / that._clusters.length * 2 * Math.PI) * that._cwidth / 2 + Math.random();
-            n.y = Math.sin(n.cluster / that._clusters.length * 2 * Math.PI) * that._cheight / 2 + Math.random();
+            n.x = Math.cos(n.cluster / that._clusters.length * 2 * Math.PI) * that._w / 2 + Math.random();
+            n.y = Math.sin(n.cluster / that._clusters.length * 2 * Math.PI) * that._h / 2 + Math.random();
             if (!that._clusters[n.cluster] || (n.radius > that._clusters[n.cluster].radius)) that._clusters[n.cluster] = n;
         });
 
@@ -203,10 +210,6 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
 
         var that = this;
 
-        // cleanup/(re-)initialize data
-        this._cwidth = this._w > 0 ? this._w : 960;
-        this._cheight = this._h > 0 ? this._h : 600;
-
         var node = this._svgContainer.selectAll('g.bubblynode').data(this._nodes);
 
         // circle groups creation
@@ -221,6 +224,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
             .attr("class", "bubbly")
             .style("fill", function(d) { return that._color(d.cluster); })
             .on("mouseover", function(d) {
+                d3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
@@ -234,6 +238,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
                     .style("top", (newY) + "px");
             })
             .on("mouseout", function(d) {
+                d3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
@@ -276,7 +281,30 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
         nodeenter
             .append("text")
             .attr("class", "bubblytext")
+                        .on("mouseover", function(d) {
+                d3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+                that._tooltip
+                    .html(d.tooltip ? d.tooltip : '')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .on("mouseout", function(d) {
+                d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
             .text(function(d){return that._clusters[d.cluster] === d ? d.cluster : ''});
+
+        node.select('.bubblytext')
+            .call(this._force.drag);
 
         // Move d to be adjacent to the cluster node.
         function cluster(alpha) {
@@ -288,7 +316,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
                     l = Math.sqrt(x * x + y * y),
                     r = d.radius + cluster.radius;
                 if (l !== r) {
-                    l = (l - r) / l * alpha;
+                    l = (l - r) / l * alpha / Math.min(10, (d.clustersize ? d.clustersize : 10));
                     d.x -= x *= l;
                     d.y -= y *= l;
                     cluster.x += x;
@@ -309,9 +337,9 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
                 quadtree.visit(function(quad, x1, y1, x2, y2) {
                     if (quad.point && (quad.point !== d)) {
                         var x = d.x - quad.point.x,
-                        y = d.y - quad.point.y,
-                        l = Math.sqrt(x * x + y * y),
-                        r = d.radius + quad.point.radius + (d.cluster === quad.point.cluster ? that._padding : that._clusterPadding);
+                            y = d.y - quad.point.y,
+                            l = Math.sqrt(x * x + y * y),
+                            r = d.radius + quad.point.radius + (d.cluster === quad.point.cluster ? that._padding : that._clusterPadding);
                         if (l < r) {
                             l = (l - r) / l * alpha;
                             d.x -= x *= l;
@@ -330,7 +358,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
 
         this._force
             .nodes(this._nodes)
-            .size([this._cwidth, this._cheight])
+            .size([this._w, this._h])
             .gravity(.02)
             .charge(0)
             .on("tick", tick)
