@@ -1,4 +1,4 @@
-{ "legendtext": "Requirement Profile alskfj ;lkjsf ;lkjlk jsdfkl;sjflkjdslfkjdsf l;ksjdflksjdflkjsdf",
+{ "legendtext": "Requirement Profile",
   "data": {
     "H_b46": [
       0.0672,
@@ -76,7 +76,7 @@
       ]
     },
     {
-      "name": "Rm Have Internet Connectivity",
+      "name": "Rm",
       "limits": [
         0.0,
         2523.6
