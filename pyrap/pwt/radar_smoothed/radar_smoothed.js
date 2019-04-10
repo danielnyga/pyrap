@@ -1,6 +1,6 @@
 pwt_rs_ = {};
 
-pwt_rs_.RadarSmoothed = function( parent, audio ) {
+pwt_rs_.RadarSmoothed = function( parent, options ) {
 
     this._parentDIV = this.createElement(parent);
     this._tooltip = d3.select(this._parentDIV).append("div")
@@ -45,7 +45,7 @@ pwt_rs_.RadarSmoothed = function( parent, audio ) {
     this._allAxisnames = [];
     this._total = this._allAxis.length;
     this._legendopts = [];
-    this._legendtext = legendtext;
+    this._legendtext = options.legendtext;
 
     this._initialized = false;
     this._needsRender = true;
@@ -68,6 +68,20 @@ pwt_rs_.RadarSmoothed = function( parent, audio ) {
 pwt_rs_.RadarSmoothed.prototype = {
 
     initialize: function() {
+
+        d3.selection.prototype.moveToFront = function() {
+          return this.each(function(){
+            this.parentNode.appendChild(this);
+          });
+        };
+        d3.selection.prototype.moveToBack = function() {
+            return this.each(function() {
+                var firstChild = this.parentNode.firstChild;
+                if (firstChild) {
+                    this.parentNode.insertBefore(this, firstChild);
+                }
+            });
+        };
 
         if (this._svgContainer.empty()) {
             this._svg
@@ -176,6 +190,18 @@ pwt_rs_.RadarSmoothed.prototype = {
      * removes all axes from the radar chart
      */
     clear : function ( ) {
+        // clear legend
+        this._legendopts.splice(0, this._legendopts.length);
+
+        // clear axes
+        this._allAxis.splice(0, this._allAxis.length);
+        this._total = this._allAxis.length;
+
+        // clear min and max values
+        this._cfg.minValues = {};
+        this._cfg.maxValues = {};
+
+        // clear data
         this.setData( {} );
     },
 
@@ -245,7 +271,7 @@ pwt_rs_.RadarSmoothed.prototype = {
      * decimal place with the unit appended.
      */
     Format : function(unit, value){
-        if (unit == '%') {
+        if (unit === '%') {
 			return d3.format('.2%')(value);
 		} else {
             return (value >= 0.1 ? d3.format(".2f")(value) : d3.format(".2e")(value)) + unit;
@@ -515,7 +541,7 @@ pwt_rs_.RadarSmoothed.prototype = {
                         .transition(200)
                         .style("fill-opacity", 0.1);
                     //Bring back the hovered over blob
-                    d3.select('#' + d)
+                    d3.select('#' + that.replAxisname(d))
                         .transition(200)
                         .style("fill-opacity", 0.7);
 
@@ -919,7 +945,7 @@ pwt_rs_.RadarSmoothed.prototype = {
         blobwrapperenter
             .append("path")
             .attr("class", "rs_area")
-            .attr("id", function(d,i) { return d[0][0]; })
+            .attr("id", function(d,i) { return that.replAxisname(d[0][0]); })
             .attr("d", function(d,i) { return that.radarline(d); })
             .style("fill", function(d,i) { return that._cfg.color(i); })
             .style("fill-opacity", this._cfg.opacityArea)
@@ -1066,7 +1092,7 @@ rap.registerTypeHandler( 'pwt.customs.RadarSmoothed', {
 
     factory: function( properties ) {
         var parent = rap.getObject( properties.parent );
-        return new pwt_rs_.RadarSmoothed( parent, properties.options);
+        return new pwt_rs_.RadarSmoothed( parent, properties);
     },
 
     destructor: 'destroy',

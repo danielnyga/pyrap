@@ -14,6 +14,17 @@
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
 }
 
+.rs_tooltip {
+  display: none;
+  position: fixed;
+  overflow: hidden;
+  color: white;
+  font: 13px bookman, arial, sans-serif;
+  background-color:rgba(70,130,180, 0.7);
+  border-radius: 5px;
+  padding: 10px;
+}
+
 text.rs_axisname {
   font-size: 11px;
   fill: #333333;
@@ -51,15 +62,4 @@ rect.rs_maxiv {
 rect.rs_miniv {
   fill: grey;
   fill-opacity: 1;
-}
-
-.rs_tooltip {
-  display: none;
-  position: fixed;
-  overflow: hidden;
-  color: white;
-  font: 13px bookman, arial, sans-serif;
-  background-color:rgba(70,130,180, 0.7);
-  border-radius: 5px;
-  padding: 10px;
 }

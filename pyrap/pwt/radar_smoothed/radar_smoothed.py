@@ -19,7 +19,7 @@ class RadarSmoothed(Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('RadarSmoothed')
-    def __init__(self, parent, opts=None, **options):
+    def __init__(self, parent, legendtext=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = RadarSmoothedTheme(self, session.runtime.mngr.theme)
         self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
@@ -30,15 +30,14 @@ class RadarSmoothed(Widget):
             session.runtime.requirecss(fi)
         self._axes = []
         self._data = {}
-        self._opts = opts
+        self._legendtext = legendtext
         self.on_select = OnSelect(self)
         self.on_set = OnSet(self)
         self.svg = None
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        if self._opts:
-            options.options = self._opts
+        options.legendtext = ifnone(self._legendtext, '')
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
@@ -57,6 +56,15 @@ class RadarSmoothed(Widget):
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         return w, h
 
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.items():
+            if key == 'svg':
+                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'radar_smoothed', 'radar_smoothed.css'), name=__class__.__name__)
+            if key == 'pdf':
+                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'radar_smoothed', 'radar_smoothed.css'), name=__class__.__name__)
+        self.on_set.notify(_rwt_event(op))
+
     def _handle_notify(self, op):
         events = {'Selection': self.on_select}
         if op.event not in events:
@@ -71,15 +79,6 @@ class RadarSmoothed(Widget):
                 axis.intervalmax = op.args['args'].get('dataset')['interval'][1]
             events[op.event].notify(_rwt_selection_event(op))
         return True
-
-    def _handle_set(self, op):
-        Widget._handle_set(self, op)
-        for key, value in op.args.items():
-            if key == 'svg':
-                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'radar_smoothed', 'radar_smoothed.css'), name=__class__.__name__)
-            if key == 'pdf':
-                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'radar_smoothed', 'radar_smoothed.css'), name=__class__.__name__)
-        self.on_set.notify(_rwt_event(op))
 
     def addaxis(self, name, minval=None, maxval=None, unit='%', intervalmin=None, intervalmax=None):
         if isinstance(name, RadarAxis):
@@ -127,9 +126,28 @@ class RadarSmoothed(Widget):
         return self._data
 
     def clear(self):
+        self._axes = []
         self._data = {}
-        self._opts = []
-        session.runtime << RWTCallOperation(self.id, 'clear', {})
+        session.runtime << RWTCallOperation(self.id, 'clear', { })
+
+    def interval(self, axis, minval=None, maxval=None):
+        x = self.axisbyname(axis)
+        if minval is not None:
+            x.intervalmin = minval
+        if maxval is not None:
+            x.intervalmax = maxval
+        session.runtime << RWTCallOperation(self.id, 'updateAxis', {'axis': x.json() })
+
+    def limits(self, axis, minval=None, maxval=None):
+        if minval is not None:
+            axis.minval = minval
+        if maxval is not None:
+            axis.maxval = maxval
+        session.runtime << RWTCallOperation(self.id, 'updateAxis', {'axis': axis.json() })
+
+    def unit(self, axis, unit):
+        axis.unit = unit
+        session.runtime << RWTCallOperation(self.id, 'updateAxis', {'axis': axis.json() })
 
     def setdata(self, data):
         self._data = data
