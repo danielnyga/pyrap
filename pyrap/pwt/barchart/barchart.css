@@ -11,7 +11,7 @@
   stroke: black;
 }
 
-text {
+.barchart {
   color: black;
   font: 10px monospace, arial, sans-serif;
   font-weight: normal;

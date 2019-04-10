@@ -36,15 +36,6 @@ class RadarChart(Widget):
         self.on_set = OnSet(self)
         self.svg = None
 
-    def _handle_set(self, op):
-        Widget._handle_set(self, op)
-        for key, value in op.args.items():
-            if key == 'svg':
-                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'radar', 'radar.css'), name=__class__.__name__)
-            if key == 'pdf':
-                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'radar', 'radar.css'), name=__class__.__name__)
-        self.on_set.notify(_rwt_event(op))
-
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         if self._opts:
@@ -67,6 +58,15 @@ class RadarChart(Widget):
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
         return w, h
+
+    def _handle_set(self, op):
+        Widget._handle_set(self, op)
+        for key, value in op.args.items():
+            if key == 'svg':
+                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'radar', 'radar.css'), name=__class__.__name__)
+            if key == 'pdf':
+                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'radar', 'radar.css'), name=__class__.__name__)
+        self.on_set.notify(_rwt_event(op))
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select}
@@ -110,10 +110,6 @@ class RadarChart(Widget):
     def axes(self):
         return self._axes
 
-    @property
-    def data(self):
-        return self._data
-
     def remaxis(self, axis):
         self._axes.remove(axis)
         session.runtime << RWTCallOperation(self.id, 'remAxis', {'name': axis.name})
@@ -126,6 +122,10 @@ class RadarChart(Widget):
                 self._axes.remove(a)
                 return True
         return False
+
+    @property
+    def data(self):
+        return self._data
 
     def clear(self):
         self._axes = []
