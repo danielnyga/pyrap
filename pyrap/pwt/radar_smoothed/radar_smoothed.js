@@ -36,7 +36,6 @@ pwt_rs_.RadarSmoothed = function( parent, audio ) {
                     '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
                     '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
                     '#17becf', '#9edae5']),
-        defaultformat: d3.format('%'),
         maxValues: {},          // mapping axis name to max value
         minValues: {}           // mapping axis name to min value
 	};
@@ -247,7 +246,7 @@ pwt_rs_.RadarSmoothed.prototype = {
      */
     Format : function(unit, value){
         if (unit == '%') {
-			return d3.format('%')(value);
+			return d3.format('.2%')(value);
 		} else {
             return (value >= 0.1 ? d3.format(".2f")(value) : d3.format(".2e")(value)) + unit;
 		}
@@ -293,17 +292,28 @@ pwt_rs_.RadarSmoothed.prototype = {
             axis = d.axis;
         }
 
+        // the axis end point
+        var x0 = this.valtop(axis, this._cfg.maxValues[axis.name]) * (Math.cos(this._cfg.angleslice*i + Math.PI/2));
+        var y0 = this.valtop(axis, this._cfg.maxValues[axis.name]) * (-Math.sin(this._cfg.angleslice*i + Math.PI/2));
+
 	    // x/y coords of mousepointer
 	    coordinates = d3.mouse(this._svgContainer.node());
 		var mx = coordinates[0];
 		var my = coordinates[1];
 
-		// determine new value for by calculating length from center to (px,py)
-	    var len = Math.sqrt(Math.pow(mx, 2) + Math.pow(my, 2));
-	    var newValue = this.ptoval(axis, len);
+		// determine the direction of the mouse pointer (positive - mouse moves in direction of axis, negative - mouse
+        // moves in opposite direction
+        var lambda = Math.sign((x0 * mx + y0 * my)/(Math.pow(x0, 2) + Math.pow(y0, 2)));
 
-	    // return new x/y position of XXX and new value
-	    return [mx, my, newValue];
+		// determine new value for by calculating length from center to (px,py)
+        // if the mousepointer is at a position equal to or lower than the axis minimum, the newvalue is set to the
+        // axis minimum
+	    var len = Math.sqrt(Math.pow(mx, 2) + Math.pow(my, 2));
+	    var axvalue = this.ptoval(axis, Math.max(0, len * lambda));
+
+	    // return new x/y position of the dragtarget (and maybe the corresponding interval) and the semantic value at
+        // that point of the axis
+	    return [mx, my, axvalue];
 	},
 
     /**
@@ -336,12 +346,9 @@ pwt_rs_.RadarSmoothed.prototype = {
             case 'rs_miniv':
             case 'rs_maxiv':
 
-                // get length of vector to new position
-                var l = Math.sqrt(Math.pow(dragtarget.attr('x'), 2) + Math.pow(dragtarget.attr('y'), 2));
-
 	            var selectiontype = tclass;
                 var dataset = d;
-                var newdata = this.ptoval(d, l);
+                var newdata = this.ptoval(d, dragtarget.attr('y'));
         }
 		rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { args: {'func': 'dragend', 'type': selectiontype, 'dataset': dataset, 'data': newdata} } );
 	},
@@ -385,26 +392,10 @@ pwt_rs_.RadarSmoothed.prototype = {
      */
     radarline : function (v) {
         var that = this;
-        return function(x) {
-            return d3.svg.line.radial()
-                .interpolate(that._cfg.roundStrokes ? "cardinal-closed" : "linear-closed")
-                .radius(function(d) {return that.ptovalt(d); })
-                .angle(function(d,i) { return i*that._cfg.angleslice + Math.PI/2; })(x);
-        }(v);
-    },
-
-    /**
-     * maps a value along the axis to its semantic value. Like ptoval, but accepting a triplet of
-     * [datasetname, value, axisname]] instead of the axis and the value
-     */
-    ptovalt : function (data) {
-        var that = this;
-        return function(x) {
-            return d3.scale.linear()
-                .range([0, that._cfg.radius])
-                .domain([that._cfg.minValues[data[2]], that._cfg.maxValues[data[2]]])(x);
-        }(data[1]);
-
+        return d3.svg.line.radial()
+            .interpolate(that._cfg.roundStrokes ? "cardinal-closed" : "linear-closed")
+            .radius(function(d) { return that.valtop(d[2], d[1]); })
+            .angle(function(d,i) { return that._cfg.angleslice*(i+1); })(v);
     },
 
     /**
@@ -414,15 +405,15 @@ pwt_rs_.RadarSmoothed.prototype = {
      */
     ptoval : function(d, p) {
         var that = this;
-            return d3.scale.linear()
-                .domain([0, that._cfg.radius])
-                .range([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])(p);
+        return d3.scale.linear()
+            .domain([0, that._cfg.radius])
+            .range([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])(p);
     },
 
     /**
      * maps the semantic value of an axis to its coordinate - the inverse of ptoval
      * @param d     the axis
-     * @param i     0 if it should select the lower bound of the interval or 1 for the upper bound.
+     * @param v     the semantic value to determine the coordinate for
      */
     valtop : function(d, v) {
         var that = this;
@@ -607,13 +598,13 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("class", "rs_axisline")
             .attr("x1", 0)
             .attr("y1", 0)
-            .attr("x2", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
-            .attr("y2", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
+            .attr("x2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
 
         // update the lines
         axes.select(".rs_axisline")
-            .attr("x2", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
-            .attr("y2", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
+            .attr("x2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
 
         // append the axis labels
         axisenter
@@ -621,19 +612,16 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("class", "rs_axisname")
             .attr("text-anchor", "middle")
             .attr("dy", "0.35em")
-            .attr("x", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
-            .attr("y", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
-            .text(function(d, i){return d.name + i})
+            .attr("x", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .text(function(d, i){return d.name})
             .call(this.wrap, this._cfg.wrapWidth);
 
         // update the labels
         axes.select(".rs_axisname")
-            .attr("x", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
-            .attr("y", function(d, i){ return that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
-            // .text(function(d, i){return d.name + i})
-            .text(function(d, i){
-                return d.name + ' ' + i + ' ' + that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * (Math.cos(that._cfg.angleslice*i + Math.PI/2)) + '/' + that.ptovalt([null, that._cfg.maxValues[d.name], d.name]) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2));
-            })
+            .attr("x", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .text(function(d, i){return d.name})
             .call(this.wrap, this._cfg.wrapWidth);
 
         var newaxis = [];
@@ -785,30 +773,35 @@ pwt_rs_.RadarSmoothed.prototype = {
                             .origin(Object)
                             .on("drag", function(d, i) {
                                 var data = that.dragmove(d, i);
-                                console.log('data miniv:', data);
 
-                                var lenx = data[0] - that._cfg.w/2;
-                                var leny = data[1] - that._cfg.h/2;
+                                var l = that.valtop(d, data[2]);
 
-                                var l = Math.sqrt(Math.pow(lenx, 2) + Math.pow(leny, 2));
+                                // the position of the miniv rect is bound to the axis minimum on the lower side and the
+                                // position of the maxiv rect on the upper side
+                                var dragTarget = d3.select(this),
+                                    miny = that.valtop(d, that._cfg.minValues[d.name]),
+                                    maxy = that._svgContainer.select(".rs_maxiv-"+that.replAxisname(d.name)).attr('y');
 
-                                //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                                var maxy = that._svgContainer.select(".rs_maxiv-"+that.replAxisname(d.name)).attr('y');
-                                var dragTarget = d3.select(this);
                                 dragTarget
                                     .attr("y", function(d, i){
-                                        return Math.min(that._cfg.h/2 + l, maxy);
+                                        return Math.min(maxy, Math.max(miny, l));
                                     });
+
+                                // the y coord of the interval bar is bound by the limits of the axis and the position
+                                // of the maxiv rect
+                                var inty = Math.min(l, dragTarget.attr("y"));
 
                                 // update actual interval
                                 that._svgContainer.select(".rs_iv-"+that.replAxisname(d.name))
                                     .attr("y", function(d, i){
-                                        return that._cfg.h/2 + l;
+                                        return l;
                                     })
                                     .attr("height", function(d, i){
-                                        return maxy - (that._cfg.h/2 + l);
+                                        return maxy - inty;
                                     });
-                                d.interval[0] = data[2] * 100. / 100.;
+
+                                // update upper interval of axis
+                                d.interval[0] = data[2];
                             })
                             .on('dragend', function(d, i) {
 
@@ -866,10 +859,9 @@ pwt_rs_.RadarSmoothed.prototype = {
                             .origin(Object)
                             .on("drag", function(d, i) {
                                 var data = that.dragmove(d, i);
-                                console.log('got', data);
 
                                 // initial length of the interval
-                                var l = Math.sqrt(Math.pow(data[0], 2) + Math.pow(data[1], 2));
+                                var l = that.valtop(d, data[2]);
 
                                 // the position of the maxiv rect is bound to the axis maximum on the upper side and the
                                 // position of the miniv rect on the lower side
@@ -910,7 +902,7 @@ pwt_rs_.RadarSmoothed.prototype = {
         for (var name = 0; name < datasetnames.length; name++) {
             var tmp = [];
             for (var v=this._allAxis.length-1; v >= 0; v--) {
-                tmp.push([datasetnames[name], that._data[datasetnames[name]][v], this._allAxis[v].name]);
+                tmp.push([datasetnames[name], that._data[datasetnames[name]][v], this._allAxis[v]]);
             }
             data.push(tmp);
         }
@@ -971,21 +963,21 @@ pwt_rs_.RadarSmoothed.prototype = {
 
         // append the circles
         blobwrapper.selectAll(".rs_datapoint")
-            .data(function(d,i) { return d; })
+            .data(function(d) { return d; })
             .enter()
             .append("circle")
             .attr("class", "rs_datapoint")
             .attr("r", this._cfg.dotRadius)
-            .attr("cx", function(d,i){ return that.ptovalt(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
-            .attr("cy", function(d,i){ return that.ptovalt(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("cx", function(d){ return that.valtop(d[2], d[1]) * Math.cos(that._cfg.angleslice*that._allAxis.indexOf(d[2]) + Math.PI/2); })
+            .attr("cy", function(d){ return that.valtop(d[2], d[1]) * (-Math.sin(that._cfg.angleslice*that._allAxis.indexOf(d[2]) + Math.PI/2)); })
             .style("fill", function(d,i,j) { return that._cfg.color(j); })
             .style("fill-opacity", 0.8);
 
         // update the circles
         blobwrapper.selectAll(".rs_datapoint")
             .attr("r", this._cfg.dotRadius)
-            .attr("cx", function(d,i){ return that.ptovalt(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
-            .attr("cy", function(d,i){ return that.ptovalt(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("cx", function(d){ return that.valtop(d[2], d[1]) * Math.cos(that._cfg.angleslice*that._allAxis.indexOf(d[2]) + Math.PI/2); })
+            .attr("cy", function(d){ return that.valtop(d[2], d[1]) * (-Math.sin(that._cfg.angleslice*that._allAxis.indexOf(d[2]) + Math.PI/2)); })
             .style("fill", function(d,i,j) { return that._cfg.color(j); });
 
         blobwrapper.exit().remove();
@@ -994,22 +986,24 @@ pwt_rs_.RadarSmoothed.prototype = {
         //////// Append invisible circles for tooltip ///////////
         /////////////////////////////////////////////////////////
 
-        //Wrapper for the invisible circles on top
-        var blobCircleWrapper = this._svgContainer.selectAll(".rs_invdatapointwrapper").data(data);
+        //Append a set of invisible circles on top for the mouseover pop-up
+        // we need to determine the axes index differently here because it is not the index i from the dataset because
+        // of the different data structure. We therefore determine it by retrieving the index of the axis from
+        // this._allAxis
+        var blobcirclewrapper = this._svgContainer.selectAll(".rs_invdatapointwrapper").data(data);
 
-        blobCircleWrapper
+        blobcirclewrapper
             .enter().append("g")
             .attr("class", "rs_invdatapointwrapper");
 
-        //Append a set of invisible circles on top for the mouseover pop-up
-        blobCircleWrapper.selectAll(".rs_invdatapoint")
+        blobcirclewrapper.selectAll(".rs_invdatapoint")
             .data(function(d,i) { return d; })
             .enter()
             .append("circle")
             .attr("class", "rs_invdatapoint")
             .attr("r", this._cfg.dotRadius*1.5)
-            .attr("cx", function(d,i){ return that.ptovalt(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
-            .attr("cy", function(d,i){ return that.ptovalt(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("cx", function(d,i){ return that.valtop(d[2], d[1]) * Math.cos(that._cfg.angleslice*that._allAxis.indexOf(d[2]) + Math.PI/2); })
+            .attr("cy", function(d,i){ return that.valtop(d[2], d[1]) * (-Math.sin(that._cfg.angleslice*that._allAxis.indexOf(d[2]) + Math.PI/2)); })
             .style("fill", 'none')
             .style("pointer-events", "all")
             .on('mouseover', function(d) {
@@ -1029,19 +1023,41 @@ pwt_rs_.RadarSmoothed.prototype = {
                 var newY = (d3.event.pageY - 20);
 
                 that._tooltip
-                    .html(that.Format(that._allAxis[that._allAxisnames.indexOf(d[2])].unit, isNaN(d[1]) ? 0 : d[1]))
+                    .html(that.Format(d[2].unit, isNaN(d[1]) ? 0 : d[1]))
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
 
-            });
+            })
+            .call(d3.behavior.drag()
+                .origin(Object)
+                .on("drag", function(d) {
+                    // d is an array [datasetname, value, axis], so to get the correct dragmove values we need to
+                    // pass it the correct index of the axis
+                    var movedata = that.dragmove(d, that._allAxis.indexOf(d[2], 0));
 
-        blobCircleWrapper.selectAll(".rs_invdatapoint")
+                    //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
+                    var dragTarget = d3.select(this);
+                    dragTarget
+                        .attr("cx", function(){ return that.valtop(d, movedata[2]) * Math.cos(that._cfg.angleslice*that._allAxis.indexOf(d, 0) + Math.PI/2); })
+                        .attr("cy", function(){ return that.valtop(d, movedata[2]) * (-Math.sin(that._cfg.angleslice*that._allAxis.indexOf(d, 0) + Math.PI/2)); });
+
+                    //Updating the data of the circle with the new value
+                    that._data[d[0]][that._allAxis.indexOf(d[2], 0)] = movedata[2];
+                    that.update();
+                })
+                .on('dragend', function(d, i) {
+                    var _this = this;
+                    that.dragend(d, that._allAxis.indexOf(d[2], 0), _this, that);
+                })
+            );
+
+        blobcirclewrapper.selectAll(".rs_invdatapoint")
             .attr("r", this._cfg.dotRadius*1.5)
-            .attr("cx", function(d,i){ return that.ptovalt(d) * Math.cos(that._cfg.angleslice*i + Math.PI/2); })
-            .attr("cy", function(d,i){ return that.ptovalt(d) * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("cx", function(d,i){ return that.valtop(d[2], d[1]) * Math.cos(that._cfg.angleslice*that._allAxis.indexOf(d[2]) + Math.PI/2); })
+            .attr("cy", function(d,i){ return that.valtop(d[2], d[1]) * (-Math.sin(that._cfg.angleslice*that._allAxis.indexOf(d[2]) + Math.PI/2)); })
             .style("pointer-events", "all");
 
-        blobCircleWrapper.exit().remove();
+        blobcirclewrapper.exit().remove();
     }
 };
 

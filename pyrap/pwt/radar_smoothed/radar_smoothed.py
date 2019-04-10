@@ -6,7 +6,7 @@ from pyrap.pwt.radar.radar import RadarAxis
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, RWTSetOperation
 from pyrap.constants import d3wrapper
-from pyrap.events import OnSelect, _rwt_event, OnSet
+from pyrap.events import OnSelect, _rwt_event, OnSet, _rwt_selection_event
 from pyrap.ptypes import BitField
 from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
 from pyrap.themes import WidgetTheme
@@ -61,7 +61,15 @@ class RadarSmoothed(Widget):
         events = {'Selection': self.on_select}
         if op.event not in events:
             return Widget._handle_notify(self, op)
-        events[op.event].notify(_rwt_event(op))
+        else:  # must be selection event
+            if op.args.args.get('type', None) == 'rs_miniv':
+                axis = self.axisbyname(op.args['args'].get('dataset')['name'])
+                axis.intervalmin = op.args['args'].get('dataset')['interval'][0]
+
+            elif op.args.args.get('type', None) == 'rs_maxiv':
+                axis = self.axisbyname(op.args['args'].get('dataset')['name'])
+                axis.intervalmax = op.args['args'].get('dataset')['interval'][1]
+            events[op.event].notify(_rwt_selection_event(op))
         return True
 
     def _handle_set(self, op):
