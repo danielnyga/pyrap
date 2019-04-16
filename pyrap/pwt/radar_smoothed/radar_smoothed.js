@@ -148,7 +148,7 @@ pwt_rs_.RadarSmoothed.prototype = {
     },
 
     setBounds: function( args ) {
-                if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
+        if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
             this._cfg.w = Math.max(400, args[2] - this._cfg.left - this._cfg.right);
             this._cfg.h = Math.max(300, args[3] - this._cfg.top - this._cfg.bottom);
         }

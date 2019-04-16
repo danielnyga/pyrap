@@ -51,7 +51,7 @@ class ControlsDemo():
     def setup(application): pass
 
     def desktop(self, **kwargs):
-        page = kwargs.get('page', 'RadarSmooth')
+        page = kwargs.get('page', 'Radar')
         self.shell = Shell(maximized=True, titlebar=False)
         self.shell.on_resize += self.shell.dolayout
         shell = self.shell
@@ -251,7 +251,7 @@ class ControlsDemo():
         # =======================================================================
         page = self.create_page_template('Radar Chart Demo -- Smoothed')
         self.create_radarsmoothed_page(page)
-        self.pages['RadarSmooth'] = page
+        self.pages['Radar Smooth'] = page
 
         #=======================================================================
         # create D3 radial dendrogramm
@@ -291,9 +291,9 @@ class ControlsDemo():
         #=======================================================================
         # create D3 bar chart
         #=======================================================================
-        page = self.create_page_template('D3 BarChart')
+        page = self.create_page_template('D3 Bar Chart')
         self.create_barchart_page(page)
-        self.pages['BarChart'] = page
+        self.pages['Bar Chart'] = page
 
         # =======================================================================
         # create video
@@ -1022,11 +1022,10 @@ class ControlsDemo():
                 c.dispose()
 
         def reload(*_):
-            if comp_body.children:
-                clear()
+            clear()
 
-            tree = Tree(comp_body, halign='fill', valign='fill')
-            tree.setdata(data)
+            t = Tree(comp_body, halign='fill', valign='fill')
+            t.setdata(data)
 
             self.shell.dolayout()
 
@@ -1118,7 +1117,7 @@ class ControlsDemo():
         btn_download.on_select += download
 
     def create_barchart_page(self, parent):
-        grp = Group(parent, text='BarChart')
+        grp = Group(parent, text='Bar Chart')
         grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
 
         comp_btn = Composite(grp)
