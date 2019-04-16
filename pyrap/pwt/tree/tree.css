@@ -4,21 +4,21 @@ text.tree {
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
 
-.treenode {
+.tree_node {
   cursor: pointer;
 }
 
-.treenode circle {
+.tree_node circle {
   fill: #fff;
   stroke: steelblue;
   stroke-width: 1.5px;
 }
 
-.treenode text {
+.tree_node text {
   font: 13px monospace, arial, sans-serif;
 }
 
-.treelink {
+.tree_link {
   fill: none;
   stroke: #ccc;
   stroke-width: 1.5px;

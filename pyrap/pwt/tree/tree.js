@@ -3,6 +3,8 @@ pwt_tree = {};
 pwt_tree.Tree = function( parent, options) {
 
     this._parentDIV =  this.createElement(parent);
+    this._parent = parent;
+
     this._tooltip = d3.select(this._parentDIV).append("div")
             .attr('class', 'treetooltip')
             .style('z-index', 1000000);
@@ -14,34 +16,33 @@ pwt_tree.Tree = function( parent, options) {
         i: 0,
         w: 900,
         h: 600,
-        radius: 10
+        radius: 5
     };
 
     this._tree = d3.layout.tree().size([this._cfg.w, this._cfg.h]);
-    this._diagonal = d3.svg.diagonal().projection(function(d) {
-        return [d.y, d.x];
-    });
     this._data = {};
+    this._nodes = [];
+    this._links = [];
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.tree');
 
     this._initialized = false;
-    this._needsRender = true;
+
     var that = this;
+
+    this.onresize = function () {
+        that.setBounds( that._parent.getClientArea() )
+    };
+
     rap.on( "render", function() {
-        if( that._needsRender ) {
-            if( !that._initialized) {
-                that.initialize( that );
-                that._initialized = true;
-            }
-            that.update({});
-            that._needsRender = false;
+        if( !that._initialized) {
+            that.initialize( that, parent );
+            that._initialized = true;
         }
+        that.update({});
     } );
-    parent.addListener( "Resize", function() {
-        that.setBounds( parent.getClientArea() );
-    } );
+    this._parent.addListener( "Resize", this.onresize);
 };
 
 pwt_tree.Tree.prototype = {
@@ -89,9 +90,10 @@ pwt_tree.Tree.prototype = {
 
     destroy: function() {
         var element = this._parentDIV;
-        if( element.parentNode ) {
+        if ( element.parentNode ) {
             element.parentNode.removeChild( element );
         }
+        this._parent.removeListener( "Resize", this.onresize);
     },
 
     setWidth: function( width ) {
@@ -110,26 +112,34 @@ pwt_tree.Tree.prototype = {
      * updates data options
      */
     setData : function ( data ) {
-        // clear old data
-        this._data = data;
-        this._data.x0 = this._cfg.h / 2;
-        this._data.y0 = 0;
+        // make sure to always re-render when received new data
+        // TODO: find better way
 
         function collapse(d) {
-            if(d.children) {
+            if (d.children) {
                 d._children = d.children;
                 d._children.forEach(collapse);
                 d.children = null;
             }
         }
-        this._data.children.forEach(collapse);
+
+        this._data = data;
+
+        if (this._data.children) {
+            // clear old data
+            this._data.x0 = this._cfg.h / 2;
+            this._data.y0 = 0;
+
+            this._data.children.forEach(collapse);
+        }
         this.update(this._data);
+        rap._.notify('render');
     },
 
     /**
      * Toggle children on click
      */
-    click: function( d, that ) {
+    click : function( d, that ) {
         if (d.children) {
             d._children = d.children;
             d.children = null;
@@ -145,6 +155,13 @@ pwt_tree.Tree.prototype = {
      */
     retrievesvg : function ( args ) {
         rwt.remote.Connection.getInstance().getRemoteObject( this ).set( args.type, this._svg.node().outerHTML );
+    },
+
+    diagonal : function(x) {
+        return d3.svg.diagonal()
+            .projection(function(d) {
+                return [d.y, d.x];
+            })(x);
     },
 
     /**
@@ -164,7 +181,8 @@ pwt_tree.Tree.prototype = {
     update : function (source) {
 
         // no update before graph has been initialized
-        if (!this._initialized) { return; }
+        if (!this._initialized) { rap._.notify('render'); }
+        if (Object.keys(source).length === 0) { return; }
 
         var that = this;
 
@@ -173,21 +191,21 @@ pwt_tree.Tree.prototype = {
             .size([this._cfg.w, this._cfg.h]);
 
         // Compute the new tree layout.
-        var nodes = this._tree.nodes(this._data).reverse(),
-            links = this._tree.links(nodes);
+        this._nodes = this._tree.nodes(this._data).reverse();
+        this._links = this._tree.links(this._nodes);
 
         // Normalize for fixed-depth.
-        nodes.forEach(function(d) { d.y = d.depth * 180; });
+        this._nodes.forEach(function(d) { d.y = d.depth * 180; });
 
         // Update the nodes…
-        var node = this._svgContainer.selectAll("g.treenode")
-            .data(nodes, function(d) { return d.id || (d.id = ++that._cfg.i); });
+        var node = this._svgContainer.selectAll("g.tree_node")
+            .data(this._nodes, function(d) { return d.id || (d.id = ++that._cfg.i); });
 
         // Enter any new nodes at the parent's previous position.
-        var nodeEnter = node
+        var nodeenter = node
             .enter()
             .append("g")
-            .attr("class", "treenode")
+            .attr("class", "tree_node")
             .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
             .on("click", function(d, i) {
                 that.click(d, that);
@@ -211,13 +229,14 @@ pwt_tree.Tree.prototype = {
                     .style("display", "none");
             });
 
-        nodeEnter
+        nodeenter
             .append("circle")
             .attr("r", 1e-6)
             .style("fill", function(d) { return (typeof d._children  !== 'undefined' && d._children.length > 0) ? d.highlight ? "green" : "steelblue" : "white"; })
             .style("stroke", function(d) { return d.highlight ? "green" : "steelblue"; });
 
-        nodeEnter.append("svg:a")
+        nodeenter
+            .append("svg:a")
             .attr("target", "E2B")
             .attr("href", function(d) { return d.url; })
             .append("text")
@@ -228,127 +247,136 @@ pwt_tree.Tree.prototype = {
             .style("fill-opacity", 1e-6);
 
         // Transition nodes to their new position.
-        var nodeUpdate = node
+        var nodeupdate = node
             .transition()
             .duration(this._cfg.duration)
             .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
-        nodeUpdate
+        nodeupdate
             .select("circle")
             .attr("r", this._cfg.radius)
             .style("fill", function(d) { return d._children  && d._children.length > 0 ? d.highlight ? "green" : "steelblue" : "white"; });
 
-        nodeUpdate
+        nodeupdate
             .select("text")
             .style("fill-opacity", 1);
 
         // Transition exiting nodes to the parent's new position.
-        var nodeExit = node
+        var nodeexit = node
             .exit()
             .transition()
             .duration(this._cfg.duration)
             .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
             .remove();
 
-        nodeExit
+        nodeexit
             .select("circle")
             .attr("r", 1e-6);
 
-        nodeExit
+        nodeexit
             .select("text")
             .style("fill-opacity", 1e-6);
 
-        // Update the links…
-        var link = this._svgContainer.selectAll("path.treelink")
-            .data(links, function(d) { return d.target.id; });
-
-        // Enter any new links at the parent's previous position.
-        var linkEnter = link
-            .enter()
-            .insert("path", "g")
-            .attr("class", "treelink")
-            .style('stroke', function(d) { return d.target.highlight ? "green" : "steelblue"; })
-            .attr("d", function(d) {
-                var o = {x: source.x0, y: source.y0};
-                return that._diagonal({source: o, target: o});
-            })
-            .attr("id", function(d) { return d.source.nodetext + '-' + d.target.nodetext; });
-
-        var thing = this._svgContainer.selectAll("g.treething")
-            .data(links, function(d) { return d.target.id; });
+        var edge = this._svgContainer.selectAll("g.tree_edge")
+            .data(this._links, function(d) { return d.target.id; });
 
         // Enter any new linktexts at the parent's previous position.
-        var thingEnter = thing
+        var edgeenter = edge
             .enter()
             .append("g")
-            .attr("class", "treething");
+            .attr("class", "tree_edge");
 
-        thingEnter.append("text")
-            .style("font-size", "15px")
-            .append("textPath")
-            .attr("href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
-            .style('text-anchor', "middle")
-            .attr("startOffset", "50%")
-            .text(function(d) { return d.target.edgetext; })
-            .on("mouseover", function() {
-                that._tooltip
-                    .transition(200)
-                    .style('display', 'block');
-            })
-            .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
-                that._tooltip
-                    .html(d.target.edgetooltip)
-                    .style("left", (newX) + "px")
-                    .style("top", (newY) + "px");
-            })
-            .on("mouseout", function() {
-                that._tooltip
-                    .transition(200)
-                    .style("display", "none");
+          // Enter any new links at the parent's previous position.
+        edgeenter
+            .append("path")
+            .attr("class", "tree_link")
+            .attr("id", function(d) { return d.source.nodetext + '-' + d.target.nodetext; })
+            .attr("d", function(d) {
+                var o = {x: source.x0, y: source.y0};
+                return that.diagonal({source: o, target: o});
             });
+        //
+        // edgeenter
+        //     .append("text")
+        //     .style("font-size", "15px")
+        //     .append("textPath")
+        //     .attr("href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
+        //     .style('text-anchor', "middle")
+        //     .attr("startOffset", "50%")
+        //     .text(function(d) { return d.target.edgetext; })
+        //     .on("mouseover", function() {
+        //         that._tooltip
+        //             .transition(200)
+        //             .style('display', 'block');
+        //     })
+        //     .on('mousemove', function(d) {
+        //         var newX = (d3.event.pageX + 20);
+        //         var newY = (d3.event.pageY - 20);
+        //         that._tooltip
+        //             .html(d.target.edgetooltip)
+        //             .style("left", (newX) + "px")
+        //             .style("top", (newY) + "px");
+        //     })
+        //     .on("mouseout", function() {
+        //         that._tooltip
+        //             .transition(200)
+        //             .style("display", "none");
+        //     });
+        //
+        // edgeenter
+        //     .append("use")
+        //     .attr("href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
+        //     .style("stroke", "black")
+        //     .style("fill", "none");
 
-        thingEnter
-            .append("use")
-            .attr("href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
-            .style("stroke", "black")
-            .style("fill", "none");
-
-        var thingUpdate = thing
+          // Transition links to their new position.
+        var edgeupdate = edge
             .transition()
-            .duration(0.2*this._cfg.duration);
+            .duration(this._cfg.duration);
 
-        thingUpdate.select("text")
-            .style("fill-opacity", 1);
+        edgeupdate
+            .selectAll('path')
+            .attr("d", that.diagonal)
+            .style('stroke', function(d) { return d.target.highlight ? "green" : "steelblue"; });
 
-        var thingExit = thing
+        // edgeupdate
+        //     .select("text")
+        //     .style("fill-opacity", 1);
+
+        var edgeexit = edge
             .exit()
             .transition()
-            .duration(0.2*this._cfg.duration)
-            .remove();
-
-        thingExit.select("text")
-            .style("fill-opacity", 1e-6);
-
-        // Transition links to their new position.
-        link.transition()
             .duration(this._cfg.duration)
-            .attr("d", that._diagonal);
+            .remove();
 
         // Transition exiting nodes to the parent's new position.
-        link
-            .exit()
-            .transition()
-            .duration(this._cfg.duration)
+        edgeexit
+            .select('path')
             .attr("d", function(d) {
                 var o = {x: source.x, y: source.y};
-                return that._diagonal({source: o, target: o});
-            })
-            .remove();
+                return that.diagonal({source: o, target: o});
+            });
+        //
+        // // Transition exiting nodes to the parent's new position.
+        // edgeexit
+        //     .select(".treelink")
+        //     .transition()
+        //     .duration(this._cfg.duration)
+        //     .attr("d", function(d) {
+        //         var o = {x: source.x, y: source.y};
+        //         return that.diagonal({source: o, target: o});
+        //     }).remove();
+        //
+        // edgeexit
+        //     .select("text")
+        //     .style("fill-opacity", 1e-6);
+        //
+        // edgeexit
+        //     .select("use")
+        //     .remove();
 
         // Stash the old positions for transition.
-        nodes.forEach(function(d) {
+        this._nodes.forEach(function(d) {
             d.x0 = d.x;
             d.y0 = d.y;
         });
@@ -365,7 +393,7 @@ rap.registerTypeHandler( 'pwt.customs.Tree', {
 
   destructor: 'destroy',
   properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
-  methods : [ 'updateData', 'clear', 'retrievesvg'],
+  methods : [ 'retrievesvg'],
   events: [ 'Selection' ]
 
 } );

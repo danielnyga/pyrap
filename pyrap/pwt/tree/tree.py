@@ -26,6 +26,7 @@ class Tree(Widget):
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
         with open(os.path.join(locations.pwt_loc, 'tree', 'tree.css')) as fi:
             session.runtime.requirecss(fi)
+        self._data = {}
         self.on_select = OnSelect(self)
         self.on_set = OnSet(self)
         self.svg = None
@@ -67,6 +68,10 @@ class Tree(Widget):
         else:
             events[op.event].notify(_rwt_event(op))
         return True
+
+    def clear(self):
+        self._data = {}
+        session.runtime << RWTSetOperation(self.id, {'data': self._data})
 
     def setdata(self, data):
         self._data = data
