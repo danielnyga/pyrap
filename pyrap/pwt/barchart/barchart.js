@@ -4,9 +4,7 @@ pwt_barchart.BarChart = function( parent, options ) {
 
     this.barHeight = 15;
     this.topOffset = 20;
-    this.w = 0;
-    this.h = 0;
-    this.fontpixels = 7.5; //x-small
+    this.fontpixels = 10; //x-small
     this.yBarWidth = 0;
     this.barChartData = [];
 
@@ -14,6 +12,10 @@ pwt_barchart.BarChart = function( parent, options ) {
 
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.barchart');
+
+    this._tooltip = d3.select(this._parentDIV).append("div")
+            .attr('class', 'barcharttooltip')
+            .style('z-index', 1000000);
 
     this._initialized = false;
     this._needsRender = true;
@@ -37,9 +39,6 @@ pwt_barchart.BarChart.prototype = {
 
     initialize: function() {
 
-        this.w = this._parentDIV.offsetWidth;
-        this.h = 1;//this._parentDIV.offsetHeight;
-
         if (this._svgContainer.empty()) {
             this._svg
                 .attr('width', "100%")
@@ -51,10 +50,10 @@ pwt_barchart.BarChart.prototype = {
         }
 
         this._svgContainer.append("g")
-            .attr("class", "x axis");
+            .attr("class", "x bcaxis");
 
         this._svgContainer.append("g")
-            .attr("class", "y axis");
+            .attr("class", "y bcaxis");
     },
 
     createElement: function( parent ) {
@@ -96,7 +95,9 @@ pwt_barchart.BarChart.prototype = {
     setData : function (results) {
         this.clear();
         this.barChartData = results.slice();
-        this.barChartData.sort(function(a, b) { return b.value - a.value; });
+        this.barChartData.sort(function(a, b) { return a.value - b.value; });
+
+        // determine horizontal translation based on the maximum string length of the y axis items
         var l = [];
         for (var e = 0; e < this.barChartData.length; e++) {
             l.push(this.barChartData[e].name);
@@ -104,6 +105,7 @@ pwt_barchart.BarChart.prototype = {
         if (l.length > 0) {
             this.yBarWidth = l.reduce(function (a, b) { return a.length > b.length ? a : b; }).length * this.fontpixels;
         }
+
         this.update();
     },
 
@@ -122,102 +124,103 @@ pwt_barchart.BarChart.prototype = {
         rwt.remote.Connection.getInstance().getRemoteObject( this ).set( args.type, this._svg.node().outerHTML );
     },
 
+    Format : function(x) {
+        return d3.format(".2%")(x);
+    },
+
     /**
      * redraws the bar chart with the updated data
      */
     update : function () {
 
         // no update before graph has been initialized
-        if (!this._initialized) { return; }
+        if (!this._initialized) { rap._.notify('render'); }
 
-        this.w = this._parentDIV.offsetWidth;
-        this.h = this.barChartData.length * 1.2 * this.barHeight;
+        var that = this;
 
         this._svgContainer
             .attr("transform", "translate(" + this.yBarWidth + "," + this.topOffset + ")");
 
-        var format = d3.format(".4f");
-
-        var x = d3.scale.linear()
-            .range([0, this.w - this.yBarWidth - 5*this.fontpixels])
+        this.xscale = d3.scale.linear()
+            .range([0, this._w - this.yBarWidth - 5*this.fontpixels])
             .domain([0, 1]);
 
-        var y = d3.scale.ordinal()
-            .rangeRoundBands([this.h, 0])
+        this.yscale = d3.scale.ordinal()
+            .rangeRoundBands([this.barChartData.length * 1.2 * this.barHeight, 0])
             .domain(this.barChartData.map(function(d) { return d.name; }));
 
         var xAxis = d3.svg.axis()
-            .scale(x)
+            .scale(this.xscale)
             .orient("top")
             .innerTickSize(5)
             .outerTickSize(1);
 
         var yAxis = d3.svg.axis()
-            .scale(y)
+            .scale(this.yscale)
             .orient("left")
             .innerTickSize(5)
             .outerTickSize(1);
 
         // selection for bars
-        var barSelection = this._svgContainer.selectAll("g.bar").data(this.barChartData, function(d) { return d.name; });
+        var bars = this._svgContainer.selectAll("g.bar").data(this.barChartData, function(d) { return d.name; });
 
         // create elements (bars)
-        var barItems = barSelection
+        var barsenter = bars
             .enter()
             .append("g")
             .attr("class", "bar")
-            .attr("transform", function(d) { return "translate(0," + y(d.name) + ")"; });
+            .attr("transform", function(d) { return "translate(0," + that.yscale(d.name) + ")"; });
 
-        // create bars and texts
-        barItems.append("rect")
-            .attr("width", function(d) { return x(d.value); })
-            .attr("height", this.barHeight);
+        // create bars
+        barsenter.append("rect")
+            .attr("width", function(d) { return that.xscale(d.value); })
+            .attr("height", this.barHeight)
+            .on("mouseover", function(d) {
+                that._tooltip
+                    .transition(200)
+                    .style('display', 'block');
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+                that._tooltip
+                    .html(that.Format(d.value))
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .on("mouseout", function(d) {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            });
 
-        barItems.append("text")
+        // update bars
+        bars.select('rect')
+            .attr("width", function(d) { return that.xscale(d.value); });
+
+        // create texts
+        barsenter.append("text")
             .attr("class", "value")
-            .attr("x", function(d) { return x(d.value); })
-            .attr("y", y.rangeBand() / 2)
+            .attr("x", function(d) { return that.xscale(d.value); })
+            .attr("y", that.yscale.rangeBand() / 2)
             .attr("dx", function(d) { return d.value > .1 ? -3 : "4em"; })
             .attr("dy", ".35em")
             .attr("text-anchor", "end")
-            .text(function(d) { return format(d.value); });
+            .text(function(d) { return that.Format(d.value); });
+
+        bars.select('text')
+            .attr("x", function(d) { return that.xscale(d.value); })
+            .attr("y", that.yscale.rangeBand() / 2)
+            .attr("dx", function(d) { return d.value > .1 ? -3 : "4em"; });
 
         // remove elements
-        barSelection.exit().remove();
+        bars.exit().remove();
 
-        this._svg.selectAll("g.y.axis")
+        this._svg.selectAll("g.y.bcaxis")
             .call(yAxis);
 
-        this._svg.selectAll("g.x.axis")
+        this._svg.selectAll("g.x.bcaxis")
             .call(xAxis);
-
-        this.h = this.barChartData.length * 1.2 * this.barHeight + this.topOffset;
-
-        this._svgContainer
-            .attr("height", this.h)
-            .attr("width", this.w);
-
-        this._svg
-            .attr("height", this.h)
-            .attr("width", this.w);
-
-        // tooltip
-        var tooltip = this._svg.selectAll(".tooltip").data([1]);
-
-        // create tooltip
-        tooltip
-            .enter()
-            .append('text')
-            .attr('class', 'tooltip')
-            .style('display', 'none')
-            .style('fill', '#89a35c')
-            .style('z-index', 1000000)
-            .style('font-family', 'sans-serif')
-            .style('font-size', '13px')
-            .style('font-weight', 'bold');
-
-        tooltip.exit().remove();
-
     }
 };
 
@@ -230,11 +233,8 @@ rap.registerTypeHandler( 'pwt.customs.BarChart', {
     },
 
     destructor: 'destroy',
-
     properties: [ 'bounds', 'data'],
-
     methods : [ 'clear', 'retrievesvg'],
-
     events: [ 'Selection' ]
 
 } );

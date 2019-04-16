@@ -1,5 +1,6 @@
 .bar rect {
   fill: steelblue;
+  opacity: .7;
 }
 
 .bar text {
@@ -16,4 +17,15 @@
   font: 10px monospace, arial, sans-serif;
   font-weight: normal;
   font-weight: bold;
+}
+
+.barcharttooltip {
+  display: none;
+  position: fixed;
+  overflow: hidden;
+  color: white;
+  font: 13px bookman, arial, sans-serif;
+  background-color:rgba(0,0,0, 0.7);
+  border-radius: 5px;
+  padding: 10px;
 }
