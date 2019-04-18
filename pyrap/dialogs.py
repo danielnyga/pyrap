@@ -198,6 +198,8 @@ class OptionsDialog(Shell):
     def create_content(self):
         Shell.create_content(self)
 
+        self.layout.minheight = self.parent.shell().height * 0.7
+
         # calculate and set options field size
         mainarea = ScrolledComposite(self.content, padding=px(40), hscroll=True, vscroll=True, halign='fill', valign='fill', minwidth=300, minheight=100)
         mainarea.content.layout = CellLayout(halign='fill', valign='fill')
