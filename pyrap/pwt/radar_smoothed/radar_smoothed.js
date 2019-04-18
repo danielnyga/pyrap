@@ -10,25 +10,23 @@ pwt_rs_.RadarSmoothed = function( parent, options ) {
     this._svg = d3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.rs');
     this._radarlegend = this._svg.select('svg.rs_legend');
+    this._id = null;
 
     this._cfg = {
         w: 800,
         h: 600,
-        radius: 100,
+        radius: null,
         angleslice: null,
-        factorLegend: .85,
         intervalwidth: 15,
-        top: 100,
-        right: 100,
-        bottom: 110,
-        left: 100,
-        maxValue: 0.5,          //What is the value that the biggest circle will represent
+        top: 50,
+        right: 50,
+        bottom: 50,
+        left: 50,
         levels: 5,              //How many levels or inner circles should there be drawn
-        labelFactor: 1.25,   	//How much farther than the radius of the outer circle should the labels be placed
+        labelFactor: 1.1,   	//How much farther than the radius of the outer circle should the labels be placed
         wrapWidth: 60, 		    //The number of pixels after which a label needs to be given a new line
         opacityArea: 0.35, 	    //The opacity of the area of the blob
         dotRadius: 4, 			//The size of the colored circles of each blog
-        opacityCircles: 0.1, 	//The opacity of the circles of each blob
         strokeWidth: 2, 		//The width of the stroke around each blob
         roundStrokes: true,	    //If true the area and stroke will follow a round path (cardinal-closed)
         color: d3.scale.ordinal()
@@ -68,6 +66,8 @@ pwt_rs_.RadarSmoothed = function( parent, options ) {
 pwt_rs_.RadarSmoothed.prototype = {
 
     initialize: function() {
+        this._id = rwt.remote.Connection.getInstance().getRemoteObject( this )._.id;
+
 
         d3.selection.prototype.moveToFront = function() {
           return this.each(function(){
@@ -115,7 +115,7 @@ pwt_rs_.RadarSmoothed.prototype = {
 
         this._filter = this._defs
             .append('filter')
-            .attr('id','glow');
+            .attr('id','glow' + this._id);
 
         this._filter
             .append('feGaussianBlur')
@@ -149,8 +149,8 @@ pwt_rs_.RadarSmoothed.prototype = {
 
     setBounds: function( args ) {
         if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
-            this._cfg.w = Math.max(400, args[2] - this._cfg.left - this._cfg.right);
-            this._cfg.h = Math.max(300, args[3] - this._cfg.top - this._cfg.bottom);
+            this._cfg.w = args[2] - this._cfg.left - this._cfg.right;
+            this._cfg.h = args[3] - this._cfg.top - this._cfg.bottom;
         }
 
         this._svgContainer
@@ -537,11 +537,11 @@ pwt_rs_.RadarSmoothed.prototype = {
                 .attr("y", function(d, i){ return i * 20 + 9;})
                 .on('click', function(d) {
                     //Dim all blobs
-                    d3.selectAll(".rs_area")
+                    that._svgContainer.selectAll(".rs_area")
                         .transition(200)
                         .style("fill-opacity", 0.1);
                     //Bring back the hovered over blob
-                    d3.select('#' + that.replAxisname(d))
+                    that._svgContainer.select('.rs_area-' + that.replAxisname(d))
                         .transition(200)
                         .style("fill-opacity", 0.7);
 
@@ -594,12 +594,10 @@ pwt_rs_.RadarSmoothed.prototype = {
             .append("circle")
             .attr("class", "rs_levelcircle")
             .attr("r", function(d, i){return that._cfg.radius/that._cfg.levels*d;})
-            .style("fill-opacity", this._cfg.opacityCircles)
-            .style("filter" , "url(#glow)");
+            .style("filter" , "url(#glow" + this._id + ")");
 
         axislevels
-            .attr("r", function(d, i){return that._cfg.radius/that._cfg.levels*d;})
-            .style("fill-opacity", this._cfg.opacityCircles);
+            .attr("r", function(d, i){return that._cfg.radius/that._cfg.levels*d;});
 
         axislevels.exit().remove();
 
@@ -624,13 +622,13 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("class", "rs_axisline")
             .attr("x1", 0)
             .attr("y1", 0)
-            .attr("x2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
-            .attr("y2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
+            .attr("x2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name]) * that._cfg.labelFactor  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name]) * that._cfg.labelFactor  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
 
         // update the lines
         axes.select(".rs_axisline")
-            .attr("x2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name])*1.1  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
-            .attr("y2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name])*1.1  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
+            .attr("x2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name]) * that._cfg.labelFactor  * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
+            .attr("y2", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name]) * that._cfg.labelFactor  * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); });
 
         // append the axis labels
         axisenter
@@ -718,7 +716,6 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("transform", function(d, i){
                 return "rotate(" + that.angledeg(i) + ", " + 0 + ", " + 0 +") translate(-" + that._cfg.intervalwidth/2 + ", 0) ";
             })
-            .style("fill-opacity", that._cfg.opacityArea)
             .attr("width", that._cfg.intervalwidth)
             .attr("height", function(d, i) {
                 return that.valtop(d, d.interval[1]) - that.valtop(d, d.interval[0]);
@@ -944,14 +941,13 @@ pwt_rs_.RadarSmoothed.prototype = {
         // append the polygon areas
         blobwrapperenter
             .append("path")
-            .attr("class", "rs_area")
-            .attr("id", function(d,i) { return that.replAxisname(d[0][0]); })
+            .attr("class", function(d,i) { return "rs_area rs_area-" + that.replAxisname(d[0][0]); })
             .attr("d", function(d,i) { return that.radarline(d); })
             .style("fill", function(d,i) { return that._cfg.color(i); })
             .style("fill-opacity", this._cfg.opacityArea)
             .on('mouseover', function (d,i){
                 //Dim all blobs
-                d3.selectAll(".rs_area")
+                that._svgContainer.selectAll(".rs_area")
                     .transition().duration(200)
                     .style("fill-opacity", 0.1);
                 //Bring back the hovered over blob
@@ -961,7 +957,7 @@ pwt_rs_.RadarSmoothed.prototype = {
             })
             .on('mouseout', function(){
                 //Bring back all blobs
-                d3.selectAll(".rs_area")
+                that._svgContainer.selectAll(".rs_area")
                     .transition().duration(200)
                     .style("fill-opacity", that._cfg.opacityArea);
             });
@@ -979,7 +975,7 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("d", function(d,i) { return that.radarline(d); })
             .style("stroke-width", this._cfg.strokeWidth + "px")
             .style("stroke", function(d,i) { return that._cfg.color(i); })
-            .style("filter" , "url(#glow)");
+            .style("filter" , "url(#glow" + this._id + ")");
 
         // update the area outlines
         blobwrapper.select(".rs_stroke")

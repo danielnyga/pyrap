@@ -43,6 +43,7 @@ line.rs_axisline {
 circle.rs_levelcircle {
   fill: #CDCDCD;
   stroke: #CDCDCD;
+  fill-opacity: 0.1;
 }
 
 path.rs_stroke {
