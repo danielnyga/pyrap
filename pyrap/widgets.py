@@ -1712,7 +1712,7 @@ class ScrolledComposite(Composite):
         if RWT.VSCROLL in self.style:
             self._vbar = ScrollBar(self, orientation=RWT.VERTICAL)
             self._vbar.visible = True
-        self.content = Composite(self)
+        self.content = Composite(self, layout=CellLayout())
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
