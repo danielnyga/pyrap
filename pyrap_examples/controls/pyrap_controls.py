@@ -984,7 +984,7 @@ class ControlsDemo():
                 clear()
 
             cluster = BubblyClusters(comp_body, halign='fill', valign='fill')
-            cluster.setaudio(audio)
+            # cluster.setaudio(audio)
             cluster.setdata(data)
 
             self.shell.dolayout()

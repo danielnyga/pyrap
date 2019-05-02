@@ -121,10 +121,10 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
      * Play sound
      */
     play: function() {
-        // if (this._audio) {
-        //     var audioClone = this._sound.cloneNode();
-        //     audioClone.play();
-        // }
+        if (this._audio) {
+            var audioClone = this._sound.cloneNode();
+            audioClone.play();
+        }
     },
 
     /**
