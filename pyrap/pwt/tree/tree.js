@@ -295,39 +295,39 @@ pwt_tree.Tree.prototype = {
                 var o = {x: source.x0, y: source.y0};
                 return that.diagonal({source: o, target: o});
             });
-        //
-        // edgeenter
-        //     .append("text")
-        //     .style("font-size", "15px")
-        //     .append("textPath")
-        //     .attr("href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
-        //     .style('text-anchor', "middle")
-        //     .attr("startOffset", "50%")
-        //     .text(function(d) { return d.target.edgetext; })
-        //     .on("mouseover", function() {
-        //         that._tooltip
-        //             .transition(200)
-        //             .style('display', 'block');
-        //     })
-        //     .on('mousemove', function(d) {
-        //         var newX = (d3.event.pageX + 20);
-        //         var newY = (d3.event.pageY - 20);
-        //         that._tooltip
-        //             .html(d.target.edgetooltip)
-        //             .style("left", (newX) + "px")
-        //             .style("top", (newY) + "px");
-        //     })
-        //     .on("mouseout", function() {
-        //         that._tooltip
-        //             .transition(200)
-        //             .style("display", "none");
-        //     });
-        //
-        // edgeenter
-        //     .append("use")
-        //     .attr("href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
-        //     .style("stroke", "black")
-        //     .style("fill", "none");
+
+        edgeenter
+            .append("text")
+            .style("font-size", "15px")
+            .append("textPath")
+            .attr("href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
+            .style('text-anchor', "middle")
+            .attr("startOffset", "50%")
+            .text(function(d) { return d.target.edgetext; })
+            .on("mouseover", function() {
+                that._tooltip
+                    .transition(200)
+                    .style('display', 'block');
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+                that._tooltip
+                    .html(d.target.edgetooltip)
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .on("mouseout", function() {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            });
+
+        edgeenter
+            .append("use")
+            .attr("href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
+            .style("stroke", "black")
+            .style("fill", "none");
 
           // Transition links to their new position.
         var edgeupdate = edge
@@ -339,9 +339,9 @@ pwt_tree.Tree.prototype = {
             .attr("d", that.diagonal)
             .style('stroke', function(d) { return d.target.highlight ? "green" : "steelblue"; });
 
-        // edgeupdate
-        //     .select("text")
-        //     .style("fill-opacity", 1);
+        edgeupdate
+            .select("text")
+            .style("fill-opacity", 1);
 
         var edgeexit = edge
             .exit()
@@ -356,24 +356,24 @@ pwt_tree.Tree.prototype = {
                 var o = {x: source.x, y: source.y};
                 return that.diagonal({source: o, target: o});
             });
-        //
-        // // Transition exiting nodes to the parent's new position.
-        // edgeexit
-        //     .select(".treelink")
-        //     .transition()
-        //     .duration(this._cfg.duration)
-        //     .attr("d", function(d) {
-        //         var o = {x: source.x, y: source.y};
-        //         return that.diagonal({source: o, target: o});
-        //     }).remove();
-        //
-        // edgeexit
-        //     .select("text")
-        //     .style("fill-opacity", 1e-6);
-        //
-        // edgeexit
-        //     .select("use")
-        //     .remove();
+
+        // Transition exiting nodes to the parent's new position.
+        edgeexit
+            .select(".treelink")
+            .transition()
+            .duration(this._cfg.duration)
+            .attr("d", function(d) {
+                var o = {x: source.x, y: source.y};
+                return that.diagonal({source: o, target: o});
+            }).remove();
+
+        edgeexit
+            .select("text")
+            .style("fill-opacity", 1e-6);
+
+        edgeexit
+            .select("use")
+            .remove();
 
         // Stash the old positions for transition.
         this._nodes.forEach(function(d) {
