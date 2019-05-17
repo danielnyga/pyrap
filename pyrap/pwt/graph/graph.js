@@ -401,13 +401,16 @@ pwt_d3.Graph.prototype = {
 
         // update link labels
         graphlinklabels
-            .text(function(d){ return d.value.join(' / '); });
+            .text(function(d){ return d.value.join(' / '); })
+            .style("opacity", function(d) { return d.show ? 1 : 0; });
 
         // create link labels
         graphlinklabels
             .enter().append('text')
             .attr('class', 'graphlinklabel')
-            .text(function(d){ return d.value.join(' / '); });
+            .text(function(d){ return d.value.join(' / '); })
+            .style("opacity", function(d) { return d.show ? 1 : 0; })
+;
 
         // remove old link labels
         graphlinklabels.exit().remove();
