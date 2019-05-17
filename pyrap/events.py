@@ -87,7 +87,20 @@ class OnResize(RWTEvent):
         return RWTListenOperation(self.widget.id, {'Resize': False})
     
     def _notify(self, listener): listener()
-    
+
+
+class OnMouseOver(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'MouseOver', widget)
+
+    def _create_subscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'MouseOver': True})
+
+    def _create_unsubscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'MouseOver': False})
+
+    def _notify(self, listener, data): listener(data)
+
     
 class OnMouseDown(RWTEvent):
     def __init__(self, widget):
