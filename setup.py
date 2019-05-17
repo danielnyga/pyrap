@@ -57,7 +57,7 @@ class myinstall(distutils.command.install.install):
         self.distribution.get_command_obj('install_data').install_dir = datapath()
 
 setup(
-    name='pyrap',
+    name='pyrap-web',
     packages=['pyrap_examples',
               'pyrap_examples.controls',
               'pyrap_examples.helloworld',
