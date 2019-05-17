@@ -437,7 +437,9 @@ pwt_d3.Graph.prototype = {
 
         // create nodes
         graphnodesenter.append("svg:circle")
-            .attr('class', "graphcircle")
+            .attr('class', function(d) {
+                return "graphcircle " + d.type;
+            })
             .attr("r", function(d) {
                 d.radius = 10;
                 return d.radius;
