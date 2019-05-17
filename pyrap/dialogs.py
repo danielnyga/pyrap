@@ -37,8 +37,8 @@ def ask_question(parent, title, text, buttons, markup=False):
     return msg.answer
 
 
-def ask_input(parent, title, message=False, multiline=False, password=False, markup=False):
-    msg = InputBox(parent, title, message=message, multiline=multiline, password=password, markup=markup)
+def ask_input(parent, title, message=False, multiline=False, password=False):
+    msg = InputBox(parent, title, message=message, multiline=multiline, password=password)
     msg.show(True)
     msg.on_close.wait()
     return msg.answer
