@@ -380,6 +380,17 @@ pwt_rs_.RadarSmoothed.prototype = {
 	},
 
     /**
+     * returns a copy (by value) of given dict d
+     */
+    _cpdict : function( d ) {
+        var cp = {};
+        for (var k in d) {
+            cp[k] = d[k];
+        }
+        return cp;
+    },
+
+    /**
      * updates an axis of the radar chart
      */
     updateAxis : function ( data ) {
@@ -410,6 +421,39 @@ pwt_rs_.RadarSmoothed.prototype = {
 
         // update
         this.update();
+    },
+
+    /**
+     * removes an axis from the radar chart
+     */
+    remAxis : function ( axis ) {
+        // TODO: move this to python
+        var tmpdata = this._cpdict(this._data);
+        var tmpaxes = this._allAxis.slice();
+        this.clear();
+
+        function findaxis(a) { return a.name == axis.name; }
+
+        var remaxes = tmpaxes.filter(findaxis);
+        for (var x = 0; x<remaxes.length; x++) {
+            var idx = tmpaxes.indexOf(remaxes[x])
+            if (idx > -1) {
+                tmpaxes.splice(idx, 1);
+                Object.keys(tmpdata).forEach(function(key, i) {
+                   tmpdata[key].splice(idx, 1);
+                }, this);
+            }
+        }
+        this._allAxis = tmpaxes;
+        this._total = this._allAxis.length;
+
+        // restore min/max values for axes
+        for (var a in this._allAxis) {
+            this._cfg.minValues[this._allAxis[a].name] = (typeof this._allAxis[a].limits[0]) !== 'undefined' ? this._allAxis[a].limits[0]: 0;
+            this._cfg.maxValues[this._allAxis[a].name] = (typeof this._allAxis[a].limits[1]) !== 'undefined' ? this._allAxis[a].limits[1]: 100;
+        }
+
+        this.setData(tmpdata);
     },
 
     /**
@@ -639,7 +683,39 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("x", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name]) * that._cfg.labelFactor * (Math.cos(that._cfg.angleslice*i + Math.PI/2)); })
             .attr("y", function(d, i){ return that.valtop(d, that._cfg.maxValues[d.name]) * that._cfg.labelFactor * (-Math.sin(that._cfg.angleslice*i + Math.PI/2)); })
             .text(function(d, i){return d.name})
-            .call(this.wrap, this._cfg.wrapWidth);
+            .call(this.wrap, this._cfg.wrapWidth)
+            .on('mouseover', function(d) {
+                d3.select(this).style("cursor", "pointer");
+
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
+            })
+            .on('mouseout', function(d){
+                d3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3.event.pageX + 20);
+                var newY = (d3.event.pageY - 20);
+
+                that._tooltip
+                    .html('<b>' + d.name + '</b> (' + d.unit + ')<br><b>limits:</b> [' + d.limits + ']<br><b>interval:</b> [' + d.interval + ']')
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+
+            })
+            .on('click', function(d) {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'left', args:{'axis': d3.select(this).text(), 'type': 'axis'} } );
+            })
+            .on('contextmenu', function(d) {
+                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'right', args:{'axis': d3.select(this).text(), 'type': 'axis'} } );
+            });
 
         // update the labels
         axes.select(".rs_axisname")
