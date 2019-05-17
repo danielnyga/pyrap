@@ -72,7 +72,7 @@ setup(
               'pyrap.pwt.graph',
               'pyrap.pwt.plot',
               'pyrap.pwt.radar',
-              'pyrap.pwt.radar_redesign',
+              'pyrap.pwt.radar_smoothed',
               'pyrap.pwt.radialdendrogramm',
               'pyrap.pwt.ros3d',
               'pyrap.pwt.svg',
