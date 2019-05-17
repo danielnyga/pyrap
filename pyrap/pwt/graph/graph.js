@@ -369,6 +369,7 @@ pwt_d3.Graph.prototype = {
                 var as = split[split.length-1];
                 return "url(#" + as + ")"; })
             .on("mouseover", function(d) {
+                d3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
@@ -382,6 +383,7 @@ pwt_d3.Graph.prototype = {
                     .style("top", (newY) + "px");
             })
             .on("mouseout", function(d) {
+                d3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
@@ -399,13 +401,16 @@ pwt_d3.Graph.prototype = {
 
         // update link labels
         graphlinklabels
-            .text(function(d){ return d.value.join(' / '); });
+            .text(function(d){ return d.value.join(' / '); })
+            .style("opacity", function(d) { return d.show ? 1 : 0; });
 
         // create link labels
         graphlinklabels
             .enter().append('text')
             .attr('class', 'graphlinklabel')
-            .text(function(d){ return d.value.join(' / '); });
+            .text(function(d){ return d.value.join(' / '); })
+            .style("opacity", function(d) { return d.show ? 1 : 0; })
+;
 
         // remove old link labels
         graphlinklabels.exit().remove();
@@ -432,7 +437,9 @@ pwt_d3.Graph.prototype = {
 
         // create nodes
         graphnodesenter.append("svg:circle")
-            .attr('class', "graphcircle")
+            .attr('class', function(d) {
+                return "graphcircle " + d.type;
+            })
             .attr("r", function(d) {
                 d.radius = 10;
                 return d.radius;

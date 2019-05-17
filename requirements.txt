@@ -4,3 +4,4 @@ colored
 pyparsing
 python-multipart
 dnutils
+svglib
