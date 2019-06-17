@@ -201,7 +201,7 @@ pwt_d3.Graph.prototype = {
 
         // check if there is already a link between src and tgt
         var index = this.findLinkIndex(src, tgt);
-        if (index == -1) {
+        if (index === -1) {
             // if not, create it
             this.links.push({"source": this.findNode(lnk.source.name),"target": this.findNode(lnk.target.name),"value": [lnk.value], "show": lnk.show, "arcStyle": lnk.arcStyle, 'tttext': lnk.tttext ? lnk.tttext : ''});
         } else {
@@ -474,7 +474,7 @@ pwt_d3.Graph.prototype = {
             .attr("dx", function (d) { return 5; }) // move inside rect
             .attr("dy", function (d) { return 15; }) // move inside rect
             .text( function(d) { return d.id; } )
-            .style("opacity", function(d) { return d.show ? 1 : 0; });
+            .style("opacity", function(d) { return d.show || typeof d.show == 'undefined' ? 1 : 0; });
 
         // create node labels
         graphnodesenter.append("svg:text")
@@ -482,7 +482,7 @@ pwt_d3.Graph.prototype = {
             .attr("dx", function (d) { return 5; }) // move inside rect
             .attr("dy", function (d) { return 15; }) // move inside rect
             .text( function(d) { return d.id; } )
-            .style("opacity", function(d) { return d.show ? 1 : 0; });
+            .style("opacity", function(d) { return d.show || typeof d.show == 'undefined' ? 1 : 0; });
 
         // remove old nodes
         graphnodes.exit().remove();
