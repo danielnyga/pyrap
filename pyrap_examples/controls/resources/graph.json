@@ -1,6 +1,6 @@
 [
     {
-      "arcStyle": "strokegreen",
+      "arcStyle": "green",
       "value": "has_pos",
       "target": {
         "name": "VB",
@@ -14,7 +14,7 @@
       }
     },
     {
-      "arcStyle": "strokegreen",
+      "arcStyle": "green",
       "value": "compound",
       "target": {
         "name": "banana-3",
@@ -28,7 +28,7 @@
       }
     },
     {
-      "arcStyle": "strokegreen",
+      "arcStyle": "green",
       "value": "has_pos",
       "target": {
         "name": "NN",
@@ -42,7 +42,7 @@
       }
     },
     {
-      "arcStyle": "strokegreen",
+      "arcStyle": "green",
       "value": "has_pos",
       "target": {
         "name": "DT",
@@ -56,7 +56,7 @@
       }
     },
     {
-      "arcStyle": "strokegreen",
+      "arcStyle": "green",
       "value": "root",
       "target": {
         "name": "Make-1",
@@ -70,7 +70,7 @@
       }
     },
     {
-      "arcStyle": "strokegreen",
+      "arcStyle": "green",
       "value": "has_pos",
       "target": {
         "name": "NN",
@@ -84,7 +84,7 @@
       }
     },
     {
-      "arcStyle": "strokegreen",
+      "arcStyle": "green",
       "value": "det",
       "target": {
         "name": "a-2",
@@ -98,7 +98,7 @@
       }
     },
     {
-      "arcStyle": "strokegreen",
+      "arcStyle": "green",
       "value": "dobj",
       "target": {
         "name": "milkshake-4",
@@ -112,8 +112,9 @@
       }
     }
   ,  {
-    "arcStyle": "strokegreen",
+    "arcStyle": "dashed green",
     "value": "has_sense",
+    "show": true,
     "target": {
       "name": "milkshake.n.01",
       "show": true,
@@ -126,8 +127,9 @@
     }
   },
   {
-    "arcStyle": "strokegreen",
+    "arcStyle": "green",
     "value": "has_sense",
+    "show": false,
     "target": {
       "name": "cook.v.02",
       "text": "prepare for eating by applying heat",
@@ -140,7 +142,7 @@
     }
   },
   {
-    "arcStyle": "strokegreen",
+    "arcStyle": "green",
     "value": "action_verb",
     "target": {
       "name": "Cooking",
@@ -154,8 +156,9 @@
     }
   },
   {
-    "arcStyle": "strokegreen",
+    "arcStyle": "green",
     "value": "obj_to_be_cooked",
+    "tttext": "blubbel",
     "target": {
       "name": "Cooking",
       "show": true,

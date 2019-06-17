@@ -190,6 +190,7 @@ pwt_scatterplot.Scatterplot.prototype = {
      */
     update : function () {
 
+
         if (!this._initialized) { return; }
 
         var that = this;

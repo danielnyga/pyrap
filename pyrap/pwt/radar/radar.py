@@ -3,10 +3,9 @@ import os
 from dnutils.tools import ifnone
 
 from pyrap import session, locations
-from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
-    RWTSetOperation
+from pyrap.communication import RWTCreateOperation, RWTCallOperation, RWTSetOperation
 from pyrap.constants import d3wrapper
-from pyrap.events import OnSelect, _rwt_selection_event, _rwt_event, OnSet
+from pyrap.events import OnSelect, _rwt_event, _rwt_selection_event, OnSet
 from pyrap.ptypes import BitField
 from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
 from pyrap.themes import WidgetTheme

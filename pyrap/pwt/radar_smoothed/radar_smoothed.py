@@ -1,12 +1,11 @@
 import os
 
 from dnutils.tools import ifnone
-from pyrap.pwt.radar.radar import RadarAxis
 
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, RWTSetOperation
 from pyrap.constants import d3wrapper
-from pyrap.events import OnSelect, _rwt_event, OnSet, _rwt_selection_event
+from pyrap.events import OnSelect, _rwt_event, _rwt_selection_event, OnSet
 from pyrap.ptypes import BitField
 from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
 from pyrap.themes import WidgetTheme
@@ -155,6 +154,91 @@ class RadarSmoothed(Widget):
 
     def download(self, pdf=False):
         session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'type': 'pdf' if pdf else 'svg'})
+
+
+class RadarAxis(object):
+    def __init__(self, name, minval=0, maxval=100, unit='%', intervalmin=None, intervalmax=None):
+        self._name = name
+        self._minval = minval
+        self._maxval = maxval
+        self._unit = unit
+        self._intervalmin = intervalmin
+        self._intervalmax = intervalmax
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, n):
+        self._name = n
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, u):
+        self._unit = u
+
+    @property
+    def minval(self):
+        return self._minval
+
+    @minval.setter
+    def minval(self, m):
+        self._minval = m
+
+    @property
+    def maxval(self):
+        return self._maxval
+
+    @maxval.setter
+    def maxval(self, m):
+        self._maxval = m
+
+    @property
+    def intervalmin(self):
+        return self._intervalmin
+
+    @intervalmin.setter
+    def intervalmin(self, m):
+        self._intervalmin = m
+
+    @property
+    def intervalmax(self):
+        return self._intervalmax
+
+    @intervalmax.setter
+    def intervalmax(self, m):
+        self._intervalmax = m
+
+    def intervals(self):
+        return self.intervalmin, self.intervalmax
+
+    def __str__(self):
+        return 'Axis {}({}), limits: [{},{}], interval: [{},{}]'.format(self.name, self.unit, self.minval, self.maxval, self.intervalmin, self.intervalmin)
+
+    def __repr__(self):
+        return '<Axis name={} at 0x{}>'.format(self.name, '')
+
+    def __eq__(self, other):
+        if self.name != other.name: return False
+        if self.intervalmin != other.intervalmin: return False
+        if self.intervalmax != other.intervalmax: return False
+        if self.minval != other.minval: return False
+        if self.maxval != other.maxval: return False
+        if self.unit != other.unit: return False
+        return True
+
+    def __ne__(self, other):
+        return not self == other
+
+    def json(self):
+        return {'name': self.name,
+                'limits': [self.minval, self.maxval],
+                'unit': self.unit,
+                'interval': [self.intervalmin, self.intervalmax]}
 
 
 class RadarSmoothedTheme(WidgetTheme):
