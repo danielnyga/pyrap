@@ -21,7 +21,7 @@
 }
 
 .graphlink.dashed {
-  stroke-dasharray: 0,2 1;
+  stroke-dasharray: 2.5;
 }
 
 marker {
