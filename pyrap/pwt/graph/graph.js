@@ -159,7 +159,7 @@ pwt_d3.Graph.prototype = {
             if (this.findNodeIndex(data[dataIndex].target.name) === -1) {
                 this.addNode(data[dataIndex].target.name, data[dataIndex].target.text, data[dataIndex].target.type, data[dataIndex].target.show);
             }
-            this.links.push({"source": this.findNode(data[dataIndex].source),"target": this.findNode(data[dataIndex].target),"value": data[dataIndex].value, "arcStyle":data[dataIndex].arcStyle});
+            this.links.push({"source": this.findNode(data[dataIndex].source),"target": this.findNode(data[dataIndex].target),"value": data[dataIndex].value, "show": data[dataIndex].show, "arcStyle":data[dataIndex].arcStyle, 'tttext': data[dataIndex].tttext ? data[dataIndex].tttext : ''});
         }
         this.update();
     },
@@ -203,7 +203,7 @@ pwt_d3.Graph.prototype = {
         var index = this.findLinkIndex(src, tgt);
         if (index == -1) {
             // if not, create it
-            this.links.push({"source": this.findNode(lnk.source.name),"target": this.findNode(lnk.target.name),"value": [lnk.value], "arcStyle": lnk.arcStyle, 'tttext': lnk.tttext ? lnk.tttext : ''});
+            this.links.push({"source": this.findNode(lnk.source.name),"target": this.findNode(lnk.target.name),"value": [lnk.value], "show": lnk.show, "arcStyle": lnk.arcStyle, 'tttext': lnk.tttext ? lnk.tttext : ''});
         } else {
             // otherwise update link text
             this.links[index].value.push(lnk.value);
@@ -402,14 +402,14 @@ pwt_d3.Graph.prototype = {
         // update link labels
         graphlinklabels
             .text(function(d){ return d.value.join(' / '); })
-            .style("opacity", function(d) { return d.show ? 1 : 0; });
+            .style("opacity", function(d) { return d.show || typeof d.show == 'undefined' ? 1 : 0; });
 
         // create link labels
         graphlinklabels
             .enter().append('text')
             .attr('class', 'graphlinklabel')
             .text(function(d){ return d.value.join(' / '); })
-            .style("opacity", function(d) { return d.show ? 1 : 0; })
+            .style("opacity", function(d) { return d.show || typeof d.show == 'undefined' ? 1 : 0; })
 ;
 
         // remove old link labels
