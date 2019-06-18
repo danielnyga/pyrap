@@ -1,6 +1,7 @@
 import os
 from io import BytesIO
 
+import dnutils
 from dnutils import ifnone
 
 from pyrap import session
@@ -11,6 +12,8 @@ from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor, checkwidget
 from lxml import etree as ET
 
+logger = dnutils.getlogger('MatCALOLogger')
+
 
 class SVG(Widget):
 
@@ -20,16 +23,15 @@ class SVG(Widget):
     @constructor('SVG')
     def __init__(self, parent, svg=None, cssid=None, **options):
         Widget.__init__(self, parent, **options)
+        self.root = None
+        self.tree = None
         self._cssid = cssid
         self._svgfile = svg
         self._content = None
-        # size as read from the viewbox property in the svg attributes
-        self._vbwidth = None
-        self._vbheight = None
-        self._ratio = None
-        # size as can be set by the user
-        self._gwidth = None
-        self._gheight = None
+        # limiting/scaling values
+        self._factor = 1
+        self._maxwidth = None
+        self._maxheight = None
         self.on_select = OnSelect(self)
         self.theme = SVGTheme(self, session.runtime.mngr.theme)
 
@@ -38,6 +40,7 @@ class SVG(Widget):
         options.cssid = self._cssid
         options.selfid = self.id
         if self._svgfile is not None:
+            print('getting svg', self._svgfile)
             options.svg = self._get_rwt_svg(self._svgfile)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
@@ -48,10 +51,12 @@ class SVG(Widget):
         else:
             self.root = ET.fromstring(svg)
             self.tree = ET.ElementTree(self.root)
-        w, h = self.root.attrib['viewBox'].split()[-2:]
-        self._vbwidth = int(float(w))
-        self._vbheight = int(float(h))
-        self._ratio = float(self._vbwidth) / self._vbheight
+        #
+        # # determine size from viewbox
+        # w, h = self.root.attrib['viewBox'].split()[-2:]
+        # self._vbwidth = int(float(w))
+        # self._vbheight = int(float(h))
+        # self._ratio = float(self._vbwidth) / self._vbheight
 
         # writing the stream to the content will omit leading doc infos
         stream = BytesIO()
@@ -96,24 +101,6 @@ class SVG(Widget):
         self._svgfile = svg
         _svg = self._get_rwt_svg(svg)
         session.runtime << RWTSetOperation(self.id, {'svg': _svg})
-
-    @property
-    def gwidth(self):
-        return self._gwidth
-
-    @gwidth.setter
-    @checkwidget
-    def gwidth(self, w):
-        self._gwidth = w
-
-    @property
-    def gheight(self):
-        return self._gheight
-
-    @gheight.setter
-    @checkwidget
-    def gheight(self, h):
-        self._gheight = h
 
     def getattr(self, id, attr):
         '''
@@ -173,8 +160,36 @@ class SVG(Widget):
         self._content = str(stream.getvalue())
         stream.close()
 
+    def scale(self, factor):
+        self._factor = factor
+
+    def maxwidth(self, width):
+        self._maxwidth = width
+
+    def maxheight(self, height):
+        self._maxheight = height
+
     def compute_size(self):
         w, h = Widget.compute_size(self.parent)
+
+        # try to determine size from SVG attributes
+        if self.root is not None:
+            # determine size from viewbox
+            if 'viewBox' in self.root.attrib:
+                w_, h_ = self.root.attrib['viewBox'].split()[-2:]
+                w += int(float(w_))
+                h += int(float(h_))
+            # determine size from width/height attributes
+            elif 'width' in self.root.attrib:
+                try:
+                    w += int(float(self.root.attrib['width']))
+                except ValueError:
+                    logger.warning('Width is not a float value:', self.root.attrib['width'])
+            elif 'height' in self.root.attrib:
+                try:
+                    h += self.root.attrib['height']
+                except ValueError:
+                    logger.warning('Height is not a float value:', self.root.attrib['height'])
 
         padding = self.theme.padding
         if padding:
@@ -187,6 +202,32 @@ class SVG(Widget):
         t, r, b, l = self.theme.borders
         w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
         h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
+
+        # apply scaling factor
+        w *= self._factor
+        h *= self._factor
+
+        # limit width/height to possibly set max values
+        if h > 0:
+            ratio = float(w) / float(h)
+
+            if self._maxwidth is not None and self._maxheight is not None:
+                tmpratio = self._maxwidth/self._maxheight
+                # determine which max value is stricter limiting
+                if tmpratio < ratio:
+                    w = self._maxwidth
+                    h = w/ratio
+                else:
+                    h = self._maxheight
+                    w = h*ratio
+            elif self._maxwidth is not None:
+                w = min(w, self._maxwidth)
+                h = w/ratio
+            elif self._maxheight is not None:
+                h = min(h, self._maxheight)
+                w = ratio * h
+        if w == 0 or h == 0:
+            logger.warning('Size of SVG is too small to display. Set width and height manually.', w, h)
         return w, h
 
 
