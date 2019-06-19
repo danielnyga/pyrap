@@ -11,7 +11,7 @@ pwt_heatmap.Heatmap = function( parent ) {
     this._svgContainer = this._svg.select('g.heatmap');
 
     this._cfg = {
-         margin: {top: 20, right: 25, bottom: 30, left: 40},
+         margin: {top: 5, right: 25, bottom: 30, left: 40},
          w: 300,
          h: 300,
          color: d3v5.scaleSequential()
@@ -41,10 +41,13 @@ pwt_heatmap.Heatmap.prototype = {
 
     initialize: function () {
 
+        var that = this;
+
         if (this._svgContainer.empty()) {
             this._svg
                 .attr('width', "100%")
-                .attr('height', "100%")
+                .attr('height', "90%")
+                .style('position', 'absolute')
                 .append("svg:g")
                 .attr('class', 'heatmap')
                 .attr("transform", "translate(" + this._cfg.margin.left + "," + this._cfg.margin.top + ")");
@@ -57,6 +60,40 @@ pwt_heatmap.Heatmap.prototype = {
             // append y-labels
             this._y_labels = this._svgContainer.append("g");
         }
+
+        this._canvas = d3v5.select(this._parentDIV)
+            .append("canvas")
+            .attr("width", 900)
+            .attr("height", 20)
+            .style('position', 'absolute')
+            .style('top', this._cfg.h + 'px');
+
+        var ctx = this._canvas.node().getContext("2d");
+        var x = d3v5.scaleLinear().domain([0, 1]).range([20, 500]);
+
+        // draw legend color bar
+        d3v5.range(0, 1, 0.001)
+            .forEach(function (d) {
+                ctx.beginPath();
+                ctx.strokeStyle = that._cfg.color(d);
+                ctx.moveTo(x(d), 0);
+                ctx.lineTo(x(d), 20);
+                ctx.stroke();
+            });
+
+        // draw axis for legend color bar
+        this._legend = d3v5.select(this._parentDIV)
+            .append("svg")
+            .attr("class", "heatmaplegend")
+            .attr("width", 900)
+            .attr("height", 30)
+            .style('position', 'absolute')
+            .style('top', this._cfg.h + 'px');
+
+        this._legend
+            .append('g')
+            .attr("class", "axis")
+            .call(d3v5.axisBottom(x));
     },
 
     createElement: function (parent) {
@@ -74,7 +111,7 @@ pwt_heatmap.Heatmap.prototype = {
     setBounds: function (args) {
         if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
             this._cfg.w = Math.min(args[2],args[3]) - this._cfg.margin.left - this._cfg.margin.right;
-            this._cfg.h = Math.min(args[2],args[3]) - this._cfg.margin.top - this._cfg.margin.bottom;
+            this._cfg.h = Math.min(args[2],args[3])*0.90 - this._cfg.margin.top - this._cfg.margin.bottom;
         }
 
         this._parentDIV.style.left = args[0] + "px";
@@ -156,6 +193,15 @@ pwt_heatmap.Heatmap.prototype = {
             .padding(0.03);
 
         ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE LEGEND                              ///
+        ////////////////////////////////////////////////////////////////////////
+        this._canvas
+            .style('top', (this._cfg.h + this._cfg.margin.top + this._cfg.margin.bottom + 5) + 'px');
+
+        this._legend
+            .style('top', (this._cfg.h + this._cfg.margin.top + this._cfg.margin.bottom + 25) + 'px');
+
+        ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE LABELS                              ///
         ////////////////////////////////////////////////////////////////////////
         this._x_labels
@@ -182,13 +228,10 @@ pwt_heatmap.Heatmap.prototype = {
             .attr("y", function (d) {
                 return y(d.y)
             })
-            .style("fill", function (d) {
-                return that._cfg.color(d.value)
-            })
             .attr("width", x.bandwidth())
             .attr("height", y.bandwidth())
             .style("fill", function (d) {
-                return that._cfg.color(d.value);
+                return that._cfg.color(Math.abs(d.value));
             });
 
         // create squares
@@ -206,7 +249,7 @@ pwt_heatmap.Heatmap.prototype = {
             .attr("width", x.bandwidth())
             .attr("height", y.bandwidth())
             .style("fill", function (d) {
-                return that._cfg.color(d.value);
+                return that._cfg.color(Math.abs(d.value));
             })
             .style("stroke-width", 4)
             .style("stroke", "none")
@@ -228,7 +271,7 @@ pwt_heatmap.Heatmap.prototype = {
                 var newY = (d3v5.event.pageY - 20);
 
                 that._tooltip
-                    .html(d.x + '/' + d.y + ': ' + d.value)
+                    .html(d.x + ' - ' + d.y + ': <br>' + d.value)
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
 
