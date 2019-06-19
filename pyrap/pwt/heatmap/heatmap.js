@@ -11,7 +11,7 @@ pwt_heatmap.Heatmap = function( parent ) {
     this._svgContainer = this._svg.select('g.heatmap');
 
     this._cfg = {
-         margin: {top: 20, right: 20, bottom: 20, left: 20},
+         margin: {top: 20, right: 25, bottom: 30, left: 40},
          w: 300,
          h: 300,
          color: d3v5.scaleSequential()
@@ -73,8 +73,8 @@ pwt_heatmap.Heatmap.prototype = {
 
     setBounds: function (args) {
         if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
-            this._cfg.w = Math.min(args[2],args[3]) - 80;
-            this._cfg.h = Math.min(args[2],args[3]) - 80;
+            this._cfg.w = Math.min(args[2],args[3]) - this._cfg.margin.left - this._cfg.margin.right;
+            this._cfg.h = Math.min(args[2],args[3]) - this._cfg.margin.top - this._cfg.margin.bottom;
         }
 
         this._parentDIV.style.left = args[0] + "px";
@@ -148,31 +148,33 @@ pwt_heatmap.Heatmap.prototype = {
         var x = d3v5.scaleBand()
             .range([0, this._cfg.h])
             .domain(this._X)
-            .padding(0.05);
+            .padding(0.03);
 
         var y = d3v5.scaleBand()
             .range([this._cfg.h, 0])
             .domain(this._Y)
-            .padding(0.05);
+            .padding(0.03);
 
-        // this._x_labels
-        //     .attr("transform", "translate(0," + this._cfg.h + ")")
-        //     // .call(d3v5.axisBottom(x).tickSize(0))
-        //     .call(d3v5.axis(x).tickSize(0))
-        //     .select(".domain").remove();
-        //
-        // this._y_labels
-        //     // .call(d3v5.axisLeft(y).tickSize(0))
-        //     .call(d3v5.axis(y).tickSize(0))
-        //     .select(".domain").remove();
+        ////////////////////////////////////////////////////////////////////////
+        ///                       UPDATE LABELS                              ///
+        ////////////////////////////////////////////////////////////////////////
+        this._x_labels
+            .attr("transform", "translate(0," + this._cfg.h + ")")
+            .call(d3v5.axisBottom(x).tickSize(0))
+            .select(".domain").remove();
+
+        this._y_labels
+            .call(d3v5.axisLeft(y).tickSize(0))
+            .select(".domain").remove();
 
         ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE SQUARES                             ///
         ////////////////////////////////////////////////////////////////////////
-        var hm = this._svg.selectAll('rect').data(this._data, function (d) {
+        var hm = this._svgContainer.selectAll('rect').data(this._data, function (d) {
             return d.x + ':' + d.y;
         });
 
+        // update squares
         hm
             .attr("x", function (d) {
                 return x(d.x)
@@ -182,9 +184,14 @@ pwt_heatmap.Heatmap.prototype = {
             })
             .style("fill", function (d) {
                 return that._cfg.color(d.value)
+            })
+            .attr("width", x.bandwidth())
+            .attr("height", y.bandwidth())
+            .style("fill", function (d) {
+                return that._cfg.color(d.value);
             });
 
-        // update
+        // create squares
         hm
             .enter()
             .append("rect")
@@ -221,7 +228,7 @@ pwt_heatmap.Heatmap.prototype = {
                 var newY = (d3v5.event.pageY - 20);
 
                 that._tooltip
-                    .html(d.value)
+                    .html(d.x + '/' + d.y + ': ' + d.value)
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
 
