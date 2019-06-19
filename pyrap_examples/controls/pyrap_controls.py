@@ -23,6 +23,7 @@ from pyrap.dialogs import msg_ok, msg_warn, msg_err, ask_yesno, ask_yesnocancel,
 from pyrap.layout import GridLayout, RowLayout, CellLayout, ColumnLayout
 from pyrap.ptypes import BoolVar, Color, px, Image, Font, NumVar, SVG
 from pyrap.pwt.bubblyclusters.bubblyclusters import BubblyClusters
+from pyrap.pwt.heatmap.heatmap import Heatmap
 from pyrap.pwt.radar_smoothed.radar_smoothed import RadarSmoothed
 from pyrap.pwt.radialdendrogramm.radialdendrogramm import RadialDendrogramm
 from pyrap.pwt.graph.graph import Graph
@@ -294,6 +295,13 @@ class ControlsDemo():
         page = self.create_page_template('D3 Bar Chart')
         self.create_barchart_page(page)
         self.pages['Bar Chart'] = page
+
+        #=======================================================================
+        # create D3 heatmap
+        #=======================================================================
+        page = self.create_page_template('D3 Heatmap')
+        self.create_heatmap_page(page)
+        self.pages['Heatmap'] = page
 
         # =======================================================================
         # create video
@@ -1108,6 +1116,46 @@ class ControlsDemo():
 
             graph = Graph(comp_body, halign='fill', valign='fill')
             graph.updatedata(data)
+
+            self.shell.dolayout()
+
+        reload()
+        btn_clear.on_select += clear
+        btn_reload.on_select += reload
+        btn_download.on_select += download
+
+    def create_heatmap_page(self, parent):
+        grp = Group(parent, text='Heatmap')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Load', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+
+        def download(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.download(pdf=False)
+
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+
+        data = []
+        with open('resources/heatmap.json') as f:
+            data = json.load(f)
+
+        def clear(*_):
+            for c in comp_body.children:
+                c.dispose()
+
+        def reload(*_):
+            if comp_body.children:
+                clear()
+
+            hm = Heatmap(comp_body, halign='fill', valign='fill')
+            hm.setdata(data)
 
             self.shell.dolayout()
 

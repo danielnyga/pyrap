@@ -26,6 +26,16 @@ d3wrapper = '''if (typeof d3 === 'undefined') {{
     {d3content}
 }}'''
 
+d3v4 = '''
+    d3v4 = d3
+    window.d3 = null
+'''
+
+d3v3 = '''
+    d3v3 = d3
+    window.d3 = null
+'''
+
 style = '''
 <style type="text/css">
   <![CDATA[
