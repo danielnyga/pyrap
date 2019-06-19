@@ -4,7 +4,7 @@ from dnutils.tools import ifnone
 
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, RWTSetOperation
-from pyrap.constants import d3wrapper
+from pyrap.constants import d3v3
 from pyrap.events import OnSelect, _rwt_event, _rwt_selection_event, OnSet
 from pyrap.ptypes import BitField
 from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
@@ -21,9 +21,8 @@ class RadarSmoothed(Widget):
     def __init__(self, parent, legendtext=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = RadarSmoothedTheme(self, session.runtime.mngr.theme)
-        self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
-            cnt = d3wrapper.format(**{'d3content': f.read()})
+            cnt = d3v3.format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
         with open(os.path.join(locations.pwt_loc, 'radar_smoothed', 'radar_smoothed.css')) as fi:
             session.runtime.requirecss(fi)

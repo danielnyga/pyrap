@@ -3,11 +3,11 @@ pwt_rs_ = {};
 pwt_rs_.RadarSmoothed = function( parent, options ) {
 
     this._parentDIV = this.createElement(parent);
-    this._tooltip = d3.select(this._parentDIV).append("div")
+    this._tooltip = d3v3.select(this._parentDIV).append("div")
         .attr('class', 'rs_tooltip')
         .style('z-index', 1000000);
 
-    this._svg = d3.select(this._parentDIV).append("svg");
+    this._svg = d3v3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.rs');
     this._radarlegend = this._svg.select('svg.rs_legend');
     this._id = null;
@@ -29,7 +29,7 @@ pwt_rs_.RadarSmoothed = function( parent, options ) {
         dotRadius: 4, 			//The size of the colored circles of each blog
         strokeWidth: 2, 		//The width of the stroke around each blob
         roundStrokes: true,	    //If true the area and stroke will follow a round path (cardinal-closed)
-        color: d3.scale.ordinal()
+        color: d3v3.scale.ordinal()
             .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
                     '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
                     '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
@@ -69,12 +69,12 @@ pwt_rs_.RadarSmoothed.prototype = {
         this._id = rwt.remote.Connection.getInstance().getRemoteObject( this )._.id;
 
 
-        d3.selection.prototype.moveToFront = function() {
+        d3v3.selection.prototype.moveToFront = function() {
           return this.each(function(){
             this.parentNode.appendChild(this);
           });
         };
-        d3.selection.prototype.moveToBack = function() {
+        d3v3.selection.prototype.moveToBack = function() {
             return this.each(function() {
                 var firstChild = this.parentNode.firstChild;
                 if (firstChild) {
@@ -272,9 +272,9 @@ pwt_rs_.RadarSmoothed.prototype = {
      */
     Format : function(unit, value){
         if (unit === '%') {
-			return d3.format('.2%')(value);
+			return d3v3.format('.2%')(value);
 		} else {
-            return (value >= 0.1 ? d3.format(".2f")(value) : d3.format(".2e")(value)) + unit;
+            return (value >= 0.1 ? d3v3.format(".2f")(value) : d3v3.format(".2e")(value)) + unit;
 		}
     },
 
@@ -282,7 +282,7 @@ pwt_rs_.RadarSmoothed.prototype = {
     //Wraps SVG text
     wrap : function (text, width) {
         text.each(function() {
-        var text = d3.select(this),
+        var text = d3v3.select(this),
             words = text.text().split(/\s+/).reverse(),
             word,
             line = [],
@@ -323,7 +323,7 @@ pwt_rs_.RadarSmoothed.prototype = {
         var y0 = this.valtop(axis, this._cfg.maxValues[axis.name]) * (-Math.sin(this._cfg.angleslice*i + Math.PI/2));
 
 	    // x/y coords of mousepointer
-	    coordinates = d3.mouse(this._svgContainer.node());
+	    coordinates = d3v3.mouse(this._svgContainer.node());
 		var mx = coordinates[0];
 		var my = coordinates[1];
 
@@ -353,7 +353,7 @@ pwt_rs_.RadarSmoothed.prototype = {
             var axis = d.axis;
         }
 
-        var dragtarget = d3.select(_this);
+        var dragtarget = d3v3.select(_this);
 
 		dragtarget
 			.attr('opacity', 1);
@@ -462,7 +462,7 @@ pwt_rs_.RadarSmoothed.prototype = {
      */
     radarline : function (v) {
         var that = this;
-        return d3.svg.line.radial()
+        return d3v3.svg.line.radial()
             .interpolate(that._cfg.roundStrokes ? "cardinal-closed" : "linear-closed")
             .radius(function(d) { return that.valtop(d[2], d[1]); })
             .angle(function(d,i) { return that._cfg.angleslice*(i+1); })(v);
@@ -475,7 +475,7 @@ pwt_rs_.RadarSmoothed.prototype = {
      */
     ptoval : function(d, p) {
         var that = this;
-        return d3.scale.linear()
+        return d3v3.scale.linear()
             .domain([0, that._cfg.radius])
             .range([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])(p);
     },
@@ -488,7 +488,7 @@ pwt_rs_.RadarSmoothed.prototype = {
     valtop : function(d, v) {
         var that = this;
         return function(x) {
-            return d3.scale.linear()
+            return d3v3.scale.linear()
                 .domain([that._cfg.minValues[d.name], that._cfg.maxValues[d.name]])
                 .range([0, that._cfg.radius])(x);
         }(v);
@@ -591,20 +591,20 @@ pwt_rs_.RadarSmoothed.prototype = {
 
                 })
                 .on('mouseover', function(d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v3.select(this).style("cursor", "pointer");
                     that._tooltip
                         .transition(200)
                         .style("display", "block");
                 })
                 .on('mouseout', function(d){
-                    d3.select(this).style("cursor", "default");
+                    d3v3.select(this).style("cursor", "default");
                     that._tooltip
                         .transition(200)
                         .style("display", "none");
                 })
                 .on('mousemove', function(d) {
-                    var newX = (d3.event.pageX + 20);
-                    var newY = (d3.event.pageY - 20);
+                    var newX = (d3v3.event.pageX + 20);
+                    var newY = (d3v3.event.pageY - 20);
 
                     that._tooltip
                         .html('Click to highlight')
@@ -631,7 +631,7 @@ pwt_rs_.RadarSmoothed.prototype = {
         axisgrid.exit().remove();
 
         //Draw the background circles
-        var axislevels = axisgrid.selectAll(".rs_levelcircle").data(d3.range(1,(this._cfg.levels+1)).reverse());
+        var axislevels = axisgrid.selectAll(".rs_levelcircle").data(d3v3.range(1,(this._cfg.levels+1)).reverse());
 
         axislevels
            .enter()
@@ -685,21 +685,21 @@ pwt_rs_.RadarSmoothed.prototype = {
             .text(function(d, i){return d.name})
             .call(this.wrap, this._cfg.wrapWidth)
             .on('mouseover', function(d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v3.select(this).style("cursor", "pointer");
 
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
             })
             .on('mouseout', function(d){
-                d3.select(this).style("cursor", "default");
+                d3v3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
 
                 that._tooltip
                     .html('<b>' + d.name + '</b> (' + d.unit + ')<br><b>limits:</b> [' + d.limits + ']<br><b>interval:</b> [' + d.interval + ']')
@@ -711,10 +711,10 @@ pwt_rs_.RadarSmoothed.prototype = {
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
-                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'left', args:{'axis': d3.select(this).text(), 'type': 'axis'} } );
+                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'left', args:{'axis': d3v3.select(this).text(), 'type': 'axis'} } );
             })
             .on('contextmenu', function(d) {
-                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'right', args:{'axis': d3.select(this).text(), 'type': 'axis'} } );
+                rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { 'button': 'right', args:{'axis': d3v3.select(this).text(), 'type': 'axis'} } );
             });
 
         // update the labels
@@ -797,23 +797,23 @@ pwt_rs_.RadarSmoothed.prototype = {
                 return that.valtop(d, d.interval[1]) - that.valtop(d, d.interval[0]);
             })
             .on('mouseover', function(d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
 
-                d3.select(this).moveToFront();
+                d3v3.select(this).moveToFront();
             })
             .on('mouseout', function(){
-                d3.select(this).style("cursor", "default");
+                d3v3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
-                d3.select(this).moveToBack();
+                d3v3.select(this).moveToBack();
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
 
                 that._tooltip
                     .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
@@ -848,27 +848,27 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("width", 2*that._cfg.intervalwidth)
             .attr("height", 5)
             .on('mouseover', function(d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
             })
             .on('mouseout', function(d) {
-                d3.select(this).style("cursor", "default");
+                d3v3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
 
                 that._tooltip
                     .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
-            .call(d3.behavior.drag()
+            .call(d3v3.behavior.drag()
                             .origin(Object)
                             .on("drag", function(d, i) {
                                 var data = that.dragmove(d, i);
@@ -877,7 +877,7 @@ pwt_rs_.RadarSmoothed.prototype = {
 
                                 // the position of the miniv rect is bound to the axis minimum on the lower side and the
                                 // position of the maxiv rect on the upper side
-                                var dragTarget = d3.select(this),
+                                var dragTarget = d3v3.select(this),
                                     miny = that.valtop(d, that._cfg.minValues[d.name]),
                                     maxy = that._svgContainer.select(".rs_maxiv-"+that.replAxisname(d.name)).attr('y');
 
@@ -934,27 +934,27 @@ pwt_rs_.RadarSmoothed.prototype = {
             .attr("width", 2*that._cfg.intervalwidth)
             .attr("height", 5)
             .on('mouseover', function(d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
             })
             .on('mouseout', function(d) {
-                d3.select(this).style("cursor", "default");
+                d3v3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
 
                 that._tooltip
                     .html("[" + d.interval[0].toPrecision(4) + ', ' + d.interval[1].toPrecision(4) +']')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
-            .call(d3.behavior.drag()
+            .call(d3v3.behavior.drag()
                             .origin(Object)
                             .on("drag", function(d, i) {
                                 var data = that.dragmove(d, i);
@@ -964,7 +964,7 @@ pwt_rs_.RadarSmoothed.prototype = {
 
                                 // the position of the maxiv rect is bound to the axis maximum on the upper side and the
                                 // position of the miniv rect on the lower side
-                                var dragTarget = d3.select(this),
+                                var dragTarget = d3v3.select(this),
                                     miny = that._svgContainer.select(".rs_miniv-"+that.replAxisname(d.name)).attr('y'),
                                     maxy = that.valtop(d, that._cfg.maxValues[d.name]);
 
@@ -1027,7 +1027,7 @@ pwt_rs_.RadarSmoothed.prototype = {
                     .transition().duration(200)
                     .style("fill-opacity", 0.1);
                 //Bring back the hovered over blob
-                d3.select(this)
+                d3v3.select(this)
                     .transition().duration(200)
                     .style("fill-opacity", 0.7);
             })
@@ -1105,20 +1105,20 @@ pwt_rs_.RadarSmoothed.prototype = {
             .style("fill", 'none')
             .style("pointer-events", "all")
             .on('mouseover', function(d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v3.select(this).style("cursor", "pointer");
                     that._tooltip
                         .transition(200)
                         .style("display", "block");
             })
             .on('mouseout', function(d){
-                d3.select(this).style("cursor", "default");
+                d3v3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
 
                 that._tooltip
                     .html(that.Format(d[2].unit, isNaN(d[1]) ? 0 : d[1]))
@@ -1126,7 +1126,7 @@ pwt_rs_.RadarSmoothed.prototype = {
                     .style("top", (newY) + "px");
 
             })
-            .call(d3.behavior.drag()
+            .call(d3v3.behavior.drag()
                 .origin(Object)
                 .on("drag", function(d) {
                     // d is an array [datasetname, value, axis], so to get the correct dragmove values we need to
@@ -1134,7 +1134,7 @@ pwt_rs_.RadarSmoothed.prototype = {
                     var movedata = that.dragmove(d, that._allAxis.indexOf(d[2], 0));
 
                     //Bound the drag behavior to the max and min of the axis, not by pixels but by value calc (easier)
-                    var dragTarget = d3.select(this);
+                    var dragTarget = d3v3.select(this);
                     dragTarget
                         .attr("cx", function(){ return that.valtop(d, movedata[2]) * Math.cos(that._cfg.angleslice*that._allAxis.indexOf(d, 0) + Math.PI/2); })
                         .attr("cy", function(){ return that.valtop(d, movedata[2]) * (-Math.sin(that._cfg.angleslice*that._allAxis.indexOf(d, 0) + Math.PI/2)); });

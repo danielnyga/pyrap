@@ -1,64 +1,22 @@
-/*
- * -*- coding: utf-8 -*-
- *                                          _..._                       .-'''-.
- *                                       .-'_..._''.           .---.   '   _    \
- *  __  __   ___                       .' .'      '.\          |   | /   /` '.   \
- * |  |/  `.'   `.                    / .'                     |   |.   |     \  '
- * |   .-.  .-.   '              .|  . '                       |   ||   '      |  '
- * |  |  |  |  |  |    __      .' |_ | |                 __    |   |\    \     / /
- * |  |  |  |  |  | .:--.'.  .'     || |              .:--.'.  |   | `.   ` ..' /
- * |  |  |  |  |  |/ |   \ |'--.  .-'. '             / |   \ | |   |    '-...-'`
- * |  |  |  |  |  |`" __ | |   |  |   \ '.          .`" __ | | |   |
- * |__|  |__|  |__| .'.''| |   |  |    '. `._____.-'/ .'.''| | |   |
- *                 / /   | |_  |  '.'    `-.______ / / /   | |_'---'
- *                 \ \._,\ '/  |   /              `  \ \._,\ '/
- *                  `--'  `"   `'-'                   `--'  `"
- * (C) 2017 by Mareike Picklum (mareikep@cs.uni-bremen.de)
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 pwt_heatmap = {};
 
 pwt_heatmap.Heatmap = function( parent ) {
 
     this._parentDIV = this.createElement(parent);
-    this._tooltip = d3.select(this._parentDIV).append("div")
+    this._tooltip = d3v5.select(this._parentDIV).append("div")
         .attr('class', 'heatmaptooltip')
         .style('z-index', 1000000);
 
-    this._svg = d3.select(this._parentDIV).append("svg");
+    this._svg = d3v5.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.heatmap');
 
     this._cfg = {
          margin: {top: 20, right: 20, bottom: 20, left: 20},
          w: 300,
          h: 300,
-         color: d3.scaleSequential()
-                    .interpolator(d3.interpolateYlOrBr)
-                    .domain([1,100])
-        // color: d3.scale.ordinal()
-        //     .range(d3.YlOrBr[15])
-            // .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
-            //     '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
-            //     '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
-            //     '#17becf', '#9edae5'])
+         color: d3v5.scaleSequential()
+                    .interpolator(d3v5.interpolateYlOrBr)
+                    .domain([0, 1])
 	};
 
     this._initialized = false;
@@ -169,8 +127,8 @@ pwt_heatmap.Heatmap.prototype = {
     setData: function (data) {
         // preprocess data
         this._data = data;
-        this._X = d3.map(data, function (d) { return d.x; }).keys();
-        this._Y = d3.map(data, function (d) { return d.y; }).keys();
+        this._X = d3v5.map(data, function (d) { return d.x; }).keys();
+        this._Y = d3v5.map(data, function (d) { return d.y; }).keys();
         this.update();
     },
 
@@ -187,26 +145,25 @@ pwt_heatmap.Heatmap.prototype = {
 
         var that = this;
 
-        console.log('HEATMAP', this._cfg.h, this._X, this._Y, this._data);
-        var x = d3.scaleBand()
+        var x = d3v5.scaleBand()
             .range([0, this._cfg.h])
             .domain(this._X)
             .padding(0.05);
 
-        var y = d3.scaleBand()
+        var y = d3v5.scaleBand()
             .range([this._cfg.h, 0])
             .domain(this._Y)
             .padding(0.05);
 
         // this._x_labels
         //     .attr("transform", "translate(0," + this._cfg.h + ")")
-        //     // .call(d3.axisBottom(x).tickSize(0))
-        //     .call(d3.axis(x).tickSize(0))
+        //     // .call(d3v5.axisBottom(x).tickSize(0))
+        //     .call(d3v5.axis(x).tickSize(0))
         //     .select(".domain").remove();
         //
         // this._y_labels
-        //     // .call(d3.axisLeft(y).tickSize(0))
-        //     .call(d3.axis(y).tickSize(0))
+        //     // .call(d3v5.axisLeft(y).tickSize(0))
+        //     .call(d3v5.axis(y).tickSize(0))
         //     .select(".domain").remove();
 
         ////////////////////////////////////////////////////////////////////////
@@ -242,26 +199,26 @@ pwt_heatmap.Heatmap.prototype = {
             .attr("width", x.bandwidth())
             .attr("height", y.bandwidth())
             .style("fill", function (d) {
-                return that._cfg.color(d.value)
+                return that._cfg.color(d.value);
             })
             .style("stroke-width", 4)
             .style("stroke", "none")
             .style("opacity", 0.8)
             .on('mouseover', function (d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v5.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
             })
             .on('mouseout', function (d) {
-                d3.select(this).style("cursor", "default");
+                d3v5.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
             })
             .on('mousemove', function (d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v5.event.pageX + 20);
+                var newY = (d3v5.event.pageY - 20);
 
                 that._tooltip
                     .html(d.value)

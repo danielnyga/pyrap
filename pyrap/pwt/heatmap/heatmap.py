@@ -35,10 +35,9 @@
 import os
 
 from dnutils.tools import ifnone
-
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, RWTSetOperation
-from pyrap.constants import d3wrapper
+from pyrap.constants import d3v5
 from pyrap.events import OnSelect, _rwt_event, OnSet
 from pyrap.ptypes import BitField
 from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
@@ -55,18 +54,11 @@ class Heatmap(Widget):
     def __init__(self, parent, opts=None, **options):
         Widget.__init__(self, parent, **options)
         self.theme = HeatmapTheme(self, session.runtime.mngr.theme)
-        with open(os.path.join(locations.trdparty, 'd3', 'd3.v4.min.js'), 'r') as f:
-            cnt = d3wrapper.format(**{'d3content': f.read()})
-            session.runtime.ensurejsresources(cnt, name='d3.v4.min.js', force=True)
+        with open(os.path.join(locations.trdparty, 'd3', 'd3.v5.min.js'), 'r') as f:
+            cnt = d3v5.format(**{'d3content': f.read()})
+            session.runtime.ensurejsresources(cnt, name='d3.v5.min.js', force=True)
         with open(os.path.join(locations.pwt_loc, 'heatmap', 'heatmap.css')) as fi:
             session.runtime.requirecss(fi)
-        # session.runtime.ensurejsresources([
-        #                                     os.path.join(locations.trdparty, 'd3', 'd3-scale.v3.min.js'),
-        #                                     os.path.join(locations.trdparty, 'd3', 'd3-array.v2.min.js'),
-        #                                     os.path.join(locations.trdparty, 'd3', 'd3-color.v1.min.js'),
-        #                                     os.path.join(locations.trdparty, 'd3', 'd3-format.v1.min.js'),
-        #                                     os.path.join(locations.trdparty, 'd3', 'd3-interpolate.v1.min.js')
-        #                                    ])
         self._data = {}
         self._opts = opts
         self.on_select = OnSelect(self)

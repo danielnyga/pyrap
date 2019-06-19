@@ -9,7 +9,7 @@ from pyrap.ptypes import BitField
 from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor
-from pyrap.constants import d3wrapper
+from pyrap.constants import d3v3
 
 
 class BarChart(Widget):
@@ -22,7 +22,7 @@ class BarChart(Widget):
         Widget.__init__(self, parent, **options)
         self.theme = BarChartTheme(self, session.runtime.mngr.theme)
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
-            cnt = d3wrapper.format(**{'d3content': f.read()})
+            cnt = d3v3.format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
         with open(os.path.join(locations.pwt_loc, 'barchart', 'barchart.css')) as fi:
             session.runtime.requirecss(fi)

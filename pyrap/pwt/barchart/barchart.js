@@ -10,10 +10,10 @@ pwt_barchart.BarChart = function( parent, options ) {
 
     this._parentDIV = this.createElement(parent);
 
-    this._svg = d3.select(this._parentDIV).append("svg");
+    this._svg = d3v3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.barchart');
 
-    this._tooltip = d3.select(this._parentDIV).append("div")
+    this._tooltip = d3v3.select(this._parentDIV).append("div")
             .attr('class', 'barcharttooltip')
             .style('z-index', 1000000);
 
@@ -125,7 +125,7 @@ pwt_barchart.BarChart.prototype = {
     },
 
     Format : function(x) {
-        return d3.format(".2%")(x);
+        return d3v3.format(".2%")(x);
     },
 
     /**
@@ -141,21 +141,21 @@ pwt_barchart.BarChart.prototype = {
         this._svgContainer
             .attr("transform", "translate(" + this.yBarWidth + "," + this.topOffset + ")");
 
-        this.xscale = d3.scale.linear()
+        this.xscale = d3v3.scale.linear()
             .range([0, this._w - this.yBarWidth - 5*this.fontpixels])
             .domain([0, 1]);
 
-        this.yscale = d3.scale.ordinal()
+        this.yscale = d3v3.scale.ordinal()
             .rangeRoundBands([this.barChartData.length * 1.2 * this.barHeight, 0])
             .domain(this.barChartData.map(function(d) { return d.name; }));
 
-        var xAxis = d3.svg.axis()
+        var xAxis = d3v3.svg.axis()
             .scale(this.xscale)
             .orient("top")
             .innerTickSize(5)
             .outerTickSize(1);
 
-        var yAxis = d3.svg.axis()
+        var yAxis = d3v3.svg.axis()
             .scale(this.yscale)
             .orient("left")
             .innerTickSize(5)
@@ -181,8 +181,8 @@ pwt_barchart.BarChart.prototype = {
                     .style('display', 'block');
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
                 that._tooltip
                     .html(that.Format(d.value))
                     .style("left", (newX) + "px")

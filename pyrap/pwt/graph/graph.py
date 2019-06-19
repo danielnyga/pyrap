@@ -1,10 +1,10 @@
 import os
-from dnutils import ifnone
 
+from dnutils import ifnone
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
     RWTCallOperation
-from pyrap.constants import style, d3wrapper
+from pyrap.constants import d3v3
 from pyrap.events import OnSelect, OnSet, _rwt_event
 from pyrap.ptypes import BitField
 from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
@@ -21,9 +21,8 @@ class Graph(Widget):
     def __init__(self, parent, **options):
         Widget.__init__(self, parent, **options)
         self.theme = GraphTheme(self, session.runtime.mngr.theme)
-        self._requiredjs = [os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js')]
         with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
-            cnt = d3wrapper.format(**{'d3content': f.read()})
+            cnt = d3v3.format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
         with open(os.path.join(locations.pwt_loc, 'graph', 'graph.css')) as fi:
             session.runtime.requirecss(fi)

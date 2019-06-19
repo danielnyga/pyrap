@@ -1,9 +1,9 @@
-pwt_d3 = {};
+pwt_graph = {};
 
-pwt_d3.Graph = function( parent ) {
+pwt_graph.Graph = function( parent ) {
 
     this._parentDIV = this.createElement(parent);
-    this._tooltip = d3.select(this._parentDIV).append("div")
+    this._tooltip = d3v3.select(this._parentDIV).append("div")
         .attr('class', 'graphtooltip')
         .style('z-index', 1000000);
 
@@ -12,12 +12,12 @@ pwt_d3.Graph = function( parent ) {
     this._circleradius = 10;
     this._charge = -700;
     this._gravity = .1;
-    this.force = d3.layout.force();
+    this.force = d3v3.layout.force();
     this.nodes = this.force.nodes();
     this.links = this.force.links();
     this._markertypes = ["red", "green", "black", "blue"];
 
-    this._svg = d3.select(this._parentDIV).append("svg");
+    this._svg = d3v3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.graph');
     this._defs = this._svgContainer.select('defs');
 
@@ -39,7 +39,7 @@ pwt_d3.Graph = function( parent ) {
     } );
 };
 
-pwt_d3.Graph.prototype = {
+pwt_graph.Graph.prototype = {
 
     initialize: function() {
 
@@ -369,21 +369,21 @@ pwt_d3.Graph.prototype = {
                 var as = split[split.length-1];
                 return "url(#" + as + ")"; })
             .on("mouseover", function(d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
                 that._tooltip
                     .html(d.tttext)
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
             .on("mouseout", function(d) {
-                d3.select(this).style("cursor", "default");
+                d3v3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
@@ -451,8 +451,8 @@ pwt_d3.Graph.prototype = {
                     .style("display", "block");
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
                 that._tooltip
                     .html(d.text)
                     .style("left", (newX) + "px")
@@ -612,7 +612,7 @@ rap.registerTypeHandler( 'pwt.customs.Graph', {
 
     factory: function( properties ) {
         var parent = rap.getObject( properties.parent );
-        return new pwt_d3.Graph( parent, properties);
+        return new pwt_graph.Graph( parent, properties);
     },
 
     destructor: 'destroy',

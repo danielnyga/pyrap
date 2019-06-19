@@ -5,7 +5,7 @@ pwt_tree.Tree = function( parent, options) {
     this._parentDIV =  this.createElement(parent);
     this._parent = parent;
 
-    this._tooltip = d3.select(this._parentDIV).append("div")
+    this._tooltip = d3v3.select(this._parentDIV).append("div")
             .attr('class', 'treetooltip')
             .style('z-index', 1000000);
 
@@ -19,12 +19,12 @@ pwt_tree.Tree = function( parent, options) {
         radius: 5
     };
 
-    this._tree = d3.layout.tree().size([this._cfg.w, this._cfg.h]);
+    this._tree = d3v3.layout.tree().size([this._cfg.w, this._cfg.h]);
     this._data = {};
     this._nodes = [];
     this._links = [];
 
-    this._svg = d3.select(this._parentDIV).append("svg");
+    this._svg = d3v3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.tree');
 
     this._initialized = false;
@@ -158,7 +158,7 @@ pwt_tree.Tree.prototype = {
     },
 
     diagonal : function(x) {
-        return d3.svg.diagonal()
+        return d3v3.svg.diagonal()
             .projection(function(d) {
                 return [d.y, d.x];
             })(x);
@@ -216,8 +216,8 @@ pwt_tree.Tree.prototype = {
                     .style('display', 'block');
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
                 that._tooltip
                     .html(d.nodetooltip)
                     .style("left", (newX) + "px")
@@ -310,8 +310,8 @@ pwt_tree.Tree.prototype = {
                     .style('display', 'block');
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
                 that._tooltip
                     .html(d.target.edgetooltip)
                     .style("left", (newX) + "px")

@@ -1,20 +1,20 @@
-// based on code from https://github.com/alangrafu/radar-chart-d3
-// check http://nbremer.blogspot.nl/2013/09/making-d3-radar-chart-look-bit-better.html
+// based on code from https://github.com/alangrafu/radar-chart-d3v3
+// check http://nbremer.blogspot.nl/2013/09/making-d3v3-radar-chart-look-bit-better.html
 // for extra information
 pwt_bubblyclusters = {};
 
 pwt_bubblyclusters.BubblyClusters = function( parent, audio ) {
 
     this._parentDIV = this.createElement(parent);
-    this._tooltip = d3.select(this._parentDIV).append("div")
+    this._tooltip = d3v3.select(this._parentDIV).append("div")
         .attr('class', 'bubblytooltip')
         .style('z-index', 1000000);
 
     this._padding = 1.5; // separation between same-color nodes
     this._clusterPadding = 6; // separation between different-color nodes
     this._maxRadius = 12;
-    this._force = d3.layout.force();
-    this._color = d3.scale.ordinal()
+    this._force = d3v3.layout.force();
+    this._color = d3v3.scale.ordinal()
         .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
                 '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
                 '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
@@ -29,7 +29,7 @@ pwt_bubblyclusters.BubblyClusters = function( parent, audio ) {
     this._w = 800;
     this._h = 600;
 
-    this._svg = d3.select(this._parentDIV).append("svg");
+    this._svg = d3v3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.bubblyclusters');
 
     this._initialized = false;
@@ -224,21 +224,21 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
             .attr("class", "bubbly")
             .style("fill", function(d) { return that._color(d.cluster); })
             .on("mouseover", function(d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
                 that._tooltip
                     .html(d.tooltip ? d.tooltip : '')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
             .on("mouseout", function(d) {
-                d3.select(this).style("cursor", "default");
+                d3v3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
@@ -253,7 +253,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
             .duration(1000)
             .delay(function(d, i) { that.play(); return i * 5; })
             .attrTween("r", function(d) {
-                var i = d3.interpolate(0, d.radius);
+                var i = d3v3.interpolate(0, d.radius);
                 return function(t) {
                     return i(t);
                 };
@@ -282,21 +282,21 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
             .append("text")
             .attr("class", "bubblytext")
                         .on("mouseover", function(d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
             })
             .on('mousemove', function(d) {
-                var newX = (d3.event.pageX + 20);
-                var newY = (d3.event.pageY - 20);
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
                 that._tooltip
                     .html(d.tooltip ? d.tooltip : '')
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
             .on("mouseout", function(d) {
-                d3.select(this).style("cursor", "default");
+                d3v3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
@@ -327,7 +327,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
 
         // Resolves collisions between d and all other circles.
         function collide(alpha) {
-            var quadtree = d3.geom.quadtree(that._nodes);
+            var quadtree = d3v3.geom.quadtree(that._nodes);
             return function(d) {
                 var r = d.radius + that._maxRadius + Math.max(that._padding, that._clusterPadding),
                 nx1 = d.x - r,

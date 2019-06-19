@@ -1,5 +1,5 @@
-// based on code from https://github.com/alangrafu/radar-chart-d3
-// check http://nbremer.blogspot.nl/2013/09/making-d3-radar-chart-look-bit-better.html
+// based on code from https://github.com/alangrafu/radar-chart-d3v3
+// check http://nbremer.blogspot.nl/2013/09/making-d3v3-radar-chart-look-bit-better.html
 // for extra information
 pwt_radialdendrogramm = {};
 
@@ -11,19 +11,19 @@ pwt_radialdendrogramm.RadialDendrogramm = function( parent) {
     this._w = 800;
     this._h = 600;
 
-    this._cluster = d3.layout.cluster()
+    this._cluster = d3v3.layout.cluster()
         .separation(function(a, b) { return (a.parent === b.parent ? 1 : 5 ) }) // gap between elements: 1, between groups: 5
         .sort(null)
         .value(function(d) { return d.size; });
 
-    this._bundle = d3.layout.bundle();
-    this._line = d3.svg.line.radial()
+    this._bundle = d3v3.layout.bundle();
+    this._line = d3v3.svg.line.radial()
         .interpolate("bundle")
         .tension(.75)
         .radius(function(d) { return d.y; })
         .angle(function(d) { return d.x / 180 * Math.PI; });
 
-    this._svg = d3.select(this._parentDIV).append("svg");
+    this._svg = d3v3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.radialdendrogram');
 
     this._initialized = false;
@@ -232,14 +232,14 @@ pwt_radialdendrogramm.RadialDendrogramm.prototype = {
             .classed("radialdnode--target", function(n) { return n.target; })
             .classed("radialdnode--source", function(n) { return n.source; });
 
-        d3.select(_this)
+        d3v3.select(_this)
             .style("fill", "steelblue")
             .style("font-weight", "bold");
 
         // split selections if different colors needed
         this._svgContainer.selectAll(".radialdnode--source, .radialdnode--target")
             .each(function(d) {
-                d3.select(this)
+                d3v3.select(this)
                     .style("fill", "steelblue")
                     .style("font-weight", "bold");
             });
@@ -247,7 +247,7 @@ pwt_radialdendrogramm.RadialDendrogramm.prototype = {
         // split selections if different colors needed
         this._svgContainer.selectAll(".radialdlink--source, .radialdlink--target")
             .each(function(d) {
-                d3.select(this)
+                d3v3.select(this)
                     .style("stroke-opacity", 1)
                     .style("stroke-width", "2px");
             });
@@ -321,11 +321,11 @@ pwt_radialdendrogramm.RadialDendrogramm.prototype = {
             .style("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
             .text(function(d) { return d.key; })
             .on('mouseover', function(d) {
-                d3.select(this).style("cursor", "pointer");
+                d3v3.select(this).style("cursor", "pointer");
                 that.mouseover(d, this);
             })
             .on('mouseout', function(d, i) {
-                d3.select(this).style("cursor", "default");
+                d3v3.select(this).style("cursor", "default");
                 that.mouseout(d, this);
             });
 
