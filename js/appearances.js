@@ -1956,11 +1956,23 @@ rwt.theme.AppearanceManager.getInstance().setCurrentTheme( {
   "sash" : {
     style : function( states ) {
       var tv = new rwt.theme.ThemeValues( states );
+
+      var c = 'undefined';
+      if (states.disabled) {
+        c = 'undefined';
+      } else if (states.click) {
+        c = 'pointer';
+      } else if (states.horizontal) {
+        c = "row-resize";
+      } else {
+        c = "col-resize";
+      }
+
       return {
         backgroundColor : tv.getCssColor( "Sash", "background-color" ),
         backgroundImage : tv.getCssImage( "Sash", "background-image" ),
         border : tv.getCssBorder( "Sash", "border" ),
-        cursor : states.disabled ? "undefined" : states.horizontal ? "row-resize" : "col-resize"
+        cursor : c
       };
     }
   },

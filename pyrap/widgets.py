@@ -3961,14 +3961,16 @@ class Sash(Widget):
     _defstyle_ = Widget._defstyle_
 
     @constructor('Sash')
-    def __init__(self, parent, orientation, **options):
+    def __init__(self, parent, orientation, click=False, **options):
         Widget.__init__(self, parent, **options)
         self.theme = SashTheme(self, session.runtime.mngr.theme)
         self.orientation = orientation
+        self._click = click
         if self.orientation in ('v', 'vertical'):
             self.style |= RWT.VERTICAL
         elif self.orientation == ('h', 'horizontal'):
             self.style |= RWT.HORIZONTAL
+
         self.on_select = OnSelect(self)
 
     def _handle_notify(self, op):
@@ -3985,6 +3987,12 @@ class Sash(Widget):
             options.style.append('VERTICAL')
         else:
             options.style.append('HORIZONTAL')
+
+        if self._click:
+            options.style.append('CLICK')
+        else:
+            options.style.append('DRAG')
+
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
 
     def compute_size(self):
