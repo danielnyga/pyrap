@@ -317,7 +317,7 @@ class Widget(object):
     @checkwidget
     def bg(self, color):
         self.theme.bg = parse_value(color, Color)
-        session.runtime << RWTSetOperation(self.id, {'background': [int(round(v * 255)) for v in [self.theme.bg.red, self.theme.bg.green, self.theme.bg.blue, self.theme.bg.alpha]]})
+        session.runtime << RWTSetOperation(self.id, {'background': [int(round(v * 255)) for v in [self.theme.bg.red, self.theme.bg.green, self.theme.bg.blue]] + [self.theme.bg.alpha]})
 
     @property
     def bgimg(self):
