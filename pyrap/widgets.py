@@ -19,7 +19,7 @@ from . import locations
 from .base import session
 from .communication import RWTSetOperation,\
     RWTCreateOperation, RWTCallOperation, RWTDestroyOperation
-from .constants import RWT, GCBITS, CURSOR
+from .constants import RWT, GCBITS, CURSOR, DLG
 from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus, \
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
     OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished, OnLongClick
@@ -32,7 +32,7 @@ from .themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
     SliderTheme, DropDownTheme, BrowserTheme, ListTheme, MenuTheme, MenuItemTheme, TableItemTheme, TableTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme, \
-    SeparatorTheme, DecoratorTheme, LinkTheme, SashTheme, ToggleTheme, SashTheme
+    SeparatorTheme, DecoratorTheme, LinkTheme, SashTheme, ToggleTheme, SashTheme, ToolTipTheme
 from .utils import RStorage, BiMap, BitMask
 from collections import OrderedDict
 import collections
@@ -3998,3 +3998,54 @@ class Sash(Widget):
     def compute_size(self):
         w = self.theme.width
         return (w, 0) if RWT.VERTICAL in self.style else (0, w)
+
+
+class ToolTip(Widget):
+
+    _rwt_class_name = 'rwt.widgets.ToolTip'
+
+    _styles_ = Widget._styles_ + {'markup': RWT.MARKUP,
+                                  'autohide': RWT.AUTOHIDE}
+    _defstyle_ = Widget._defstyle_
+
+    @constructor('ToolTip')
+    def __init__(self, parent, text, message=None, location=None, icon=None, **options):
+        Widget.__init__(self, parent, **options)
+        self.theme = ToolTipTheme(self, session.runtime.mngr.theme)
+        self.text = text
+        self.message = message
+        self.icon = icon
+        self._location = location
+        self.on_select = OnSelect(self)
+
+    def _handle_notify(self, op):
+        events = {'Selection': self.on_select}
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_selection_event(op))
+        return True
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if self.icon == DLG.INFORMATION:
+            options.style.append('ICON_INFORMATION')
+        elif self.icon == DLG.WARNING:
+            options.style.append('ICON_WARNING')
+        elif self.icon == DLG.ERROR:
+            options.style.append('ICON_ERROR')
+
+        if self._location is not None:
+            options.location = self._location
+
+        options.markupEnabled = RWT.MARKUP in self.style
+        options.autoHide = RWT.AUTOHIDE in self.style
+        options.text = self.text
+        options.message = self.message
+        options.visible = True
+
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
+
+    def compute_size(self):
+        width, height = Widget.compute_size(self)
+        return width, height

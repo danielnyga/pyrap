@@ -22,8 +22,8 @@ from pyrap.ptypes import BitField
 import sys
 from copy import copy, deepcopy
 import re
-from pyrap.constants import BORDER, GRADIENT, ANIMATION, FONT, SHADOW, CURSOR,\
-    RWT
+from pyrap.constants import BORDER, GRADIENT, ANIMATION, FONT, SHADOW, CURSOR, \
+    RWT, DLG
 import math
 from cssutils.css.cssfontfacerule import CSSFontFaceRule
 from pyparsing import Literal, alphanums, alphas, Word, ZeroOrMore, quotedString,\
@@ -1188,6 +1188,36 @@ class SashTheme(WidgetTheme):
     @property
     def width(self):
         return self._theme.get_property('width', 'Sash', self.custom_variant(), self.styles(), self.states())
+
+
+class ToolTipTheme(WidgetTheme):
+
+    def __init__(self, widget, theme):
+        WidgetTheme.__init__(self, widget, theme, 'ToolTip')
+
+    def styles(self):
+        styles = WidgetTheme.styles(self)
+        return styles
+
+    @property
+    def icon(self):
+        return self._theme.get_property('background-image', 'ToolTip-Image', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def padding(self):
+        return self._theme.get_property('padding', 'ToolTip', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def borders(self):
+        return [self._theme.get_property('border-%s' % b, 'ToolTip', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
+
+    @property
+    def bg(self):
+        return self._theme.get_property('background-color', 'ToolTip', self.custom_variant(), self.styles(), self.states())
+
+    @property
+    def font(self):
+        return self._theme.get_property('font', 'ToolTip-Text', self.custom_variant(), self.styles(), self.states())
 
 
 class LabelTheme(WidgetTheme):
