@@ -1,0 +1,41 @@
+text.radialtreetext {
+  font: 15px monospace, arial, sans-serif;
+  font-weight: bold;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+.radialtreetooltip {
+  display: none;
+  position: fixed;
+  overflow: hidden;
+  color: #1F77B4;
+  font: 13px monospace, arial, sans-serif;
+  font-weight: bold;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+  background-color: #fff;
+  border-radius: 5px;
+}
+
+.rtnode {
+  cursor: pointer;
+}
+.rtnode circle {
+  fill: none;
+}
+.rtnode text {
+  font-size: 12px;
+}
+.rtnode text:hover {
+  font-size: 1.2em;
+  font-weight: bold;
+  transition: font-size 0.1s;
+}
+.rtnode text:not(:hover) {
+  transition: font-size 1s;
+  transition-delay: 0.5s;
+}
+.rtlink {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+}
