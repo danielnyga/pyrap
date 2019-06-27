@@ -1,3 +1,4 @@
+// adapted from https://bl.ocks.org/wmleler/a734fb2bb3319a2cb386
 pwt_radialtree = {};
 
 pwt_radialtree.RadialTree = function( parent ) {
@@ -23,7 +24,7 @@ pwt_radialtree.RadialTree = function( parent ) {
         selcolor: 'green',
         zoomfactor: 0.04,
         pan: 3,
-        rot: 0.3,
+        rot: 1.5,
         w: 800,
         h: 800
 	};
@@ -66,6 +67,7 @@ pwt_radialtree.RadialTree = function( parent ) {
     this._aniTime = null;
 
     this._transition = null;
+    this._timestamp = null;
 
     this._initialized = false;
     this._needsRender = true;
@@ -380,7 +382,11 @@ pwt_radialtree.RadialTree.prototype = {
 
     // right click, show context menu and select this node
     showContextMenu : function(d, that) {
-        rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { args: {'func': 'context', 'node': { 'name': d.name, 'id': d.id } } } );
+        console.log(d3v3.event.pageX, d3v3.event.pageY);
+        rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { args: { func: 'context'},
+                                                                                           item: { name: d.name, id: d.id },
+                                                                                           x: d3v3.event.pageX,
+                                                                                           y: d3v3.event.pageY } );
     },
 
     hideContextMenu : function() {
@@ -424,24 +430,27 @@ pwt_radialtree.RadialTree.prototype = {
     },
 
     wheel : function(that) {  // mousewheel
-        var slow = d3v3.event.altKey ? 0.25 : 1;
+        that._timestamp = Date.now();
 
         if (d3v3.event.deltaY > 0) {  // down
-            that._moveR = -that._cfg.rot * slow; // rotate counterclockwise
+            that._moveR = -that._cfg.rot; // rotate counterclockwise
         }
         if (d3v3.event.deltaY < 0) {  // up
-            that._moveR = that._cfg.rot * slow; // rotate clockwise
+            that._moveR = that._cfg.rot; // rotate clockwise
         }
 
         if (that._aniRequest === null) {
-            that._aniTime = 1000;
             that._aniRequest = requestAnimationFrame(that.frame(that));
         }
 
-        if(that._zoomdir !== d3v3.event.deltaY) {
-            cancelAnimationFrame(that._aniRequest);
-            that._aniRequest = that._aniTime = null;
-        }
+        setTimeout(function(){
+            if (Date.now() - that._timestamp > 200) {
+                    cancelAnimationFrame(that._aniRequest);
+                    that._aniRequest = that._aniTime = null;
+                    that._moveR = 0;
+            }
+        }, 250);
+
 
         that._zoomdir = d3v3.event.deltaY;
     },
@@ -717,12 +726,32 @@ pwt_radialtree.RadialTree.prototype = {
             .attr('transform', 'rotate(' + (source.x0 - 90) + ')translate(' + source.y0 + ')')
             .on('click', function(d) { that.click(d, that); })
             .on('dblclick', function(d) { that.dblclick(d, that); })
-            .on('contextmenu', function(d) { that.showContextMenu(d, that); });
+            .on('contextmenu', function(d) { that.showContextMenu(d, that); })
+            .on("mouseover", function(d) {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
+                that._tooltip
+                    .html(d.tooltip)
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .on("mouseout", function(d) {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            });
 
         nodeEnter.append('circle')
             .attr('r', 1e-6)
+            .attr('class', function(d) {
+                return d.type;
+            })
             .on('dblclick', function(d) { that.dblclick(d, that); })
-            .style('fill', that._cfg.defcolor)
             .style('fill-opacity', function(d) {
                 return d._children ? 1 : 0.1;
             });
@@ -730,6 +759,9 @@ pwt_radialtree.RadialTree.prototype = {
         nodeEnter.append('text')
             .text(function(d) {
                 return d.name;
+            })
+            .attr('class', function(d) {
+                return d.type;
             })
             .style('opacity', 0.9)
             .style('fill-opacity', 0)
@@ -744,15 +776,17 @@ pwt_radialtree.RadialTree.prototype = {
             .attr('r', function(d) {
                 return (d.selected ? 5 : 2) * that._cfg.nradius * that.reduceZ(that);
             })
-            .style('fill', that._cfg.defcolor)
+            .style('fill', function(d) {
+                return d.selected ? that._cfg.selcolor : null;
+            })
             .style('fill-opacity', function(d) {
-                return d._children ? 1 : 0.1;
+                return d._children ? 1 : null;
             })
-            .attr('stroke', function(d) {
-                return d.selected ? that._cfg.selcolor : 'steelblue';
+            .style('stroke', function(d) {
+                return d.selected ? that._cfg.selcolor : null;
             })
-            .attr('stroke-width', function(d) {
-                return d.selected ? 3 : 1.5;
+            .style('stroke-width', function(d) {
+                return d.selected ? 3 : null;
             });
     
         node.select('text')
@@ -762,8 +796,8 @@ pwt_radialtree.RadialTree.prototype = {
             .attr('transform', function(d) {
                 return ((d.x + that._curR) % 360 <= 180 ? 'translate(8)scale(' : 'rotate(180)translate(-8)scale(' ) + that.reduceZ(that) +')';
             })
-            .attr('fill', function(d) {
-              return d.selected ? that._cfg.selcolor : 'black';
+            .style('fill', function(d) {
+              return d.selected ? that._cfg.selcolor : null;
             })
             .attr('dy', '.35em');
 
