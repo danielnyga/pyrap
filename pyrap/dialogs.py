@@ -4,6 +4,7 @@ Created on Nov 21, 2016
 @author: nyga
 '''
 from dnutils import ifnone
+from pyrap.events import _rwt_event
 from pyrap.widgets import Spinner, Edit,\
     Separator, Canvas
 from pyrap.constants import DLG, CURSOR
@@ -48,6 +49,23 @@ def options_list(parent, options):
     msg = OptionsDialog(parent, options)
     msg.show(pack=True)
     msg.on_close.wait()
+    return msg.answer
+
+
+def context_menu(parent, options, location=None, **kwargs):
+    msg = ContextMenu(parent, options)
+    msg.show(pack=True)
+
+    if location is not None:
+        msg.bounds = location + msg.bounds[2:]
+        msg.dolayout()
+
+    msg.on_close.wait()
+
+    if msg.answer is not None:
+        answer, callback = msg.answer
+        callback(**kwargs)
+
     return msg.answer
 
 
@@ -188,7 +206,7 @@ class OptionsDialog(Shell):
         if isinstance(options, dict):
             if not all([type(i) is str for i in options]):
                 raise TypeError('All keys in an item dictionary must be strings.')
-            if type(options) is dict:
+            else:
                 options = OrderedDict(((k, options[k]) for k in sorted(options)))
         elif type(options) in (list, tuple):
             options = OrderedDict(((str(i), i) for i in options))
@@ -254,7 +272,6 @@ class InputBox(Shell):
     Represents a simple message box containing an editfield for text input.
     '''
 
-
     @constructor('InputBox')
     def __init__(self, parent, title, icon=None, message=False, multiline=False, password=True, modal=True, resize=False,
                  btnclose=True):
@@ -303,7 +320,8 @@ def open_progress(parent, title, text, target, autoclose=False):
     dlg = ProgressDialog(parent, title, text, target, modal=0, autoclose=autoclose)
     dlg.show(True)
     dlg.start()
-            
+
+
 class ProgressDialog(MessageBox):
     
     @constructor('ProgressDialog')
@@ -556,5 +574,65 @@ class ColorDialog(Shell):
             self._color = None
             self.close()
         cancel.on_select += docancel
-        
-        
+
+
+class ContextMenu(Shell):
+    '''
+    Represents a simple context menu providing a list of options to the user.
+    '''
+
+    @constructor('ContextMenu')
+    def __init__(self, parent, options):
+        Shell.__init__(self, parent=parent, titlebar=False, border=True, resize=False, modal=True)
+        self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
+        self.answer = None
+        self._options = None
+        self._setoptions(options)
+        parent.on_mousedown += lambda x: self.answer_and_close([None, None])
+
+    def answer_and_close(self, a):
+        self.answer = a
+        self.close()
+
+    def _setoptions(self, options):
+        if options is None:
+            options = []
+        if isinstance(options, dict):
+            if not all([type(i) is str for i in options]):
+                raise TypeError('All keys in an item dictionary must be strings.')
+            else:
+                options = OrderedDict(((k, options[k]) for k in sorted(options)))
+        elif type(options) in (list, tuple):
+            options = OrderedDict(((str(i), i) for i in options))
+        else: raise TypeError('Invalid type for List items: %s' % type(options))
+        self._options = options
+
+    def create_content(self):
+        Shell.create_content(self)
+
+        optionslist = Composite(self.content)
+        optionslist.layout = RowLayout(halign='fill', valign='fill', equalheights=True)
+
+        self.create_options(optionslist)
+
+        self.show(True)
+
+    def _selection(self, x):
+        self.options[x.widget.text]()
+        self.answer_and_close([x.widget.text, self.options[x.widget.text]])
+
+    def create_options(self, parent):
+        for c in parent.children:
+            c.dispose()
+        for option in self.options:
+            tmp = Option(parent, text=option, halign='left', valign='fill')
+            tmp.on_checked += lambda x: self.answer_and_close([x.widget.text, self.options[x.widget.text]])
+        parent.on_mousedown += lambda x: self.answer_and_close([None, None])
+
+    @property
+    def options(self):
+        return self._options
+
+    @options.setter
+    def options(self, options):
+        self._setoptions(options)
