@@ -1,0 +1,59 @@
+.radar{
+  font: 15px monospace, arial, sans-serif;
+  font-weight: normal;
+  fill: #242424;
+  text-align: center;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+}
+
+.r_legend {
+  font: 11px monospace, arial, sans-serif;
+  font-weight: normal;
+  fill: #242424;
+  text-align: center;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+}
+
+.radartooltip {
+  display: none;
+  position: fixed;
+  overflow: hidden;
+  color: white;
+  font: 13px bookman, arial, sans-serif;
+  background-color:rgba(70,130,180, 0.7);
+  border-radius: 5px;
+  padding: 10px;
+}
+
+rect.r_iv {
+  fill: #98DF8A;
+}
+
+text.leveltext {
+ fill: #737373;
+ font-size: 10px;
+}
+
+text.r_axisname {
+  font-size: 11px;
+  fill: #333333;
+}
+
+line.r_line {
+  stroke: grey;
+  stroke-width: 1px;
+}
+
+
+text.legend {
+  font-size: 11px;
+  fill: #737373;
+  font-weight: bold;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+text.legendtitle {
+  font-size: 12px;
+  fill: #404040;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}

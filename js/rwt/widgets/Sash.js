@@ -58,8 +58,14 @@ rwt.qx.Class.define( "rwt.widgets.Sash", {
       apply : "_applyOrientation",
       init : "horizontal",
       nullable : true
-    }
+    },
 
+    movetype : {
+      check : [ "click", "drag" ],
+      apply : "_applyMoveType",
+      init : "drag",
+      nullable : true
+    }
   },
 
   members : {
@@ -181,6 +187,11 @@ rwt.qx.Class.define( "rwt.widgets.Sash", {
       this._setStyle( value );
     },
 
+    _applyMoveType : function( value, old ) {
+      this._removeStyle( old );
+      this._setStyle( value );
+    },
+
     _setStyle : function( style ) {
       if( style == "horizontal" ) {
         this.addEventListener( "mousedown", this._onMouseDownY, this );
@@ -196,6 +207,14 @@ rwt.qx.Class.define( "rwt.widgets.Sash", {
         this.addState( "vertical" );
         this._handle.addState( "vertical" );
         this._sliderHandle.addState( "vertical" );
+      } else if (style == 'click') {
+        this.addState( "click" );
+        this._handle.addState( "click" );
+        this._sliderHandle.addState( "click" );
+      } else if (style == 'drag') {
+        this.addState( "drag" );
+        this._handle.addState( "drag" );
+        this._sliderHandle.addState( "drag" );
       }
     },
 
@@ -214,6 +233,14 @@ rwt.qx.Class.define( "rwt.widgets.Sash", {
         this.removeState( "vertical" );
         this._handle.removeState( "vertical" );
         this._sliderHandle.removeState( "vertical" );
+      } else if (style == 'click') {
+        this.removeState( "click" );
+        this._handle.removeState( "click" );
+        this._sliderHandle.removeState( "click" );
+      } else if (style == 'drag') {
+        this.removeState( "drag" );
+        this._handle.removeState( "drag" );
+        this._sliderHandle.removeState( "drag" );
       }
     },
 

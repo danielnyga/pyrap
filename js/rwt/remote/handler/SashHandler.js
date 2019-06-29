@@ -17,10 +17,17 @@ rwt.remote.HandlerRegistry.add( "rwt.widgets.Sash", {
     result.setUserData( "isControl", true );
     rwt.remote.HandlerUtil.setParent( result, properties.parent );
     var orientation = rwt.widgets.util.Layout.ORIENTATION_VERTICAL;
-    if( properties.style.indexOf( "HORIZONTAL" ) != -1 ) {
+    if( properties.style.indexOf( "HORIZONTAL" ) !== -1 ) {
       orientation = rwt.widgets.util.Layout.ORIENTATION_HORIZONTAL;
     }
     result.setOrientation( orientation );
+
+    var movetype = 'drag';
+    if( properties.style.indexOf( "CLICK" ) !== -1 ) {
+      movetype = 'click';
+    }
+    result.setMovetype( movetype );
+
     return result;
   },
 

@@ -279,6 +279,6 @@ StackLayout
 
    .. container:: right
 
-   The :class:`StackLayout` works the same as the :class:`GridLayout` and its derivatives. Its cells, however, are not
-   aligned in a grid, but in a "virtual" stack "depth layers". At any time, one layer ("grid cell") can be
-   brought to top and thus made visible. All others, are invisible at that time.
+		The :class:`StackLayout` works the same as the :class:`GridLayout` and its derivatives. Its cells, however, are not
+		aligned in a grid, but in a "virtual" stack "depth layers". At any time, one layer ("grid cell") can be
+		brought to top and thus made visible. All others, are invisible at that time.

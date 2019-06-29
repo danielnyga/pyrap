@@ -1,6 +1,0 @@
-Pillow==3.3.1
-cssutils
-colored
-pyparsing
-python-multipart
-dnutils

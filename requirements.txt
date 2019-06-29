@@ -1,0 +1,7 @@
+Pillow
+cssutils
+colored
+pyparsing
+python-multipart
+dnutils
+svglib

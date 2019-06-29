@@ -94,7 +94,9 @@ that the pyRAP framework offers.
 
       https://prac.open-ease.org
 
-
+Disclaimer:
+   The 'web' package in pyrap is a modified version of the `web.py package <http://webpy.org>`_. The package is a
+   Python 3 - version of the provided package.
 
 Contents:
 

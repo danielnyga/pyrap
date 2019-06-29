@@ -1,0 +1,25 @@
+Welcome to pyRAP!
+=================
+
+pyRAP is a framework for implementing extremely powerful and beautiful 
+web-based AJAX applications in pure Python. No HTML. No JavaScript. 
+No PHP. Just pure Python. It has been designed as a lightweight, 
+easy-to-use yet powerful library that makes development of SaaS 
+applications as easy and fast as possible.
+
+  * Project Page: https://pyrap.org/
+  * Lead developers: 
+    * Daniel Nyga (nyga@cs.uni-bremen.de)
+    * Mareike Picklum (mareikep@cs.uni-bremen.de)
+
+Release notes
+-------------
+
+  * Version 1.0.1 (17.05.2019)
+    * *Release*: Initial release
+
+
+Documentation
+-------------
+
+  * https://pyrap.org/index.html

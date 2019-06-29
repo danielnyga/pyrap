@@ -43,7 +43,9 @@ rwt.remote.RemoteObject.prototype = {
    * @param {var} value The value of the property.
    */
   set : function( key, value ) {
-    Connection.getInstance().getMessageWriter().appendSet( this._.id, key, value );
+    var connection = Connection.getInstance();
+    connection.getMessageWriter().appendSet( this._.id, key, value );
+    connection.send();
   },
 
   /**

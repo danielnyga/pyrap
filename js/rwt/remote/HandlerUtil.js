@@ -166,7 +166,7 @@ rwt.remote.HandlerUtil = {
         if( widget.__user$backgroundGradient == null ) {
           widget.setBackgroundGradient( null );
         }
-        var color = value[ 3 ] === 0 ? "transparent" : rwt.util.Colors.rgbToRgbString( value );
+        var color = value[ 3 ] === 0 ? 'transparent' : typeof value[ 3 ] === 'undefined' ? rwt.util.Colors.rgbToRgbString( value ) : rwt.util.Colors.rgbaToRgbaString( value );
         widget.setBackgroundColor( color );
       }
     },

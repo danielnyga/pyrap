@@ -1,0 +1,3 @@
+include requirements.txt
+recursive-exclude 3rdparty/hammerjs *.*
+recursive-exclude 3rdparty/hammertouchemulator *.* LICENSE Makefile

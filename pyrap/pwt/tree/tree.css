@@ -1,0 +1,36 @@
+text.tree {
+  font: 13px monospace, arial, sans-serif;
+  font-weight: bold;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+.tree_node {
+  cursor: pointer;
+}
+
+.tree_node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.tree_node text {
+  font: 13px monospace, arial, sans-serif;
+}
+
+.tree_link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+}
+
+.treetooltip {
+  display: none;
+  position: fixed;
+  overflow: hidden;
+  color: white;
+  font: 13px bookman, arial, sans-serif;
+  background-color:rgba(70,130,180, 0.7);
+  border-radius: 5px;
+  padding: 10px;
+}

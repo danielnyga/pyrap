@@ -1,0 +1,43 @@
+.scatter {
+  font: 15px monospace, arial, sans-serif;
+  font-weight: bold;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+.scattertooltip {
+  display: none;
+  position: fixed;
+  overflow: hidden;
+  color: white;
+  font: 13px bookman, arial, sans-serif;
+  background-color:rgba(70,130,180, 0.7);
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+}
+
+.axis text {
+	font-family: sans-serif;
+	font-size: 11px;
+}
+
+circle.scattercircle {
+  stroke-width: 1.5;
+}
+
+text.scattertext {
+  font: 10px monospace, arial, sans-serif;
+  font-weight: normal;
+  text-shadow: none;
+}
+
+path.scatterline {
+  fill: none;
+  stroke-width: 1.5px;
+}

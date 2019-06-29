@@ -24,7 +24,7 @@ rwt.util.Colors = {
    * Detects if a string is a valid color.
    */
   isValid : function( str ) {
-    return isNamedColor( str ) || isHex3String( str ) || isHex6String( str ) || isRgbString( str );
+    return isNamedColor( str ) || isHex3String( str ) || isHex6String( str ) || isRgbString( str ) || isRgbaString( str );
   },
 
   /**
@@ -35,6 +35,8 @@ rwt.util.Colors = {
       return NAMED[str];
     } else if( isRgbString( str ) ) {
       return rgbStringToRgb();
+    } else if( isRgbaString( str ) ) {
+      return rgbaStringToRgba();
     } else if( isHex3String( str ) ) {
       return hex3StringToRgb();
     } else if( isHex6String( str ) ) {
@@ -74,7 +76,8 @@ var hexstr = function( number ) {
 var REGEXP = {
   hex3 : /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
   hex6 : /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
-  rgb : /^rgb\(\s*([0-9]{1,3}\.{0,1}[0-9]*)\s*,\s*([0-9]{1,3}\.{0,1}[0-9]*)\s*,\s*([0-9]{1,3}\.{0,1}[0-9]*)\s*\)$/
+  rgb : /^rgb\(\s*([0-9]{1,3}\.{0,1}[0-9]*)\s*,\s*([0-9]{1,3}\.{0,1}[0-9]*)\s*,\s*([0-9]{1,3}\.{0,1}[0-9]*)\s*\)$/,
+  rgba : /^rgba\(\s*([0-9]{1,3}\.{0,1}[0-9]*)\s*,\s*([0-9]{1,3}\.{0,1}[0-9]*)\s*,\s*([0-9]{1,3}\.{0,1}[0-9]*)\s*,\s*([0-9]{1,3}\.{0,1}[0-9]*)\s*\)$/
 };
 
 /*
@@ -117,6 +120,10 @@ var isRgbString = function( str ) {
   return REGEXP.rgb.test( str );
 };
 
+var isRgbaString = function( str ) {
+  return REGEXP.rgba.test( str );
+};
+
 var hex3StringToRgb = function() {
   var r = parseInt( RegExp.$1, 16 ) * 17;
   var g = parseInt( RegExp.$2, 16 ) * 17;
@@ -138,4 +145,11 @@ var rgbStringToRgb = function() {
   return [r, g, b];
 };
 
+var rgbaStringToRgba = function() {
+  var r = parseInt( RegExp.$1, 10 );
+  var g = parseInt( RegExp.$2, 10 );
+  var b = parseInt( RegExp.$3, 10 );
+  var a = parseFloat( RegExp.$4 );
+  return [r, g, b, a];
+};
 })();

@@ -1,0 +1,66 @@
+.rs{
+  font: 15px monospace, arial, sans-serif;
+  font-weight: normal;
+  fill: #242424;
+  text-align: center;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+}
+
+.rs_legend {
+  font: 11px monospace, arial, sans-serif;
+  font-weight: normal;
+  fill: #242424;
+  text-align: center;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+}
+
+.rs_tooltip {
+  display: none;
+  position: fixed;
+  overflow: hidden;
+  color: white;
+  font: 13px bookman, arial, sans-serif;
+  background-color:rgba(70,130,180, 0.7);
+  border-radius: 5px;
+  padding: 10px;
+}
+
+text.rs_axisname {
+  font-size: 11px;
+  fill: #333333;
+}
+
+text.rs_axislabel {
+  fill: #737373;
+  font-size: 10px;
+}
+
+line.rs_axisline {
+  stroke: white;
+  stroke-width: 2px;
+}
+
+circle.rs_levelcircle {
+  fill: #CDCDCD;
+  stroke: #CDCDCD;
+  fill-opacity: 0.1;
+}
+
+path.rs_stroke {
+  fill: none;
+}
+
+rect.rs_iv {
+  fill: #98DF8A;
+  fill-opacity: 0.5;
+}
+
+rect.rs_maxiv {
+  fill: grey;
+  fill-opacity: 1;
+}
+
+rect.rs_miniv {
+  fill: grey;
+  fill-opacity: 1;
+}

@@ -19,9 +19,7 @@ import datetime
 
 sys.path.append(os.path.join('..', '..'))
 
-from _version import (__version__, __basedir__)
-
-sys.path.append(os.path.join('..', __basedir__))
+from _version import (__version__)
 
 import sphinx_bootstrap_theme
 
