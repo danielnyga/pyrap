@@ -1233,7 +1233,7 @@ class Button(Widget):
         if self.img is not None:
             w, h = self.img.size
             width += w
-            height += (h - px(h)) if (h > px(h)) else 0
+            height += max(0, (h - th))
         return width, height
     
     
