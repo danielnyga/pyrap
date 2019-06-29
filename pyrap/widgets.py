@@ -2727,6 +2727,8 @@ class List(Widget):
 
     @property
     def selection(self):
+        if not self.items:
+            return None
         sel = [self.items[list(self.items.keys())[i]] for i in self._selidx]
         if RWT.MULTI not in self.style: 
             if not sel: return None
