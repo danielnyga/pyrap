@@ -1243,7 +1243,7 @@ class Button(Widget):
         if self.img is not None:
             w, h = self.img.size
             width += w
-            height += (h - px(h)) if (h > px(h)) else 0
+            height += max(0, (h - th))
         return width, height
     
     
@@ -2737,6 +2737,8 @@ class List(Widget):
 
     @property
     def selection(self):
+        if not self.items:
+            return None
         sel = [self.items[list(self.items.keys())[i]] for i in self._selidx]
         if RWT.MULTI not in self.style: 
             if not sel: return None
