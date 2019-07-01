@@ -14,6 +14,7 @@ from dnutils import out
 from dnutils.threads import sleep, ThreadInterrupt
 from dnutils.tools import ifnone
 
+from pyrap.pwt.audio.audio import Audio
 from pyrap.pwt.barchart.barchart import BarChart
 
 import pyrap
@@ -309,6 +310,13 @@ class ControlsDemo():
         page = self.create_page_template('Video')
         self.create_video_page(page)
         self.pages['Video'] = page
+
+        # =======================================================================
+        # create audio
+        # =======================================================================
+        page = self.create_page_template('Audio')
+        self.create_audio_page(page)
+        self.pages['Audio'] = page
 
         for page in [self.pages[k] for k in sorted(self.pages.keys())][1:]:
             page.layout.exclude = True
@@ -1218,6 +1226,30 @@ class ControlsDemo():
 
         v = Video(comp_body, halign='fill', valign='fill')
         v.addsrc({'source': 'resources/test.mp4', 'type': 'video/mp4'})
+
+        def play(*_):
+            v.play()
+
+        def pause(*_):
+            v.pause()
+
+        btn_play.on_select += play
+        btn_pause.on_select += pause
+
+    def create_audio_page(self, parent):
+        grp = Group(parent, text='Audio')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_play = Button(comp_btn, text='Play', halign='fill', valign='fill')
+        btn_pause = Button(comp_btn, text='Pause', halign='fill', valign='fill')
+
+        comp_body = Composite(grp)
+        comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+
+        v = Audio(comp_body, halign='fill', valign='fill')
+        v.addsrc({'source': 'resources/test.mp3', 'type': 'audio/mpeg'})
 
         def play(*_):
             v.play()
