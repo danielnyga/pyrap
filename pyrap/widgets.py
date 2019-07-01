@@ -22,7 +22,7 @@ from .communication import RWTSetOperation,\
 from .constants import RWT, GCBITS, CURSOR, DLG
 from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus, \
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
-    OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished, OnLongClick
+    OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished, OnLongClick, KeyPressed
 from .exceptions import WidgetDisposedError
 from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout, GridLayout
 from .ptypes import px, BitField, BoolVar, NumVar, Color,\
@@ -332,6 +332,16 @@ class Widget(object):
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         session.runtime << RWTSetOperation(self.id, {'backgroundImage': img})
+
+    @property
+    def bgsize(self):
+        return self.theme.bgsize
+
+    @bgsize.setter
+    @checkwidget
+    def bgsize(self, size):
+        session.runtime << RWTSetOperation(self.id, {'backgroundSize': size})
+
 
     @property
     def color(self):
