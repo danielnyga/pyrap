@@ -4059,3 +4059,63 @@ class ToolTip(Widget):
     def compute_size(self):
         width, height = Widget.compute_size(self)
         return width, height
+
+
+class Keyboard(Composite):
+    KEYS = {'de': [
+        ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'ß', '<'),
+        ('q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', 'ü', '+', '-'),
+        ('a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ö', 'ä'),
+        ('shift', 'y', 'x', 'c', 'v', 'b', 'n', 'm', '.', ','),
+        (' ',)
+    ], 'en': [
+        ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='),
+        ('q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\'),
+        ('a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', "'"),
+        ('shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.'),
+        (' ',)
+    ]}
+
+    @constructor('Keyboard')
+    def __init__(self, parent, language='de', **kwargs):
+        super(Keyboard, self).__init__(parent, **kwargs)
+        self.keys = []
+        self.shift = BoolVar()
+        self.shiftbtn = None
+        self.on_select = KeyPressed()
+        self.widths = 50
+        self.language = language
+
+    def create_content(self):
+        self.layout = RowLayout(equalheights=True, padding=5, valign='center', halign='center')
+
+        for keyrow in Keyboard.KEYS.get(self.language, Keyboard.KEYS['de']):
+            row = Composite(self, layout=ColumnLayout(valign='fill', halign='center', equalwidths=True))
+            for key in keyrow:
+                if key == 'shift':
+                    self.shiftbtn = Toggle(row, text='up', minwidth=40)
+                    self.shiftbtn.bind(self.shift)
+                    self.shift.set(True)
+                    self.shift.on_change += self.on_shift
+                    self.shiftbtn.on_checked += self.on_shift
+                elif type(key) is int:
+                    Label(row, minwidth=key)
+                else:
+                    b = Button(row, text=key, valign='fill', halign='center')
+                    b.on_select += self.key_pressed
+                    if key == ' ':
+                        b.layout.minwidth = 300
+                    else:
+                        b.layout.minwidth = self.widths
+                    self.keys.append(b)
+        self.update()
+
+    def update(self):
+        for k in self.keys:
+            k.text = k.text.upper() if (self.shift.value and k.text != 'ß') else k.text.lower()
+
+    def on_shift(self, *_):
+        self.update()
+
+    def key_pressed(self, event):
+        self.on_select.notify(event.widget.text)
