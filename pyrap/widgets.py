@@ -188,7 +188,13 @@ class Widget(object):
     def _handle_set(self, op):
         for key, value in op.args.items():
             if key == 'bounds':
+                resize = False
+                x, y, h, w = list(map(px, value))
+                if w != self.width or h != self.height:
+                    resize = True
                 self._bounds = list(map(px, value))
+                if resize and isinstance(self, Shell):
+                    self.on_resize.notify()
 
     def _handle_call(self, op):
         pass
@@ -1769,6 +1775,7 @@ class ScrolledComposite(Composite):
             width += self._vbar.theme.width
         return width, height
 
+
 class ScrollBar(Widget):
 
     _rwt_class_name_ = 'rwt.widgets.ScrollBar'
@@ -1917,7 +1924,6 @@ class TabItem(Widget):
             parent.children.remove(self)
         self.parent.items.insert(idx, self)
         self.selected = False
-
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
