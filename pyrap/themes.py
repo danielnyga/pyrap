@@ -1208,6 +1208,10 @@ class ToolTipTheme(WidgetTheme):
         return self._theme.get_property('padding', 'ToolTip', self.custom_variant(), self.styles(), self.states())
 
     @property
+    def margin(self):
+        return self._theme.get_property('margin', 'Label', self.custom_variant(), self.styles(), self.states())
+
+    @property
     def borders(self):
         return [self._theme.get_property('border-%s' % b, 'ToolTip', self.custom_variant(), self.styles(), self.states()) for b in ('top', 'right', 'bottom', 'left')]
 
