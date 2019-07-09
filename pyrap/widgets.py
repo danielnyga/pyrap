@@ -1240,7 +1240,7 @@ class Button(Widget):
     
     def compute_size(self):
         width, height = Widget.compute_size(self)
-        if self.compute_textsize:
+        if self.compute_textsize and self.text is not None:
             tw, th = session.runtime.textsize_estimate(self.theme.font, self._text.replace('\n', '<br>'), self.shell())
         else:
             tw, th = 0, 0
