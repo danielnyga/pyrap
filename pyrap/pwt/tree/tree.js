@@ -219,7 +219,7 @@ pwt_tree.Tree.prototype = {
                 var newX = (d3v3.event.pageX + 20);
                 var newY = (d3v3.event.pageY - 20);
                 that._tooltip
-                    .html(d.nodetooltip)
+                    .html(d.tooltip)
                     .style("left", (newX) + "px")
                     .style("top", (newY) + "px");
             })
@@ -232,8 +232,9 @@ pwt_tree.Tree.prototype = {
         nodeenter
             .append("circle")
             .attr("r", 1e-6)
-            .style("fill", function(d) { return (typeof d._children  !== 'undefined' && d._children.length > 0) ? d.highlight ? "green" : "steelblue" : "white"; })
-            .style("stroke", function(d) { return d.highlight ? "green" : "steelblue"; });
+            .attr('class', function(d) {
+                return d.type;
+            });
 
         nodeenter
             .append("svg:a")
@@ -243,7 +244,7 @@ pwt_tree.Tree.prototype = {
             .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
             .attr("dy", "1.2em")
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) { return d.shownodetext ? d.nodetext : ''; })
+            .text(function(d) { return d.showname ? d.name : ''; })
             .style("fill-opacity", 1e-6);
 
         // Transition nodes to their new position.
@@ -255,7 +256,10 @@ pwt_tree.Tree.prototype = {
         nodeupdate
             .select("circle")
             .attr("r", this._cfg.radius)
-            .style("fill", function(d) { return d._children  && d._children.length > 0 ? d.highlight ? "green" : "steelblue" : "white"; });
+            .attr('class', function(d) {
+                return d.type;
+            })
+            .style("fill-opacity", function(d) { return d._children && d._children.length > 0 ? 1 : .1; });
 
         nodeupdate
             .select("text")
@@ -290,7 +294,7 @@ pwt_tree.Tree.prototype = {
         edgeenter
             .append("path")
             .attr("class", "tree_link")
-            .attr("id", function(d) { return d.source.nodetext + '-' + d.target.nodetext; })
+            .attr("id", function(d) { return d.source.name + '-' + d.target.name; })
             .attr("d", function(d) {
                 var o = {x: source.x0, y: source.y0};
                 return that.diagonal({source: o, target: o});
@@ -300,10 +304,10 @@ pwt_tree.Tree.prototype = {
             .append("text")
             .style("font-size", "15px")
             .append("textPath")
-            .attr("href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
+            .attr("href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
             .style('text-anchor', "middle")
             .attr("startOffset", "50%")
-            .text(function(d) { return d.target.edgetext; })
+            .text(function(d) { return ((typeof d.target.showedge === 'undefined' || d.target.showedge) && d.target.edgetext) ? d.target.edgetext : ''; })
             .on("mouseover", function() {
                 that._tooltip
                     .transition(200)
@@ -325,8 +329,8 @@ pwt_tree.Tree.prototype = {
 
         edgeenter
             .append("use")
-            .attr("href", function(d) { return '#' + d.source.nodetext + '-' + d.target.nodetext; })
-            .style("stroke", "black")
+            .attr("href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
+            .style("stroke", "none")
             .style("fill", "none");
 
           // Transition links to their new position.
@@ -337,7 +341,9 @@ pwt_tree.Tree.prototype = {
         edgeupdate
             .selectAll('path')
             .attr("d", that.diagonal)
-            .style('stroke', function(d) { return d.target.highlight ? "green" : "steelblue"; });
+            .attr('class', function(d) {
+                return d.target.type;
+            });
 
         edgeupdate
             .select("text")

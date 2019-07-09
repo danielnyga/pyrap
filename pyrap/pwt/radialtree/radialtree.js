@@ -153,7 +153,7 @@ pwt_radialtree.RadialTree.prototype = {
         if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
             var oldwidth = this._cfg.w;
             var oldheight = this._cfg.h;
-            this._cfg.w = Math.min(args[2],args[3]) - this._cfg.padding;
+            this._cfg.w = Math.min(args[2],args[3]);
             this._cfg.h = this._cfg.w;
             this._curX += (this._cfg.w - oldwidth) / 2;
             this._curY += (this._cfg.h - oldheight) / 2;
@@ -382,7 +382,6 @@ pwt_radialtree.RadialTree.prototype = {
 
     // right click, show context menu and select this node
     showContextMenu : function(d, that) {
-        console.log(d3v3.event.pageX, d3v3.event.pageY);
         rwt.remote.Connection.getInstance().getRemoteObject( that ).notify( "Selection", { args: { func: 'context'},
                                                                                            item: { name: d.name, id: d.id },
                                                                                            x: d3v3.event.pageX,
@@ -746,7 +745,8 @@ pwt_radialtree.RadialTree.prototype = {
                     .style("display", "none");
             });
 
-        nodeEnter.append('circle')
+        nodeEnter
+            .append('circle')
             .attr('r', 1e-6)
             .attr('class', function(d) {
                 return d.type;
@@ -755,10 +755,11 @@ pwt_radialtree.RadialTree.prototype = {
             .style('fill-opacity', function(d) {
                 return d._children ? 1 : 0.1;
             });
-    
-        nodeEnter.append('text')
+
+        nodeEnter
+            .append('text')
             .text(function(d) {
-                return d.name;
+                return ((typeof d.showname === 'undefined' || d.showname) && d.name) ? d.name : '';
             })
             .attr('class', function(d) {
                 return d.type;
@@ -836,12 +837,15 @@ pwt_radialtree.RadialTree.prototype = {
     
         // Update the links…
         var link = this._svgContainer.selectAll('path.rtlink').data(links, function(d) { return d.target.id; });
-    
+
         // Enter any new links at the parent's previous position
         link
             .enter()
             .insert('path', 'g')
             .attr('class', 'rtlink')
+            .attr("id", function(d) {
+                var str = d.source.name + '-' + d.target.name;
+                return str.replace(" ", "_") })
             .attr('d', function() {
             var o = {
                 x: source.x0,
@@ -852,6 +856,28 @@ pwt_radialtree.RadialTree.prototype = {
                 target: o
             });
         });
+
+        var linkenter = link
+            .enter()
+            .append('g')
+            .attr('class', 'rtedge');
+
+        linkenter
+            .append("text")
+            .style("font-size", "15px")
+            .append("textPath")
+            .attr("href", function(d) {
+                var str = d.source.name + '-' + d.target.name;
+                return '#' + str.replace(" ", "_"); })
+            .style('text-anchor', "middle")
+            .attr("startOffset", "50%")
+            .text(function(d) { return ((typeof d.target.showedge === 'undefined' || d.target.showedge) && d.target.edgetext) ? d.target.edgetext : ''; });
+
+        linkenter
+            .append("use")
+            .attr("href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
+            .style("stroke", "none")
+            .style("fill", "none");
     
         // Transition links to their new position
         link

@@ -29,6 +29,7 @@ from pyrap.pwt.radialdendrogramm.radialdendrogramm import RadialDendrogramm
 from pyrap.pwt.graph.graph import Graph
 from pyrap.pwt.plot.plot import Scatterplot
 from pyrap.pwt.radar.radar import RadarChart
+from pyrap.pwt.radialtree.radialtree import RadialTree
 from pyrap.pwt.tree.tree import Tree
 from pyrap.pwt.video.video import Video
 from pyrap.widgets import Label, Button, RWT, Shell, Checkbox, Composite, Edit, \
@@ -274,6 +275,13 @@ class ControlsDemo():
         page = self.create_page_template('D3 Tree')
         self.create_tree_page(page)
         self.pages['Tree'] = page
+
+        #=======================================================================
+        # create D3 RadialTree
+        #=======================================================================
+        page = self.create_page_template('D3 RadialTree')
+        self.create_radialtree_page(page)
+        self.pages['RadialTree'] = page
 
         #=======================================================================
         # create D3 scatterplot
@@ -1022,7 +1030,7 @@ class ControlsDemo():
         comp_body.layout = CellLayout(halign='fill', valign='fill')
 
         data = []
-        with open('resources/treedata.json') as f:
+        with open('resources/radialtree.json') as f:
             data = json.load(f)
 
         def clear(*_):
@@ -1033,6 +1041,45 @@ class ControlsDemo():
             clear()
 
             t = Tree(comp_body, halign='fill', valign='fill')
+            t.setdata(data)
+
+            self.shell.dolayout()
+
+        reload()
+        btn_clear.on_select += clear
+        btn_reload.on_select += reload
+        btn_download.on_select += download
+
+    def create_radialtree_page(self, parent):
+        grp = Group(parent, text='Radial Tree')
+        grp.layout = RowLayout(halign='fill', valign='fill', flexrows=1)
+
+        comp_btn = Composite(grp)
+        comp_btn.layout = ColumnLayout(halign='fill', valign='fill', equalwidths=True)
+        btn_clear = Button(comp_btn, text='Clear', halign='fill', valign='fill')
+        btn_reload = Button(comp_btn, text='Reload', halign='fill', valign='fill')
+        btn_download = Button(comp_btn, text='Download', halign='fill', valign='fill')
+
+        def download(*_):
+            if comp_body.children:
+                v = comp_body.children[-1]
+                v.download(pdf=False)
+
+        comp_body = Composite(grp)
+        comp_body.layout = CellLayout(halign='fill', valign='fill')
+
+        data = []
+        with open('resources/radialtree.json') as f:
+            data = json.load(f)
+
+        def clear(*_):
+            for c in comp_body.children:
+                c.dispose()
+
+        def reload(*_):
+            clear()
+
+            t = RadialTree(comp_body, css=['resources/default.css'], halign='fill', valign='fill')
             t.setdata(data)
 
             self.shell.dolayout()

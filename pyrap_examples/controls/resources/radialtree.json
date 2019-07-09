@@ -1,380 +1,4464 @@
 {
- "name": "flare",
- "children": [
-  {
-   "name": "analytics",
-   "children": [
+  "name": "Char. Vals",
+  "showname": true,
+  "type": null,
+  "tooltip": "Characteristic Values",
+  "children": [
     {
-     "name": "cluster",
-     "children": [
-      {"name": "AgglomerativeCluster", "size": 3938},
-      {"name": "CommunityStructure", "size": 3812},
-      {"name": "HierarchicalCluster", "size": 6714},
-      {"name": "MergeEdge", "size": 743}
-     ]
+      "name": "D01",
+      "showname": true,
+      "type": "D01_1",
+      "tooltip": "D01",
+      "children": [
+        {
+          "name": "1",
+          "showname": true,
+          "type": "D01_1",
+          "tooltip": "D01.1",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D01_1",
+              "tooltip": "D01.1.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D01_1",
+                  "tooltip": "D01.1.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D01_1",
+                      "tooltip": "D01.1.1.1.1",
+                      "children": [
+                        {
+                          "name": "HM [N/mm^2]",
+                          "showname": true,
+                          "type": "D01_1",
+                          "tooltip": "D01.1.1.1.1 - HM [N/mm^2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D01_1",
+                      "tooltip": "D01.1.1.1.2",
+                      "children": [
+                        {
+                          "name": "HUpl [N/mm^2]",
+                          "showname": true,
+                          "type": "D01_1",
+                          "tooltip": "D01.1.1.1.2 - HUpl [N/mm^2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D01_1",
+                      "tooltip": "D01.1.1.1.3",
+                      "children": [
+                        {
+                          "name": "HIT [N/mm^2]",
+                          "showname": true,
+                          "type": "D01_1",
+                          "tooltip": "D01.1.1.1.3 - HIT [N/mm^2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D01_1",
+                      "tooltip": "D01.1.1.1.4",
+                      "children": [
+                        {
+                          "name": "hmaxl u [\u00b5m]",
+                          "showname": true,
+                          "type": "D01_1",
+                          "tooltip": "D01.1.1.1.4 - hmaxl u [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "D01_1",
+                      "tooltip": "D01.1.1.1.5",
+                      "children": [
+                        {
+                          "name": "nIT [%]",
+                          "showname": true,
+                          "type": "D01_1",
+                          "tooltip": "D01.1.1.1.5 - nIT [%]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "D01_1",
+                      "tooltip": "D01.1.1.1.6",
+                      "children": [
+                        {
+                          "name": "Wt [\u00b5J]",
+                          "showname": true,
+                          "type": "D01_1",
+                          "tooltip": "D01.1.1.1.6 - Wt [\u00b5J]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "D01_1",
+                      "tooltip": "D01.1.1.1.7",
+                      "children": [
+                        {
+                          "name": "EIT/(1-vs^2) [GPa]",
+                          "showname": true,
+                          "type": "D01_1",
+                          "tooltip": "D01.1.1.1.7 - EIT/(1-vs^2) [GPa]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "D01_1",
+                      "tooltip": "D01.1.1.1.8",
+                      "children": [
+                        {
+                          "name": "HV []",
+                          "showname": true,
+                          "type": "D01_1",
+                          "tooltip": "D01.1.1.1.8 - HV []"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3",
+          "showname": true,
+          "type": "D01_3",
+          "tooltip": "D01.3",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D01_3",
+              "tooltip": "D01.3.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D01_3",
+                  "tooltip": "D01.3.1.1",
+                  "children": [
+                    {
+                      "name": "13",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.13",
+                      "children": [
+                        {
+                          "name": "invalid []",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.13 - invalid []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.1",
+                      "children": [
+                        {
+                          "name": "Eindringtiefe Belastungsbeginn [\u00b5m]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.1 - Eindringtiefe Belastungsbeginn [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.2",
+                      "children": [
+                        {
+                          "name": "Eindringtiefe nach Wartezeit [\u00b5m]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.2 - Eindringtiefe nach Wartezeit [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.6",
+                      "children": [
+                        {
+                          "name": "Pr\u00fcfkraft nach Wartezeit [N]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.6 - Pr\u00fcfkraft nach Wartezeit [N]"
+                        },
+                        {
+                          "name": "Arbeit bei Pr\u00fcfkraft nach Wartezeit [Nm]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.6 - Arbeit bei Pr\u00fcfkraft nach Wartezeit [Nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.4",
+                      "children": [
+                        {
+                          "name": "Eindringtiefe bei Vorkraft [\u00b5m]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.4 - Eindringtiefe bei Vorkraft [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.5",
+                      "children": [
+                        {
+                          "name": "h_plast [\u00b5m]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.5 - h_plast [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.7",
+                      "children": [
+                        {
+                          "name": "Wplast [Nm]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.7 - Wplast [Nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.8",
+                      "children": [
+                        {
+                          "name": "Eindringarbeit [Nmm]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.8 - Eindringarbeit [Nmm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.9",
+                      "children": [
+                        {
+                          "name": "Plastische Deformationsarbeit [Nmm]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.9 - Plastische Deformationsarbeit [Nmm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.10",
+                      "children": [
+                        {
+                          "name": "Schnittpunkt der Steigungsgeraden hr mit x-Achse [\u00b5m]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.10 - Schnittpunkt der Steigungsgeraden hr mit x-Achse [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "11",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.11",
+                      "children": [
+                        {
+                          "name": "Spannung [N/mm\u00b2]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.11 - Spannung [N/mm\u00b2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "12",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.12",
+                      "children": [
+                        {
+                          "name": "Bruch []",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.12 - Bruch []"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "2",
+                  "showname": true,
+                  "type": "D01_3",
+                  "tooltip": "D01.3.1.2",
+                  "children": [
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.2.2",
+                      "children": [
+                        {
+                          "name": "Eindringtiefe Beginn [\u00b5m]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.2.2 - Eindringtiefe Beginn [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.2.3",
+                      "children": [
+                        {
+                          "name": "Eindringtiefe Ende [\u00b5m]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.2.3 - Eindringtiefe Ende [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.2.4",
+                      "children": [
+                        {
+                          "name": "Kraft Beginn [N]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.2.4 - Kraft Beginn [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.2.5",
+                      "children": [
+                        {
+                          "name": "Kraft Ende [N]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.2.5 - Kraft Ende [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.2.6",
+                      "children": [
+                        {
+                          "name": "Belastung []",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.2.6 - Belastung []"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "5",
+          "showname": true,
+          "type": "D01_5",
+          "tooltip": "D01.5",
+          "children": [
+            {
+              "name": "2",
+              "showname": true,
+              "type": "D01_5",
+              "tooltip": "D01.5.2",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D01_5",
+                  "tooltip": "D01.5.2.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.1",
+                      "children": [
+                        {
+                          "name": "Messung []",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.1 - Messung []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.2",
+                      "children": [
+                        {
+                          "name": "Re1 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.2 - Re1 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.3",
+                      "children": [
+                        {
+                          "name": "Im1 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.3 - Im1 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.4",
+                      "children": [
+                        {
+                          "name": "Mag1 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.4 - Mag1 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.5",
+                      "children": [
+                        {
+                          "name": "Ph1 [rad]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.5 - Ph1 [rad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.6",
+                      "children": [
+                        {
+                          "name": "Re2 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.6 - Re2 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.7",
+                      "children": [
+                        {
+                          "name": "Im2 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.7 - Im2 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.8",
+                      "children": [
+                        {
+                          "name": "Mag2 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.8 - Mag2 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.9",
+                      "children": [
+                        {
+                          "name": "Ph2 [rad]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.9 - Ph2 [rad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.10",
+                      "children": [
+                        {
+                          "name": "Re3 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.10 - Re3 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "11",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.11",
+                      "children": [
+                        {
+                          "name": "Im3 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.11 - Im3 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "12",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.12",
+                      "children": [
+                        {
+                          "name": "Mag3 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.12 - Mag3 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "13",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.13",
+                      "children": [
+                        {
+                          "name": "Ph3 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.13 - Ph3 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "14",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.14",
+                      "children": [
+                        {
+                          "name": "Re4 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.14 - Re4 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "15",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.15",
+                      "children": [
+                        {
+                          "name": "Im4 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.15 - Im4 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "16",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.16",
+                      "children": [
+                        {
+                          "name": "Mag4 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.16 - Mag4 [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "17",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.2.1.17",
+                      "children": [
+                        {
+                          "name": "Ph4 [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.2.1.17 - Ph4 [V]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D01_5",
+              "tooltip": "D01.5.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D01_5",
+                  "tooltip": "D01.5.1.1",
+                  "children": [
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.2",
+                      "children": [
+                        {
+                          "name": "Vmag [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.2 - Vmag [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.3",
+                      "children": [
+                        {
+                          "name": "A3 [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.3 - A3 [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.4",
+                      "children": [
+                        {
+                          "name": "A5 [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.4 - A5 [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.5",
+                      "children": [
+                        {
+                          "name": "A7 [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.5 - A7 [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.6",
+                      "children": [
+                        {
+                          "name": "P3 [rad]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.6 - P3 [rad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.7",
+                      "children": [
+                        {
+                          "name": "P5 [rad]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.7 - P5 [rad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.8",
+                      "children": [
+                        {
+                          "name": "P7 [rad]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.8 - P7 [rad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.9",
+                      "children": [
+                        {
+                          "name": "UHS [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.9 - UHS [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.10",
+                      "children": [
+                        {
+                          "name": "K [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.10 - K [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "11",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.11",
+                      "children": [
+                        {
+                          "name": "Hco [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.11 - Hco [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "12",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.12",
+                      "children": [
+                        {
+                          "name": "Hro [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.12 - Hro [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "13",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.13",
+                      "children": [
+                        {
+                          "name": "Mmax [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.13 - Mmax [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "14",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.14",
+                      "children": [
+                        {
+                          "name": "Mmean [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.14 - Mmean [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "15",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.15",
+                      "children": [
+                        {
+                          "name": "Mr [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.15 - Mr [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "16",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.16",
+                      "children": [
+                        {
+                          "name": "HCm [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.16 - HCm [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "17",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.17",
+                      "children": [
+                        {
+                          "name": "DH25m [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.17 - DH25m [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "18",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.18",
+                      "children": [
+                        {
+                          "name": "DH50 [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.18 - DH50 [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "19",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.19",
+                      "children": [
+                        {
+                          "name": "DH75m [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.19 - DH75m [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "20",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.20",
+                      "children": [
+                        {
+                          "name": "umax [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.20 - umax [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "21",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.21",
+                      "children": [
+                        {
+                          "name": "umean [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.21 - umean [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "22",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.22",
+                      "children": [
+                        {
+                          "name": "ur [V]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.22 - ur [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "23",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.23",
+                      "children": [
+                        {
+                          "name": "Hcu [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.23 - Hcu [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "24",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.24",
+                      "children": [
+                        {
+                          "name": "DH25u [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.24 - DH25u [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "25",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.25",
+                      "children": [
+                        {
+                          "name": "DH50u [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.25 - DH50u [A/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "26",
+                      "showname": true,
+                      "type": "D01_5",
+                      "tooltip": "D01.5.1.1.26",
+                      "children": [
+                        {
+                          "name": "DH75u [A/cm]",
+                          "showname": true,
+                          "type": "D01_5",
+                          "tooltip": "D01.5.1.1.26 - DH75u [A/cm]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "6",
+          "showname": true,
+          "type": "D01_6",
+          "tooltip": "D01.6",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D01_6",
+              "tooltip": "D01.6.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D01_6",
+                  "tooltip": "D01.6.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.1",
+                      "children": [
+                        {
+                          "name": "Austenit [%]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.1 - Austenit [%]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.2",
+                      "children": [
+                        {
+                          "name": "Martensit [%]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.2 - Martensit [%]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.3",
+                      "children": [
+                        {
+                          "name": "FWHM/PN [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.3 - FWHM/PN [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.4",
+                      "children": [
+                        {
+                          "name": "IB/PN [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.4 - IB/PN [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.5",
+                      "children": [
+                        {
+                          "name": "E0 Austenit []",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.5 - E0 Austenit []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.6",
+                      "children": [
+                        {
+                          "name": "E0 Martensit []",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.6 - E0 Martensit []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.7",
+                      "children": [
+                        {
+                          "name": "CrystSize Austenit [nm]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.7 - CrystSize Austenit [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.8",
+                      "children": [
+                        {
+                          "name": "CrystSize Martensit [nm]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.8 - CrystSize Martensit [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.9",
+                      "children": [
+                        {
+                          "name": "FWHM alpha(211) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.9 - FWHM alpha(211) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.10",
+                      "children": [
+                        {
+                          "name": "IB alpha(211) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.10 - IB alpha(211) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "11",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.11",
+                      "children": [
+                        {
+                          "name": "FWHM alpha(200) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.11 - FWHM alpha(200) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "12",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.12",
+                      "children": [
+                        {
+                          "name": "IB alpha(200) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.12 - IB alpha(200) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "13",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.13",
+                      "children": [
+                        {
+                          "name": "FWHM alpha(110) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.13 - FWHM alpha(110) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "14",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.14",
+                      "children": [
+                        {
+                          "name": "IB alpha(110) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.14 - IB alpha(110) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "15",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.15",
+                      "children": [
+                        {
+                          "name": "FWHM gamma(220) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.15 - FWHM gamma(220) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "16",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.16",
+                      "children": [
+                        {
+                          "name": "IB gamma(220) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.16 - IB gamma(220) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "17",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.17",
+                      "children": [
+                        {
+                          "name": "FWHM gamma(200) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.17 - FWHM gamma(200) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "18",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.18",
+                      "children": [
+                        {
+                          "name": "IB gamma(200) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.18 - IB gamma(200) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "19",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.19",
+                      "children": [
+                        {
+                          "name": "FWHM gamma(111) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.19 - FWHM gamma(111) [2theta grad]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "20",
+                      "showname": true,
+                      "type": "D01_6",
+                      "tooltip": "D01.6.1.1.20",
+                      "children": [
+                        {
+                          "name": "IB gamma(111) [2theta grad]",
+                          "showname": true,
+                          "type": "D01_6",
+                          "tooltip": "D01.6.1.1.20 - IB gamma(111) [2theta grad]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "7",
+          "showname": true,
+          "type": "D01_7",
+          "tooltip": "D01.7",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D01_7",
+              "tooltip": "D01.7.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D01_7",
+                  "tooltip": "D01.7.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D01_7",
+                      "tooltip": "D01.7.1.1.1",
+                      "children": [
+                        {
+                          "name": "Eigenspannungen quer [MPa]",
+                          "showname": true,
+                          "type": "D01_7",
+                          "tooltip": "D01.7.1.1.1 - Eigenspannungen quer [MPa]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D01_7",
+                      "tooltip": "D01.7.1.1.2",
+                      "children": [
+                        {
+                          "name": "Eigenspannungen laengs [MPa]",
+                          "showname": true,
+                          "type": "D01_7",
+                          "tooltip": "D01.7.1.1.2 - Eigenspannungen laengs [MPa]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     },
     {
-     "name": "graph",
-     "children": [
-      {"name": "BetweennessCentrality", "size": 3534},
-      {"name": "LinkDistance", "size": 5731},
-      {"name": "MaxFlowMinCut", "size": 7840},
-      {"name": "ShortestPaths", "size": 5914},
-      {"name": "SpanningTree", "size": 3416}
-     ]
+      "name": "D02",
+      "showname": true,
+      "type": "D02_1",
+      "tooltip": "D02",
+      "children": [
+        {
+          "name": "1",
+          "showname": true,
+          "type": "D02_1",
+          "tooltip": "D02.1",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D02_1",
+              "tooltip": "D02.1.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D02_1",
+                  "tooltip": "D02.1.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D02_1",
+                      "tooltip": "D02.1.1.1.1",
+                      "children": [
+                        {
+                          "name": "Eindruckfl\u00e4che [\u00b5m\u00b2]",
+                          "showname": true,
+                          "type": "D02_1",
+                          "tooltip": "D02.1.1.1.1 - Eindruckfl\u00e4che [\u00b5m\u00b2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D02_1",
+                      "tooltip": "D02.1.1.1.2",
+                      "children": [
+                        {
+                          "name": "Eindruckdurchmesser [\u00b5m]",
+                          "showname": true,
+                          "type": "D02_1",
+                          "tooltip": "D02.1.1.1.2 - Eindruckdurchmesser [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D02_1",
+                      "tooltip": "D02.1.1.1.3",
+                      "children": [
+                        {
+                          "name": "Gemessene Tiefe [\u00b5m]",
+                          "showname": true,
+                          "type": "D02_1",
+                          "tooltip": "D02.1.1.1.3 - Gemessene Tiefe [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D02_1",
+                      "tooltip": "D02.1.1.1.4",
+                      "children": [
+                        {
+                          "name": "H\u00f6he PileUp [\u00b5m]",
+                          "showname": true,
+                          "type": "D02_1",
+                          "tooltip": "D02.1.1.1.4 - H\u00f6he PileUp [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "D02_1",
+                      "tooltip": "D02.1.1.1.5",
+                      "children": [
+                        {
+                          "name": "Theoretische Tiefe aus Kugeldurchmesser [\u00b5m]",
+                          "showname": true,
+                          "type": "D02_1",
+                          "tooltip": "D02.1.1.1.5 - Theoretische Tiefe aus Kugeldurchmesser [\u00b5m]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     },
     {
-     "name": "optimization",
-     "children": [
-      {"name": "AspectRatioBanker", "size": 7074}
-     ]
+      "name": "D03",
+      "showname": true,
+      "type": "D03_1",
+      "tooltip": "D03",
+      "children": [
+        {
+          "name": "1",
+          "showname": true,
+          "type": "D03_1",
+          "tooltip": "D03.1",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D03_1",
+              "tooltip": "D03.1.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D03_1",
+                  "tooltip": "D03.1.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.1",
+                      "children": [
+                        {
+                          "name": "Scan []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.1 - Scan []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.2",
+                      "children": [
+                        {
+                          "name": "Opeak1_x []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.2 - Opeak1_x []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.3",
+                      "children": [
+                        {
+                          "name": "Opeak1_y []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.3 - Opeak1_y []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.4",
+                      "children": [
+                        {
+                          "name": "Opeak1_q []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.4 - Opeak1_q []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.5",
+                      "children": [
+                        {
+                          "name": "Opeak2_x []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.5 - Opeak2_x []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.6",
+                      "children": [
+                        {
+                          "name": "Opeak2_y []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.6 - Opeak2_y []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.7",
+                      "children": [
+                        {
+                          "name": "Opeak2_q []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.7 - Opeak2_q []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.8",
+                      "children": [
+                        {
+                          "name": "Q_pos []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.8 - Q_pos []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.9",
+                      "children": [
+                        {
+                          "name": "Q_neg []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.9 - Q_neg []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.10",
+                      "children": [
+                        {
+                          "name": "Q_ges []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.10 - Q_ges []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "11",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.11",
+                      "children": [
+                        {
+                          "name": "Rpeak1_x []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.11 - Rpeak1_x []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "12",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.12",
+                      "children": [
+                        {
+                          "name": "Rpeak1_y []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.12 - Rpeak1_y []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "13",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.13",
+                      "children": [
+                        {
+                          "name": "Rpeak1_q []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.13 - Rpeak1_q []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "14",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.14",
+                      "children": [
+                        {
+                          "name": "Rpeak2_x []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.14 - Rpeak2_x []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "15",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.15",
+                      "children": [
+                        {
+                          "name": "Rpeak2_y []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.15 - Rpeak2_y []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "16",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.16",
+                      "children": [
+                        {
+                          "name": "Rpeak2_q []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.16 - Rpeak2_q []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "18",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.18",
+                      "children": [
+                        {
+                          "name": "Rel1 []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.18 - Rel1 []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "19",
+                      "showname": true,
+                      "type": "D03_1",
+                      "tooltip": "D03.1.1.1.19",
+                      "children": [
+                        {
+                          "name": "Rel2 []",
+                          "showname": true,
+                          "type": "D03_1",
+                          "tooltip": "D03.1.1.1.19 - Rel2 []"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "2",
+          "showname": true,
+          "type": "D03_2",
+          "tooltip": "D03.2",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D03_2",
+              "tooltip": "D03.2.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D03_2",
+                  "tooltip": "D03.2.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D03_2",
+                      "tooltip": "D03.2.1.1.1",
+                      "children": [
+                        {
+                          "name": "Time [s]",
+                          "showname": true,
+                          "type": "D03_2",
+                          "tooltip": "D03.2.1.1.1 - Time [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D03_2",
+                      "tooltip": "D03.2.1.1.2",
+                      "children": [
+                        {
+                          "name": "WE(1)Current [A]",
+                          "showname": true,
+                          "type": "D03_2",
+                          "tooltip": "D03.2.1.1.2 - WE(1)Current [A]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D03_2",
+                      "tooltip": "D03.2.1.1.3",
+                      "children": [
+                        {
+                          "name": "Corrected time [s]",
+                          "showname": true,
+                          "type": "D03_2",
+                          "tooltip": "D03.2.1.1.3 - Corrected time [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D03_2",
+                      "tooltip": "D03.2.1.1.4",
+                      "children": [
+                        {
+                          "name": "Index []",
+                          "showname": true,
+                          "type": "D03_2",
+                          "tooltip": "D03.2.1.1.4 - Index []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "D03_2",
+                      "tooltip": "D03.2.1.1.5",
+                      "children": [
+                        {
+                          "name": "WE(1)Potential [V]",
+                          "showname": true,
+                          "type": "D03_2",
+                          "tooltip": "D03.2.1.1.5 - WE(1)Potential [V]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "D03_2",
+                      "tooltip": "D03.2.1.1.6",
+                      "children": [
+                        {
+                          "name": "ECN(1)Potential [V]",
+                          "showname": true,
+                          "type": "D03_2",
+                          "tooltip": "D03.2.1.1.6 - ECN(1)Potential [V]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3",
+          "showname": true,
+          "type": "D03_3",
+          "tooltip": "D03.3",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D03_3",
+              "tooltip": "D03.3.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D03_3",
+                  "tooltip": "D03.3.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.1",
+                      "children": [
+                        {
+                          "name": "CIRC []",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.1 - CIRC []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.2",
+                      "children": [
+                        {
+                          "name": "FIT X^2 []",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.2 - FIT X^2 []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.3",
+                      "children": [
+                        {
+                          "name": "R1 [Ohm/cm^2]",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.3 - R1 [Ohm/cm^2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.4",
+                      "children": [
+                        {
+                          "name": "R2 [Ohm/cm^2]",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.4 - R2 [Ohm/cm^2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.5",
+                      "children": [
+                        {
+                          "name": "R3 [Ohm/cm^2]",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.5 - R3 [Ohm/cm^2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.6",
+                      "children": [
+                        {
+                          "name": "Y_(Q1) [s^N/(Ohm*cm^2)]",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.6 - Y_(Q1) [s^N/(Ohm*cm^2)]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.7",
+                      "children": [
+                        {
+                          "name": "N_(Q1) []",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.7 - N_(Q1) []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.8",
+                      "children": [
+                        {
+                          "name": "Y_(Q2) [s^N/(Ohm*cm^2)]",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.8 - Y_(Q2) [s^N/(Ohm*cm^2)]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.9",
+                      "children": [
+                        {
+                          "name": "N_(Q2) []",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.9 - N_(Q2) []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.10",
+                      "children": [
+                        {
+                          "name": "Y_(W1) [s^0,5/(Ohm*cm^2)]",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.10 - Y_(W1) [s^0,5/(Ohm*cm^2)]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "11",
+                      "showname": true,
+                      "type": "D03_3",
+                      "tooltip": "D03.3.1.1.11",
+                      "children": [
+                        {
+                          "name": "L [H]",
+                          "showname": true,
+                          "type": "D03_3",
+                          "tooltip": "D03.3.1.1.11 - L [H]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "4",
+          "showname": true,
+          "type": "D03_4",
+          "tooltip": "D03.4",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D03_4",
+              "tooltip": "D03.4.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D03_4",
+                  "tooltip": "D03.4.1.1",
+                  "children": [
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D03_4",
+                      "tooltip": "D03.4.1.1.3",
+                      "children": [
+                        {
+                          "name": "i_pas [mA]",
+                          "showname": true,
+                          "type": "D03_4",
+                          "tooltip": "D03.4.1.1.3 - i_pas [mA]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D03_4",
+                      "tooltip": "D03.4.1.1.1",
+                      "children": [
+                        {
+                          "name": "i_corr [mA]",
+                          "showname": true,
+                          "type": "D03_4",
+                          "tooltip": "D03.4.1.1.1 - i_corr [mA]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D03_4",
+                      "tooltip": "D03.4.1.1.2",
+                      "children": [
+                        {
+                          "name": "E_corr [mV]",
+                          "showname": true,
+                          "type": "D03_4",
+                          "tooltip": "D03.4.1.1.2 - E_corr [mV]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D03_4",
+                      "tooltip": "D03.4.1.1.4",
+                      "children": [
+                        {
+                          "name": "E_pit [mV]",
+                          "showname": true,
+                          "type": "D03_4",
+                          "tooltip": "D03.4.1.1.4 - E_pit [mV]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "D04",
+      "showname": true,
+      "type": "D04_1",
+      "tooltip": "D04",
+      "children": [
+        {
+          "name": "1",
+          "showname": true,
+          "type": "D04_1",
+          "tooltip": "D04.1",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D04_1",
+              "tooltip": "D04.1.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D04_1",
+                  "tooltip": "D04.1.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D04_1",
+                      "tooltip": "D04.1.1.1.1",
+                      "children": [
+                        {
+                          "name": "Dummy []",
+                          "showname": true,
+                          "type": "D04_1",
+                          "tooltip": "D04.1.1.1.1 - Dummy []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D04_1",
+                      "tooltip": "D04.1.1.1.2",
+                      "children": [
+                        {
+                          "name": "headline []",
+                          "showname": true,
+                          "type": "D04_1",
+                          "tooltip": "D04.1.1.1.2 - headline []"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "S02",
+      "showname": true,
+      "type": "S02_2",
+      "tooltip": "S02",
+      "children": [
+        {
+          "name": "2",
+          "showname": true,
+          "type": "S02_2",
+          "tooltip": "S02.2",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "S02_2",
+              "tooltip": "S02.2.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "S02_2",
+                  "tooltip": "S02.2.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.1",
+                      "children": [
+                        {
+                          "name": "A5,65 [%]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.1 - A5,65 [%]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.3",
+                      "children": [
+                        {
+                          "name": "Teile-Nr []",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.3 - Teile-Nr []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.4",
+                      "children": [
+                        {
+                          "name": "Entnahme []",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.4 - Entnahme []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.5",
+                      "children": [
+                        {
+                          "name": "Hinweis []",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.5 - Hinweis []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.10",
+                      "children": [
+                        {
+                          "name": "mE [GPa]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.10 - mE [GPa]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "12",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.12",
+                      "children": [
+                        {
+                          "name": "Rp02 [GPa]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.12 - Rp02 [GPa]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "13",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.13",
+                      "children": [
+                        {
+                          "name": "ReH [MPa]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.13 - ReH [MPa]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "14",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.14",
+                      "children": [
+                        {
+                          "name": "ReL [MPa]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.14 - ReL [MPa]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "15",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.15",
+                      "children": [
+                        {
+                          "name": "Rm [MPa]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.15 - Rm [MPa]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "16",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.16",
+                      "children": [
+                        {
+                          "name": "Ae [%]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.16 - Ae [%]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "17",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.17",
+                      "children": [
+                        {
+                          "name": "Ag [%]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.17 - Ag [%]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "18",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.18",
+                      "children": [
+                        {
+                          "name": "Agt [%]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.18 - Agt [%]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "19",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.19",
+                      "children": [
+                        {
+                          "name": "At [%]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.19 - At [%]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "20",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.20",
+                      "children": [
+                        {
+                          "name": "A20mm [%]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.20 - A20mm [%]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "21",
+                      "showname": true,
+                      "type": "S02_2",
+                      "tooltip": "S02.2.1.1.21",
+                      "children": [
+                        {
+                          "name": "RB [%]",
+                          "showname": true,
+                          "type": "S02_2",
+                          "tooltip": "S02.2.1.1.21 - RB [%]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3",
+          "showname": true,
+          "type": "S02_3",
+          "tooltip": "S02.3",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "S02_3",
+              "tooltip": "S02.3.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "S02_3",
+                  "tooltip": "S02.3.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "S02_3",
+                      "tooltip": "S02.3.1.1.1",
+                      "children": [
+                        {
+                          "name": "H\u00e4rte HV []",
+                          "showname": true,
+                          "type": "S02_3",
+                          "tooltip": "S02.3.1.1.1 - H\u00e4rte HV []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "S02_3",
+                      "tooltip": "S02.3.1.1.2",
+                      "children": [
+                        {
+                          "name": "H\u00e4rte HRC []",
+                          "showname": true,
+                          "type": "S02_3",
+                          "tooltip": "S02.3.1.1.2 - H\u00e4rte HRC []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "S02_3",
+                      "tooltip": "S02.3.1.1.3",
+                      "children": [
+                        {
+                          "name": "H\u00e4rte HB []",
+                          "showname": true,
+                          "type": "S02_3",
+                          "tooltip": "S02.3.1.1.3 - H\u00e4rte HB []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "S02_3",
+                      "tooltip": "S02.3.1.1.4",
+                      "children": [
+                        {
+                          "name": "maximale Pr\u00fcfkraft [N]",
+                          "showname": true,
+                          "type": "S02_3",
+                          "tooltip": "S02.3.1.1.4 - maximale Pr\u00fcfkraft [N]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "S04",
+      "showname": true,
+      "type": "S04_3",
+      "tooltip": "S04",
+      "children": [
+        {
+          "name": "1",
+          "showname": true,
+          "type": "S04_1",
+          "tooltip": "S04.1",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "S04_1",
+              "tooltip": "S04.1.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "S04_1",
+                  "tooltip": "S04.1.1.1",
+                  "children": [
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.5",
+                      "children": [
+                        {
+                          "name": "Peakbreite Delta t_Fc [s]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.5 - Peakbreite Delta t_Fc [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.6",
+                      "children": [
+                        {
+                          "name": "Peakbreite Delta t_Fp [s]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.6 - Peakbreite Delta t_Fp [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.7",
+                      "children": [
+                        {
+                          "name": "Schnittimpuls pc [Ns]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.7 - Schnittimpuls pc [Ns]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.8",
+                      "children": [
+                        {
+                          "name": "Passivimpuls pp [Ns]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.8 - Passivimpuls pp [Ns]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "13",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.13",
+                      "children": [
+                        {
+                          "name": "bez Schnittimpuls pc' [Ns/mm]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.13 - bez Schnittimpuls pc' [Ns/mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "14",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.14",
+                      "children": [
+                        {
+                          "name": "bez Passivimpuls pp' [Ns/mm]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.14 - bez Passivimpuls pp' [Ns/mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "18",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.18",
+                      "children": [
+                        {
+                          "name": "spez Schnittimpuls pc' [Ns/mm\u00b2]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.18 - spez Schnittimpuls pc' [Ns/mm\u00b2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "19",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.19",
+                      "children": [
+                        {
+                          "name": "spez Passivimpuls pp' [Ns/mm\u00b2]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.19 - spez Passivimpuls pp' [Ns/mm\u00b2]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "2",
+          "showname": true,
+          "type": "S04_2",
+          "tooltip": "S04.2",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "S04_2",
+              "tooltip": "S04.2.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "S04_2",
+                  "tooltip": "S04.2.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.1",
+                      "children": [
+                        {
+                          "name": "Stegnr []",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.1 - Stegnr []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.2",
+                      "children": [
+                        {
+                          "name": "Arithmetische Rauheit Sa [nm]",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.2 - Arithmetische Rauheit Sa [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.3",
+                      "children": [
+                        {
+                          "name": "Quadratische Rauheit Sq [nm]",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.3 - Quadratische Rauheit Sq [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.4",
+                      "children": [
+                        {
+                          "name": "Peak-to-valley Sz [nm]",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.4 - Peak-to-valley Sz [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.5",
+                      "children": [
+                        {
+                          "name": "Valley Sv [nm]",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.5 - Valley Sv [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.6",
+                      "children": [
+                        {
+                          "name": " Peak Sp [nm]",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.6 -  Peak Sp [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.7",
+                      "children": [
+                        {
+                          "name": "Arithmetische Welligkeit Wa [nm]",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.7 - Arithmetische Welligkeit Wa [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.8",
+                      "children": [
+                        {
+                          "name": "Quadratische Welligkeit Wq [nm]",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.8 - Quadratische Welligkeit Wq [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.9",
+                      "children": [
+                        {
+                          "name": "Peak-to-valley Wz [nm]",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.9 - Peak-to-valley Wz [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.10",
+                      "children": [
+                        {
+                          "name": "Valley Wv [nm]",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.10 - Valley Wv [nm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "11",
+                      "showname": true,
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.11",
+                      "children": [
+                        {
+                          "name": " Peak Wp [nm]",
+                          "showname": true,
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.11 -  Peak Wp [nm]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3",
+          "showname": true,
+          "type": "S04_3",
+          "tooltip": "S04.3",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "S04_3",
+              "tooltip": "S04.3.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "S04_3",
+                  "tooltip": "S04.3.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.1",
+                      "children": [
+                        {
+                          "name": "Stegnr []",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.1 - Stegnr []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.2",
+                      "children": [
+                        {
+                          "name": "Schnittnr []",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.2 - Schnittnr []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.3",
+                      "children": [
+                        {
+                          "name": "Peak-Schnittkraft Fc_max [N]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.3 - Peak-Schnittkraft Fc_max [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.4",
+                      "children": [
+                        {
+                          "name": "Peak-Passivkraft Fp_max [N]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.4 - Peak-Passivkraft Fp_max [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.5",
+                      "children": [
+                        {
+                          "name": "Peak-Zerspankraft Fz_max [N]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.5 - Peak-Zerspankraft Fz_max [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.6",
+                      "children": [
+                        {
+                          "name": "Peak-Wirkrichtungswinkel Eta [\u00b0]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.6 - Peak-Wirkrichtungswinkel Eta [\u00b0]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.7",
+                      "children": [
+                        {
+                          "name": "bez Peak-Schnittkraft Fc' [N/mm]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.7 - bez Peak-Schnittkraft Fc' [N/mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.8",
+                      "children": [
+                        {
+                          "name": "bez Peak-Passivkraft Fp' [N/mm]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.8 - bez Peak-Passivkraft Fp' [N/mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.9",
+                      "children": [
+                        {
+                          "name": "bez Peak-Zerspankraft Fz_max [N]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.9 - bez Peak-Zerspankraft Fz_max [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.10",
+                      "children": [
+                        {
+                          "name": "spez Peak-Schnittkraft Fc'' [N/mm\u00b2]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.10 - spez Peak-Schnittkraft Fc'' [N/mm\u00b2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "11",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.11",
+                      "children": [
+                        {
+                          "name": "spez Peak-Passivkraft Fp' [N/mm\u00b2]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.11 - spez Peak-Passivkraft Fp' [N/mm\u00b2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "12",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.12",
+                      "children": [
+                        {
+                          "name": "spez Peak-Zerspankraft Fz_max [N]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.12 - spez Peak-Zerspankraft Fz_max [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "13",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.13",
+                      "children": [
+                        {
+                          "name": "Schnittkraft Fc_avg [N]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.13 - Schnittkraft Fc_avg [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "14",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.14",
+                      "children": [
+                        {
+                          "name": "Passivkraft Fp_avg [N]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.14 - Passivkraft Fp_avg [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "15",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.15",
+                      "children": [
+                        {
+                          "name": "Sigma Fc []",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.15 - Sigma Fc []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "16",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.16",
+                      "children": [
+                        {
+                          "name": "Sigma Fp []",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.16 - Sigma Fp []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "17",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.17",
+                      "children": [
+                        {
+                          "name": "Zerspankraft Fz_avg [N]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.17 - Zerspankraft Fz_avg [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "18",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.18",
+                      "children": [
+                        {
+                          "name": "Wirkrichtungswinkel Eta [\u00b0]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.18 - Wirkrichtungswinkel Eta [\u00b0]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "19",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.19",
+                      "children": [
+                        {
+                          "name": "bez Schnittkraft Fc' [N/mm]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.19 - bez Schnittkraft Fc' [N/mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "20",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.20",
+                      "children": [
+                        {
+                          "name": "bez Passivkraft Fp' [N/mm]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.20 - bez Passivkraft Fp' [N/mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "21",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.21",
+                      "children": [
+                        {
+                          "name": "spez Schnittkraft Fc'' [N/mm\u00b2]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.21 - spez Schnittkraft Fc'' [N/mm\u00b2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "22",
+                      "showname": true,
+                      "type": "S04_3",
+                      "tooltip": "S04.3.1.1.22",
+                      "children": [
+                        {
+                          "name": "spez Passivkraft Fp' [N/mm\u00b2]",
+                          "showname": true,
+                          "type": "S04_3",
+                          "tooltip": "S04.3.1.1.22 - spez Passivkraft Fp' [N/mm\u00b2]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "U03",
+      "showname": true,
+      "type": "U03_3",
+      "tooltip": "U03",
+      "children": [
+        {
+          "name": "3",
+          "showname": true,
+          "type": "U03_3",
+          "tooltip": "U03.3",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "U03_3",
+              "tooltip": "U03.3.1",
+              "children": [
+                {
+                  "name": "2",
+                  "showname": true,
+                  "type": "U03_3",
+                  "tooltip": "U03.3.1.2",
+                  "children": [
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.2.3",
+                      "children": [
+                        {
+                          "name": "Steigung [W/g]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.2.3 - Steigung [W/g]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.2.1",
+                      "children": [
+                        {
+                          "name": "Starttemp [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.2.1 - Starttemp [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.2.2",
+                      "children": [
+                        {
+                          "name": "Endtemp [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.2.2 - Endtemp [\u00b0C]"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "U03_3",
+                  "tooltip": "U03.3.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.1.1",
+                      "children": [
+                        {
+                          "name": "Onset:  Temperatur [\u00b0C ]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.1.1 - Onset:  Temperatur [\u00b0C ]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.1.2",
+                      "children": [
+                        {
+                          "name": "Endset:  Temperatur [\u00b0C ]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.1.2 - Endset:  Temperatur [\u00b0C ]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.1.3",
+                      "children": [
+                        {
+                          "name": "Peakfl\u00e4che [J/g]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.1.3 - Peakfl\u00e4che [J/g]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.1.4",
+                      "children": [
+                        {
+                          "name": "Peak max/min [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.1.4 - Peak max/min [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.1.5",
+                      "children": [
+                        {
+                          "name": "Peakh\u00f6he [mW]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.1.5 - Peakh\u00f6he [mW]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "5",
+          "showname": true,
+          "type": "U03_5",
+          "tooltip": "U03.5",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "U03_5",
+              "tooltip": "U03.5.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "U03_5",
+                  "tooltip": "U03.5.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.1",
+                      "children": [
+                        {
+                          "name": "transformation start z:  time [s]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.1 - transformation start z:  time [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.2",
+                      "children": [
+                        {
+                          "name": "transformation start x:  temperature [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.2 - transformation start x:  temperature [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.3",
+                      "children": [
+                        {
+                          "name": "transformation start y:  change in length [\u00b5m ]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.3 - transformation start y:  change in length [\u00b5m ]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.4",
+                      "children": [
+                        {
+                          "name": "transformation end z:  time [s]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.4 - transformation end z:  time [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.5",
+                      "children": [
+                        {
+                          "name": "transformation end x:  temperature [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.5 - transformation end x:  temperature [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.6",
+                      "children": [
+                        {
+                          "name": "transformation end y:  change in length [\u00b5m ]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.6 - transformation end y:  change in length [\u00b5m ]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.7",
+                      "children": [
+                        {
+                          "name": "dl [\u00b5m]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.7 - dl [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.8",
+                      "children": [
+                        {
+                          "name": "dT [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.8 - dT [\u00b0C]"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "2",
+                  "showname": true,
+                  "type": "U03_5",
+                  "tooltip": "U03.5.1.2",
+                  "children": [
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.2.5",
+                      "children": [
+                        {
+                          "name": "heat/hold/cool []",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.2.5 - heat/hold/cool []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.2.1",
+                      "children": [
+                        {
+                          "name": "start temp [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.2.1 - start temp [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.2.2",
+                      "children": [
+                        {
+                          "name": "end temp [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.2.2 - end temp [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.2.3",
+                      "children": [
+                        {
+                          "name": "slope [\u00b5m/\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.2.3 - slope [\u00b5m/\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.2.4",
+                      "children": [
+                        {
+                          "name": "slope_hold [\u00b5m/s]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.2.4 - slope_hold [\u00b5m/s]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "U04",
+      "showname": true,
+      "type": "U04_8",
+      "tooltip": "U04",
+      "children": [
+        {
+          "name": "3",
+          "showname": true,
+          "type": "U04_3",
+          "tooltip": "U04.3",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "U04_3",
+              "tooltip": "U04.3.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "U04_3",
+                  "tooltip": "U04.3.1.1",
+                  "children": [
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.2",
+                      "children": [
+                        {
+                          "name": "Umrechnungsfaktor [mm/cm]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.2 - Umrechnungsfaktor [mm/cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.3",
+                      "children": [
+                        {
+                          "name": "t1v [s]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.3 - t1v [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.4",
+                      "children": [
+                        {
+                          "name": "t2v [s]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.4 - t2v [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.5",
+                      "children": [
+                        {
+                          "name": "s1v [cm]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.5 - s1v [cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.6",
+                      "children": [
+                        {
+                          "name": "s2v [cm]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.6 - s2v [cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.7",
+                      "children": [
+                        {
+                          "name": "v1v [m/s]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.7 - v1v [m/s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.8",
+                      "children": [
+                        {
+                          "name": "t1n [s]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.8 - t1n [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.9",
+                      "children": [
+                        {
+                          "name": "t2n [s]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.9 - t2n [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.10",
+                      "children": [
+                        {
+                          "name": "s1n [cm]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.10 - s1n [cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "11",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.11",
+                      "children": [
+                        {
+                          "name": "s2n [cm]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.11 - s2n [cm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "12",
+                      "showname": true,
+                      "type": "U04_3",
+                      "tooltip": "U04.3.1.1.12",
+                      "children": [
+                        {
+                          "name": "v1n [m/s]",
+                          "showname": true,
+                          "type": "U04_3",
+                          "tooltip": "U04.3.1.1.12 - v1n [m/s]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "5",
+          "showname": true,
+          "type": "U04_5",
+          "tooltip": "U04.5",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "U04_5",
+              "tooltip": "U04.5.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "U04_5",
+                  "tooltip": "U04.5.1.1",
+                  "children": [
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U04_5",
+                      "tooltip": "U04.5.1.1.3",
+                      "children": [
+                        {
+                          "name": "Grundniveau Druck an [N]",
+                          "showname": true,
+                          "type": "U04_5",
+                          "tooltip": "U04.5.1.1.3 - Grundniveau Druck an [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U04_5",
+                      "tooltip": "U04.5.1.1.4",
+                      "children": [
+                        {
+                          "name": "Maximum [N]",
+                          "showname": true,
+                          "type": "U04_5",
+                          "tooltip": "U04.5.1.1.4 - Maximum [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "U04_5",
+                      "tooltip": "U04.5.1.1.5",
+                      "children": [
+                        {
+                          "name": "Aufprallkraft [N]",
+                          "showname": true,
+                          "type": "U04_5",
+                          "tooltip": "U04.5.1.1.5 - Aufprallkraft [N]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "6",
+          "showname": true,
+          "type": "U04_6",
+          "tooltip": "U04.6",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "U04_6",
+              "tooltip": "U04.6.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "U04_6",
+                  "tooltip": "U04.6.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U04_6",
+                      "tooltip": "U04.6.1.1.1",
+                      "children": [
+                        {
+                          "name": "Spur-ID []",
+                          "showname": true,
+                          "type": "U04_6",
+                          "tooltip": "U04.6.1.1.1 - Spur-ID []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U04_6",
+                      "tooltip": "U04.6.1.1.2",
+                      "children": [
+                        {
+                          "name": "\u00dcberrollung []",
+                          "showname": true,
+                          "type": "U04_6",
+                          "tooltip": "U04.6.1.1.2 - \u00dcberrollung []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U04_6",
+                      "tooltip": "U04.6.1.1.3",
+                      "children": [
+                        {
+                          "name": "Spurtiefe (bzgl Aufwurf) [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_6",
+                          "tooltip": "U04.6.1.1.3 - Spurtiefe (bzgl Aufwurf) [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U04_6",
+                      "tooltip": "U04.6.1.1.4",
+                      "children": [
+                        {
+                          "name": "Spurbreite (bzgl Aufwurf) [mm]",
+                          "showname": true,
+                          "type": "U04_6",
+                          "tooltip": "U04.6.1.1.4 - Spurbreite (bzgl Aufwurf) [mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "U04_6",
+                      "tooltip": "U04.6.1.1.5",
+                      "children": [
+                        {
+                          "name": "Spurtiefe (bzgl Nullniveau) [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_6",
+                          "tooltip": "U04.6.1.1.5 - Spurtiefe (bzgl Nullniveau) [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "U04_6",
+                      "tooltip": "U04.6.1.1.6",
+                      "children": [
+                        {
+                          "name": "Spurbreite (bzgl Nullniveau) [mm]",
+                          "showname": true,
+                          "type": "U04_6",
+                          "tooltip": "U04.6.1.1.6 - Spurbreite (bzgl Nullniveau) [mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "U04_6",
+                      "tooltip": "U04.6.1.1.7",
+                      "children": [
+                        {
+                          "name": "Aufwurfh\u00f6he links [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_6",
+                          "tooltip": "U04.6.1.1.7 - Aufwurfh\u00f6he links [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "U04_6",
+                      "tooltip": "U04.6.1.1.8",
+                      "children": [
+                        {
+                          "name": "Aufwurfbreite links [mm]",
+                          "showname": true,
+                          "type": "U04_6",
+                          "tooltip": "U04.6.1.1.8 - Aufwurfbreite links [mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "U04_6",
+                      "tooltip": "U04.6.1.1.9",
+                      "children": [
+                        {
+                          "name": "Aufwurfh\u00f6he rechts [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_6",
+                          "tooltip": "U04.6.1.1.9 - Aufwurfh\u00f6he rechts [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "10",
+                      "showname": true,
+                      "type": "U04_6",
+                      "tooltip": "U04.6.1.1.10",
+                      "children": [
+                        {
+                          "name": "Aufwurfbreite rechts [mm]",
+                          "showname": true,
+                          "type": "U04_6",
+                          "tooltip": "U04.6.1.1.10 - Aufwurfbreite rechts [mm]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "7",
+          "showname": true,
+          "type": "U04_7",
+          "tooltip": "U04.7",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "U04_7",
+              "tooltip": "U04.7.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "U04_7",
+                  "tooltip": "U04.7.1.1",
+                  "children": [
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U04_7",
+                      "tooltip": "U04.7.1.1.3",
+                      "children": [
+                        {
+                          "name": "Festwalzdruck [bar]",
+                          "showname": true,
+                          "type": "U04_7",
+                          "tooltip": "U04.7.1.1.3 - Festwalzdruck [bar]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "U04_7",
+                      "tooltip": "U04.7.1.1.7",
+                      "children": [
+                        {
+                          "name": "Festwalzkraft [N]",
+                          "showname": true,
+                          "type": "U04_7",
+                          "tooltip": "U04.7.1.1.7 - Festwalzkraft [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "U04_7",
+                      "tooltip": "U04.7.1.1.8",
+                      "children": [
+                        {
+                          "name": "in Bearbeitungsrichtung [N]",
+                          "showname": true,
+                          "type": "U04_7",
+                          "tooltip": "U04.7.1.1.8 - in Bearbeitungsrichtung [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "U04_7",
+                      "tooltip": "U04.7.1.1.9",
+                      "children": [
+                        {
+                          "name": "Kraft senkrecht zur Bearbeitungsrichtung [N]",
+                          "showname": true,
+                          "type": "U04_7",
+                          "tooltip": "U04.7.1.1.9 - Kraft senkrecht zur Bearbeitungsrichtung [N]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U04_7",
+                      "tooltip": "U04.7.1.1.2",
+                      "children": [
+                        {
+                          "name": "Kugeldurchmesser [mm]",
+                          "showname": true,
+                          "type": "U04_7",
+                          "tooltip": "U04.7.1.1.2 - Kugeldurchmesser [mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U04_7",
+                      "tooltip": "U04.7.1.1.4",
+                      "children": [
+                        {
+                          "name": "Radius deformierte Fl\u00e4che [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_7",
+                          "tooltip": "U04.7.1.1.4 - Radius deformierte Fl\u00e4che [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "U04_7",
+                      "tooltip": "U04.7.1.1.5",
+                      "children": [
+                        {
+                          "name": "deformierte Fl\u00e4che [mm\u00b2]",
+                          "showname": true,
+                          "type": "U04_7",
+                          "tooltip": "U04.7.1.1.5 - deformierte Fl\u00e4che [mm\u00b2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "U04_7",
+                      "tooltip": "U04.7.1.1.6",
+                      "children": [
+                        {
+                          "name": "rel deformierte Fl\u00e4che [%]",
+                          "showname": true,
+                          "type": "U04_7",
+                          "tooltip": "U04.7.1.1.6 - rel deformierte Fl\u00e4che [%]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "8",
+          "showname": true,
+          "type": "U04_8",
+          "tooltip": "U04.8",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "U04_8",
+              "tooltip": "U04.8.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "U04_8",
+                  "tooltip": "U04.8.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U04_8",
+                      "tooltip": "U04.8.1.1.1",
+                      "children": [
+                        {
+                          "name": "Partikeldurchmesser [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_8",
+                          "tooltip": "U04.8.1.1.1 - Partikeldurchmesser [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U04_8",
+                      "tooltip": "U04.8.1.1.2",
+                      "children": [
+                        {
+                          "name": "Strahldruck [bar]",
+                          "showname": true,
+                          "type": "U04_8",
+                          "tooltip": "U04.8.1.1.2 - Strahldruck [bar]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U04_8",
+                      "tooltip": "U04.8.1.1.3",
+                      "children": [
+                        {
+                          "name": "Partikelradius [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_8",
+                          "tooltip": "U04.8.1.1.3 - Partikelradius [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U04_8",
+                      "tooltip": "U04.8.1.1.4",
+                      "children": [
+                        {
+                          "name": "Deformationsradius [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_8",
+                          "tooltip": "U04.8.1.1.4 - Deformationsradius [\u00b5m]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Z02",
+      "showname": true,
+      "type": "Z02_1",
+      "tooltip": "Z02",
+      "children": [
+        {
+          "name": "1",
+          "showname": true,
+          "type": "Z02_1",
+          "tooltip": "Z02.1",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "Z02_1",
+              "tooltip": "Z02.1.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "Z02_1",
+                  "tooltip": "Z02.1.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.1",
+                      "children": [
+                        {
+                          "name": "Type []",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.1 - Type []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.2",
+                      "children": [
+                        {
+                          "name": "a0 [mm]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.2 - a0 [mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.3",
+                      "children": [
+                        {
+                          "name": "b0 [mm]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.3 - b0 [mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.4",
+                      "children": [
+                        {
+                          "name": "S0 [mm\u00b2]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.4 - S0 [mm\u00b2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.5",
+                      "children": [
+                        {
+                          "name": "E [GPa]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.5 - E [GPa]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.6",
+                      "children": [
+                        {
+                          "name": "Rp001 [GPa]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.6 - Rp001 [GPa]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.8",
+                      "children": [
+                        {
+                          "name": "L0 [mm]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.8 - L0 [mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "9",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.9",
+                      "children": [
+                        {
+                          "name": "Le [mm]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.9 - Le [mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.7",
+                      "children": [
+                        {
+                          "name": "Rp01 [GPa]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.7 - Rp01 [GPa]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "2",
+          "showname": true,
+          "type": "Z02_2",
+          "tooltip": "Z02.2",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "Z02_2",
+              "tooltip": "Z02.2.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "Z02_2",
+                  "tooltip": "Z02.2.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.1",
+                      "children": [
+                        {
+                          "name": "Spannungsverh\u00e4ltnis []",
+                          "showname": true,
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.1 - Spannungsverh\u00e4ltnis []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.2",
+                      "children": [
+                        {
+                          "name": "Dauerfestigkeit [N/mm^2]",
+                          "showname": true,
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.2 - Dauerfestigkeit [N/mm^2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.3",
+                      "children": [
+                        {
+                          "name": "Wechselfestigkeit [N/mm^2]",
+                          "showname": true,
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.3 - Wechselfestigkeit [N/mm^2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.4",
+                      "children": [
+                        {
+                          "name": "Weibullverteilung []",
+                          "showname": true,
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.4 - Weibullverteilung []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.5",
+                      "children": [
+                        {
+                          "name": "Anzahl Proben []",
+                          "showname": true,
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.5 - Anzahl Proben []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.6",
+                      "children": [
+                        {
+                          "name": "Anzahl Pr\u00fcfungen []",
+                          "showname": true,
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.6 - Anzahl Pr\u00fcfungen []"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
-   ]
-  },
-  {
-   "name": "animate",
-   "children": [
-    {"name": "Easing", "size": 17010},
-    {"name": "FunctionSequence", "size": 5842},
-    {
-     "name": "interpolate",
-     "children": [
-      {"name": "ArrayInterpolator", "size": 1983},
-      {"name": "ColorInterpolator", "size": 2047},
-      {"name": "DateInterpolator", "size": 1375},
-      {"name": "Interpolator", "size": 8746},
-      {"name": "MatrixInterpolator", "size": 2202},
-      {"name": "NumberInterpolator", "size": 1382},
-      {"name": "ObjectInterpolator", "size": 1629},
-      {"name": "PointInterpolator", "size": 1675},
-      {"name": "RectangleInterpolator", "size": 2042}
-     ]
-    },
-    {"name": "ISchedulable", "size": 1041},
-    {"name": "Parallel", "size": 5176},
-    {"name": "Pause", "size": 449},
-    {"name": "Scheduler", "size": 5593},
-    {"name": "Sequence", "size": 5534},
-    {"name": "Transition", "size": 9201},
-    {"name": "Transitioner", "size": 19975},
-    {"name": "TransitionEvent", "size": 1116},
-    {"name": "Tween", "size": 6006}
-   ]
-  },
-  {
-   "name": "data",
-   "children": [
-    {
-     "name": "converters",
-     "children": [
-      {"name": "Converters", "size": 721},
-      {"name": "DelimitedTextConverter", "size": 4294},
-      {"name": "GraphMLConverter", "size": 9800},
-      {"name": "IDataConverter", "size": 1314},
-      {"name": "JSONConverter", "size": 2220}
-     ]
-    },
-    {"name": "DataField", "size": 1759},
-    {"name": "DataSchema", "size": 2165},
-    {"name": "DataSet", "size": 586},
-    {"name": "DataSource", "size": 3331},
-    {"name": "DataTable", "size": 772},
-    {"name": "DataUtil", "size": 3322}
-   ]
-  },
-  {
-   "name": "display",
-   "children": [
-    {"name": "DirtySprite", "size": 8833},
-    {"name": "LineSprite", "size": 1732},
-    {"name": "RectSprite", "size": 3623},
-    {"name": "TextSprite", "size": 10066}
-   ]
-  },
-  {
-   "name": "flex",
-   "children": [
-    {"name": "FlareVis", "size": 4116}
-   ]
-  },
-  {
-   "name": "physics",
-   "children": [
-    {"name": "DragForce", "size": 1082},
-    {"name": "GravityForce", "size": 1336},
-    {"name": "IForce", "size": 319},
-    {"name": "NBodyForce", "size": 10498},
-    {"name": "Particle", "size": 2822},
-    {"name": "Simulation", "size": 9983},
-    {"name": "Spring", "size": 2213},
-    {"name": "SpringForce", "size": 1681}
-   ]
-  },
-  {
-   "name": "query",
-   "children": [
-    {"name": "AggregateExpression", "size": 1616},
-    {"name": "And", "size": 1027},
-    {"name": "Arithmetic", "size": 3891},
-    {"name": "Average", "size": 891},
-    {"name": "BinaryExpression", "size": 2893},
-    {"name": "Comparison", "size": 5103},
-    {"name": "CompositeExpression", "size": 3677},
-    {"name": "Count", "size": 781},
-    {"name": "DateUtil", "size": 4141},
-    {"name": "Distinct", "size": 933},
-    {"name": "Expression", "size": 5130},
-    {"name": "ExpressionIterator", "size": 3617},
-    {"name": "Fn", "size": 3240},
-    {"name": "If", "size": 2732},
-    {"name": "IsA", "size": 2039},
-    {"name": "Literal", "size": 1214},
-    {"name": "Match", "size": 3748},
-    {"name": "Maximum", "size": 843},
-    {
-     "name": "methods",
-     "children": [
-      {"name": "add", "size": 593},
-      {"name": "and", "size": 330},
-      {"name": "average", "size": 287},
-      {"name": "count", "size": 277},
-      {"name": "distinct", "size": 292},
-      {"name": "div", "size": 595},
-      {"name": "eq", "size": 594},
-      {"name": "fn", "size": 460},
-      {"name": "gt", "size": 603},
-      {"name": "gte", "size": 625},
-      {"name": "iff", "size": 748},
-      {"name": "isa", "size": 461},
-      {"name": "lt", "size": 597},
-      {"name": "lte", "size": 619},
-      {"name": "max", "size": 283},
-      {"name": "min", "size": 283},
-      {"name": "mod", "size": 591},
-      {"name": "mul", "size": 603},
-      {"name": "neq", "size": 599},
-      {"name": "not", "size": 386},
-      {"name": "or", "size": 323},
-      {"name": "orderby", "size": 307},
-      {"name": "range", "size": 772},
-      {"name": "select", "size": 296},
-      {"name": "stddev", "size": 363},
-      {"name": "sub", "size": 600},
-      {"name": "sum", "size": 280},
-      {"name": "update", "size": 307},
-      {"name": "variance", "size": 335},
-      {"name": "where", "size": 299},
-      {"name": "xor", "size": 354},
-      {"name": "_", "size": 264}
-     ]
-    },
-    {"name": "Minimum", "size": 843},
-    {"name": "Not", "size": 1554},
-    {"name": "Or", "size": 970},
-    {"name": "Query", "size": 13896},
-    {"name": "Range", "size": 1594},
-    {"name": "StringUtil", "size": 4130},
-    {"name": "Sum", "size": 791},
-    {"name": "Variable", "size": 1124},
-    {"name": "Variance", "size": 1876},
-    {"name": "Xor", "size": 1101}
-   ]
-  },
-  {
-   "name": "scale",
-   "children": [
-    {"name": "IScaleMap", "size": 2105},
-    {"name": "LinearScale", "size": 1316},
-    {"name": "LogScale", "size": 3151},
-    {"name": "OrdinalScale", "size": 3770},
-    {"name": "QuantileScale", "size": 2435},
-    {"name": "QuantitativeScale", "size": 4839},
-    {"name": "RootScale", "size": 1756},
-    {"name": "Scale", "size": 4268},
-    {"name": "ScaleType", "size": 1821},
-    {"name": "TimeScale", "size": 5833}
-   ]
-  },
-  {
-   "name": "util",
-   "children": [
-    {"name": "Arrays", "size": 8258},
-    {"name": "Colors", "size": 10001},
-    {"name": "Dates", "size": 8217},
-    {"name": "Displays", "size": 12555},
-    {"name": "Filter", "size": 2324},
-    {"name": "Geometry", "size": 10993},
-    {
-     "name": "heap",
-     "children": [
-      {"name": "FibonacciHeap", "size": 9354},
-      {"name": "HeapNode", "size": 1233}
-     ]
-    },
-    {"name": "IEvaluable", "size": 335},
-    {"name": "IPredicate", "size": 383},
-    {"name": "IValueProxy", "size": 874},
-    {
-     "name": "math",
-     "children": [
-      {"name": "DenseMatrix", "size": 3165},
-      {"name": "IMatrix", "size": 2815},
-      {"name": "SparseMatrix", "size": 3366}
-     ]
-    },
-    {"name": "Maths", "size": 17705},
-    {"name": "Orientation", "size": 1486},
-    {
-     "name": "palette",
-     "children": [
-      {"name": "ColorPalette", "size": 6367},
-      {"name": "Palette", "size": 1229},
-      {"name": "ShapePalette", "size": 2059},
-      {"name": "SizePalette", "size": 2291}
-     ]
-    },
-    {"name": "Property", "size": 5559},
-    {"name": "Shapes", "size": 19118},
-    {"name": "Sort", "size": 6887},
-    {"name": "Stats", "size": 6557},
-    {"name": "Strings", "size": 22026}
-   ]
-  },
-  {
-   "name": "vis",
-   "children": [
-    {
-     "name": "axis",
-     "children": [
-      {"name": "Axes", "size": 1302},
-      {"name": "Axis", "size": 24593},
-      {"name": "AxisGridLine", "size": 652},
-      {"name": "AxisLabel", "size": 636},
-      {"name": "CartesianAxes", "size": 6703}
-     ]
-    },
-    {
-     "name": "controls",
-     "children": [
-      {"name": "AnchorControl", "size": 2138},
-      {"name": "ClickControl", "size": 3824},
-      {"name": "Control", "size": 1353},
-      {"name": "ControlList", "size": 4665},
-      {"name": "DragControl", "size": 2649},
-      {"name": "ExpandControl", "size": 2832},
-      {"name": "HoverControl", "size": 4896},
-      {"name": "IControl", "size": 763},
-      {"name": "PanZoomControl", "size": 5222},
-      {"name": "SelectionControl", "size": 7862},
-      {"name": "TooltipControl", "size": 8435}
-     ]
-    },
-    {
-     "name": "data",
-     "children": [
-      {"name": "Data", "size": 20544},
-      {"name": "DataList", "size": 19788},
-      {"name": "DataSprite", "size": 10349},
-      {"name": "EdgeSprite", "size": 3301},
-      {"name": "NodeSprite", "size": 19382},
-      {
-       "name": "render",
-       "children": [
-        {"name": "ArrowType", "size": 698},
-        {"name": "EdgeRenderer", "size": 5569},
-        {"name": "IRenderer", "size": 353},
-        {"name": "ShapeRenderer", "size": 2247}
-       ]
-      },
-      {"name": "ScaleBinding", "size": 11275},
-      {"name": "Tree", "size": 7147},
-      {"name": "TreeBuilder", "size": 9930}
-     ]
-    },
-    {
-     "name": "events",
-     "children": [
-      {"name": "DataEvent", "size": 2313},
-      {"name": "SelectionEvent", "size": 1880},
-      {"name": "TooltipEvent", "size": 1701},
-      {"name": "VisualizationEvent", "size": 1117}
-     ]
-    },
-    {
-     "name": "legend",
-     "children": [
-      {"name": "Legend", "size": 20859},
-      {"name": "LegendItem", "size": 4614},
-      {"name": "LegendRange", "size": 10530}
-     ]
-    },
-    {
-     "name": "operator",
-     "children": [
-      {
-       "name": "distortion",
-       "children": [
-        {"name": "BifocalDistortion", "size": 4461},
-        {"name": "Distortion", "size": 6314},
-        {"name": "FisheyeDistortion", "size": 3444}
-       ]
-      },
-      {
-       "name": "encoder",
-       "children": [
-        {"name": "ColorEncoder", "size": 3179},
-        {"name": "Encoder", "size": 4060},
-        {"name": "PropertyEncoder", "size": 4138},
-        {"name": "ShapeEncoder", "size": 1690},
-        {"name": "SizeEncoder", "size": 1830}
-       ]
-      },
-      {
-       "name": "filter",
-       "children": [
-        {"name": "FisheyeTreeFilter", "size": 5219},
-        {"name": "GraphDistanceFilter", "size": 3165},
-        {"name": "VisibilityFilter", "size": 3509}
-       ]
-      },
-      {"name": "IOperator", "size": 1286},
-      {
-       "name": "label",
-       "children": [
-        {"name": "Labeler", "size": 9956},
-        {"name": "RadialLabeler", "size": 3899},
-        {"name": "StackedAreaLabeler", "size": 3202}
-       ]
-      },
-      {
-       "name": "layout",
-       "children": [
-        {"name": "AxisLayout", "size": 6725},
-        {"name": "BundledEdgeRouter", "size": 3727},
-        {"name": "CircleLayout", "size": 9317},
-        {"name": "CirclePackingLayout", "size": 12003},
-        {"name": "DendrogramLayout", "size": 4853},
-        {"name": "ForceDirectedLayout", "size": 8411},
-        {"name": "IcicleTreeLayout", "size": 4864},
-        {"name": "IndentedTreeLayout", "size": 3174},
-        {"name": "Layout", "size": 7881},
-        {"name": "NodeLinkTreeLayout", "size": 12870},
-        {"name": "PieLayout", "size": 2728},
-        {"name": "RadialTreeLayout", "size": 12348},
-        {"name": "RandomLayout", "size": 870},
-        {"name": "StackedAreaLayout", "size": 9121},
-        {"name": "TreeMapLayout", "size": 9191}
-       ]
-      },
-      {"name": "Operator", "size": 2490},
-      {"name": "OperatorList", "size": 5248},
-      {"name": "OperatorSequence", "size": 4190},
-      {"name": "OperatorSwitch", "size": 2581},
-      {"name": "SortOperator", "size": 2023}
-     ]
-    },
-    {"name": "Visualization", "size": 16540}
-   ]
-  }
- ]
+  ]
 }

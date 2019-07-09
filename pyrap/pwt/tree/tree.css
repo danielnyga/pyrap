@@ -9,19 +9,19 @@ text.tree {
 }
 
 .tree_node circle {
-  fill: #fff;
+  fill: steelblue;
   stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.tree_node circle.highlight {
+  fill: green;
+  stroke: green;
   stroke-width: 1.5px;
 }
 
 .tree_node text {
   font: 13px monospace, arial, sans-serif;
-}
-
-.tree_link {
-  fill: none;
-  stroke: #ccc;
-  stroke-width: 1.5px;
 }
 
 .treetooltip {
@@ -33,4 +33,15 @@ text.tree {
   background-color:rgba(70,130,180, 0.7);
   border-radius: 5px;
   padding: 10px;
+}
+
+.tree_edge path {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.tree_edge path.highlight {
+  stroke: green;
+  stroke-width: 2px;
 }
