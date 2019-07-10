@@ -645,30 +645,30 @@ class Shell(Widget):
             pack = self._packed
         else:
             self._packed = pack
-        with stopwatch('/pyrap/layout'):
-            # materialize the layout tree
-            adapter = materialize_adapters(self)
-            if not pack or self.maximized:
-                adapter.hpos, adapter.vpos, adapter.width, adapter.height = self.client_rect
-            else:
-                adapter.hpos, adapter.vpos, adapter.width, adapter.height = None, None, None, None
-            adapter.run()
-            if pack and not self.maximized:
-                adapter.hpos, adapter.vpos, _, _ = self.client_rect
-                adapter.width, adapter.height = adapter.preferred_size()
-                t, r, b, l = self.compute_fringe()
-                w = max(adapter.width + l + r, ifnone(self.layout.minwidth, 0))
-                h = max(adapter.height + t + b, ifnone(self.layout.minheight, 0))
-                adapter.widget.bounds = adapter.hpos + adapter.layout.padding_left, \
-                                        adapter.vpos + adapter.layout.padding_top, \
-                                        adapter.width - adapter.layout.padding_left - adapter.layout.padding_right, \
-                                        adapter.height - adapter.layout.padding_top - adapter.layout.padding_bottom
-                _, _, dispw, disph = session.runtime.display.bounds
-                xpos = int(round(dispw.value / 2. - w / 2.))
-                ypos = int(round(disph.value / 2. - h / 2.))
-                self.bounds = xpos, ypos, w, h
-                if not allnone((self.layout.minwidth, self.layout.minheight)):
-                    self.dolayout()
+        # materialize the layout tree
+        adapter = materialize_adapters(self)
+        if not pack or self.maximized:
+            adapter.hpos, adapter.vpos, adapter.width, adapter.height = self.client_rect
+        else:
+            adapter.hpos, adapter.vpos, adapter.width, adapter.height = None, None, None, None
+        adapter.run()
+        if pack and not self.maximized:
+            adapter.hpos, adapter.vpos, _, _ = self.client_rect
+            adapter.width, adapter.height = adapter.preferred_size()
+            t, r, b, l = self.compute_fringe()
+            w = max(adapter.width + l + r, ifnone(self.layout.minwidth, 0))
+            h = max(adapter.height + t + b, ifnone(self.layout.minheight, 0))
+            adapter.widget.bounds = adapter.hpos + adapter.layout.padding_left, \
+                                    adapter.vpos + adapter.layout.padding_top, \
+                                    adapter.width - adapter.layout.padding_left - adapter.layout.padding_right, \
+                                    adapter.height - adapter.layout.padding_top - adapter.layout.padding_bottom
+            _, _, dispw, disph = session.runtime.display.bounds
+            xpos = int(round(dispw.value / 2. - w / 2.))
+            ypos = int(round(disph.value / 2. - h / 2.))
+            self.bounds = xpos, ypos, w, h
+            if not allnone((self.layout.minwidth, self.layout.minheight)):
+                self.dolayout()
+        out('doing layout')
 
     def onresize_shell(self):
         self.dolayout()
@@ -1009,7 +1009,7 @@ class Label(Widget):
         w, h = 0, 0
         if self.img is not None:
             w, h = self.img.size
-        elif RWT.WRAP not in self.style:
+        elif self.text:
             lines = self._text.split('\n' if RWT.MARKUP not in self.style else '<br>')
             w += max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
