@@ -284,6 +284,7 @@ rwt/remote/handler/CopyToClipboardHandler.js
 {code_base}/pyrap/pwt/radar_smoothed/radar_smoothed.js
 {code_base}/pyrap/pwt/tree/tree.js
 {code_base}/pyrap/pwt/video/video.js
+{code_base}/pyrap/pwt/audio/audio.js
 {code_base}/pyrap/pwt/radialdendrogramm/radialdendrogramm.js
 {code_base}/pyrap/pwt/bubblyclusters/bubblyclusters.js
 {code_base}/pyrap/pwt/plot/plot.js

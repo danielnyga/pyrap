@@ -74,7 +74,13 @@ class RWTEvent(Event):
             w.rm_handler(dnutils.threads.SUSPEND, block.set)
             self._waiters.remove(w)
         Event.notify(self, *args, **kwargs)
-            
+
+
+class KeyPressed(Event):
+
+    def _notify(self, listener, *args, **kwargs):
+        listener(*args)
+
 
 class OnResize(RWTEvent):
     def __init__(self, widget):

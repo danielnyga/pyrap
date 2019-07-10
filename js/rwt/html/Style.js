@@ -356,9 +356,7 @@ rwt.qx.Class.define( "rwt.html.Style", {
     setBackgroundSize : function( target, size ) {
       if( target.___rwtStyle__backgroundSize !== size ) {
         target.___rwtStyle__backgroundSize = size;
-        if( target.___rwtStyle__backgroundImage ) {
-          this._updateBackground( target );
-        }
+        this._updateBackgroundSize( target );
       }
     },
 
@@ -501,6 +499,12 @@ rwt.qx.Class.define( "rwt.html.Style", {
       } else {
         this._clearCssBackground( target );
       }
+    },
+
+    _updateBackgroundSize : function ( target ) {
+        if( target.___rwtStyle__backgroundSize ) {
+          this.setStyleProperty( target, "backgroundSize", target.___rwtStyle__backgroundSize );
+        }
     },
 
     _pushBackgroundImage : function( target, backgroundArray ) {
