@@ -207,22 +207,16 @@
                       ]
                     },
                     {
-                      "name": "6",
+                      "name": "3",
                       "showname": true,
                       "type": "D01_3",
-                      "tooltip": "D01.3.1.1.6",
+                      "tooltip": "D01.3.1.1.3",
                       "children": [
                         {
                           "name": "Pr\u00fcfkraft nach Wartezeit [N]",
                           "showname": true,
                           "type": "D01_3",
-                          "tooltip": "D01.3.1.1.6 - Pr\u00fcfkraft nach Wartezeit [N]"
-                        },
-                        {
-                          "name": "Arbeit bei Pr\u00fcfkraft nach Wartezeit [Nm]",
-                          "showname": true,
-                          "type": "D01_3",
-                          "tooltip": "D01.3.1.1.6 - Arbeit bei Pr\u00fcfkraft nach Wartezeit [Nm]"
+                          "tooltip": "D01.3.1.1.3 - Pr\u00fcfkraft nach Wartezeit [N]"
                         }
                       ]
                     },
@@ -251,6 +245,20 @@
                           "showname": true,
                           "type": "D01_3",
                           "tooltip": "D01.3.1.1.5 - h_plast [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "D01_3",
+                      "tooltip": "D01.3.1.1.6",
+                      "children": [
+                        {
+                          "name": "Arbeit bei Pr\u00fcfkraft nach Wartezeit [Nm]",
+                          "showname": true,
+                          "type": "D01_3",
+                          "tooltip": "D01.3.1.1.6 - Arbeit bei Pr\u00fcfkraft nach Wartezeit [Nm]"
                         }
                       ]
                     },
@@ -1409,6 +1417,372 @@
       ]
     },
     {
+      "name": "U03",
+      "showname": true,
+      "type": "U03_3",
+      "tooltip": "U03",
+      "children": [
+        {
+          "name": "3",
+          "showname": true,
+          "type": "U03_3",
+          "tooltip": "U03.3",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "U03_3",
+              "tooltip": "U03.3.1",
+              "children": [
+                {
+                  "name": "2",
+                  "showname": true,
+                  "type": "U03_3",
+                  "tooltip": "U03.3.1.2",
+                  "children": [
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.2.3",
+                      "children": [
+                        {
+                          "name": "Steigung [W/g]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.2.3 - Steigung [W/g]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.2.1",
+                      "children": [
+                        {
+                          "name": "Starttemp [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.2.1 - Starttemp [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.2.2",
+                      "children": [
+                        {
+                          "name": "Endtemp [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.2.2 - Endtemp [\u00b0C]"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "U03_3",
+                  "tooltip": "U03.3.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.1.1",
+                      "children": [
+                        {
+                          "name": "Onset:  Temperatur [\u00b0C ]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.1.1 - Onset:  Temperatur [\u00b0C ]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.1.2",
+                      "children": [
+                        {
+                          "name": "Endset:  Temperatur [\u00b0C ]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.1.2 - Endset:  Temperatur [\u00b0C ]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.1.3",
+                      "children": [
+                        {
+                          "name": "Peakfl\u00e4che [J/g]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.1.3 - Peakfl\u00e4che [J/g]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.1.4",
+                      "children": [
+                        {
+                          "name": "Peak max/min [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.1.4 - Peak max/min [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "U03_3",
+                      "tooltip": "U03.3.1.1.5",
+                      "children": [
+                        {
+                          "name": "Peakh\u00f6he [mW]",
+                          "showname": true,
+                          "type": "U03_3",
+                          "tooltip": "U03.3.1.1.5 - Peakh\u00f6he [mW]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "5",
+          "showname": true,
+          "type": "U03_5",
+          "tooltip": "U03.5",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "U03_5",
+              "tooltip": "U03.5.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "U03_5",
+                  "tooltip": "U03.5.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.1",
+                      "children": [
+                        {
+                          "name": "transformation start z:  time [s]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.1 - transformation start z:  time [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.2",
+                      "children": [
+                        {
+                          "name": "transformation start x:  temperature [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.2 - transformation start x:  temperature [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.3",
+                      "children": [
+                        {
+                          "name": "transformation start y:  change in length [\u00b5m ]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.3 - transformation start y:  change in length [\u00b5m ]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.4",
+                      "children": [
+                        {
+                          "name": "transformation end z:  time [s]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.4 - transformation end z:  time [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.5",
+                      "children": [
+                        {
+                          "name": "transformation end x:  temperature [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.5 - transformation end x:  temperature [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.6",
+                      "children": [
+                        {
+                          "name": "transformation end y:  change in length [\u00b5m ]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.6 - transformation end y:  change in length [\u00b5m ]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.7",
+                      "children": [
+                        {
+                          "name": "dl [\u00b5m]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.7 - dl [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.1.8",
+                      "children": [
+                        {
+                          "name": "dT [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.1.8 - dT [\u00b0C]"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "2",
+                  "showname": true,
+                  "type": "U03_5",
+                  "tooltip": "U03.5.1.2",
+                  "children": [
+                    {
+                      "name": "5",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.2.5",
+                      "children": [
+                        {
+                          "name": "heat/hold/cool []",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.2.5 - heat/hold/cool []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.2.1",
+                      "children": [
+                        {
+                          "name": "start temp [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.2.1 - start temp [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.2.2",
+                      "children": [
+                        {
+                          "name": "end temp [\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.2.2 - end temp [\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.2.3",
+                      "children": [
+                        {
+                          "name": "slope [\u00b5m/\u00b0C]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.2.3 - slope [\u00b5m/\u00b0C]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U03_5",
+                      "tooltip": "U03.5.1.2.4",
+                      "children": [
+                        {
+                          "name": "slope_hold [\u00b5m/s]",
+                          "showname": true,
+                          "type": "U03_5",
+                          "tooltip": "U03.5.1.2.4 - slope_hold [\u00b5m/s]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "D02",
       "showname": true,
       "type": "D02_1",
@@ -1793,6 +2167,86 @@
           ]
         },
         {
+          "name": "4",
+          "showname": true,
+          "type": "D03_4",
+          "tooltip": "D03.4",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "D03_4",
+              "tooltip": "D03.4.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "D03_4",
+                  "tooltip": "D03.4.1.1",
+                  "children": [
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "D03_4",
+                      "tooltip": "D03.4.1.1.3",
+                      "children": [
+                        {
+                          "name": "i_pas [mA]",
+                          "showname": true,
+                          "type": "D03_4",
+                          "tooltip": "D03.4.1.1.3 - i_pas [mA]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "D03_4",
+                      "tooltip": "D03.4.1.1.1",
+                      "children": [
+                        {
+                          "name": "i_corr [mA]",
+                          "showname": true,
+                          "type": "D03_4",
+                          "tooltip": "D03.4.1.1.1 - i_corr [mA]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "D03_4",
+                      "tooltip": "D03.4.1.1.2",
+                      "children": [
+                        {
+                          "name": "E_corr [mV]",
+                          "showname": true,
+                          "type": "D03_4",
+                          "tooltip": "D03.4.1.1.2 - E_corr [mV]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "D03_4",
+                      "tooltip": "D03.4.1.1.4",
+                      "children": [
+                        {
+                          "name": "E_pit [mV]",
+                          "showname": true,
+                          "type": "D03_4",
+                          "tooltip": "D03.4.1.1.4 - E_pit [mV]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
           "name": "2",
           "showname": true,
           "type": "D03_2",
@@ -2069,86 +2523,6 @@
                           "showname": true,
                           "type": "D03_3",
                           "tooltip": "D03.3.1.1.11 - L [H]"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "4",
-          "showname": true,
-          "type": "D03_4",
-          "tooltip": "D03.4",
-          "children": [
-            {
-              "name": "1",
-              "showname": true,
-              "type": "D03_4",
-              "tooltip": "D03.4.1",
-              "children": [
-                {
-                  "name": "1",
-                  "showname": true,
-                  "type": "D03_4",
-                  "tooltip": "D03.4.1.1",
-                  "children": [
-                    {
-                      "name": "3",
-                      "showname": true,
-                      "type": "D03_4",
-                      "tooltip": "D03.4.1.1.3",
-                      "children": [
-                        {
-                          "name": "i_pas [mA]",
-                          "showname": true,
-                          "type": "D03_4",
-                          "tooltip": "D03.4.1.1.3 - i_pas [mA]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "1",
-                      "showname": true,
-                      "type": "D03_4",
-                      "tooltip": "D03.4.1.1.1",
-                      "children": [
-                        {
-                          "name": "i_corr [mA]",
-                          "showname": true,
-                          "type": "D03_4",
-                          "tooltip": "D03.4.1.1.1 - i_corr [mA]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "2",
-                      "showname": true,
-                      "type": "D03_4",
-                      "tooltip": "D03.4.1.1.2",
-                      "children": [
-                        {
-                          "name": "E_corr [mV]",
-                          "showname": true,
-                          "type": "D03_4",
-                          "tooltip": "D03.4.1.1.2 - E_corr [mV]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "4",
-                      "showname": true,
-                      "type": "D03_4",
-                      "tooltip": "D03.4.1.1.4",
-                      "children": [
-                        {
-                          "name": "E_pit [mV]",
-                          "showname": true,
-                          "type": "D03_4",
-                          "tooltip": "D03.4.1.1.4 - E_pit [mV]"
                         }
                       ]
                     }
@@ -2543,138 +2917,152 @@
       ]
     },
     {
-      "name": "S04",
+      "name": "Z02",
       "showname": true,
-      "type": "S04_3",
-      "tooltip": "S04",
+      "type": "Z02_1",
+      "tooltip": "Z02",
       "children": [
         {
           "name": "1",
           "showname": true,
-          "type": "S04_1",
-          "tooltip": "S04.1",
+          "type": "Z02_1",
+          "tooltip": "Z02.1",
           "children": [
             {
               "name": "1",
               "showname": true,
-              "type": "S04_1",
-              "tooltip": "S04.1.1",
+              "type": "Z02_1",
+              "tooltip": "Z02.1.1",
               "children": [
                 {
                   "name": "1",
                   "showname": true,
-                  "type": "S04_1",
-                  "tooltip": "S04.1.1.1",
+                  "type": "Z02_1",
+                  "tooltip": "Z02.1.1.1",
                   "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.1",
+                      "children": [
+                        {
+                          "name": "Type []",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.1 - Type []"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.2",
+                      "children": [
+                        {
+                          "name": "a0 [mm]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.2 - a0 [mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.3",
+                      "children": [
+                        {
+                          "name": "b0 [mm]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.3 - b0 [mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.4",
+                      "children": [
+                        {
+                          "name": "S0 [mm\u00b2]",
+                          "showname": true,
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.4 - S0 [mm\u00b2]"
+                        }
+                      ]
+                    },
                     {
                       "name": "5",
                       "showname": true,
-                      "type": "S04_1",
-                      "tooltip": "S04.1.1.1.5",
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.5",
                       "children": [
                         {
-                          "name": "Peakbreite Delta t_Fc [s]",
+                          "name": "E [GPa]",
                           "showname": true,
-                          "type": "S04_1",
-                          "tooltip": "S04.1.1.1.5 - Peakbreite Delta t_Fc [s]"
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.5 - E [GPa]"
                         }
                       ]
                     },
                     {
                       "name": "6",
                       "showname": true,
-                      "type": "S04_1",
-                      "tooltip": "S04.1.1.1.6",
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.6",
                       "children": [
                         {
-                          "name": "Peakbreite Delta t_Fp [s]",
+                          "name": "Rp001 [GPa]",
                           "showname": true,
-                          "type": "S04_1",
-                          "tooltip": "S04.1.1.1.6 - Peakbreite Delta t_Fp [s]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "7",
-                      "showname": true,
-                      "type": "S04_1",
-                      "tooltip": "S04.1.1.1.7",
-                      "children": [
-                        {
-                          "name": "Schnittimpuls pc [Ns]",
-                          "showname": true,
-                          "type": "S04_1",
-                          "tooltip": "S04.1.1.1.7 - Schnittimpuls pc [Ns]"
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.6 - Rp001 [GPa]"
                         }
                       ]
                     },
                     {
                       "name": "8",
                       "showname": true,
-                      "type": "S04_1",
-                      "tooltip": "S04.1.1.1.8",
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.8",
                       "children": [
                         {
-                          "name": "Passivimpuls pp [Ns]",
+                          "name": "L0 [mm]",
                           "showname": true,
-                          "type": "S04_1",
-                          "tooltip": "S04.1.1.1.8 - Passivimpuls pp [Ns]"
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.8 - L0 [mm]"
                         }
                       ]
                     },
                     {
-                      "name": "13",
+                      "name": "9",
                       "showname": true,
-                      "type": "S04_1",
-                      "tooltip": "S04.1.1.1.13",
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.9",
                       "children": [
                         {
-                          "name": "bez Schnittimpuls pc' [Ns/mm]",
+                          "name": "Le [mm]",
                           "showname": true,
-                          "type": "S04_1",
-                          "tooltip": "S04.1.1.1.13 - bez Schnittimpuls pc' [Ns/mm]"
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.9 - Le [mm]"
                         }
                       ]
                     },
                     {
-                      "name": "14",
+                      "name": "7",
                       "showname": true,
-                      "type": "S04_1",
-                      "tooltip": "S04.1.1.1.14",
+                      "type": "Z02_1",
+                      "tooltip": "Z02.1.1.1.7",
                       "children": [
                         {
-                          "name": "bez Passivimpuls pp' [Ns/mm]",
+                          "name": "Rp01 [GPa]",
                           "showname": true,
-                          "type": "S04_1",
-                          "tooltip": "S04.1.1.1.14 - bez Passivimpuls pp' [Ns/mm]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "18",
-                      "showname": true,
-                      "type": "S04_1",
-                      "tooltip": "S04.1.1.1.18",
-                      "children": [
-                        {
-                          "name": "spez Schnittimpuls pc' [Ns/mm\u00b2]",
-                          "showname": true,
-                          "type": "S04_1",
-                          "tooltip": "S04.1.1.1.18 - spez Schnittimpuls pc' [Ns/mm\u00b2]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "19",
-                      "showname": true,
-                      "type": "S04_1",
-                      "tooltip": "S04.1.1.1.19",
-                      "children": [
-                        {
-                          "name": "spez Passivimpuls pp' [Ns/mm\u00b2]",
-                          "showname": true,
-                          "type": "S04_1",
-                          "tooltip": "S04.1.1.1.19 - spez Passivimpuls pp' [Ns/mm\u00b2]"
+                          "type": "Z02_1",
+                          "tooltip": "Z02.1.1.1.7 - Rp01 [GPa]"
                         }
                       ]
                     }
@@ -2687,172 +3075,102 @@
         {
           "name": "2",
           "showname": true,
-          "type": "S04_2",
-          "tooltip": "S04.2",
+          "type": "Z02_2",
+          "tooltip": "Z02.2",
           "children": [
             {
               "name": "1",
               "showname": true,
-              "type": "S04_2",
-              "tooltip": "S04.2.1",
+              "type": "Z02_2",
+              "tooltip": "Z02.2.1",
               "children": [
                 {
                   "name": "1",
                   "showname": true,
-                  "type": "S04_2",
-                  "tooltip": "S04.2.1.1",
+                  "type": "Z02_2",
+                  "tooltip": "Z02.2.1.1",
                   "children": [
                     {
                       "name": "1",
                       "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.1",
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.1",
                       "children": [
                         {
-                          "name": "Stegnr []",
+                          "name": "Spannungsverh\u00e4ltnis []",
                           "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.1 - Stegnr []"
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.1 - Spannungsverh\u00e4ltnis []"
                         }
                       ]
                     },
                     {
                       "name": "2",
                       "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.2",
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.2",
                       "children": [
                         {
-                          "name": "Arithmetische Rauheit Sa [nm]",
+                          "name": "Dauerfestigkeit [N/mm^2]",
                           "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.2 - Arithmetische Rauheit Sa [nm]"
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.2 - Dauerfestigkeit [N/mm^2]"
                         }
                       ]
                     },
                     {
                       "name": "3",
                       "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.3",
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.3",
                       "children": [
                         {
-                          "name": "Quadratische Rauheit Sq [nm]",
+                          "name": "Wechselfestigkeit [N/mm^2]",
                           "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.3 - Quadratische Rauheit Sq [nm]"
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.3 - Wechselfestigkeit [N/mm^2]"
                         }
                       ]
                     },
                     {
                       "name": "4",
                       "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.4",
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.4",
                       "children": [
                         {
-                          "name": "Peak-to-valley Sz [nm]",
+                          "name": "Weibullverteilung []",
                           "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.4 - Peak-to-valley Sz [nm]"
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.4 - Weibullverteilung []"
                         }
                       ]
                     },
                     {
                       "name": "5",
                       "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.5",
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.5",
                       "children": [
                         {
-                          "name": "Valley Sv [nm]",
+                          "name": "Anzahl Proben []",
                           "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.5 - Valley Sv [nm]"
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.5 - Anzahl Proben []"
                         }
                       ]
                     },
                     {
                       "name": "6",
                       "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.6",
+                      "type": "Z02_2",
+                      "tooltip": "Z02.2.1.1.6",
                       "children": [
                         {
-                          "name": " Peak Sp [nm]",
+                          "name": "Anzahl Pr\u00fcfungen []",
                           "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.6 -  Peak Sp [nm]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "7",
-                      "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.7",
-                      "children": [
-                        {
-                          "name": "Arithmetische Welligkeit Wa [nm]",
-                          "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.7 - Arithmetische Welligkeit Wa [nm]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "8",
-                      "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.8",
-                      "children": [
-                        {
-                          "name": "Quadratische Welligkeit Wq [nm]",
-                          "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.8 - Quadratische Welligkeit Wq [nm]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "9",
-                      "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.9",
-                      "children": [
-                        {
-                          "name": "Peak-to-valley Wz [nm]",
-                          "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.9 - Peak-to-valley Wz [nm]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "10",
-                      "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.10",
-                      "children": [
-                        {
-                          "name": "Valley Wv [nm]",
-                          "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.10 - Valley Wv [nm]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "11",
-                      "showname": true,
-                      "type": "S04_2",
-                      "tooltip": "S04.2.1.1.11",
-                      "children": [
-                        {
-                          "name": " Peak Wp [nm]",
-                          "showname": true,
-                          "type": "S04_2",
-                          "tooltip": "S04.2.1.1.11 -  Peak Wp [nm]"
+                          "type": "Z02_2",
+                          "tooltip": "Z02.2.1.1.6 - Anzahl Pr\u00fcfungen []"
                         }
                       ]
                     }
@@ -2861,7 +3179,15 @@
               ]
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "name": "S04",
+      "showname": true,
+      "type": "S04_3",
+      "tooltip": "S04",
+      "children": [
         {
           "name": "3",
           "showname": true,
@@ -3193,150 +3519,134 @@
               ]
             }
           ]
-        }
-      ]
-    },
-    {
-      "name": "U03",
-      "showname": true,
-      "type": "U03_3",
-      "tooltip": "U03",
-      "children": [
+        },
         {
-          "name": "3",
+          "name": "1",
           "showname": true,
-          "type": "U03_3",
-          "tooltip": "U03.3",
+          "type": "S04_1",
+          "tooltip": "S04.1",
           "children": [
             {
               "name": "1",
               "showname": true,
-              "type": "U03_3",
-              "tooltip": "U03.3.1",
+              "type": "S04_1",
+              "tooltip": "S04.1.1",
               "children": [
-                {
-                  "name": "2",
-                  "showname": true,
-                  "type": "U03_3",
-                  "tooltip": "U03.3.1.2",
-                  "children": [
-                    {
-                      "name": "3",
-                      "showname": true,
-                      "type": "U03_3",
-                      "tooltip": "U03.3.1.2.3",
-                      "children": [
-                        {
-                          "name": "Steigung [W/g]",
-                          "showname": true,
-                          "type": "U03_3",
-                          "tooltip": "U03.3.1.2.3 - Steigung [W/g]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "1",
-                      "showname": true,
-                      "type": "U03_3",
-                      "tooltip": "U03.3.1.2.1",
-                      "children": [
-                        {
-                          "name": "Starttemp [\u00b0C]",
-                          "showname": true,
-                          "type": "U03_3",
-                          "tooltip": "U03.3.1.2.1 - Starttemp [\u00b0C]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "2",
-                      "showname": true,
-                      "type": "U03_3",
-                      "tooltip": "U03.3.1.2.2",
-                      "children": [
-                        {
-                          "name": "Endtemp [\u00b0C]",
-                          "showname": true,
-                          "type": "U03_3",
-                          "tooltip": "U03.3.1.2.2 - Endtemp [\u00b0C]"
-                        }
-                      ]
-                    }
-                  ]
-                },
                 {
                   "name": "1",
                   "showname": true,
-                  "type": "U03_3",
-                  "tooltip": "U03.3.1.1",
+                  "type": "S04_1",
+                  "tooltip": "S04.1.1.1",
                   "children": [
-                    {
-                      "name": "1",
-                      "showname": true,
-                      "type": "U03_3",
-                      "tooltip": "U03.3.1.1.1",
-                      "children": [
-                        {
-                          "name": "Onset:  Temperatur [\u00b0C ]",
-                          "showname": true,
-                          "type": "U03_3",
-                          "tooltip": "U03.3.1.1.1 - Onset:  Temperatur [\u00b0C ]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "2",
-                      "showname": true,
-                      "type": "U03_3",
-                      "tooltip": "U03.3.1.1.2",
-                      "children": [
-                        {
-                          "name": "Endset:  Temperatur [\u00b0C ]",
-                          "showname": true,
-                          "type": "U03_3",
-                          "tooltip": "U03.3.1.1.2 - Endset:  Temperatur [\u00b0C ]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "3",
-                      "showname": true,
-                      "type": "U03_3",
-                      "tooltip": "U03.3.1.1.3",
-                      "children": [
-                        {
-                          "name": "Peakfl\u00e4che [J/g]",
-                          "showname": true,
-                          "type": "U03_3",
-                          "tooltip": "U03.3.1.1.3 - Peakfl\u00e4che [J/g]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "4",
-                      "showname": true,
-                      "type": "U03_3",
-                      "tooltip": "U03.3.1.1.4",
-                      "children": [
-                        {
-                          "name": "Peak max/min [\u00b0C]",
-                          "showname": true,
-                          "type": "U03_3",
-                          "tooltip": "U03.3.1.1.4 - Peak max/min [\u00b0C]"
-                        }
-                      ]
-                    },
                     {
                       "name": "5",
                       "showname": true,
-                      "type": "U03_3",
-                      "tooltip": "U03.3.1.1.5",
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.5",
                       "children": [
                         {
-                          "name": "Peakh\u00f6he [mW]",
+                          "name": "Peakbreite Delta t_Fc [s]",
                           "showname": true,
-                          "type": "U03_3",
-                          "tooltip": "U03.3.1.1.5 - Peakh\u00f6he [mW]"
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.5 - Peakbreite Delta t_Fc [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "6",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.6",
+                      "children": [
+                        {
+                          "name": "Peakbreite Delta t_Fp [s]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.6 - Peakbreite Delta t_Fp [s]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "7",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.7",
+                      "children": [
+                        {
+                          "name": "Schnittimpuls pc [Ns]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.7 - Schnittimpuls pc [Ns]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "8",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.8",
+                      "children": [
+                        {
+                          "name": "Passivimpuls pp [Ns]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.8 - Passivimpuls pp [Ns]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "13",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.13",
+                      "children": [
+                        {
+                          "name": "bez Schnittimpuls pc' [Ns/mm]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.13 - bez Schnittimpuls pc' [Ns/mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "14",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.14",
+                      "children": [
+                        {
+                          "name": "bez Passivimpuls pp' [Ns/mm]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.14 - bez Passivimpuls pp' [Ns/mm]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "18",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.18",
+                      "children": [
+                        {
+                          "name": "spez Schnittimpuls pc' [Ns/mm\u00b2]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.18 - spez Schnittimpuls pc' [Ns/mm\u00b2]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "19",
+                      "showname": true,
+                      "type": "S04_1",
+                      "tooltip": "S04.1.1.1.19",
+                      "children": [
+                        {
+                          "name": "spez Passivimpuls pp' [Ns/mm\u00b2]",
+                          "showname": true,
+                          "type": "S04_1",
+                          "tooltip": "S04.1.1.1.19 - spez Passivimpuls pp' [Ns/mm\u00b2]"
                         }
                       ]
                     }
@@ -3347,210 +3657,174 @@
           ]
         },
         {
-          "name": "5",
+          "name": "2",
           "showname": true,
-          "type": "U03_5",
-          "tooltip": "U03.5",
+          "type": "S04_2",
+          "tooltip": "S04.2",
           "children": [
             {
               "name": "1",
               "showname": true,
-              "type": "U03_5",
-              "tooltip": "U03.5.1",
+              "type": "S04_2",
+              "tooltip": "S04.2.1",
               "children": [
                 {
                   "name": "1",
                   "showname": true,
-                  "type": "U03_5",
-                  "tooltip": "U03.5.1.1",
+                  "type": "S04_2",
+                  "tooltip": "S04.2.1.1",
                   "children": [
                     {
                       "name": "1",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.1.1",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.1",
                       "children": [
                         {
-                          "name": "transformation start z:  time [s]",
+                          "name": "Stegnr []",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.1.1 - transformation start z:  time [s]"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.1 - Stegnr []"
                         }
                       ]
                     },
                     {
                       "name": "2",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.1.2",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.2",
                       "children": [
                         {
-                          "name": "transformation start x:  temperature [\u00b0C]",
+                          "name": "Arithmetische Rauheit Sa [nm]",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.1.2 - transformation start x:  temperature [\u00b0C]"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.2 - Arithmetische Rauheit Sa [nm]"
                         }
                       ]
                     },
                     {
                       "name": "3",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.1.3",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.3",
                       "children": [
                         {
-                          "name": "transformation start y:  change in length [\u00b5m ]",
+                          "name": "Quadratische Rauheit Sq [nm]",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.1.3 - transformation start y:  change in length [\u00b5m ]"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.3 - Quadratische Rauheit Sq [nm]"
                         }
                       ]
                     },
                     {
                       "name": "4",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.1.4",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.4",
                       "children": [
                         {
-                          "name": "transformation end z:  time [s]",
+                          "name": "Peak-to-valley Sz [nm]",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.1.4 - transformation end z:  time [s]"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.4 - Peak-to-valley Sz [nm]"
                         }
                       ]
                     },
                     {
                       "name": "5",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.1.5",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.5",
                       "children": [
                         {
-                          "name": "transformation end x:  temperature [\u00b0C]",
+                          "name": "Valley Sv [nm]",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.1.5 - transformation end x:  temperature [\u00b0C]"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.5 - Valley Sv [nm]"
                         }
                       ]
                     },
                     {
                       "name": "6",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.1.6",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.6",
                       "children": [
                         {
-                          "name": "transformation end y:  change in length [\u00b5m ]",
+                          "name": " Peak Sp [nm]",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.1.6 - transformation end y:  change in length [\u00b5m ]"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.6 -  Peak Sp [nm]"
                         }
                       ]
                     },
                     {
                       "name": "7",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.1.7",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.7",
                       "children": [
                         {
-                          "name": "dl [\u00b5m]",
+                          "name": "Arithmetische Welligkeit Wa [nm]",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.1.7 - dl [\u00b5m]"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.7 - Arithmetische Welligkeit Wa [nm]"
                         }
                       ]
                     },
                     {
                       "name": "8",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.1.8",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.8",
                       "children": [
                         {
-                          "name": "dT [\u00b0C]",
+                          "name": "Quadratische Welligkeit Wq [nm]",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.1.8 - dT [\u00b0C]"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "name": "2",
-                  "showname": true,
-                  "type": "U03_5",
-                  "tooltip": "U03.5.1.2",
-                  "children": [
-                    {
-                      "name": "5",
-                      "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.2.5",
-                      "children": [
-                        {
-                          "name": "heat/hold/cool []",
-                          "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.2.5 - heat/hold/cool []"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.8 - Quadratische Welligkeit Wq [nm]"
                         }
                       ]
                     },
                     {
-                      "name": "1",
+                      "name": "9",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.2.1",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.9",
                       "children": [
                         {
-                          "name": "start temp [\u00b0C]",
+                          "name": "Peak-to-valley Wz [nm]",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.2.1 - start temp [\u00b0C]"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.9 - Peak-to-valley Wz [nm]"
                         }
                       ]
                     },
                     {
-                      "name": "2",
+                      "name": "10",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.2.2",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.10",
                       "children": [
                         {
-                          "name": "end temp [\u00b0C]",
+                          "name": "Valley Wv [nm]",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.2.2 - end temp [\u00b0C]"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.10 - Valley Wv [nm]"
                         }
                       ]
                     },
                     {
-                      "name": "3",
+                      "name": "11",
                       "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.2.3",
+                      "type": "S04_2",
+                      "tooltip": "S04.2.1.1.11",
                       "children": [
                         {
-                          "name": "slope [\u00b5m/\u00b0C]",
+                          "name": " Peak Wp [nm]",
                           "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.2.3 - slope [\u00b5m/\u00b0C]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "4",
-                      "showname": true,
-                      "type": "U03_5",
-                      "tooltip": "U03.5.1.2.4",
-                      "children": [
-                        {
-                          "name": "slope_hold [\u00b5m/s]",
-                          "showname": true,
-                          "type": "U03_5",
-                          "tooltip": "U03.5.1.2.4 - slope_hold [\u00b5m/s]"
+                          "type": "S04_2",
+                          "tooltip": "S04.2.1.1.11 -  Peak Wp [nm]"
                         }
                       ]
                     }
@@ -3568,6 +3842,86 @@
       "type": "U04_8",
       "tooltip": "U04",
       "children": [
+        {
+          "name": "8",
+          "showname": true,
+          "type": "U04_8",
+          "tooltip": "U04.8",
+          "children": [
+            {
+              "name": "1",
+              "showname": true,
+              "type": "U04_8",
+              "tooltip": "U04.8.1",
+              "children": [
+                {
+                  "name": "1",
+                  "showname": true,
+                  "type": "U04_8",
+                  "tooltip": "U04.8.1.1",
+                  "children": [
+                    {
+                      "name": "1",
+                      "showname": true,
+                      "type": "U04_8",
+                      "tooltip": "U04.8.1.1.1",
+                      "children": [
+                        {
+                          "name": "Partikeldurchmesser [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_8",
+                          "tooltip": "U04.8.1.1.1 - Partikeldurchmesser [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "2",
+                      "showname": true,
+                      "type": "U04_8",
+                      "tooltip": "U04.8.1.1.2",
+                      "children": [
+                        {
+                          "name": "Strahldruck [bar]",
+                          "showname": true,
+                          "type": "U04_8",
+                          "tooltip": "U04.8.1.1.2 - Strahldruck [bar]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "3",
+                      "showname": true,
+                      "type": "U04_8",
+                      "tooltip": "U04.8.1.1.3",
+                      "children": [
+                        {
+                          "name": "Partikelradius [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_8",
+                          "tooltip": "U04.8.1.1.3 - Partikelradius [\u00b5m]"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "4",
+                      "showname": true,
+                      "type": "U04_8",
+                      "tooltip": "U04.8.1.1.4",
+                      "children": [
+                        {
+                          "name": "Deformationsradius [\u00b5m]",
+                          "showname": true,
+                          "type": "U04_8",
+                          "tooltip": "U04.8.1.1.4 - Deformationsradius [\u00b5m]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
         {
           "name": "3",
           "showname": true,
@@ -4103,352 +4457,6 @@
                           "showname": true,
                           "type": "U04_7",
                           "tooltip": "U04.7.1.1.6 - rel deformierte Fl\u00e4che [%]"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "8",
-          "showname": true,
-          "type": "U04_8",
-          "tooltip": "U04.8",
-          "children": [
-            {
-              "name": "1",
-              "showname": true,
-              "type": "U04_8",
-              "tooltip": "U04.8.1",
-              "children": [
-                {
-                  "name": "1",
-                  "showname": true,
-                  "type": "U04_8",
-                  "tooltip": "U04.8.1.1",
-                  "children": [
-                    {
-                      "name": "1",
-                      "showname": true,
-                      "type": "U04_8",
-                      "tooltip": "U04.8.1.1.1",
-                      "children": [
-                        {
-                          "name": "Partikeldurchmesser [\u00b5m]",
-                          "showname": true,
-                          "type": "U04_8",
-                          "tooltip": "U04.8.1.1.1 - Partikeldurchmesser [\u00b5m]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "2",
-                      "showname": true,
-                      "type": "U04_8",
-                      "tooltip": "U04.8.1.1.2",
-                      "children": [
-                        {
-                          "name": "Strahldruck [bar]",
-                          "showname": true,
-                          "type": "U04_8",
-                          "tooltip": "U04.8.1.1.2 - Strahldruck [bar]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "3",
-                      "showname": true,
-                      "type": "U04_8",
-                      "tooltip": "U04.8.1.1.3",
-                      "children": [
-                        {
-                          "name": "Partikelradius [\u00b5m]",
-                          "showname": true,
-                          "type": "U04_8",
-                          "tooltip": "U04.8.1.1.3 - Partikelradius [\u00b5m]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "4",
-                      "showname": true,
-                      "type": "U04_8",
-                      "tooltip": "U04.8.1.1.4",
-                      "children": [
-                        {
-                          "name": "Deformationsradius [\u00b5m]",
-                          "showname": true,
-                          "type": "U04_8",
-                          "tooltip": "U04.8.1.1.4 - Deformationsradius [\u00b5m]"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Z02",
-      "showname": true,
-      "type": "Z02_1",
-      "tooltip": "Z02",
-      "children": [
-        {
-          "name": "1",
-          "showname": true,
-          "type": "Z02_1",
-          "tooltip": "Z02.1",
-          "children": [
-            {
-              "name": "1",
-              "showname": true,
-              "type": "Z02_1",
-              "tooltip": "Z02.1.1",
-              "children": [
-                {
-                  "name": "1",
-                  "showname": true,
-                  "type": "Z02_1",
-                  "tooltip": "Z02.1.1.1",
-                  "children": [
-                    {
-                      "name": "1",
-                      "showname": true,
-                      "type": "Z02_1",
-                      "tooltip": "Z02.1.1.1.1",
-                      "children": [
-                        {
-                          "name": "Type []",
-                          "showname": true,
-                          "type": "Z02_1",
-                          "tooltip": "Z02.1.1.1.1 - Type []"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "2",
-                      "showname": true,
-                      "type": "Z02_1",
-                      "tooltip": "Z02.1.1.1.2",
-                      "children": [
-                        {
-                          "name": "a0 [mm]",
-                          "showname": true,
-                          "type": "Z02_1",
-                          "tooltip": "Z02.1.1.1.2 - a0 [mm]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "3",
-                      "showname": true,
-                      "type": "Z02_1",
-                      "tooltip": "Z02.1.1.1.3",
-                      "children": [
-                        {
-                          "name": "b0 [mm]",
-                          "showname": true,
-                          "type": "Z02_1",
-                          "tooltip": "Z02.1.1.1.3 - b0 [mm]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "4",
-                      "showname": true,
-                      "type": "Z02_1",
-                      "tooltip": "Z02.1.1.1.4",
-                      "children": [
-                        {
-                          "name": "S0 [mm\u00b2]",
-                          "showname": true,
-                          "type": "Z02_1",
-                          "tooltip": "Z02.1.1.1.4 - S0 [mm\u00b2]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "5",
-                      "showname": true,
-                      "type": "Z02_1",
-                      "tooltip": "Z02.1.1.1.5",
-                      "children": [
-                        {
-                          "name": "E [GPa]",
-                          "showname": true,
-                          "type": "Z02_1",
-                          "tooltip": "Z02.1.1.1.5 - E [GPa]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "6",
-                      "showname": true,
-                      "type": "Z02_1",
-                      "tooltip": "Z02.1.1.1.6",
-                      "children": [
-                        {
-                          "name": "Rp001 [GPa]",
-                          "showname": true,
-                          "type": "Z02_1",
-                          "tooltip": "Z02.1.1.1.6 - Rp001 [GPa]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "8",
-                      "showname": true,
-                      "type": "Z02_1",
-                      "tooltip": "Z02.1.1.1.8",
-                      "children": [
-                        {
-                          "name": "L0 [mm]",
-                          "showname": true,
-                          "type": "Z02_1",
-                          "tooltip": "Z02.1.1.1.8 - L0 [mm]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "9",
-                      "showname": true,
-                      "type": "Z02_1",
-                      "tooltip": "Z02.1.1.1.9",
-                      "children": [
-                        {
-                          "name": "Le [mm]",
-                          "showname": true,
-                          "type": "Z02_1",
-                          "tooltip": "Z02.1.1.1.9 - Le [mm]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "7",
-                      "showname": true,
-                      "type": "Z02_1",
-                      "tooltip": "Z02.1.1.1.7",
-                      "children": [
-                        {
-                          "name": "Rp01 [GPa]",
-                          "showname": true,
-                          "type": "Z02_1",
-                          "tooltip": "Z02.1.1.1.7 - Rp01 [GPa]"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "2",
-          "showname": true,
-          "type": "Z02_2",
-          "tooltip": "Z02.2",
-          "children": [
-            {
-              "name": "1",
-              "showname": true,
-              "type": "Z02_2",
-              "tooltip": "Z02.2.1",
-              "children": [
-                {
-                  "name": "1",
-                  "showname": true,
-                  "type": "Z02_2",
-                  "tooltip": "Z02.2.1.1",
-                  "children": [
-                    {
-                      "name": "1",
-                      "showname": true,
-                      "type": "Z02_2",
-                      "tooltip": "Z02.2.1.1.1",
-                      "children": [
-                        {
-                          "name": "Spannungsverh\u00e4ltnis []",
-                          "showname": true,
-                          "type": "Z02_2",
-                          "tooltip": "Z02.2.1.1.1 - Spannungsverh\u00e4ltnis []"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "2",
-                      "showname": true,
-                      "type": "Z02_2",
-                      "tooltip": "Z02.2.1.1.2",
-                      "children": [
-                        {
-                          "name": "Dauerfestigkeit [N/mm^2]",
-                          "showname": true,
-                          "type": "Z02_2",
-                          "tooltip": "Z02.2.1.1.2 - Dauerfestigkeit [N/mm^2]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "3",
-                      "showname": true,
-                      "type": "Z02_2",
-                      "tooltip": "Z02.2.1.1.3",
-                      "children": [
-                        {
-                          "name": "Wechselfestigkeit [N/mm^2]",
-                          "showname": true,
-                          "type": "Z02_2",
-                          "tooltip": "Z02.2.1.1.3 - Wechselfestigkeit [N/mm^2]"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "4",
-                      "showname": true,
-                      "type": "Z02_2",
-                      "tooltip": "Z02.2.1.1.4",
-                      "children": [
-                        {
-                          "name": "Weibullverteilung []",
-                          "showname": true,
-                          "type": "Z02_2",
-                          "tooltip": "Z02.2.1.1.4 - Weibullverteilung []"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "5",
-                      "showname": true,
-                      "type": "Z02_2",
-                      "tooltip": "Z02.2.1.1.5",
-                      "children": [
-                        {
-                          "name": "Anzahl Proben []",
-                          "showname": true,
-                          "type": "Z02_2",
-                          "tooltip": "Z02.2.1.1.5 - Anzahl Proben []"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "6",
-                      "showname": true,
-                      "type": "Z02_2",
-                      "tooltip": "Z02.2.1.1.6",
-                      "children": [
-                        {
-                          "name": "Anzahl Pr\u00fcfungen []",
-                          "showname": true,
-                          "type": "Z02_2",
-                          "tooltip": "Z02.2.1.1.6 - Anzahl Pr\u00fcfungen []"
                         }
                       ]
                     }

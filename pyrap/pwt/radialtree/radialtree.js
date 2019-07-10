@@ -672,7 +672,7 @@ pwt_radialtree.RadialTree.prototype = {
         this._root = data;
         this._transition = true;
 
-        this._root.x0 = this.curY;
+        this._root.x0 = this._curY;
         this._root.y0 = 0;
         this.selectNode(this._root, this); // current selected node
         this.expandTree(this._root, this);
@@ -714,10 +714,10 @@ pwt_radialtree.RadialTree.prototype = {
                 ')translate(' + this._curX + ' ' + this._curY + 
                 ')scale(' + this._curZ + ')');
     
-        // Update the nodes…
+        // NODES
         var node = this._svgContainer.selectAll('g.rtnode').data(nodes, function(d) { return d.id || (d.id = ++that._counter); });
     
-        // Enter any new nodes at the parent's previous position
+        // create nodes
         var nodeEnter = node
             .enter()
             .insert('g', ':first-child')
@@ -770,24 +770,16 @@ pwt_radialtree.RadialTree.prototype = {
                 return ((source.x0 + that._curR) % 360 <= 180 ? 'translate(8)scale(' : 'rotate(180)translate(-8)scale(') + that.reduceZ(that) + ')';
             });
     
-        // that.update existing graph nodes
-
-        // Change the circle fill depending on whether it has children and is collapsed
+        // update nodes: change circle fill depending on whether it has children and is collapsed
         node.select('circle')
             .attr('r', function(d) {
-                return (d.selected ? 5 : 2) * that._cfg.nradius * that.reduceZ(that);
-            })
-            .style('fill', function(d) {
-                return d.selected ? that._cfg.selcolor : null;
+                return (d.selected ? 10 : 2) * that._cfg.nradius * that.reduceZ(that);
             })
             .style('fill-opacity', function(d) {
                 return d._children ? 1 : null;
             })
-            .style('stroke', function(d) {
-                return d.selected ? that._cfg.selcolor : null;
-            })
             .style('stroke-width', function(d) {
-                return d.selected ? 3 : null;
+                return d.selected ? 5 : null;
             });
     
         node.select('text')
@@ -796,9 +788,6 @@ pwt_radialtree.RadialTree.prototype = {
             })
             .attr('transform', function(d) {
                 return ((d.x + that._curR) % 360 <= 180 ? 'translate(8)scale(' : 'rotate(180)translate(-8)scale(' ) + that.reduceZ(that) +')';
-            })
-            .style('fill', function(d) {
-              return d.selected ? that._cfg.selcolor : null;
             })
             .attr('dy', '.35em');
 
@@ -817,7 +806,7 @@ pwt_radialtree.RadialTree.prototype = {
         nodeUpdate.select('text')
             .style('fill-opacity', 1);
     
-        // Transition exiting nodes to the parent's new position and remove
+        // remove nodes: exiting nodes to the parent's new position and remove
         var nodeExit = node
             .exit()
             .transition()
@@ -835,18 +824,25 @@ pwt_radialtree.RadialTree.prototype = {
         nodeExit.select('text')
             .style('fill-opacity', 0);
     
-        // Update the links…
-        var link = this._svgContainer.selectAll('path.rtlink').data(links, function(d) { return d.target.id; });
+        // EDGES
+        var link = this._svgContainer.selectAll('g.rtedge').data(links, function(d) { return d.target.id; });
 
-        // Enter any new links at the parent's previous position
-        link
+        var linkenter = link
             .enter()
+            .append('g')
+            .attr('class', 'rtedge');
+
+        // create links
+        linkenter
             .insert('path', 'g')
-            .attr('class', 'rtlink')
+            .attr('class', function(d) {
+                return 'rtlink ' + d.target.type;
+            })
             .attr("id", function(d) {
                 var str = d.source.name + '-' + d.target.name;
-                return str.replace(" ", "_") })
+                return str.replace(" ", "_"); })
             .attr('d', function() {
+
             var o = {
                 x: source.x0,
                 y: source.y0
@@ -857,11 +853,6 @@ pwt_radialtree.RadialTree.prototype = {
             });
         });
 
-        var linkenter = link
-            .enter()
-            .append('g')
-            .attr('class', 'rtedge');
-
         linkenter
             .append("text")
             .style("font-size", "15px")
@@ -871,29 +862,68 @@ pwt_radialtree.RadialTree.prototype = {
                 return '#' + str.replace(" ", "_"); })
             .style('text-anchor', "middle")
             .attr("startOffset", "50%")
-            .text(function(d) { return ((typeof d.target.showedge === 'undefined' || d.target.showedge) && d.target.edgetext) ? d.target.edgetext : ''; });
+            .text(function(d) { return ((typeof d.target.showedge === 'undefined' || d.target.showedge) && d.target.edgetext) ? d.target.edgetext : ''; })
+            .on("mouseover", function() {
+                that._tooltip
+                    .transition(200)
+                    .style('display', 'block');
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
+                that._tooltip
+                    .html(d.target.edgetooltip)
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .on("mouseout", function() {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            });
 
         linkenter
             .append("use")
             .attr("href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
             .style("stroke", "none")
             .style("fill", "none");
-    
-        // Transition links to their new position
-        link
+
+        // update links: transition links to their new position
+        var linkupdate = link
             .transition()
-            .duration(duration)
+            .duration(duration);
+
+        linkupdate
+            .select('path')
             .delay( transition ? function(d, i) {
                 return i * that._cfg.ndelay + Math.abs(d.source.depth - that._curNode.depth) * that._cfg.ddelay;
             } : 0)
             .attr('d', function(d) {
-                return that.diagonal(d);});
-    
-        // Transition exiting nodes to the parent's new position
-        link
+                return that.diagonal(d);})
+            .attr('class', function(d) {
+                return 'rtlink ' + d.target.type;
+            });
+
+        linkupdate
+            .select("text")
+            .style("fill-opacity", 1);
+
+        // remove links
+        var linkexit = link
             .exit()
             .transition()
-            .duration(duration)
+            .duration(duration);
+
+        linkexit
+            .select("text")
+            .style("fill-opacity", 1e-6);
+
+        linkexit
+            .select("use")
+            .remove();
+
+        linkexit
+            .select('path')
             .attr('d', function() {
                 var o = {
                     x: source.x0,
@@ -904,6 +934,9 @@ pwt_radialtree.RadialTree.prototype = {
                     target: o
                 });
             })
+            .remove();
+
+        linkexit
             .remove();
     
         // Stash the old positions for transition
