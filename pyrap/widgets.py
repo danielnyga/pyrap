@@ -22,7 +22,7 @@ from .communication import RWTSetOperation,\
 from .constants import RWT, GCBITS, CURSOR, DLG
 from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus, \
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
-    OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished, OnLongClick
+    OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished, OnLongClick, KeyPressed
 from .exceptions import WidgetDisposedError
 from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout, GridLayout
 from .ptypes import px, BitField, BoolVar, NumVar, Color,\
@@ -188,7 +188,13 @@ class Widget(object):
     def _handle_set(self, op):
         for key, value in op.args.items():
             if key == 'bounds':
+                resize = False
+                x, y, h, w = list(map(px, value))
+                if w != self.width or h != self.height:
+                    resize = True
                 self._bounds = list(map(px, value))
+                if resize and isinstance(self, Shell):
+                    self.on_resize.notify()
 
     def _handle_call(self, op):
         pass
@@ -332,6 +338,16 @@ class Widget(object):
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         session.runtime << RWTSetOperation(self.id, {'backgroundImage': img})
+
+    @property
+    def bgsize(self):
+        return self.theme.bgsize
+
+    @bgsize.setter
+    @checkwidget
+    def bgsize(self, size):
+        session.runtime << RWTSetOperation(self.id, {'backgroundSize': size})
+
 
     @property
     def color(self):
@@ -629,30 +645,30 @@ class Shell(Widget):
             pack = self._packed
         else:
             self._packed = pack
-        with stopwatch('/pyrap/layout'):
-            # materialize the layout tree
-            adapter = materialize_adapters(self)
-            if not pack or self.maximized:
-                adapter.hpos, adapter.vpos, adapter.width, adapter.height = self.client_rect
-            else:
-                adapter.hpos, adapter.vpos, adapter.width, adapter.height = None, None, None, None
-            adapter.run()
-            if pack and not self.maximized:
-                adapter.hpos, adapter.vpos, _, _ = self.client_rect
-                adapter.width, adapter.height = adapter.preferred_size()
-                t, r, b, l = self.compute_fringe()
-                w = max(adapter.width + l + r, ifnone(self.layout.minwidth, 0))
-                h = max(adapter.height + t + b, ifnone(self.layout.minheight, 0))
-                adapter.widget.bounds = adapter.hpos + adapter.layout.padding_left, \
-                                        adapter.vpos + adapter.layout.padding_top, \
-                                        adapter.width - adapter.layout.padding_left - adapter.layout.padding_right, \
-                                        adapter.height - adapter.layout.padding_top - adapter.layout.padding_bottom
-                _, _, dispw, disph = session.runtime.display.bounds
-                xpos = int(round(dispw.value / 2. - w / 2.))
-                ypos = int(round(disph.value / 2. - h / 2.))
-                self.bounds = xpos, ypos, w, h
-                if not allnone((self.layout.minwidth, self.layout.minheight)):
-                    self.dolayout()
+        # materialize the layout tree
+        adapter = materialize_adapters(self)
+        if not pack or self.maximized:
+            adapter.hpos, adapter.vpos, adapter.width, adapter.height = self.client_rect
+        else:
+            adapter.hpos, adapter.vpos, adapter.width, adapter.height = None, None, None, None
+        adapter.run()
+        if pack and not self.maximized:
+            adapter.hpos, adapter.vpos, _, _ = self.client_rect
+            adapter.width, adapter.height = adapter.preferred_size()
+            t, r, b, l = self.compute_fringe()
+            w = max(adapter.width + l + r, ifnone(self.layout.minwidth, 0))
+            h = max(adapter.height + t + b, ifnone(self.layout.minheight, 0))
+            adapter.widget.bounds = adapter.hpos + adapter.layout.padding_left, \
+                                    adapter.vpos + adapter.layout.padding_top, \
+                                    adapter.width - adapter.layout.padding_left - adapter.layout.padding_right, \
+                                    adapter.height - adapter.layout.padding_top - adapter.layout.padding_bottom
+            _, _, dispw, disph = session.runtime.display.bounds
+            xpos = int(round(dispw.value / 2. - w / 2.))
+            ypos = int(round(disph.value / 2. - h / 2.))
+            self.bounds = xpos, ypos, w, h
+            if not allnone((self.layout.minwidth, self.layout.minheight)):
+                self.dolayout()
+        out('doing layout')
 
     def onresize_shell(self):
         self.dolayout()
@@ -993,7 +1009,7 @@ class Label(Widget):
         w, h = 0, 0
         if self.img is not None:
             w, h = self.img.size
-        elif RWT.WRAP not in self.style:
+        elif self.text:
             lines = self._text.split('\n' if RWT.MARKUP not in self.style else '<br>')
             w += max([session.runtime.textsize_estimate(self.theme.font, l, self.shell())[0] for l in lines])
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
@@ -1224,7 +1240,7 @@ class Button(Widget):
     
     def compute_size(self):
         width, height = Widget.compute_size(self)
-        if self.compute_textsize:
+        if self.compute_textsize and self.text is not None:
             tw, th = session.runtime.textsize_estimate(self.theme.font, self._text.replace('\n', '<br>'), self.shell())
         else:
             tw, th = 0, 0
@@ -1233,7 +1249,7 @@ class Button(Widget):
         if self.img is not None:
             w, h = self.img.size
             width += w
-            height += (h - px(h)) if (h > px(h)) else 0
+            height += max(0, (h - th))
         return width, height
     
     
@@ -1759,6 +1775,7 @@ class ScrolledComposite(Composite):
             width += self._vbar.theme.width
         return width, height
 
+
 class ScrollBar(Widget):
 
     _rwt_class_name_ = 'rwt.widgets.ScrollBar'
@@ -1907,7 +1924,6 @@ class TabItem(Widget):
             parent.children.remove(self)
         self.parent.items.insert(idx, self)
         self.selected = False
-
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
@@ -2727,6 +2743,8 @@ class List(Widget):
 
     @property
     def selection(self):
+        if not self.items:
+            return None
         sel = [self.items[list(self.items.keys())[i]] for i in self._selidx]
         if RWT.MULTI not in self.style: 
             if not sel: return None
@@ -4049,3 +4067,63 @@ class ToolTip(Widget):
     def compute_size(self):
         width, height = Widget.compute_size(self)
         return width, height
+
+
+class Keyboard(Composite):
+    KEYS = {'de': [
+        ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'ß', '<'),
+        ('q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', 'ü', '+', '-'),
+        ('a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ö', 'ä'),
+        ('shift', 'y', 'x', 'c', 'v', 'b', 'n', 'm', '.', ','),
+        (' ',)
+    ], 'en': [
+        ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='),
+        ('q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\'),
+        ('a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', "'"),
+        ('shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.'),
+        (' ',)
+    ]}
+
+    @constructor('Keyboard')
+    def __init__(self, parent, language='de', **kwargs):
+        super(Keyboard, self).__init__(parent, **kwargs)
+        self.keys = []
+        self.shift = BoolVar()
+        self.shiftbtn = None
+        self.on_select = KeyPressed()
+        self.widths = 50
+        self.language = language
+
+    def create_content(self):
+        self.layout = RowLayout(equalheights=True, padding=5, valign='center', halign='center')
+
+        for keyrow in Keyboard.KEYS.get(self.language, Keyboard.KEYS['de']):
+            row = Composite(self, layout=ColumnLayout(valign='fill', halign='center', equalwidths=True))
+            for key in keyrow:
+                if key == 'shift':
+                    self.shiftbtn = Toggle(row, text='up', minwidth=40)
+                    self.shiftbtn.bind(self.shift)
+                    self.shift.set(True)
+                    self.shift.on_change += self.on_shift
+                    self.shiftbtn.on_checked += self.on_shift
+                elif type(key) is int:
+                    Label(row, minwidth=key)
+                else:
+                    b = Button(row, text=key, valign='fill', halign='center')
+                    b.on_select += self.key_pressed
+                    if key == ' ':
+                        b.layout.minwidth = 300
+                    else:
+                        b.layout.minwidth = self.widths
+                    self.keys.append(b)
+        self.update()
+
+    def update(self):
+        for k in self.keys:
+            k.text = k.text.upper() if (self.shift.value and k.text != 'ß') else k.text.lower()
+
+    def on_shift(self, *_):
+        self.update()
+
+    def key_pressed(self, event):
+        self.on_select.notify(event.widget.text)

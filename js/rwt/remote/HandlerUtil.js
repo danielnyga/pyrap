@@ -108,6 +108,7 @@ rwt.remote.HandlerUtil = {
      * </p>
      * @param {string|null} cursor the new cursor (or null)
      */
+    "backgroundSize",
     "cursor",
     "customVariant",
     "bounds",
@@ -177,6 +178,15 @@ rwt.remote.HandlerUtil = {
       } else {
         widget.setUserData( "backgroundImageSize", value.slice( 1 ) );
         widget.setBackgroundImage( value[ 0 ] );
+      }
+    },
+    "backgroundSize" : function( widget, value ) {
+      if( value === null ) {
+        widget.resetBackgroundImage();
+        widget.setUserData( "backgroundImageSize", null );
+      } else {
+        widget.setUserData( "backgroundImageSize", value );
+        widget.setBackgroundSize( value );
       }
     },
     "cursor" : function( widget, value ) {

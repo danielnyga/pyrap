@@ -827,6 +827,19 @@ rwt.qx.Class.define( "rwt.widgets.base.Widget", {
       themeable : true
     },
 
+
+    /**
+     * Mapping to native style property background-size.
+     *
+     *  The size of the image file to use as background size.
+     */
+    backgroundSize : {
+      check : "String",
+      nullable : true,
+      apply : "_applyBackgroundSize",
+      themeable : true
+    },
+
     /**
      * Mapping to native style property background-repeat.
      */
@@ -3255,6 +3268,17 @@ rwt.qx.Class.define( "rwt.widgets.base.Widget", {
         imageMgr.show(value);
       }
       this._styleBackgroundImage( value );
+    },
+
+    _applyBackgroundSize : function(value, old) {
+      var imageMgr = rwt.html.ImageManager.getInstance();
+      if (old) {
+        imageMgr.hide(old);
+      }
+      if (value) {
+        imageMgr.show(value);
+      }
+      rwt.html.Style.setBackgroundSize( this, value );
     },
 
     _styleBackgroundImage : function( value ) {

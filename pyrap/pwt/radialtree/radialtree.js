@@ -649,7 +649,7 @@ pwt_radialtree.RadialTree.prototype = {
         that._svgContainer
             .attr('transform', 'rotate(' + that._curR + ' ' + that._curX + ' ' + that._curY + ')translate(' + that._curX + ' ' + that._curY + ')scale(' + that._curZ + ')');
 
-        that._svgContainer.selectAll('text')
+        that._svgContainer.selectAll('.rtnode text')
             .attr('text-anchor', function(d) {
                 return (d.x + that._curR) % 360 <= 180 ? 'start' : 'end';
             })
@@ -771,27 +771,9 @@ pwt_radialtree.RadialTree.prototype = {
             });
     
         // update nodes: change circle fill depending on whether it has children and is collapsed
-        node.select('circle')
-            .attr('r', function(d) {
-                return (d.selected ? 10 : 2) * that._cfg.nradius * that.reduceZ(that);
-            })
-            .style('fill-opacity', function(d) {
-                return d._children ? 1 : null;
-            })
-            .style('stroke-width', function(d) {
-                return d.selected ? 5 : null;
-            });
-    
-        node.select('text')
-            .attr('text-anchor', function(d) {
-                return (d.x + that._curR) % 360 <= 180 ? 'start' : 'end';
-            })
-            .attr('transform', function(d) {
-                return ((d.x + that._curR) % 360 <= 180 ? 'translate(8)scale(' : 'rotate(180)translate(-8)scale(' ) + that.reduceZ(that) +')';
-            })
-            .attr('dy', '.35em');
-
-        var nodeUpdate = node.transition().duration(duration)
+        var nodeUpdate = node
+            .transition()
+            .duration(duration)
             .delay( transition ? function(d, i) {
                 return i * that._cfg.ndelay + Math.abs(d.depth - that._curNode.depth) * that._cfg.ddelay; }  : 0)
             .attr('transform', function(d) {
@@ -800,10 +782,26 @@ pwt_radialtree.RadialTree.prototype = {
     
         nodeUpdate.select('circle')
             .attr('r', function(d) {
-                return (d.selected ? 3 : 2) * that._cfg.nradius * that.reduceZ(that);
+                return (d.selected ? 5 : 2) * that._cfg.nradius * that.reduceZ(that);
+            })
+            .style('fill-opacity', function(d) {
+                return d._children ? 1 : null;
+            })
+            .style('stroke-width', function(d) {
+                return d.selected ? 5 : null;
             });
 
         nodeUpdate.select('text')
+            .attr('text-anchor', function(d) {
+                return (d.x + that._curR) % 360 <= 180 ? 'start' : 'end';
+            })
+            .attr('transform', function(d) {
+                return ((d.x + that._curR) % 360 <= 180 ? 'translate(8)scale(' : 'rotate(180)translate(-8)scale(' ) + that.reduceZ(that) +')';
+            })
+            .attr('class', function(d) {
+                return d.type;
+            })
+            .attr('dy', '.35em')
             .style('fill-opacity', 1);
     
         // remove nodes: exiting nodes to the parent's new position and remove
@@ -836,7 +834,7 @@ pwt_radialtree.RadialTree.prototype = {
         linkenter
             .insert('path', 'g')
             .attr('class', function(d) {
-                return 'rtlink ' + d.target.type;
+                return 'rtlink' + (d.target.type ? ' ' + d.target.type : '');
             })
             .attr("id", function(d) {
                 var str = d.source.name + '-' + d.target.name;
@@ -901,12 +899,27 @@ pwt_radialtree.RadialTree.prototype = {
             .attr('d', function(d) {
                 return that.diagonal(d);})
             .attr('class', function(d) {
-                return 'rtlink ' + d.target.type;
+                return 'rtlink' + (d.target.type ? ' ' + d.target.type : '');
             });
 
         linkupdate
             .select("text")
             .style("fill-opacity", 1);
+
+        linkupdate
+            .select("text textPath")
+            .attr("href", function(d) {
+                var str = d.source.name + '-' + d.target.name;
+                return '#' + str.replace(" ", "_"); })
+            .style('text-anchor', "middle")
+            .attr("startOffset", "50%")
+            .text(function(d) { return ((typeof d.target.showedge === 'undefined' || d.target.showedge) && d.target.edgetext) ? d.target.edgetext : ''; });
+
+        linkupdate
+            .select('use')
+            .attr("href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
+            .style("stroke", "none")
+            .style("fill", "none");
 
         // remove links
         var linkexit = link
