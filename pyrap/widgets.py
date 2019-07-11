@@ -25,8 +25,8 @@ from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus, \
     OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished, OnLongClick, KeyPressed
 from .exceptions import WidgetDisposedError
 from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout, GridLayout
-from .ptypes import px, BitField, BoolVar, NumVar, Color,\
-    parse_value, toint, Image
+from .ptypes import px, BitField, BoolVar, NumVar, Color, \
+    parse_value, toint, Image, Event
 from .themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme, \
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
@@ -4127,3 +4127,48 @@ class Keyboard(Composite):
 
     def key_pressed(self, event):
         self.on_select.notify(event.widget.text)
+
+
+class NumberChanged(Event):
+
+    def _notify(self, listener, *args, **kwargs):
+        listener()
+
+
+class NumericKeys(Composite):
+    '''
+    A composite widget for entering numbers.
+    '''
+
+    @constructor('NumericKeys')
+    def __init__(self, parent, value=None, **kwargs):
+        super(NumericKeys, self).__init__(parent, **kwargs)
+        self.text = ifnone(value, '', str)
+        self.btnpoint = None
+        self.on_modify = NumberChanged()
+        self.number = 0
+
+    def enter(self, event):
+        if event.widget.text == '<':
+            self.text = ''
+        else:
+            self.text += event.widget.text
+        if self.text:
+            self.number = float(self.text)
+        else:
+            self.number = 0
+        self.btnpoint.enabled = '.' not in self.text
+        self.on_modify.notify()
+
+    def create_content(self):
+        self.layout = GridLayout(cols=3, equalheights=True, equalwidths=True)
+        for row in [('7', '8', '9'), ('4', '5', '6'), ('1', '2', '3'), ('.', '0', '<')]:
+            for n in row:
+                b = Button(self, n, valign='fill', halign='fill', minwidth=100, minheight=75)
+                b.on_select += self.enter
+                if n == '.':
+                    self.btnpoint = b
+
+    def clear(self):
+        self.text = '0'
+        self.number = 0
