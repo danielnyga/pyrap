@@ -11,7 +11,7 @@ pwt_heatmap.Heatmap = function( parent ) {
     this._svgContainer = this._svg.select('g.heatmap');
 
     this._cfg = {
-         margin: {top: 5, right: 25, bottom: 30, left: 40},
+         margin: {top: 5, right: 25, bottom: 100, left: 100},
          w: 300,
          h: 300,
          color: d3v5.scaleSequential()
@@ -60,40 +60,27 @@ pwt_heatmap.Heatmap.prototype = {
             // append y-labels
             this._y_labels = this._svgContainer.append("g");
         }
+        
+        this._defs = this._svgContainer.append("defs");
+        this._gradient = this._defs.append('linearGradient')
+            .attr('id', 'gradient')
+            .attr("x1", "0%")
+            .attr("y1", "0%")
+            .attr("x2", "0%")
+            .attr("y2", "100%");
 
-        this._canvas = d3v5.select(this._parentDIV)
-            .append("canvas")
-            .attr("width", 900)
-            .attr("height", 20)
-            .style('position', 'absolute')
-            .style('top', this._cfg.h + 'px');
-
-        var ctx = this._canvas.node().getContext("2d");
-        var x = d3v5.scaleLinear().domain([0, 1]).range([20, 500]);
-
-        // draw legend color bar
         d3v5.range(0, 1, 0.001)
-            .forEach(function (d) {
-                ctx.beginPath();
-                ctx.strokeStyle = that._cfg.color(d);
-                ctx.moveTo(x(d), 0);
-                ctx.lineTo(x(d), 20);
-                ctx.stroke();
-            });
+        .forEach(function (d) {
+            that._gradient.append('stop')
+                .attr("offset", d*100+"%")
+                .attr("stop-color", that._cfg.color(d));
+        });
 
-        // draw axis for legend color bar
-        this._legend = d3v5.select(this._parentDIV)
-            .append("svg")
-            .attr("class", "heatmaplegend")
-            .attr("width", 900)
-            .attr("height", 30)
-            .style('position', 'absolute')
-            .style('top', this._cfg.h + 'px');
-
-        this._legend
+        this._legendgroup = this._svg
             .append('g')
-            .attr("class", "axis")
-            .call(d3v5.axisBottom(x));
+            .attr("transform", "translate(" + (this._cfg.w + this._cfg.margin.left + this._cfg.margin.right) + ", 10)")
+            .attr("class", "legendaxis");
+
     },
 
     createElement: function (parent) {
@@ -195,11 +182,30 @@ pwt_heatmap.Heatmap.prototype = {
         ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE LEGEND                              ///
         ////////////////////////////////////////////////////////////////////////
-        this._canvas
-            .style('top', (this._cfg.h + this._cfg.margin.top + this._cfg.margin.bottom + 5) + 'px');
 
-        this._legend
-            .style('top', (this._cfg.h + this._cfg.margin.top + this._cfg.margin.bottom + 25) + 'px');
+        var lx = d3v5.scaleLinear().domain([0, 1]).range([0, this._cfg.h]);
+
+        this._svg.select('g.legendaxis')
+            .attr("transform", "translate(" + (this._cfg.w + this._cfg.margin.left + this._cfg.margin.right) + ", 10)");
+
+        var grad = this._legendgroup.selectAll('rect').data([0]);
+
+        grad
+            .enter()
+            .append("rect")
+            .attr("width", 10)
+            .attr("height", this._cfg.h)
+            .style("fill", "url(#gradient)");
+
+        grad
+            .attr("height", this._cfg.h);
+
+
+        grad
+            .exit().remove();
+
+        this._legendgroup
+            .call(d3v5.axisLeft(lx));
 
         ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE LABELS                              ///
@@ -207,6 +213,11 @@ pwt_heatmap.Heatmap.prototype = {
         this._x_labels
             .attr("transform", "translate(0," + this._cfg.h + ")")
             .call(d3v5.axisBottom(x).tickSize(0))
+            .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-25)")
             .select(".domain").remove();
 
         this._y_labels
@@ -223,10 +234,10 @@ pwt_heatmap.Heatmap.prototype = {
         // update squares
         hm
             .attr("x", function (d) {
-                return x(d.x)
+                return x(d.x);
             })
             .attr("y", function (d) {
-                return y(d.y)
+                return y(d.y);
             })
             .attr("width", x.bandwidth())
             .attr("height", y.bandwidth())
@@ -239,10 +250,10 @@ pwt_heatmap.Heatmap.prototype = {
             .enter()
             .append("rect")
             .attr("x", function (d) {
-                return x(d.x)
+                return x(d.x);
             })
             .attr("y", function (d) {
-                return y(d.y)
+                return y(d.y);
             })
             .attr("rx", 4)
             .attr("ry", 4)
