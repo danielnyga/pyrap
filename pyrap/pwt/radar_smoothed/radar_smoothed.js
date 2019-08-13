@@ -323,7 +323,7 @@ pwt_rs_.RadarSmoothed.prototype = {
         var y0 = this.valtop(axis, this._cfg.maxValues[axis.name]) * (-Math.sin(this._cfg.angleslice*i + Math.PI/2));
 
 	    // x/y coords of mousepointer
-	    coordinates = d3v3.mouse(this._svgContainer.node());
+	    var coordinates = d3v3.mouse(this._svgContainer.node());
 		var mx = coordinates[0];
 		var my = coordinates[1];
 
