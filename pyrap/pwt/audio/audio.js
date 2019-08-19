@@ -26,6 +26,7 @@ pwt_audio.Audio.prototype = {
 
         // create audio element
         var vid = document.createElement( "audio" );
+        vid.controls = true;
         vid.style.width = "100%";
         vid.style.height = "100%";
 
