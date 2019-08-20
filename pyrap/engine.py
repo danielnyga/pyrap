@@ -628,7 +628,7 @@ class Resource(object):
     obtained by the `location` property.
     '''
 
-    def __init__(self, registry, name, content_type, content, maxdl=inf):
+    def __init__(self, registry, name, content_type, content, maxdl=inf, last_change=None):
         self.name = name
         self.content_type = content_type
         self.content = content
@@ -636,7 +636,7 @@ class Resource(object):
         self.md5 = md5(content).hexdigest()
         if name is None:
             self.name = self.md5 + mimetypes.guess_extension(content_type)
-        self.last_change = datetime.now()
+        self.last_change = ifnone(last_change, datetime.now())
         self.downloads = 0
         self.max_downloads = maxdl
         self.lock = Lock()
@@ -673,10 +673,11 @@ class ResourceManager(object):
     def __getitem__(self, name):
         return self.get(name)
 
-    def registerf(self, name, content_type, stream, force=False, limit=inf, encode=True):
+    def registerf(self, name, content_type, stream, force=False, limit=inf, encode=True, last_change=None):
         '''
         Make a file available for download under the given path.
         
+        :param last_change:     the timstamp when the last modification of the file content happened.
         :param name:            the name of the resource under which it will be availble
                                 for download to the outside.
         :param content_type:    the MIME type of the resource
@@ -696,15 +697,15 @@ class ResourceManager(object):
                     c = c.encode('utf8')
                 except:
                     print('Could not encode, passing on') #TODO check if this is critical
-        return self.registerc(name, content_type, c, force=force, limit=limit)
+        return self.registerc(name, content_type, c, force=force, limit=limit, last_change=last_change)
 
-    def registerc(self, name, content_type, content, force=False, limit=inf):
+    def registerc(self, name, content_type, content, force=False, limit=inf, last_change=None):
         '''
         Makes the given content available for download under the given path
         and the given MIME type.
         '''
         with self.lock:
-            resource_ = Resource(self, name, content_type, content)
+            resource_ = Resource(self, name, content_type, content, last_change=last_change)
             resource = self.resources.get(resource_.name)
             if resource is not None and (resource_.content_type != resource.content_type or
                                          resource_.md5 != resource.md5) and not force:

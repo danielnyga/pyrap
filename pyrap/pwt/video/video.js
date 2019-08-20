@@ -26,6 +26,7 @@ pwt_video.Video.prototype = {
 
         // create video element
         var vid = document.createElement( "video" );
+        vid.controls = true;
         vid.style.width = "100%";
         vid.style.height = "100%";
 

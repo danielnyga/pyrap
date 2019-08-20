@@ -4,6 +4,7 @@ Created on Oct 18, 2015
 @author: nyga
 '''
 import base64
+import datetime
 import mimetypes
 import os
 from _pyio import BytesIO
@@ -968,9 +969,10 @@ class Image(object):
             self._mimetype = mimetypes.guess_type(' .' + 'png')[0]
         if mimetype is not None:
             self._mimetype = mimetype
+        self.last_change = None
         self.load()
         self.close()
-        
+
     def load(self):
         if self.filepath is None:
             if self._cnt is not None:
@@ -988,6 +990,8 @@ class Image(object):
                 return self
             else:
                 raise Exception('Unable to load Image without filepath or content!')
+        else:
+            self.last_change = datetime.datetime.fromtimestamp(os.path.getmtime(self.filepath))
         if self.fileext == 'svg':
             self._img = SVG().open(self._filepath)
             with open(self.filepath) as f: self._content = f.read()
@@ -1105,14 +1109,11 @@ class Image(object):
             self._img = self._img.resize((w.value, h.value), PILImage.LANCZOS)
             ext = self.fileext.lower()
             self._img.save(stream, format=ext if ext != 'jpg' else 'jpeg')
-
         self._content = stream.getvalue()
         stream.close()
         return self
 
         
-        
-
 if __name__ == '__main__':
     
     print(Color('#0000ff'))

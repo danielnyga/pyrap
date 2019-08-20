@@ -25,8 +25,8 @@ from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus, \
     OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished, OnLongClick, KeyPressed
 from .exceptions import WidgetDisposedError
 from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout, GridLayout
-from .ptypes import px, BitField, BoolVar, NumVar, Color,\
-    parse_value, toint, Image
+from .ptypes import px, BitField, BoolVar, NumVar, Color, \
+    parse_value, toint, Image, Event
 from .themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme, \
     CompositeTheme, ShellTheme, EditTheme, ComboTheme, TabItemTheme, \
     TabFolderTheme, ScrolledCompositeTheme, ScrollBarTheme, GroupTheme, \
@@ -334,7 +334,7 @@ class Widget(object):
     def bgimg(self, img):
         self.theme.bgimg = img
         if img is not None:
-            res = session.runtime.mngr.resources.registerc(None, mimetypes.types_map['.%s' % img.fileext], img.content)
+            res = session.runtime.mngr.resources.registerc(None, mimetypes.types_map['.%s' % img.fileext], img.content, last_change=img.last_change)
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         session.runtime << RWTSetOperation(self.id, {'backgroundImage': img})
@@ -393,7 +393,7 @@ class Widget(object):
         
     def _get_rwt_img(self, img):
         if img is not None:
-            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
+            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content, last_change=img.last_change)
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         return img
@@ -966,7 +966,7 @@ class Label(Widget):
 
     def _get_rwt_img(self, img):
         if img is not None:
-            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
+            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content, last_change=img.last_change)
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         return img
@@ -1057,7 +1057,7 @@ class Link(Widget):
 
     def _get_rwt_img(self, img):
         if img is not None:
-            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
+            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content, last_change=img.last_change)
             img = [res.location, img.width.value, img.height.value]
         else:
             img = None
@@ -1205,7 +1205,7 @@ class Button(Widget):
 
     def _get_rwt_img(self, img):
         if img is not None:
-            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content)
+            res = session.runtime.mngr.resources.registerc(None, img.mimetype, img.content, last_change=img.last_change)
             img = [res.location, img.width.value, img.height.value]
         else: img = None
         return img
@@ -1945,7 +1945,7 @@ class TabItem(Widget):
 
     def _get_rwt_img(self, img):
         if img is not None:
-            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
+            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content, last_change=img.last_change)
             img = [res.location, img.width, img.height]
         else:
             img = None
@@ -2062,7 +2062,7 @@ class Scale(Widget):
         # via CSS, so we fake a CSS class "Scale-Line" that holds the line image
         # and make it available under a constant resource name
         line = self.theme.lineimg
-        session.runtime.mngr.resources.registerc(line_resource_name, line.mimetype, line.content)
+        session.runtime.mngr.resources.registerc(line_resource_name, line.mimetype, line.content, last_change=img.last_change)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
     def _handle_notify(self, op):
@@ -2596,7 +2596,7 @@ class MenuItem(Widget):
 
     def _get_rwt_img(self, img):
         if img is not None:
-            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content)
+            res = session.runtime.mngr.resources.registerc(img.filename, 'image/%s' % img.fileext, img.content, last_change=img.last_change)
             img = [res.location, img.width.value, img.height.value]
         return img
 
@@ -3931,7 +3931,7 @@ class Decorator(Widget):
         else: raise ValueError('Illegal value for vertical position of a control decorator: "%s"' % self.valign)
         options.text = self._text
         if isinstance(self._icon, Image):
-            rc = session.runtime.mngr.resources.registerc(name=None, content_type=self._icon.mimetype, content=self._icon.content)
+            rc = session.runtime.mngr.resources.registerc(name=None, content_type=self._icon.mimetype, content=self._icon.content, last_change=self._icon.last_change)
             self.iconwidth = self._icon.width
             self.iconheight = self._icon.height
             options.image = [rc.location, self._icon.width.value, self._icon.height.value]
@@ -4127,3 +4127,48 @@ class Keyboard(Composite):
 
     def key_pressed(self, event):
         self.on_select.notify(event.widget.text)
+
+
+class NumberChanged(Event):
+
+    def _notify(self, listener, *args, **kwargs):
+        listener()
+
+
+class NumericKeys(Composite):
+    '''
+    A composite widget for entering numbers.
+    '''
+
+    @constructor('NumericKeys')
+    def __init__(self, parent, value=None, **kwargs):
+        super(NumericKeys, self).__init__(parent, **kwargs)
+        self.text = ifnone(value, '', str)
+        self.btnpoint = None
+        self.on_modify = NumberChanged()
+        self.number = 0
+
+    def enter(self, event):
+        if event.widget.text == '<':
+            self.text = ''
+        else:
+            self.text += event.widget.text
+        if self.text:
+            self.number = float(self.text)
+        else:
+            self.number = 0
+        self.btnpoint.enabled = '.' not in self.text
+        self.on_modify.notify()
+
+    def create_content(self):
+        self.layout = GridLayout(cols=3, equalheights=True, equalwidths=True)
+        for row in [('7', '8', '9'), ('4', '5', '6'), ('1', '2', '3'), ('.', '0', '<')]:
+            for n in row:
+                b = Button(self, n, valign='fill', halign='fill', minwidth=100, minheight=75)
+                b.on_select += self.enter
+                if n == '.':
+                    self.btnpoint = b
+
+    def clear(self):
+        self.text = '0'
+        self.number = 0
