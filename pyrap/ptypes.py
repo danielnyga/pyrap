@@ -883,10 +883,13 @@ class SVG(object):
         self.root = ET.fromstring(cnt)
 
         if css is not None:
-            with open(css) as fi:
-                s = defs.format(fi.read())
-                defstag = ET.fromstring(s)
-                self.root.append(defstag)
+            if type(css) is not list:
+                css = [css]
+            for css_ in css:
+                with open(css_) as fi:
+                    s = defs.format(fi.read())
+                    defstag = ET.fromstring(s)
+                    self.root.append(defstag)
         if 'viewBox' in self.root.attrib:
             w, h = self.root.attrib['viewBox'].split()[-2:]
         elif w is not None and h is not None:

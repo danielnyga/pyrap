@@ -27,6 +27,7 @@ class Graph(Widget):
         with open(os.path.join(locations.pwt_loc, 'graph', 'graph.css')) as fi:
             session.runtime.requirecss(fi)
         if css is not None:
+            self._css = css
             for css_ in css:
                 with open(css_) as fcss:
                     session.runtime.requirecss(fcss)
@@ -52,9 +53,9 @@ class Graph(Widget):
         Widget._handle_set(self, op)
         for key, value in op.args.items():
             if key == 'svg':
-                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'graph', 'graph.css'), name=__class__.__name__)
+                downloadsvg(op.args['svg'], self.width.value, self.height.value, [os.path.join(locations.pwt_loc, 'graph', 'graph.css')] + self._css, name=__class__.__name__)
             if key == 'pdf':
-                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'graph', 'graph.css'), name=__class__.__name__)
+                downloadpdf(op.args['pdf'], self.width.value, self.height.value, [os.path.join(locations.pwt_loc, 'graph', 'graph.css')] + self._css, name=__class__.__name__)
         self.on_set.notify(_rwt_event(op))
 
     def compute_size(self):

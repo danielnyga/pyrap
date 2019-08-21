@@ -7,11 +7,14 @@ pwt_graph.Graph = function( parent ) {
         .attr('class', 'graphtooltip')
         .style('z-index', 1000000);
 
-    this.WAITMSEC = 200;
-    this._linkdistance = 150;
-    this._circleradius = 10;
-    this._charge = -700;
-    this._gravity = .1;
+    this._cfg = {
+        waitmsec: 200,
+        linkdistance: 150,
+        circleradius: 10,
+        charge: -600,
+        gravity: .2
+	};
+
     this.force = d3v3.layout.force();
     this.nodes = this.force.nodes();
     this.links = this.force.links();
@@ -113,24 +116,24 @@ pwt_graph.Graph.prototype = {
     },
 
     setCircleradius: function( radius ) {
-        this._circleradius = radius;
+        this._cfg.circleradius = radius;
         this.update();
     },
 
 
     setLinkdistance: function( distance ) {
-        this._linkdistance = distance;
+        this._cfg.linkdistance = distance;
         this.update();
     },
 
     setCharge: function( charg ) {
-        this._charge = charge;
+        this._cfg.charge = charge;
         this.update();
     },
 
 
     setGravity: function( gravity ) {
-        this._gravity = gravity;
+        this._cfg.gravity = gravity;
         this.update();
     },
 
@@ -430,10 +433,11 @@ pwt_graph.Graph.prototype = {
                             .call(this.force.drag);
 
         // update nodes
-        graphnodes.select('.graphcircle')
-               .attr("dx", function (d) { return 0; }) // move inside rect
-               .attr("dy", function (d) { return 0; }) // move inside rect
-               .text(function (d) { return d.text; });
+        graphnodes
+            .select('.graphcircle')
+            .attr("dx", function (d) { return 0; }) // move inside rect
+            .attr("dy", function (d) { return 0; }) // move inside rect
+            .text(function (d) { return d.text; });
 
         // create nodes
         graphnodesenter.append("svg:circle")
@@ -441,11 +445,12 @@ pwt_graph.Graph.prototype = {
                 return "graphcircle " + d.type;
             })
             .attr("r", function(d) {
-                d.radius = 10;
+                d.radius = that._cfg.circleradius;
                 return d.radius;
             })
             .attr("id", function(d) { return d.id; } )
             .on("mouseover", function(d) {
+                d3v3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
                     .style("display", "block");
@@ -459,6 +464,7 @@ pwt_graph.Graph.prototype = {
                     .style("top", (newY) + "px");
             })
             .on("mouseout", function(d) {
+                d3v3.select(this).style("cursor", "default");
                 that._tooltip
                     .transition(200)
                     .style("display", "none");
@@ -482,7 +488,27 @@ pwt_graph.Graph.prototype = {
             .attr("dx", function (d) { return 5; }) // move inside rect
             .attr("dy", function (d) { return 15; }) // move inside rect
             .text( function(d) { return d.id; } )
-            .style("opacity", function(d) { return d.show || typeof d.show == 'undefined' ? 1 : 0; });
+            .style("opacity", function(d) { return d.show || typeof d.show == 'undefined' ? 1 : 0; })
+            .on("mouseover", function(d) {
+                d3v3.select(this).style("cursor", "pointer");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
+                that._tooltip
+                    .html(d.text)
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .on("mouseout", function(d) {
+                d3v3.select(this).style("cursor", "default");
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            });
 
         // remove old nodes
         graphnodes.exit().remove();
@@ -515,8 +541,8 @@ pwt_graph.Graph.prototype = {
 
             }
 
-            var rx = bbox.x+bbox.width/2;
-            var ry = bbox.y+bbox.height/2;
+            var rx = bbox.x+bbox.width/3;
+            var ry = bbox.y+bbox.height/3;
             var dX = d.target.x - d.source.x;
             var dY = d.target.y - d.source.y;
             var rad = Math.atan2(dX, dY);
@@ -525,27 +551,36 @@ pwt_graph.Graph.prototype = {
         };
 
         var linkArc = function (d) {
+            var sourcex = Math.max(that._cfg.circleradius, Math.min(that._w - that._cfg.circleradius, d.source.x)),
+                sourcey = Math.max(that._cfg.circleradius, Math.min(that._h - that._cfg.circleradius, d.source.y)),
+                targetx = Math.max(that._cfg.circleradius, Math.min(that._w - that._cfg.circleradius, d.target.x)),
+                targety = Math.max(that._cfg.circleradius, Math.min(that._h - that._cfg.circleradius, d.target.y));
 
-            var dx = d.target.x - d.source.x,
-                dy = d.target.y - d.source.y,
+            var dx = targetx - sourcex,
+                dy = targety - sourcey,
                 dr = Math.sqrt(dx * dx + dy * dy);
 
                 // offset to let arc start and end at the edge of the circle
                 var offSetX = (dx * d.target.radius) / dr;
                 var offSetY = (dy * d.target.radius) / dr;
             return "M" +
-                (d.source.x + offSetX) + "," +
-                (d.source.y + offSetY) + "A" +
+                (sourcex + offSetX) + "," +
+                (sourcey + offSetY) + "A" +
                 dr + "," + dr + " 0 0,0 " +
-                (d.target.x - offSetX) + "," +
-                (d.target.y - offSetY);
+                (targetx - offSetX) + "," +
+                (targety - offSetY);
         };
 
         // move arc label to arc
         var calcLabelPos = function (d, bbox) {
-            var scale = 0.4; // distance from arc
-            var origPos = { x: (d.source.x + d.target.x ) /2 - bbox.width/2, y: (d.source.y + d.target.y) /2 }; // exact middle between source and target
-            var dir = { x: d.target.x - d.source.x, y: d.target.y - d.source.y }; // direction source -> target
+            var sourcex = Math.max(that._cfg.circleradius, Math.min(that._w - that._cfg.circleradius, d.source.x)),
+                sourcey = Math.max(that._cfg.circleradius, Math.min(that._h - that._cfg.circleradius, d.source.y)),
+                targetx = Math.max(that._cfg.circleradius, Math.min(that._w - that._cfg.circleradius, d.target.x)),
+                targety = Math.max(that._cfg.circleradius, Math.min(that._h - that._cfg.circleradius, d.target.y));
+
+            var scale = 0.1; // distance from arc
+            var origPos = { x: (sourcex + targetx ) /2 - bbox.width/2, y: (sourcey + targety) /2 }; // exact middle between source and target
+            var dir = { x: targetx - sourcex, y: targety - sourcey }; // direction source -> target
             var rot = { x: dir.y, y: -dir.x }; // rotate direction -90 degrees
             var ltemp = Math.sqrt(rot.x * rot.x + rot.y * rot.y) / 100; // normalize length
             var length = ltemp !== 0 ? ltemp : 0.1; // if length is 0, set to small value to prevent NaN
@@ -554,7 +589,8 @@ pwt_graph.Graph.prototype = {
         };
 
         var transform = function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
+            // make sure nodes do not become invisible by floating beyond edges of SVG
+            return "translate(" + Math.max(that._cfg.circleradius, Math.min(that._w - that._cfg.circleradius, d.x)) + "," + Math.max(that._cfg.circleradius, Math.min(that._h - that._cfg.circleradius, d.y)) + ")";
         };
 
         var transformLabel = function (d) {
@@ -599,10 +635,10 @@ pwt_graph.Graph.prototype = {
 
         this.force
             .size([this._w, this._h])
-            .linkDistance( this._linkdistance )
-            .charge( this._charge )
+            .linkDistance( this._cfg.linkdistance )
+            .charge( this._cfg.charge )
             .on("tick", tick)
-            .gravity( this._gravity )
+            .gravity( this._cfg.gravity )
             .start();
     }
 };
