@@ -16,6 +16,8 @@ import urllib.request, urllib.parse, urllib.error
 
 import dnutils
 from datetime import datetime
+
+from pyrap.utils import parse_datetime, format_datetime
 from pyrap.web.utils import storify, Storage
 from pyrap.web.webapi import notfound, badrequest, seeother, notmodified
 
@@ -637,10 +639,19 @@ class Resource(object):
         self.md5 = md5(content).hexdigest()
         if name is None:
             self.name = self.md5 + mimetypes.guess_extension(content_type)
-        self.last_change = ifnone(last_change, datetime.now())
+        self._last_change = None
+        self.last_change = ifnone(last_change, datetime.utcnow())
         self.downloads = 0
         self.max_downloads = maxdl
         self.lock = Lock()
+
+    @property
+    def last_change(self):
+        return self._last_change
+
+    @last_change.setter
+    def last_change(self, dt):
+        self._last_change = dt.replace(microsecond=0)
 
     @property
     def location(self):
@@ -656,26 +667,28 @@ class ResourceManager(object):
     
     New resources can be registered and thus made available to clients.
     '''
+    # TIME_FORMAT = '%a %b %d %H:%M:%S %Y %z'
 
     def __init__(self, resourcepath, mtime_cache=True):
         self.resources = {}
         self.resourcepath = resourcepath
-        self.mtime_cache = {} if mtime_cache else None
+        self.mtime_cache = self.load_cache() if mtime_cache else None
         self.lock = Lock()
 
     def dump_cache(self):
         with open('.mtime_cache.dat', 'w+') as f:
-            f.writelines(['%s\t%s\n' % (k, d.ctime()) for k, d in self.mtime_cache.items()])
+            f.writelines(['%s\t%s\n' % (k, format_datetime(d)) for k, d in self.mtime_cache.items()])
 
     def load_cache(self):
+        self.mtime_cache = {}
         try:
-            with open('.mtime_cache.dat', 'r+') as f:
-                self.mtime_cache = {}
+            with open('.mtime_cache.dat', 'r') as f:
                 for l in f.readlines():
-                    key, date = l.split('\t')
-                    self.mtime_cache[key] = datetime.datetime.strptime(date, '%s %s %2d %02d:%02d:%02d %04d')
+                    key, date = l.strip('\n').split('\t')
+                    self.mtime_cache[key] = parse_datetime(date)
         except FileNotFoundError:
             pass
+        return self.mtime_cache
 
     def get(self, name):
         return self.resources.get(name)
@@ -726,7 +739,7 @@ class ResourceManager(object):
                 if resource_.md5 in self.mtime_cache:
                     resource_.last_change = self.mtime_cache[resource_.md5]
                 else:
-                    resource_.last_change = datetime.now()
+                    resource_.last_change = datetime.utcnow()
                     self.mtime_cache[resource_.md5] = resource_.last_change
                     self.dump_cache()
             resource = self.resources.get(resource_.name)
@@ -752,13 +765,13 @@ class ResourceManager(object):
             if resource.downloads >= resource.max_downloads:
                 self.unregister(resource)
         cache_date = web.ctx.env.get('HTTP_IF_MODIFIED_SINCE', 0)
-        if cache_date:
+        if cache_date and resource.last_change is not None:
             # check if the requested resource is younger than in the client's cache
-            ttuple = email.utils.parsedate_tz(cache_date)
-            cache_date = datetime.utcfromtimestamp(email.utils.mktime_tz(ttuple))
-            if cache_date > resource.last_change:
+            cache_date = parse_datetime(cache_date)
+            if cache_date >= resource.last_change:
                 raise notmodified()
-        web.modified(resource.last_change)
+        else:
+            web.modified(resource.last_change)
         if self.mtime_cache is not None:
             web.header('Cache-Control', 'only-if-cached')
         web.header('Content-Type', resource.content_type)
