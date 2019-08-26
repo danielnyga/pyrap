@@ -2062,7 +2062,7 @@ class Scale(Widget):
         # via CSS, so we fake a CSS class "Scale-Line" that holds the line image
         # and make it available under a constant resource name
         line = self.theme.lineimg
-        session.runtime.mngr.resources.registerc(line_resource_name, line.mimetype, line.content, last_change=img.last_change)
+        session.runtime.mngr.resources.registerc(line_resource_name, line.mimetype, line.content, last_change=line.last_change)
         session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
 
     def _handle_notify(self, op):
