@@ -5,6 +5,7 @@ Created on Oct 2, 2015
 '''
 import email
 import json
+import pickle
 from collections import defaultdict
 from hashlib import md5
 import mimetypes
@@ -18,7 +19,7 @@ from datetime import datetime
 from pyrap.web.utils import storify, Storage
 from pyrap.web.webapi import notfound, badrequest, seeother, notmodified
 
-from dnutils import out, Relay, getlogger, RLock, first, ifnone, logs, Lock, Event
+from dnutils import out, Relay, getlogger, RLock, first, ifnone, logs, Lock, Event, ifnot
 from pyrap import locations, threads, web
 from pyrap.base import session
 from pyrap.clientjs import gen_clientjs
@@ -656,10 +657,25 @@ class ResourceManager(object):
     New resources can be registered and thus made available to clients.
     '''
 
-    def __init__(self, resourcepath):
+    def __init__(self, resourcepath, mtime_cache=True):
         self.resources = {}
         self.resourcepath = resourcepath
+        self.mtime_cache = {} if mtime_cache else None
         self.lock = Lock()
+
+    def dump_cache(self):
+        with open('.mtime_cache.dat', 'w+') as f:
+            f.writelines(['%s\t%s\n' % (k, d.ctime()) for k, d in self.mtime_cache.items()])
+
+    def load_cache(self):
+        try:
+            with open('.mtime_cache.dat', 'r+') as f:
+                self.mtime_cache = {}
+                for l in f.readlines():
+                    key, date = l.split('\t')
+                    self.mtime_cache[key] = datetime.datetime.strptime(date, '%s %s %2d %02d:%02d:%02d %04d')
+        except FileNotFoundError:
+            pass
 
     def get(self, name):
         return self.resources.get(name)
@@ -706,6 +722,13 @@ class ResourceManager(object):
         '''
         with self.lock:
             resource_ = Resource(self, name, content_type, content, last_change=last_change)
+            if last_change is None and self.mtime_cache is not None:
+                if resource_.md5 in self.mtime_cache:
+                    resource_.last_change = self.mtime_cache[resource_.md5]
+                else:
+                    resource_.last_change = datetime.now()
+                    self.mtime_cache[resource_.md5] = resource_.last_change
+                    self.dump_cache()
             resource = self.resources.get(resource_.name)
             if resource is not None and (resource_.content_type != resource.content_type or
                                          resource_.md5 != resource.md5) and not force:
@@ -736,6 +759,8 @@ class ResourceManager(object):
             if cache_date > resource.last_change:
                 raise notmodified()
         web.modified(resource.last_change)
+        if self.mtime_cache is not None:
+            web.header('Cache-Control', 'only-if-cached')
         web.header('Content-Type', resource.content_type)
         web.header('Content-Length', len(resource.content))
         return resource.content
