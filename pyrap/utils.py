@@ -3,6 +3,8 @@ Created on Nov 10, 2015
 
 @author: nyga
 '''
+import datetime
+import email
 import os
 import sys
 
@@ -225,6 +227,14 @@ def bind(**kwargs):
             function(*args, **kwargs)
         return traced
     return wrap_f
+
+
+def parse_datetime(dt):
+    return datetime.datetime.utcfromtimestamp(email.utils.mktime_tz(email.utils.parsedate_tz(dt)))
+
+
+def format_datetime(dt):
+    return email.utils.formatdate(dt.timestamp(), True)
 
 
 if __name__ == '__main__':
