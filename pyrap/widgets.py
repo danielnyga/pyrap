@@ -2679,7 +2679,7 @@ class List(Widget):
         if self.itemheight is None:
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
             if self.markup:
-                lines = [len(i.split('<br>')) for i in self.items]
+                lines = [len(i.split('<br>')) for i in self.items.values()]
                 if lines:
                     h *= max(lines)
         else:
@@ -2721,13 +2721,14 @@ class List(Widget):
         if items is None:
             items = []
         if isinstance(items, dict):
-            if not all([type(i) is str for i in items]): 
+            if not all([type(i) is str for i in items.values()]):
                 raise TypeError('All keys in an item dictionary must be strings.')
             if type(items) is dict:
                 self._items = OrderedDict(((k, items[k]) for k in sorted(items)))
-        elif type(items) in (list, tuple):
-            items = OrderedDict(((str(i), i) for i in items))
-        else: raise TypeError('Invalid type for List items: %s' % type(items))
+        elif isinstance(items, (list, tuple)):
+            items = OrderedDict(((i, str(i)) for i in items))
+        else:
+            raise TypeError('Invalid type for List items: %s' % type(items))
         self._items = items
             
     @property
@@ -2737,7 +2738,7 @@ class List(Widget):
     @items.setter
     def items(self, items):
         self._setitems(items)
-        session.runtime << RWTSetOperation(self.id, {'items': list(self.items.keys())})
+        session.runtime << RWTSetOperation(self.id, {'items': list(self.items.values())})
         self.setitemheight()
 
     @property
