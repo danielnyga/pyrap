@@ -2689,7 +2689,6 @@ class List(Widget):
             h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
         return max(0, h)
 
-
     def create_content(self):
         if RWT.HSCROLL in self.style:
             self._hbar = ScrollBar(self, orientation=RWT.HORIZONTAL)
@@ -2739,15 +2738,20 @@ class List(Widget):
     def items(self, items):
         self._setitems(items)
         session.runtime << RWTSetOperation(self.id, {'items': list(self.items.values())})
+        for idx in list(self._selidx):
+            if idx >= len(self.items):
+                self._selidx.remove(idx)
         self.setitemheight()
 
     @property
     def selection(self):
         if not self.items:
-            return None
-        sel = [self.items[list(self.items.keys())[i]] for i in self._selidx]
+            sel = []  # return None if RWT.MULTI not in self.style else []
+        else:
+            sel = [list(self.items.keys())[i] for i in self._selidx]
         if RWT.MULTI not in self.style: 
-            if not sel: return None
+            if not sel:
+                return None
             sel = sel[0]
         return sel
     
@@ -2756,16 +2760,18 @@ class List(Widget):
         if RWT.MULTI in self.style:
             if type(sel) is list:
                 raise TypeError('Expected list, got %s' % type(sel))
-            sel = [list(self._items.values()).index(s) for s in sel]
+            sel = [list(self._items.keys()).index(s) for s in sel]
         else:
-            sel = list(self._items.values()).index(sel) if sel is not None else None
+            sel = list(self._items.keys()).index(sel) if sel is not None else None
         self.selidx = sel
         
     @property
     def selidx(self):
         if RWT.MULTI not in self.style:
-            if not self._selidx: return None
-            else: return self._selidx[0]
+            if not self._selidx:
+                return None
+            else:
+                return self._selidx[0]
         return self._selidx
     
     @selidx.setter
