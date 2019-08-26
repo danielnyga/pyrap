@@ -668,7 +668,6 @@ class Shell(Widget):
             self.bounds = xpos, ypos, w, h
             if not allnone((self.layout.minwidth, self.layout.minheight)):
                 self.dolayout()
-        out('doing layout')
 
     def onresize_shell(self):
         self.dolayout()
