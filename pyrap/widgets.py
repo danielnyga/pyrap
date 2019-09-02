@@ -3,7 +3,7 @@ Created on Oct 9, 2015
 
 @author: nyga
 '''
-
+import decimal
 import mimetypes
 import os
 import time
@@ -4107,7 +4107,7 @@ class Keyboard(Composite):
             row = Composite(self, layout=ColumnLayout(valign='fill', halign='center', equalwidths=True))
             for key in keyrow:
                 if key == 'shift':
-                    self.shiftbtn = Toggle(row, text='up', minwidth=40)
+                    self.shiftbtn = Toggle(row, text='up', minwidth=50, minheight=50)
                     self.shiftbtn.bind(self.shift)
                     self.shift.set(True)
                     self.shift.on_change += self.on_shift
@@ -4153,6 +4153,9 @@ class NumericKeys(Composite):
         self.btnpoint = None
         self.on_modify = NumberChanged()
         self.number = 0
+
+    def asdecimal(self, precision):
+        return decimal.Decimal(('%%.%df' % precision) % self.number)
 
     def enter(self, event):
         if event.widget.text == '<':
