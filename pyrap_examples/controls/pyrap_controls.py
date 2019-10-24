@@ -1170,7 +1170,9 @@ class ControlsDemo():
                 clear()
 
             graph = Graph(comp_body, halign='fill', valign='fill')
+            graph.glow = True
             graph.updatedata(data)
+            comp_body.bg = Color('black')
 
             self.shell.dolayout()
 

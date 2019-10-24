@@ -12,7 +12,8 @@ pwt_graph.Graph = function( parent ) {
         linkdistance: 150,
         circleradius: 10,
         charge: -600,
-        gravity: .2
+        gravity: .2,
+        glow: false
 	};
 
     this.force = d3v3.layout.force();
@@ -134,6 +135,11 @@ pwt_graph.Graph.prototype = {
 
     setGravity: function( gravity ) {
         this._cfg.gravity = gravity;
+        this.update();
+    },
+
+    setGlow: function ( glow ) {
+        this._cfg.glow = glow;
         this.update();
     },
 
@@ -328,6 +334,23 @@ pwt_graph.Graph.prototype = {
 
         var that = this;
 
+        // add glow filters
+        this._filters = this._defs.selectAll('filter').data(['circle', 'path']);
+
+        this._filters
+            .enter()
+            .append("filter")
+            .attr("id", function(d) { return "glow-" + d; })
+            .append("feGaussianBlur")
+            .attr("class", "glow")
+            .attr("stdDeviation", function(d) { return d === 'path' ? 0.5 : 2; })
+            .attr("result","coloredBlur");
+
+        this._filters
+            .exit()
+            .remove();
+
+        // add marker types
         this._markers = this._defs.selectAll("marker").data(this._markertypes);
 
         this._markers
@@ -356,6 +379,7 @@ pwt_graph.Graph.prototype = {
         graphlinks
             .attr("id", function(d) { return d.source.id + "-" + d.target.id; })
             .attr("class", function(d) { return "graphlink " + d.arcStyle; })
+            .style("filter", this._cfg.glow ? "url(#glow-path)" : "none")
             .attr("marker-end", function(d) {
                 var split = d.arcStyle.split(' ');
                 var as = split[split.length-1];
@@ -437,6 +461,7 @@ pwt_graph.Graph.prototype = {
             .select('.graphcircle')
             .attr("dx", function (d) { return 0; }) // move inside rect
             .attr("dy", function (d) { return 0; }) // move inside rect
+            .style("filter", this._cfg.glow ? "url(#glow-circle)" : "none")
             .text(function (d) { return d.text; });
 
         // create nodes
@@ -653,7 +678,7 @@ rap.registerTypeHandler( 'pwt.customs.Graph', {
 
     destructor: 'destroy',
 
-    properties: [ 'remove', 'width', 'height', 'linkdistance', 'circleradius', 'charge', 'gravity', 'bounds', 'arrow'],
+    properties: [ 'remove', 'width', 'height', 'linkdistance', 'circleradius', 'charge', 'gravity', 'bounds', 'arrow', 'glow'],
 
     methods : [ 'updateData', 'clear', 'retrievesvg'],
 

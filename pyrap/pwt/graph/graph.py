@@ -32,6 +32,7 @@ class Graph(Widget):
                 with open(css_) as fcss:
                     session.runtime.requirecss(fcss)
         self._links = []
+        self._glow = False
         self._linkdist = None
         self._cradius = None
         self.on_select = OnSelect(self)
@@ -86,6 +87,15 @@ class Graph(Widget):
     def linkdist(self, linkdist):
         self._linkdist = linkdist
         session.runtime << RWTSetOperation(self.id, {'linkdistance': linkdist})
+
+    @property
+    def glow(self):
+        return self._glow
+
+    @glow.setter
+    def glow(self, glow):
+        self._glow = glow
+        session.runtime << RWTSetOperation(self.id, {'glow': glow})
 
     @property
     def cradius(self):
