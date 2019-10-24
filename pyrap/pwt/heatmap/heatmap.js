@@ -11,9 +11,10 @@ pwt_heatmap.Heatmap = function( parent ) {
     this._svgContainer = this._svg.select('g.heatmap');
 
     this._cfg = {
-         margin: {top: 5, right: 25, bottom: 100, left: 100},
+         margin: {top: 0, right: 25, bottom: 60, left: 100, legendwidth: 50},
          w: 300,
          h: 300,
+         limits: {min: 0, max: 1},
          color: d3v5.scaleSequential()
                     .interpolator(d3v5.interpolateYlOrBr)
                     .domain([0, 1])
@@ -43,24 +44,34 @@ pwt_heatmap.Heatmap.prototype = {
 
         var that = this;
 
+        this._legendgroup = this._svg
+            .append('g')
+            .attr("transform", "translate(" + (this._cfg.w + this._cfg.margin.legendwidth) + ", 5)")
+            .attr("class", "legendaxis");
+
+        this._legendaxisgroup = this._legendgroup
+            .append('g')
+            .attr("transform", "translate(10,0)")
+            .attr("class", "legendaxisgroup");
+
         if (this._svgContainer.empty()) {
             this._svg
                 .attr('width', "100%")
-                .attr('height', "90%")
+                .attr('height', "100%")
                 .style('position', 'absolute')
                 .append("svg:g")
                 .attr('class', 'heatmap')
-                .attr("transform", "translate(" + this._cfg.margin.left + "," + this._cfg.margin.top + ")");
+                .attr("transform", "translate(" + (this._cfg.margin.left) + "," + this._cfg.margin.top + ")");
             this._svgContainer = this._svg.select('g.heatmap');
 
             // append x-labels
             this._x_labels = this._svgContainer.append("g")
-                .attr("transform", "translate(0," + this._cfg.h + ")");
+                .attr("transform", "translate(0," + (this._cfg.h - this._cfg.margin.top - this._cfg.margin.bottom) + ")");
 
             // append y-labels
             this._y_labels = this._svgContainer.append("g");
         }
-        
+
         this._defs = this._svgContainer.append("defs");
         this._gradient = this._defs.append('linearGradient')
             .attr('id', 'gradient')
@@ -69,17 +80,12 @@ pwt_heatmap.Heatmap.prototype = {
             .attr("x2", "0%")
             .attr("y2", "100%");
 
-        d3v5.range(0, 1, 0.001)
-        .forEach(function (d) {
+        d3v5.range(this._cfg.limits.min, this._cfg.limits.max, 0.001)
+        .forEach(function (d, i) {
             that._gradient.append('stop')
-                .attr("offset", d*100+"%")
-                .attr("stop-color", that._cfg.color(d));
+                .attr("offset", i/(that._cfg.limits.max - that._cfg.limits.min)/10+"%")
+                .attr("stop-color", that._cfg.color(Math.abs(d)));
         });
-
-        this._legendgroup = this._svg
-            .append('g')
-            .attr("transform", "translate(" + (this._cfg.w + this._cfg.margin.left + this._cfg.margin.right) + ", 10)")
-            .attr("class", "legendaxis");
 
     },
 
@@ -97,8 +103,8 @@ pwt_heatmap.Heatmap.prototype = {
 
     setBounds: function (args) {
         if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
-            this._cfg.w = Math.min(args[2],args[3]) - this._cfg.margin.left - this._cfg.margin.right;
-            this._cfg.h = Math.min(args[2],args[3])*0.90 - this._cfg.margin.top - this._cfg.margin.bottom;
+            this._cfg.w = Math.min(args[2], args[3]);// - this._cfg.margin.left - this._cfg.margin.right;
+            this._cfg.h = Math.min(args[2], args[3]);// - this._cfg.margin.top - this._cfg.margin.bottom;
         }
 
         this._parentDIV.style.left = args[0] + "px";
@@ -151,11 +157,22 @@ pwt_heatmap.Heatmap.prototype = {
     setData: function (data) {
         // preprocess data
         this._data = data;
+        this._min = data.reduce((min, p) => p.value < min ? p.value : min, data[0].value);
+        this._max = data.reduce((max, p) => p.value > max ? p.value : max, data[0].value);
         this._X = d3v5.map(data, function (d) { return d.x; }).keys();
         this._Y = d3v5.map(data, function (d) { return d.y; }).keys();
         this.update();
     },
 
+
+    /**
+     * updates limits
+     */
+    setLimits: function (limits) {
+        this._cfg.limits.min = limits[0];
+        this._cfg.limits.max = limits[1];
+        this.update();
+    },
 
     /**
      * redraws the radar chart with the updated datapoints and polygons
@@ -170,57 +187,74 @@ pwt_heatmap.Heatmap.prototype = {
         var that = this;
 
         var x = d3v5.scaleBand()
-            .range([0, this._cfg.h])
+            .range([0, this._cfg.h - this._cfg.margin.top - this._cfg.margin.bottom])
             .domain(this._X)
             .padding(0.03);
 
         var y = d3v5.scaleBand()
-            .range([this._cfg.h, 0])
+            .range([this._cfg.h - this._cfg.margin.top - this._cfg.margin.bottom, 0])
             .domain(this._Y)
             .padding(0.03);
 
         ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE LEGEND                              ///
         ////////////////////////////////////////////////////////////////////////
+        var lx = d3v5.scaleLinear().domain([this._cfg.limits.min, this._cfg.limits.max]).range([0, this._cfg.h - this._cfg.margin.top - this._cfg.margin.bottom]);
 
-        var lx = d3v5.scaleLinear().domain([0, 1]).range([0, this._cfg.h]);
+        this._legendgroup
+            .attr("transform", "translate(" + (this._cfg.w + this._cfg.margin.legendwidth) + ", 5)");
 
-        this._svg.select('g.legendaxis')
-            .attr("transform", "translate(" + (this._cfg.w + this._cfg.margin.left + this._cfg.margin.right) + ", 10)");
-
-        var grad = this._legendgroup.selectAll('rect').data([0]);
+        var grad = this._legendgroup.selectAll('rect').data([0,1]);
 
         grad
             .enter()
             .append("rect")
             .attr("width", 10)
-            .attr("height", this._cfg.h)
+            .attr("height", this._cfg.h - this._cfg.margin.top - this._cfg.margin.bottom)
             .style("fill", "url(#gradient)");
 
         grad
-            .attr("height", this._cfg.h);
-
+            .attr("height", this._cfg.h - this._cfg.margin.top - this._cfg.margin.bottom);
 
         grad
             .exit().remove();
 
-        this._legendgroup
-            .call(d3v5.axisLeft(lx));
+        var grad2 = this._legendaxisgroup.selectAll('rect').data([0]);
+
+        grad2
+            .enter()
+            .append("rect")
+            .attr("width", 10)
+            .attr("height", this._cfg.h - this._cfg.margin.top - this._cfg.margin.bottom)
+            .style("fill", "none");
+
+        grad2
+            .attr("height", this._cfg.h - this._cfg.margin.top - this._cfg.margin.bottom);
+
+
+        grad2
+            .exit().remove();
+
+
+        this._legendaxisgroup
+            .call(d3v5.axisRight(lx));
+
 
         ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE LABELS                              ///
         ////////////////////////////////////////////////////////////////////////
         this._x_labels
-            .attr("transform", "translate(0," + this._cfg.h + ")")
+            .attr("transform", "translate(0," + (this._cfg.h - this._cfg.margin.top - this._cfg.margin.bottom) + ")")
             .call(d3v5.axisBottom(x).tickSize(0))
             .selectAll("text")
                 .style("text-anchor", "end")
                 .attr("dx", "-.8em")
                 .attr("dy", ".15em")
-                .attr("transform", "rotate(-25)")
+                .attr("transform", "rotate(-35)")
             .select(".domain").remove();
 
         this._y_labels
+            .attr("transform", "translate(0, " + (this._cfg.margin.top) + ")")
             .call(d3v5.axisLeft(y).tickSize(0))
             .select(".domain").remove();
 
@@ -301,7 +335,7 @@ rap.registerTypeHandler( 'pwt.customs.Heatmap', {
     },
 
     destructor: 'destroy',
-    properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
+    properties: [ 'remove', 'width', 'height', 'data', 'bounds', 'limits'],
     methods : [ 'clear', 'retrievesvg'],
     events: [ 'Selection' ]
 

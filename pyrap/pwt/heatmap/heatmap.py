@@ -60,6 +60,7 @@ class Heatmap(Widget):
         with open(os.path.join(locations.pwt_loc, 'heatmap', 'heatmap.css')) as fi:
             session.runtime.requirecss(fi)
         self._data = {}
+        self._limits = [0, 1]
         self._opts = opts
         self.on_select = OnSelect(self)
         self.on_set = OnSet(self)
@@ -114,6 +115,10 @@ class Heatmap(Widget):
         self._data = {}
         self._opts = []
         session.runtime << RWTCallOperation(self.id, 'clear', {})
+
+    def setlimits(self, limits):
+        self._limits = limits
+        session.runtime << RWTSetOperation(self.id, {'limits': limits})
 
     def setdata(self, data):
         self._data = data
