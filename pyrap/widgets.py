@@ -804,10 +804,10 @@ class Combo(Widget):
     def selection(self, sel):
         if self._editable:
             self._selidx = self._items.index(sel) if sel is not None else None
-            txt = self._items[self._selidx]
+            txt = self._items[self._selidx] if self._selidx is not None else ''
         else:
             self._selidx = list(self._items.keys()).index(sel) if sel is not None else None
-            txt = list(self._items.keys())[self._selidx]
+            txt = list(self._items.keys())[self._selidx] if self._selidx is not None else ''
         self._text = txt
         session.runtime << RWTSetOperation(self.id, {'selectionIndex': self._selidx, 'text': txt})
 
