@@ -3,7 +3,7 @@ Created on Oct 9, 2015
 
 @author: nyga
 '''
-
+import decimal
 import mimetypes
 import os
 import time
@@ -668,7 +668,6 @@ class Shell(Widget):
             self.bounds = xpos, ypos, w, h
             if not allnone((self.layout.minwidth, self.layout.minheight)):
                 self.dolayout()
-        out('doing layout')
 
     def onresize_shell(self):
         self.dolayout()
@@ -2680,7 +2679,7 @@ class List(Widget):
         if self.itemheight is None:
             _, h = session.runtime.textsize_estimate(self.theme.font, 'X', self.shell())
             if self.markup:
-                lines = [len(i.split('<br>')) for i in self.items]
+                lines = [len(i.split('<br>')) for i in self.items.values()]
                 if lines:
                     h *= max(lines)
         else:
@@ -2689,7 +2688,6 @@ class List(Widget):
         if padding:
             h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
         return max(0, h)
-
 
     def create_content(self):
         if RWT.HSCROLL in self.style:
@@ -2722,13 +2720,14 @@ class List(Widget):
         if items is None:
             items = []
         if isinstance(items, dict):
-            if not all([type(i) is str for i in items]): 
+            if not all([type(i) is str for i in items.values()]):
                 raise TypeError('All keys in an item dictionary must be strings.')
             if type(items) is dict:
                 self._items = OrderedDict(((k, items[k]) for k in sorted(items)))
-        elif type(items) in (list, tuple):
-            items = OrderedDict(((str(i), i) for i in items))
-        else: raise TypeError('Invalid type for List items: %s' % type(items))
+        elif isinstance(items, (list, tuple)):
+            items = OrderedDict(((i, str(i)) for i in items))
+        else:
+            raise TypeError('Invalid type for List items: %s' % type(items))
         self._items = items
             
     @property
@@ -2738,16 +2737,21 @@ class List(Widget):
     @items.setter
     def items(self, items):
         self._setitems(items)
-        session.runtime << RWTSetOperation(self.id, {'items': list(self.items.keys())})
+        session.runtime << RWTSetOperation(self.id, {'items': list(self.items.values())})
+        for idx in list(self._selidx):
+            if idx >= len(self.items):
+                self._selidx.remove(idx)
         self.setitemheight()
 
     @property
     def selection(self):
         if not self.items:
-            return None
-        sel = [self.items[list(self.items.keys())[i]] for i in self._selidx]
+            sel = []  # return None if RWT.MULTI not in self.style else []
+        else:
+            sel = [list(self.items.keys())[i] for i in self._selidx]
         if RWT.MULTI not in self.style: 
-            if not sel: return None
+            if not sel:
+                return None
             sel = sel[0]
         return sel
     
@@ -2756,16 +2760,18 @@ class List(Widget):
         if RWT.MULTI in self.style:
             if type(sel) is list:
                 raise TypeError('Expected list, got %s' % type(sel))
-            sel = [list(self._items.values()).index(s) for s in sel]
+            sel = [list(self._items.keys()).index(s) for s in sel]
         else:
-            sel = list(self._items.values()).index(sel) if sel is not None else None
+            sel = list(self._items.keys()).index(sel) if sel is not None else None
         self.selidx = sel
         
     @property
     def selidx(self):
         if RWT.MULTI not in self.style:
-            if not self._selidx: return None
-            else: return self._selidx[0]
+            if not self._selidx:
+                return None
+            else:
+                return self._selidx[0]
         return self._selidx
     
     @selidx.setter
@@ -4101,7 +4107,7 @@ class Keyboard(Composite):
             row = Composite(self, layout=ColumnLayout(valign='fill', halign='center', equalwidths=True))
             for key in keyrow:
                 if key == 'shift':
-                    self.shiftbtn = Toggle(row, text='up', minwidth=40)
+                    self.shiftbtn = Toggle(row, text='up', minwidth=50, minheight=50)
                     self.shiftbtn.bind(self.shift)
                     self.shift.set(True)
                     self.shift.on_change += self.on_shift
@@ -4147,6 +4153,9 @@ class NumericKeys(Composite):
         self.btnpoint = None
         self.on_modify = NumberChanged()
         self.number = 0
+
+    def asdecimal(self, precision):
+        return decimal.Decimal(('%%.%df' % precision) % self.number)
 
     def enter(self, event):
         if event.widget.text == '<':

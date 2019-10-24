@@ -206,7 +206,7 @@ class OptionsDialog(Shell):
         if isinstance(options, dict):
             if not all([type(i) is str for i in options]):
                 raise TypeError('All keys in an item dictionary must be strings.')
-            else:
+            elif not isinstance(options, OrderedDict):
                 options = OrderedDict(((k, options[k]) for k in sorted(options)))
         elif type(options) in (list, tuple):
             options = OrderedDict(((str(i), i) for i in options))
