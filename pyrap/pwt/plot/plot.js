@@ -22,6 +22,13 @@ pwt_scatterplot.Scatterplot = function( parent, options ) {
                 '#17becf', '#9edae5'])
 	};
 
+    this._xformat = function(d) {
+            return d;
+        };
+    this._yformat = function(d) {
+            return d;
+        };
+
     this._svg = d3v3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.scatter');
 
@@ -179,10 +186,10 @@ pwt_scatterplot.Scatterplot.prototype = {
      * determines the min and max values for the x/y-axes from the scatter data
      */
     scatterlimits : function() {
-        return {'x': [d3v3.min([0, d3v3.min(this._scatterdata, function (d) { return d.x })]),
-                      d3v3.max([0, d3v3.max(this._scatterdata, function (d) { return d.x })])],
-                'y': [d3v3.min([0, d3v3.min(this._scatterdata, function (d) { return d.y })]),
-                      d3v3.max([0, d3v3.max(this._scatterdata, function (d) { return d.y })])]};
+        return {'x': [d3v3.min(this._scatterdata, function (d) { return d.x }),
+                      d3v3.max(this._scatterdata, function (d) { return d.x })],
+                'y': [d3v3.min(this._scatterdata, function (d) { return d.y }),
+                      d3v3.max(this._scatterdata, function (d) { return d.y })]};
     },
 
     /**
@@ -195,8 +202,11 @@ pwt_scatterplot.Scatterplot.prototype = {
 
         var that = this;
 
+        var nameArray = this._scatterdata.map(function (el) { return el.name; });
+        var nameSet = new Set(nameArray);
+        var colors = Array.from(nameSet).keys();
         this._cfg.scattercolor
-            .domain([Array(this._scatterdata.length).keys()]);
+            .domain(colors);
 
         // generate limits for x/y axes from data; prefer scatterdata over line data
         var limits = typeof this._scatterdata !== 'undefined' && this._scatterdata.length > 0 ? this.scatterlimits() : this.linelimits();
@@ -230,7 +240,7 @@ pwt_scatterplot.Scatterplot.prototype = {
         circlegroupsenter
             .append("circle")
             .attr("class", "scattercircle")
-            .attr('fill',function (d,i) { return that._cfg.scattercolor(i) })
+            .attr('fill',function (d,i) { return that._cfg.scattercolor(d.name) })
             .on('mouseover', function () {
                 that._tooltip
                     .transition(200)
@@ -275,7 +285,7 @@ pwt_scatterplot.Scatterplot.prototype = {
         ////////////////////////////////////////////////////////////////////////
 
         this._cfg.linecolor
-            .domain(Object.keys(this._linedata));
+            .domain(colors);
 
         var valueline = function (d) {
             return d3v3.svg.line()
