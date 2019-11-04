@@ -7,19 +7,17 @@ pwt_scatterplot.Scatterplot = function( parent, options ) {
         .attr('class', 'scattertooltip')
         .style('z-index', 1000000);
 
+    var crange = ['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
+                '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
+                '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
+                '#17becf', '#9edae5'];
     this._cfg = {
         margin: { top: 50, right: 50, bottom: 50, left: 50 },
         formatDefault: d3v3.format(',.2f'),
         scattercolor: d3v3.scale.ordinal()
-            .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
-                '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
-                '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
-                '#17becf', '#9edae5']),
+            .range(crange),
         linecolor: d3v3.scale.ordinal()
-            .range(['#e41a1c','#0a4db8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999',
-                '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
-                '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
-                '#17becf', '#9edae5'])
+            .range(crange)
 	};
 
     this._xformat = function(d) {
@@ -118,7 +116,8 @@ pwt_scatterplot.Scatterplot.prototype = {
      */
     setData : function ( data ) {
         this._scatterdata = data.scatter ? data.scatter : [];
-        this._linedata = data.line ? data.line : {};
+        // this._linedata = data.line ? data.line : {};
+        this._linedata = data.line ? data.line : [];
         this.update();
     },
 
@@ -186,10 +185,14 @@ pwt_scatterplot.Scatterplot.prototype = {
      * determines the min and max values for the x/y-axes from the scatter data
      */
     scatterlimits : function() {
-        return {'x': [d3v3.min(this._scatterdata, function (d) { return d.x }),
-                      d3v3.max(this._scatterdata, function (d) { return d.x })],
-                'y': [d3v3.min(this._scatterdata, function (d) { return d.y }),
-                      d3v3.max(this._scatterdata, function (d) { return d.y })]};
+        var minx, maxx, miny, maxy;
+        minx = d3v3.min(this._scatterdata, function (d) { return d.x });
+        maxx = d3v3.max(this._scatterdata, function (d) { return d.x });
+        miny = d3v3.min(this._scatterdata, function (d) { return d.y });
+        maxy = d3v3.max(this._scatterdata, function (d) { return d.y });
+
+        return {'x': [minx - 0.1*(maxx-minx), maxx + 0.1*maxx],
+                'y': [miny - 0.1*(maxy-miny), maxy + 0.1*maxy]};
     },
 
     /**
@@ -206,6 +209,9 @@ pwt_scatterplot.Scatterplot.prototype = {
         var nameSet = new Set(nameArray);
         var colors = Array.from(nameSet).keys();
         this._cfg.scattercolor
+            .domain(colors);
+
+        this._cfg.linecolor
             .domain(colors);
 
         // generate limits for x/y axes from data; prefer scatterdata over line data
@@ -284,9 +290,6 @@ pwt_scatterplot.Scatterplot.prototype = {
         ///                       UPDATE LINES                               ///
         ////////////////////////////////////////////////////////////////////////
 
-        this._cfg.linecolor
-            .domain(colors);
-
         var valueline = function (d) {
             return d3v3.svg.line()
                      .x(function(d) { return xScale(d.x); })
@@ -294,48 +297,44 @@ pwt_scatterplot.Scatterplot.prototype = {
                      (d)
         };
 
-        Object.keys(this._linedata).forEach(function(key, idx) {
-            // line groups selection
-            var linegroups = that._svgContainer.selectAll("g.pathnode" + "-" + key).data([0]);
+        var linegroups = this._svgContainer.selectAll('g.linegroup').data(this._linedata);
 
-            // line groups creation
-            var linegroupsenter = linegroups
-                .enter()
-                .append('g')
-                .attr("class", "pathnode" + "-" + key);
+        // line groups creation
+        var linegroupsenter = linegroups
+            .enter()
+            .append('g')
+            .attr('class', 'linegroup');
 
-            // lines creation
-            linegroupsenter
-                .append("path")
-                .attr("stroke", function(d){ return that._cfg.linecolor(key); })
-                .attr("class", "scatterline")
-                .attr("d", function(d){ return valueline(that._linedata[key]);})
-                .on('mouseover', function () {
-                    that._tooltip
-                        .transition(200)
-                        .style("display", "block");
-                })
-                .on('mousemove', function(d) {
-                    var newX = (d3v3.event.pageX + 20);
-                    var newY = (d3v3.event.pageY - 20);
-                    that._tooltip
-                        .html(key)
-                        .style("left", (newX) + "px")
-                        .style("top", (newY) + "px");
-                })
-                .on('mouseout', function () {
-                    that._tooltip
-                        .transition(200)
-                        .style("display", "none");
-                });
+        linegroupsenter
+            .append("path")
+            .attr("stroke", function(d){ return that._cfg.linecolor(d.name); })
+            .attr("class", "scatterline")
+            .attr("d", function(d){ return valueline(d.data);})
+            .on('mouseover', function () {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "block");
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
+                that._tooltip
+                    .html(d.tooltip ? d.tooltip : d.name)
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .on('mouseout', function () {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            });
 
-            // lines update
-            linegroups.select('.scatterline')
-                .attr("d", function(d){ return valueline(that._linedata[key]);});
+        // lines update
+        linegroups.select('.scatterline')
+            .attr("d", function(d){ return valueline(d.data);});
 
-            // linegroups removal
-            linegroups.exit().remove();
-        });
+        // linegroups removal
+        linegroups.exit().remove();
 
         ////////////////////////////////////////////////////////////////////////
         ///                       UPDATE AXES                                ///
