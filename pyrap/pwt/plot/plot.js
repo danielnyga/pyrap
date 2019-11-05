@@ -14,10 +14,8 @@ pwt_scatterplot.Scatterplot = function( parent, options ) {
     this._cfg = {
         margin: { top: 50, right: 50, bottom: 50, left: 50 },
         formatDefault: d3v3.format(',.2f'),
-        scattercolor: d3v3.scale.ordinal()
+        colors: d3v3.scale.ordinal()
             .range(crange),
-        linecolor: d3v3.scale.ordinal()
-            .range(crange)
 	};
 
     this._xformat = function(d) {
@@ -205,13 +203,10 @@ pwt_scatterplot.Scatterplot.prototype = {
 
         var that = this;
 
-        var nameArray = this._scatterdata.map(function (el) { return el.name; });
+        var nameArray = this._scatterdata.map(function (el) { return el.name; }) + this._linedata.map(function (el) { return el.name; });
         var nameSet = new Set(nameArray);
         var colors = Array.from(nameSet).keys();
-        this._cfg.scattercolor
-            .domain(colors);
-
-        this._cfg.linecolor
+        this._cfg.colors
             .domain(colors);
 
         // generate limits for x/y axes from data; prefer scatterdata over line data
@@ -246,7 +241,7 @@ pwt_scatterplot.Scatterplot.prototype = {
         circlegroupsenter
             .append("circle")
             .attr("class", "scattercircle")
-            .attr('fill',function (d,i) { return that._cfg.scattercolor(d.name) })
+            .attr('fill',function (d,i) { return that._cfg.colors(d.name) })
             .on('mouseover', function () {
                 that._tooltip
                     .transition(200)
@@ -276,6 +271,7 @@ pwt_scatterplot.Scatterplot.prototype = {
             .attr("class", "scattertext")
             .attr("dx", function(d){return 0;})
             .attr("dy", function(d){return 10;})
+            .attr("transform", "rotate(35)")
             .text(function(d){return d.tooltip});
 
         // circle text update
@@ -307,7 +303,7 @@ pwt_scatterplot.Scatterplot.prototype = {
 
         linegroupsenter
             .append("path")
-            .attr("stroke", function(d){ return that._cfg.linecolor(d.name); })
+            .attr("stroke", function(d){ return that._cfg.colors(d.name); })
             .attr("class", "scatterline")
             .attr("d", function(d){ return valueline(d.data);})
             .on('mouseover', function () {
