@@ -74,11 +74,11 @@ def ask_yesnocancel(parent, title, text, markup=False):
 
 
 def ask_textinput(parent, title, markup=False):
-    return ask_input(parent, title, markup=markup)
+    return ask_input(parent, title)
 
 
 def ask_passwordinput(parent, title, markup=False):
-    return ask_input(parent, title, password=True, markup=markup)
+    return ask_input(parent, title, password=True)
 
 
 def ask_yesno(parent, title, text, markup=False):
