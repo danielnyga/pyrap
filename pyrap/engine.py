@@ -19,7 +19,7 @@ from datetime import datetime
 
 from pyrap.utils import parse_datetime, format_datetime
 from pyrap.web.utils import storify, Storage
-from pyrap.web.webapi import notfound, badrequest, seeother, notmodified
+from pyrap.web.webapi import notfound, badrequest, seeother, notmodified, unauthorized
 
 from dnutils import out, Relay, getlogger, RLock, first, ifnone, logs, Lock, Event, ifnot
 from pyrap import locations, threads, web
@@ -631,7 +631,7 @@ class Resource(object):
     obtained by the `location` property.
     '''
 
-    def __init__(self, registry, name, content_type, content, maxdl=inf, last_change=None):
+    def __init__(self, registry, name, content_type, content, maxdl=inf, last_change=None, session_id=None):
         self.name = name
         self.content_type = content_type
         self.content = content
@@ -643,6 +643,7 @@ class Resource(object):
         self.last_change = ifnone(last_change, datetime.utcnow())
         self.downloads = 0
         self.max_downloads = maxdl
+        self.session_id = session_id
         self.lock = Lock()
 
     @property
@@ -658,7 +659,7 @@ class Resource(object):
         return urllib.parse.quote('%s/%s' % (self.registry.resourcepath, self.name))
 
     def download(self):
-        session.runtime.executejs('window.open("{}", "_blank");'.format(self.location))
+        session.runtime.executejs('window.open("{}?cid={}", "_blank");'.format(self.location, session.id))
 
 
 class ResourceManager(object):
@@ -702,7 +703,7 @@ class ResourceManager(object):
     def __getitem__(self, name):
         return self.get(name)
 
-    def registerf(self, name, content_type, stream, force=False, limit=inf, encode=True, last_change=None):
+    def registerf(self, name, content_type, stream, force=False, limit=inf, encode=True, last_change=None, private=False):
         '''
         Make a file available for download under the given path.
         
@@ -726,15 +727,15 @@ class ResourceManager(object):
                     c = c.encode('utf8')
                 except:
                     print('Could not encode, passing on') #TODO check if this is critical
-        return self.registerc(name, content_type, c, force=force, limit=limit, last_change=last_change)
+        return self.registerc(name, content_type, c, force=force, limit=limit, last_change=last_change, private=private)
 
-    def registerc(self, name, content_type, content, force=False, limit=inf, last_change=None):
+    def registerc(self, name, content_type, content, force=False, limit=inf, last_change=None, private=False):
         '''
         Makes the given content available for download under the given path
         and the given MIME type.
         '''
         with self.lock:
-            resource_ = Resource(self, name, content_type, content, last_change=last_change)
+            resource_ = Resource(self, name, content_type, content, last_change=last_change, session_id=session.id if private else None)
             if last_change is None and self.mtime_cache is not None:
                 if resource_.md5 in self.mtime_cache:
                     resource_.last_change = self.mtime_cache[resource_.md5]
@@ -760,6 +761,8 @@ class ResourceManager(object):
         resource = self.resources.get(rcname)
         if resource is None:
             raise notfound('Resource not available: %s' % rcname)
+        if resource.session_id and session.id != resource.session_id:
+            raise unauthorized('Not allowed.')
         with resource.lock:
             resource.downloads += 1
             if resource.downloads >= resource.max_downloads:
