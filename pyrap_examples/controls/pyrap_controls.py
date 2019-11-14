@@ -12,7 +12,7 @@ import sys
 
 from dnutils import out
 from dnutils.threads import sleep, ThreadInterrupt
-from dnutils.tools import ifnone
+from dnutils.tools import ifnone, first
 
 from pyrap.pwt.audio.audio import Audio
 from pyrap.pwt.barchart.barchart import BarChart
@@ -54,7 +54,7 @@ class ControlsDemo():
     def setup(application): pass
 
     def desktop(self, **kwargs):
-        page = kwargs.get('page', 'Radar')
+        # page = kwargs.get('page', 'Radar')
         self.shell = Shell(maximized=True, titlebar=False)
         self.shell.on_resize += self.shell.dolayout
         shell = self.shell
@@ -131,13 +131,13 @@ class ControlsDemo():
         self.content = StackedComposite(main, halign='fill', valign='fill')
         self.create_pages()
         self.navigation.on_select += self.switch_page
-        self.navigation.selection = self.pages[page]
+        self.navigation.selection = first(self.pages)
         self.switch_page()
 
         self.shell.show(True)
 
     def switch_page(self, *args):
-        for page in (self.pages.values()):
+        for page in self.pages:
             page.layout.exclude = self.navigation.selection is not page
         self.content.selection = self.navigation.selection
         self.shell.onresize_shell()
@@ -149,185 +149,185 @@ class ControlsDemo():
         #=======================================================================
         page  = self.create_page_template('Scale Widget Demo')
         self.create_scale_page(page)
-        self.pages['Scale'] = page
+        self.pages[page] = 'Scale'
         
         # =======================================================================
         # crete canvas page
         # =======================================================================
         page = self.create_page_template('Canvas Demo')
         self.create_canvas_page(page)
-        self.pages['Canvas'] = page
+        self.pages[page] = 'Canvas'
         
         #=======================================================================
         # create button page
         #=======================================================================
         page = self.create_page_template('Button Widget Demo')
         self.create_button_page(page)
-        self.pages['Button'] = page
+        self.pages[page] = 'Button'
         
         #=======================================================================
         # create browser page
         #=======================================================================
         page = self.create_page_template('Browser Widget Demo')
         self.create_browser_page(page)
-        self.pages['Browser'] = page
+        self.pages[page] = 'Browser'
         
         #=======================================================================
         # crete menu page
         #=======================================================================
         page = self.create_page_template('Menu Demo')
         self.create_menu_page(page)
-        self.pages['Menu'] = page
+        self.pages[page] = 'Menu'
         
         #=======================================================================
         # crete list page
         #=======================================================================
         page = self.create_page_template('List Demo')
         self.create_list_page(page)
-        self.pages['List'] = page
+        self.pages[page] = 'List'
         
         #=======================================================================
         # create dialogs page
         #=======================================================================
         page  = self.create_page_template('Dialog Demo')
         self.create_dialogs_page(page)
-        self.pages['Dialogs'] = page
+        self.pages[page] = 'Dialogs'
         
         #=======================================================================
         # create spinner page
         #=======================================================================
         page  = self.create_page_template('Spinner Demo')
         self.create_spinner_page(page)
-        self.pages['Spinner'] = page
+        self.pages[page] = 'Spinner'
         
         #=======================================================================
         # create fileupload
         #=======================================================================
         page  = self.create_page_template('File Upload Demo')
         self.create_upload_page(page)
-        self.pages['FileUpload'] = page
+        self.pages[page] = 'FileUpload'
 
         # =======================================================================
         # create tab folders
         # =======================================================================
         page = self.create_page_template('Tab Folders')
         self.create_tabfolder_page(page)
-        self.pages['TabFolders'] = page
+        self.pages[page] = 'TabFolders'
 
         # =======================================================================
         # create scrolled composite
         # =======================================================================
         page = self.create_page_template('Scrolled Composite')
         self.create_scrolled_page(page)
-        self.pages['Scrolled'] = page
+        self.pages[page] = 'Scrolled'
 
         # =======================================================================
         # create table demo
         # =======================================================================
         page = self.create_page_template('Table Demo')
         self.create_table_page(page)
-        self.pages['Tables'] = page
+        self.pages[page] = 'Tables'
 
         # =======================================================================
         # create sash demo
         # =======================================================================
         page = self.create_page_template('Sash Demo')
         self.create_sash_page(page)
-        self.pages['Sash'] = page
+        self.pages[page] = 'Sash'
 
         # =======================================================================
         # create cookies demo
         # =======================================================================
         page = self.create_page_template('Cookies Demo')
         self.create_cookies_page(page)
-        self.pages['Cookies'] = page
+        self.pages[page] = 'Cookies'
 
         #=======================================================================
         # create radar chart
         #=======================================================================
         page  = self.create_page_template('Radar Chart Demo')
         self.create_radar_page(page)
-        self.pages['Radar'] = page
+        self.pages[page] = 'Radar'
 
         # =======================================================================
         # create radar chart -- redesigned
         # =======================================================================
         page = self.create_page_template('Radar Chart Demo -- Smoothed')
         self.create_radarsmoothed_page(page)
-        self.pages['Radar Smooth'] = page
+        self.pages[page] = 'Radar Smooth'
 
         #=======================================================================
         # create D3 radial dendrogramm
         #=======================================================================
         page = self.create_page_template('D3 Radial Dendrogramm')
         self.create_cluster_page(page)
-        self.pages['Radial Dendrogramm'] = page
+        self.pages[page] = 'Radial Dendrogramm'
 
         #=======================================================================
         # create D3 bubbly clusters chart
         #=======================================================================
         page = self.create_page_template('D3 Bubbly Clusters')
         self.create_bubblycluster_page(page)
-        self.pages['Bubbly Clusters'] = page
+        self.pages[page] = 'Bubbly Clusters'
 
         #=======================================================================
         # create D3 tree
         #=======================================================================
         page = self.create_page_template('D3 Tree')
         self.create_tree_page(page)
-        self.pages['Tree'] = page
+        self.pages[page] = 'Tree'
 
         #=======================================================================
         # create D3 RadialTree
         #=======================================================================
         page = self.create_page_template('D3 RadialTree')
         self.create_radialtree_page(page)
-        self.pages['RadialTree'] = page
+        self.pages[page] = 'RadialTree'
 
         #=======================================================================
         # create D3 scatterplot
         #=======================================================================
         page = self.create_page_template('D3 Scatterplot')
         self.create_scatterplot_page(page)
-        self.pages['Scatterplot'] = page
+        self.pages[page] = 'Scatterplot'
 
         #=======================================================================
         # create D3 graph
         #=======================================================================
         page = self.create_page_template('D3 Graph')
         self.create_graph_page(page)
-        self.pages['Directed Graph'] = page
+        self.pages[page] = 'Directed Graph'
 
         #=======================================================================
         # create D3 bar chart
         #=======================================================================
         page = self.create_page_template('D3 Bar Chart')
         self.create_barchart_page(page)
-        self.pages['Bar Chart'] = page
+        self.pages[page] = 'Bar Chart'
 
         #=======================================================================
         # create D3 heatmap
         #=======================================================================
         page = self.create_page_template('D3 Heatmap')
         self.create_heatmap_page(page)
-        self.pages['Heatmap'] = page
+        self.pages[page] = 'Heatmap'
 
         # =======================================================================
         # create video
         # =======================================================================
         page = self.create_page_template('Video')
         self.create_video_page(page)
-        self.pages['Video'] = page
+        self.pages[page] = 'Video'
 
         # =======================================================================
         # create audio
         # =======================================================================
         page = self.create_page_template('Audio')
         self.create_audio_page(page)
-        self.pages['Audio'] = page
+        self.pages[page] = 'Audio'
 
-        for page in [self.pages[k] for k in sorted(self.pages.keys())][1:]:
-            page.layout.exclude = True
+        # for page in sorted(self.pages)[1:]:
+        page.layout.exclude = True
         self.navigation.items = self.pages
 
     def create_page_template(self, heading):
