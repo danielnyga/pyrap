@@ -4181,3 +4181,99 @@ class NumericKeys(Composite):
     def clear(self):
         self.text = '0'
         self.number = 0
+
+
+class SashMenuComposite(Composite):
+    '''
+    A composite widget for a menu that can be shown/hidden by clicking a sash.
+    '''
+
+    @constructor('SashMenuComposite')
+    def __init__(self, parent, shell, color=None, mwidth=None, **kwargs):
+        super(SashMenuComposite, self).__init__(parent, **kwargs)
+        self._color = color
+        self._content = None
+        self._menu = None
+        self._visible = False
+        self._mwidth = mwidth
+        self._parent = parent
+        self._shell = shell
+
+    @property
+    def color(self):
+        return self._color
+
+    @color.setter
+    @checkwidget
+    def color(self, color):
+        self._color = color
+        self._sash.bg = Color(color, alpha=0.5)
+   
+    @property
+    def visible(self):
+        return self._visible
+
+    @visible.setter
+    @checkwidget
+    def visible(self, visible):
+        self._visible = visible
+        self._container.minwidth = 0 if visible else self.mwidth
+        self._shell.dolayout()
+        
+    @property
+    def mwidth(self):
+        return self._mwidth
+
+    @mwidth.setter
+    @checkwidget
+    def mwidth(self, mwidth):
+        self._mwidth = mwidth
+
+    @property
+    def content(self):
+        return self._content
+
+    @content.setter
+    @checkwidget
+    def content(self, content):
+        self._content = content
+
+    @property
+    def menu(self):
+        return self._menu.content
+
+    @menu.setter
+    @checkwidget
+    def menu(self, menu):
+        self._menu = menu.content
+
+    def create_content(self):
+        self.layout = StackLayout(halign='fill', valign='fill')
+
+        self._container = Composite(self)
+        self._container.layout = ColumnLayout(halign='left', valign='fill', flexcols=0)
+        self.bg = 'transp'
+
+        menu = ScrolledComposite(self._container, valign='fill', halign='fill')
+        menu.content.layout = RowLayout(halign='fill', valign='fill', flexrows=2)
+        menu.content.bg = Color('#F5F5F5')
+
+        Label(menu.content, text='<b>Menu</b>', markup=True, halign='center', valign='fill')
+        Separator(menu.content, horizontal=True, halign='fill')
+
+        self._menu = ScrolledComposite(menu.content, halign='fill', valign='fill', vscroll=True)
+        self._menu.content.layout = RowLayout(halign='fill', valign='fill', flexrows=-1)
+        self._menu.content.bg = 'transp'
+
+        self._sash = Sash(self._container, orientation='v', click=True, valign='fill', halign='right', minwidth=10)
+        self._sash.bg = Color(self.color, alpha=0.5)
+
+        self._content = Composite(self, layout=CellLayout(halign='fill', valign='fill', ))
+
+        self._sash.on_mousedown += self.togglemenu
+
+    def togglemenu(self, *_):
+        self._container.layout.minwidth = 0 if self.visible else self.mwidth
+        self.visible = not self.visible
+        self._shell.dolayout()
+
