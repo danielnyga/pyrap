@@ -67,6 +67,8 @@ class RadialTree(Widget):
                     session.runtime.requirecss(fcss)
 
         self._data = {}
+        self._glow = False
+        self._fontcolor = None
         self._opts = opts
         self.on_select = OnSelect(self)
         self.on_set = OnSet(self)
@@ -119,6 +121,24 @@ class RadialTree(Widget):
     @property
     def data(self):
         return self._data
+
+    @property
+    def glow(self):
+        return self._glow
+
+    @glow.setter
+    def glow(self, glow):
+        self._glow = glow
+        session.runtime << RWTSetOperation(self.id, {'glow': glow})
+
+    @property
+    def fontcolor(self):
+        return self._fontcolor
+
+    @fontcolor.setter
+    def fontcolor(self, fc):
+        self._fontcolor = fc
+        session.runtime << RWTSetOperation(self.id, {'fontcolor': fc})
 
     def clear(self):
         self._data = {}

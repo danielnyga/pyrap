@@ -10,7 +10,7 @@ pwt_radialtree.RadialTree = function( parent ) {
 
     this._svg = d3v3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.radialtree');
-
+    this._defs = this._svgContainer.select('defs');
 
     this._cfg = {
         padding: 100,
@@ -26,7 +26,9 @@ pwt_radialtree.RadialTree = function( parent ) {
         pan: 3,
         rot: 1.5,
         w: 800,
-        h: 800
+        h: 800,
+        glow: false,
+        fontcolor: null
 	};
 
     this._keycodes = {
@@ -130,6 +132,10 @@ pwt_radialtree.RadialTree.prototype = {
             .on('mouseup', function(e) {
                 that.menuSelection(that); });
 
+        if (this._defs.empty()) {
+            this._defs = this._svgContainer.append("defs");
+        }
+
     },
 
     createElement: function( parent ) {
@@ -201,6 +207,16 @@ pwt_radialtree.RadialTree.prototype = {
      */
     retrievesvg : function ( args ) {
         rwt.remote.Connection.getInstance().getRemoteObject( this ).set( args.type, this._svg.node().outerHTML );
+    },
+
+    setGlow: function ( glow ) {
+        this._cfg.glow = glow;
+        this.update();
+    },
+
+    setFontcolor: function ( fc ) {
+        this._cfg.fontcolor = fc;
+        this.update();
     },
 
     /**
@@ -695,6 +711,22 @@ pwt_radialtree.RadialTree.prototype = {
 
         var that = this;
 
+        // add glow filters
+        this._filters = this._defs.selectAll('filter').data(['circle', 'path']);
+
+        this._filters
+            .enter()
+            .append("filter")
+            .attr("id", function(d) { return "glow-" + d; })
+            .append("feGaussianBlur")
+            .attr("class", "glow")
+            .attr("stdDeviation", function(d) { return d === 'path' ? 0.5 : 0.6; })
+            .attr("result","coloredBlur");
+
+        this._filters
+            .exit()
+            .remove();
+
         // TODO: get these values somewhere
         var source = this._data;
         var transition = this._transition;
@@ -784,6 +816,7 @@ pwt_radialtree.RadialTree.prototype = {
             .attr('r', function(d) {
                 return (d.selected ? 5 : 2) * that._cfg.nradius * that.reduceZ(that);
             })
+            .style("filter", this._cfg.glow ? "url(#glow-circle)" : "none")
             .style('fill-opacity', function(d) {
                 return d._children ? 1 : null;
             })
@@ -798,6 +831,7 @@ pwt_radialtree.RadialTree.prototype = {
             .attr('transform', function(d) {
                 return ((d.x + that._curR) % 360 <= 180 ? 'translate(8)scale(' : 'rotate(180)translate(-8)scale(' ) + that.reduceZ(that) +')';
             })
+            .style('fill', this._cfg.fontcolor)
             .attr('class', function(d) {
                 return d.type;
             })
@@ -970,7 +1004,7 @@ rap.registerTypeHandler( 'pwt.customs.RadialTree', {
     },
 
     destructor: 'destroy',
-    properties: [ 'remove', 'width', 'height', 'data', 'bounds'],
+    properties: [ 'remove', 'width', 'height', 'data', 'bounds', 'glow', 'fontcolor'],
     methods : [ 'clear', 'retrievesvg'],
     events: [ 'Selection' ]
 
