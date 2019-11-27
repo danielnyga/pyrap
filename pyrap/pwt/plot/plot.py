@@ -50,7 +50,7 @@ class Scatterplot(Widget):
                 fname = op.args['pdf'][1]
                 if fname is None:
                     fname = __class__.__name__
-                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'plot', 'plot.css'), name=fname)
+                downloadpdf(op.args['pdf'][0], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'plot', 'plot.css'), name=fname)
         self.on_set.notify(_rwt_event(op))
 
     def _create_rwt_widget(self):

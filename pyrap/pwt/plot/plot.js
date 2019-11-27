@@ -114,7 +114,6 @@ pwt_scatterplot.Scatterplot.prototype = {
      */
     setData : function ( data ) {
         this._scatterdata = data.scatter ? data.scatter : [];
-        // this._linedata = data.line ? data.line : {};
         this._linedata = data.line ? data.line : [];
         this.update();
     },

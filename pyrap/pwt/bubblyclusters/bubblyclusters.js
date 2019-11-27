@@ -147,7 +147,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
      * retrieves the svg as text to save it to a file
      */
     retrievesvg : function ( args ) {
-        rwt.remote.Connection.getInstance().getRemoteObject( this ).set( args.type, this._svg.node().outerHTML );
+        rwt.remote.Connection.getInstance().getRemoteObject( this ).set( args.type, [this._svg.node().outerHTML, args.fname] );
     },
 
     /**

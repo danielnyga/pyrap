@@ -65,9 +65,15 @@ class BubblyClusters(Widget):
         Widget._handle_set(self, op)
         for key, value in op.args.items():
             if key == 'svg':
-                downloadsvg(op.args['svg'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'bubblyclusters', 'bubblyclusters.css'), name=__class__.__name__)
+                fname = op.args['svg'][1]
+                if fname is None:
+                    fname = __class__.__name__
+                downloadsvg(op.args['svg'][0], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'bubblyclusters', 'bubblyclusters.css'), name=fname)
             if key == 'pdf':
-                downloadpdf(op.args['pdf'], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'bubblyclusters', 'bubblyclusters.css'), name=__class__.__name__)
+                fname = op.args['pdf'][1]
+                if fname is None:
+                    fname = __class__.__name__
+                downloadpdf(op.args['pdf'][0], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'bubblyclusters', 'bubblyclusters.css'), name=fname)
         self.on_set.notify(_rwt_event(op))
 
     def play(self):
@@ -92,8 +98,8 @@ class BubblyClusters(Widget):
         self._data = data
         session.runtime << RWTSetOperation(self.id, {'data': data})
 
-    def download(self, pdf=False):
-        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'type': 'pdf' if pdf else 'svg'})
+    def download(self, pdf=False, fname=None):
+        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'type': 'pdf' if pdf else 'svg', 'fname': fname})
 
 
 class BubblyClustersTheme(WidgetTheme):
