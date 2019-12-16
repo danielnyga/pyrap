@@ -12,6 +12,10 @@
   stroke: #89a35c;
 }
 
+.graphlink.purple {
+  stroke: #7400a3;
+}
+
 .graphlink.black {
   stroke: black;
 }
@@ -34,6 +38,10 @@ marker#red {
 
 marker#green {
   fill: #89a35c;
+}
+
+marker#purple {
+  fill: #7400a3;
 }
 
 marker#black {
@@ -67,9 +75,9 @@ marker#blue {
   display: none;
   position: fixed;
   overflow: hidden;
-  color: #89a35c;
-  font: 13px monospace, arial, sans-serif;
-  font-weight: bold;
-  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
-  background-color: #fff;
+  color: white;
+  font: 13px bookman, arial, sans-serif;
+  background-color:rgba(0,0,0, 0.7);
+  border-radius: 5px;
+  padding: 10px;
 }

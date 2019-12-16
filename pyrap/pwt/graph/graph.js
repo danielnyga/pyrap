@@ -8,7 +8,7 @@ pwt_graph.Graph = function( parent ) {
         .style('z-index', 1000000);
 
     this._cfg = {
-        waitmsec: 200,
+        waitmsec: 100,
         linkdistance: 150,
         circleradius: 10,
         charge: -600,
@@ -127,7 +127,7 @@ pwt_graph.Graph.prototype = {
         this.update();
     },
 
-    setCharge: function( charg ) {
+    setCharge: function( charge ) {
         this._cfg.charge = charge;
         this.update();
     },
