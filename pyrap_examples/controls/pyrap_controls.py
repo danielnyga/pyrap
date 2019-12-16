@@ -150,56 +150,56 @@ class ControlsDemo():
         page  = self.create_page_template('Scale Widget Demo')
         self.create_scale_page(page)
         self.pages[page] = 'Scale'
-        
+
         # =======================================================================
         # crete canvas page
         # =======================================================================
         page = self.create_page_template('Canvas Demo')
         self.create_canvas_page(page)
         self.pages[page] = 'Canvas'
-        
+
         #=======================================================================
         # create button page
         #=======================================================================
         page = self.create_page_template('Button Widget Demo')
         self.create_button_page(page)
         self.pages[page] = 'Button'
-        
+
         #=======================================================================
         # create browser page
         #=======================================================================
         page = self.create_page_template('Browser Widget Demo')
         self.create_browser_page(page)
         self.pages[page] = 'Browser'
-        
+
         #=======================================================================
         # crete menu page
         #=======================================================================
         page = self.create_page_template('Menu Demo')
         self.create_menu_page(page)
         self.pages[page] = 'Menu'
-        
+
         #=======================================================================
         # crete list page
         #=======================================================================
         page = self.create_page_template('List Demo')
         self.create_list_page(page)
         self.pages[page] = 'List'
-        
+
         #=======================================================================
         # create dialogs page
         #=======================================================================
         page  = self.create_page_template('Dialog Demo')
         self.create_dialogs_page(page)
         self.pages[page] = 'Dialogs'
-        
+
         #=======================================================================
         # create spinner page
         #=======================================================================
         page  = self.create_page_template('Spinner Demo')
         self.create_spinner_page(page)
         self.pages[page] = 'Spinner'
-        
+
         #=======================================================================
         # create fileupload
         #=======================================================================
@@ -945,7 +945,7 @@ class ControlsDemo():
 
         data = []
         with open('resources/materials.json') as f:
-            data = json.load(f)
+                data = json.load(f)
 
         def highlight(*_):
             comp_body.children[-1].highlight(txt.text)
@@ -1156,6 +1156,7 @@ class ControlsDemo():
 
         comp_body = Composite(grp)
         comp_body.layout = RowLayout(halign='fill', valign='fill', flexrows=0)
+        comp_body.bg = Color('black')
 
         data = []
         with open('resources/graph.json') as f:
@@ -1172,7 +1173,6 @@ class ControlsDemo():
             graph = Graph(comp_body, halign='fill', valign='fill')
             graph.glow = True
             graph.updatedata(data)
-            comp_body.bg = Color('black')
 
             self.shell.dolayout()
 

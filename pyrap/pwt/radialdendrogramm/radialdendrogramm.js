@@ -120,9 +120,8 @@ pwt_radialdendrogramm.RadialDendrogramm.prototype = {
                 node = map[name] = data || {name: name, children: []};
                 if (name.length) {
                     // assumes node names to be of the form groupname.nodename
-                    node.parent = find(name.substring(0, i = name.indexOf(".")));
+                    node.parent = find(data ? data.parent : "");
                     node.parent.children.push(node);
-                    node.key = name.substring(i = name.indexOf(".")+1, name.length);
                 }
             }
             return node;
@@ -150,7 +149,7 @@ pwt_radialdendrogramm.RadialDendrogramm.prototype = {
         // For each import, construct a link from the source to target node.
         nodes.forEach(function(d) {
             if (d.imports) d.imports.forEach(function(i) {
-                imports.push({source: map[d.name], target: map[i]});
+                imports.push({source: map[d.name], target: map[i.name]});
             });
         });
 
@@ -188,7 +187,7 @@ pwt_radialdendrogramm.RadialDendrogramm.prototype = {
         this.clearhighlight();
 
         function findnode( node ) {
-            return node.key === hl.name;
+            return node.name === hl.name;
         }
 
         el = this._nodes.filter(findnode);
@@ -310,7 +309,7 @@ pwt_radialdendrogramm.RadialDendrogramm.prototype = {
         nodes
             .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 8) + ",0)" + (d.x < 180 ? "" : "rotate(180)"); })
             .style("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
-            .text(function(d) { return d.key; });
+            .text(function(d) { return d.name; });
 
         nodes
             .enter()
@@ -319,7 +318,7 @@ pwt_radialdendrogramm.RadialDendrogramm.prototype = {
             .attr("dy", ".31em")
             .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 8) + ",0)" + (d.x < 180 ? "" : "rotate(180)"); })
             .style("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
-            .text(function(d) { return d.key; })
+            .text(function(d) { return d.name; })
             .on('mouseover', function(d) {
                 d3v3.select(this).style("cursor", "pointer");
                 that.mouseover(d, this);
