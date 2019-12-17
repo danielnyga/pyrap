@@ -34,16 +34,11 @@
 
 import os
 
-from dnutils.tools import ifnone
-
 from pyrap import session, locations
-from pyrap.communication import RWTCreateOperation, RWTCallOperation, \
-    RWTSetOperation
-from pyrap.constants import d3v3
-from pyrap.events import OnSelect, _rwt_event, OnSet, _rwt_selection_event
+from pyrap.communication import RWTSetOperation
+from pyrap.events import _rwt_event, _rwt_selection_event
 from pyrap.ptypes import BitField
 from pyrap.pwt.d3widget.d3widget import D3Widget
-from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor
 

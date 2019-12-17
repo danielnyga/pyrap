@@ -72,6 +72,10 @@ class D3Widget(Widget):
         self.on_set = OnSet(self)
         self.svg = None
 
+    @property
+    def data(self):
+        return self._data
+
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
         if self._opts:

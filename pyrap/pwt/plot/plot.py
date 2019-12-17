@@ -1,86 +1,22 @@
 import os
-from dnutils import ifnone
 
 from pyrap import session, locations
-from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
-    RWTCallOperation
-from pyrap.events import OnSelect, _rwt_event, OnSet
+from pyrap.communication import RWTCallOperation
 from pyrap.ptypes import BitField
-from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
+from pyrap.pwt.d3widget.d3widget import D3Widget
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor
-from pyrap.constants import d3v3
 
 
-class Scatterplot(Widget):
+class Scatterplot(D3Widget):
 
     _rwt_class_name = 'pwt.customs.Scatterplot'
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('Scatterplot')
     def __init__(self, parent, **options):
-        Widget.__init__(self, parent, **options)
+        D3Widget.__init__(self, parent, os.path.join(locations.pwt_loc, 'plot', 'plot.css'), version=3, **options)
         self.theme = ScatterTheme(self, session.runtime.mngr.theme)
-        with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
-            cnt = d3v3.format(**{'d3content': f.read()})
-            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
-        with open(os.path.join(locations.pwt_loc, 'plot', 'plot.css')) as fi:
-            session.runtime.requirecss(fi)
-        self._data = {}
-        self.svg = None
-        self.on_select = OnSelect(self)
-        self.on_set = OnSet(self)
-
-    def _handle_notify(self, op):
-        events = {'Selection': self.on_select}
-        if op.event not in events:
-            return Widget._handle_notify(self, op)
-        events[op.event].notify(_rwt_event(op))
-        return True
-
-    def _handle_set(self, op):
-        Widget._handle_set(self, op)
-        for key, value in op.args.items():
-            if key == 'svg':
-                fname = op.args['svg'][1]
-                if fname is None:
-                    fname = __class__.__name__
-                downloadsvg(op.args['svg'][0], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'plot', 'plot.css'), name=fname)
-            if key == 'pdf':
-                fname = op.args['pdf'][1]
-                if fname is None:
-                    fname = __class__.__name__
-                downloadpdf(op.args['pdf'][0], self.width.value, self.height.value, os.path.join(locations.pwt_loc, 'plot', 'plot.css'), name=fname)
-        self.on_set.notify(_rwt_event(op))
-
-    def _create_rwt_widget(self):
-        options = Widget._rwt_options(self)
-        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
-
-    def compute_size(self):
-        w, h = Widget.compute_size(self.parent)
-
-        padding = self.theme.padding
-        if padding:
-            w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
-            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
-        margin = self.theme.margin
-        if margin:
-            w += ifnone(margin.left, 0) + ifnone(margin.right, 0)
-            h += ifnone(margin.top, 0) + ifnone(margin.bottom, 0)
-        t, r, b, l = self.theme.borders
-        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        return w, h
-
-    @property
-    def data(self):
-        return self._data
-
-    def clear(self):
-        self._data = {}
-        self._opts = []
-        session.runtime << RWTCallOperation(self.id, 'clear', {})
 
     def formats(self, xformat=['', ",.2f", ''], yformat=['', ",.2f", '']):
         self._formats = [xformat, yformat]
@@ -121,11 +57,7 @@ class Scatterplot(Widget):
         Note: The axes ticks are generated from the scatterdata, so make sure that the x/y coordinates for the line
         datasets lie within the axes' limits.
         '''
-        self._data = data
-        session.runtime << RWTSetOperation(self.id, {'data': data})
-
-    def download(self, pdf=False, fname=None):
-        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'type': 'pdf' if pdf else 'svg', 'fname': fname})
+        D3Widget.setdata(self, data)
 
 
 class ScatterTheme(WidgetTheme):

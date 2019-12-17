@@ -1,6 +1,5 @@
 import os
 
-from dnutils import ifnone
 from pyrap import session, locations
 from pyrap.communication import RWTSetOperation, \
     RWTCallOperation
@@ -16,8 +15,8 @@ class Graph(D3Widget):
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('Graph')
-    def __init__(self, parent, css=None, **options):
-        D3Widget.__init__(self, parent, os.path.join(locations.pwt_loc, 'graph', 'graph.css'), version=3, css=css, **options)
+    def __init__(self, parent, css=None, opts=None, **options):
+        D3Widget.__init__(self, parent, os.path.join(locations.pwt_loc, 'graph', 'graph.css'), version=3, opts=opts, css=css, **options)
         self.theme = GraphTheme(self, session.runtime.mngr.theme)
         self._links = []
         self._glow = False
