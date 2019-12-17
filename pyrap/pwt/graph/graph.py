@@ -2,84 +2,27 @@ import os
 
 from dnutils import ifnone
 from pyrap import session, locations
-from pyrap.communication import RWTCreateOperation, RWTSetOperation, \
+from pyrap.communication import RWTSetOperation, \
     RWTCallOperation
-from pyrap.constants import d3v3
-from pyrap.events import OnSelect, OnSet, _rwt_event
 from pyrap.ptypes import BitField
-from pyrap.pwt.pwtutils import downloadsvg, downloadpdf
+from pyrap.pwt.d3widget.d3widget import D3Widget
 from pyrap.themes import WidgetTheme
 from pyrap.widgets import Widget, constructor
 
 
-class Graph(Widget):
+class Graph(D3Widget):
 
     _rwt_class_name = 'pwt.customs.Graph'
     _defstyle_ = BitField(Widget._defstyle_)
 
     @constructor('Graph')
     def __init__(self, parent, css=None, **options):
-        Widget.__init__(self, parent, **options)
+        D3Widget.__init__(self, parent, os.path.join(locations.pwt_loc, 'graph', 'graph.css'), version=3, css=css, **options)
         self.theme = GraphTheme(self, session.runtime.mngr.theme)
-        with open(os.path.join(locations.trdparty, 'd3', 'd3.v3.min.js'), 'r') as f:
-            cnt = d3v3.format(**{'d3content': f.read()})
-            session.runtime.ensurejsresources(cnt, name='d3.v3.min.js', force=True)
-        with open(os.path.join(locations.pwt_loc, 'graph', 'graph.css')) as fi:
-            session.runtime.requirecss(fi)
-        if css is not None:
-            self._css = css
-            for css_ in css:
-                with open(css_) as fcss:
-                    session.runtime.requirecss(fcss)
         self._links = []
         self._glow = False
         self._linkdist = None
         self._cradius = None
-        self.on_select = OnSelect(self)
-        self.on_set = OnSet(self)
-        self.svg = None
-
-    def _create_rwt_widget(self):
-        options = Widget._rwt_options(self)
-        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name, options)
-
-    def _handle_notify(self, op):
-        events = {'Selection': self.on_select}
-        if op.event not in events:
-            return Widget._handle_notify(self, op)
-        events[op.event].notify(_rwt_event(op))
-        return True
-
-    def _handle_set(self, op):
-        Widget._handle_set(self, op)
-        for key, value in op.args.items():
-            if key == 'svg':
-                fname = op.args['svg'][1]
-                if fname is None:
-                    fname = __class__.__name__
-                downloadsvg(op.args['svg'][0], self.width.value, self.height.value, [os.path.join(locations.pwt_loc, 'graph', 'graph.css')] + (self._css if self._css is not None else []), name=fname)
-            if key == 'pdf':
-                fname = op.args['pdf'][1]
-                if fname is None:
-                    fname = __class__.__name__
-                downloadpdf(op.args['pdf'][0], self.width.value, self.height.value, [os.path.join(locations.pwt_loc, 'graph', 'graph.css')] + (self._css if self._css is not None else []), name=fname)
-        self.on_set.notify(_rwt_event(op))
-
-    def compute_size(self):
-        w, h = Widget.compute_size(self.parent)
-
-        padding = self.theme.padding
-        if padding:
-            w += ifnone(padding.left, 0) + ifnone(padding.right, 0)
-            h += ifnone(padding.top, 0) + ifnone(padding.bottom, 0)
-        margin = self.theme.margin
-        if margin:
-            w += ifnone(margin.left, 0) + ifnone(margin.right, 0)
-            h += ifnone(margin.top, 0) + ifnone(margin.bottom, 0)
-        t, r, b, l = self.theme.borders
-        w += ifnone(l, 0, lambda b: b.width) + ifnone(r, 0, lambda b: b.width)
-        h += ifnone(t, 0, lambda b: b.width) + ifnone(b, 0, lambda b: b.width)
-        return w, h
 
     @property
     def links(self):
@@ -178,9 +121,6 @@ class Graph(Widget):
         session.runtime << RWTCallOperation(self.id, 'updateData', {'remove': remove, 'add': add})
         self._links = [x for x in self.links if x not in remove] + add
         return remove, add
-
-    def download(self, pdf=False, fname=None):
-        session.runtime << RWTCallOperation(self.id, 'retrievesvg', {'type': 'pdf' if pdf else 'svg', 'fname': fname})
 
 
 class GraphLink(object):
