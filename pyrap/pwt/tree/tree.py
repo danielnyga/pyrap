@@ -15,7 +15,7 @@ class Tree(D3Widget):
 
     @constructor('Tree')
     def __init__(self, parent, **options):
-        D3Widget.__init__(self, parent, os.path.join(locations.pwt_loc, 'tree', 'tree.css'), version=3, opts=opts, **options)
+        D3Widget.__init__(self, parent, os.path.join(locations.pwt_loc, 'tree', 'tree.css'), version=3, **options)
         self.theme = TreeTheme(self, session.runtime.mngr.theme)
 
     def _handle_notify(self, op):

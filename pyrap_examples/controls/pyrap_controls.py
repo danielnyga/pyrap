@@ -1252,7 +1252,7 @@ class ControlsDemo():
                 clear()
 
             bc = BarChart(comp_body, halign='fill', valign='fill')
-            bc.data(data)
+            bc.setdata(data)
 
             self.shell.dolayout()
 
