@@ -163,8 +163,11 @@ pwt_radialtree.RadialTree.prototype = {
             this._cfg.h = this._cfg.w;
             this._curX += (this._cfg.w - oldwidth) / 2;
             this._curY += (this._cfg.h - oldheight) / 2;
+            console.log(this._tree);
 
-            this._tree.size([360, Math.min(this._cfg.w, this._cfg.h) / 2 - this._cfg.padding]);
+            if (typeof this._tree != 'undefined'){
+                this._tree.size([360, Math.min(this._cfg.w, this._cfg.h) / 2 - this._cfg.padding]);
+            }
 
             this._svgContainer
                 .attr('transform', 'rotate(' + this._curR + ' ' + this._curX + ' ' + this._curY + ')translate(' + this._curX + ' ' + this._curY + ')scale(' + this._curZ + ')');
