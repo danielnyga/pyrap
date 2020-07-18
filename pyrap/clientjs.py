@@ -300,7 +300,7 @@ def gen_clientjs():
         if not filename.strip(): continue
         fullpath = filename if os.path.isabs(filename) else os.path.join(js_loc, filename)
         with open(fullpath) as f:
-            jscontent += f.read()
+            jscontent += f.read().decode('utf8')
         if i < len(files) - 1: jscontent += '\n'
     return jscontent
 
