@@ -2023,6 +2023,55 @@ class TabItem(Widget):
         return width, height
 
 
+class DropTarget(Widget):
+
+    _rwt_class_name_ = 'rwt.widgets.DropTarget'
+    _defstyle_ = BitField(Widget._defstyle_)
+    _styles_ = Composite._styles_ + {'dropmove': RWT.DROP_MOVE,
+                                     'dropcopy': RWT.DROP_COPY,
+                                     'droplink': RWT.DROP_LINK}
+    _deftransfer_ = BitField()
+    _transfers_ = {'filetransfer': RWT.TRANS_FILE,
+                   'texttransfer': RWT.TRANS_TEXT,
+                   'rtftransfer': RWT.TRANS_RTF,
+                   'htmltransfer': RWT.TRANS_HTML}
+
+    @constructor('DropTarget')
+    def __init__(self, control=None, **options):
+        Widget.__init__(self, control, **options)
+        self.theme = TabItemTheme(self, session.runtime.mngr.theme)
+        self._control = control
+        self.selected = False
+        self.transfer = BitField(type(self)._defstyle_)
+        if self in control.children:
+            control.children.remove(self)
+
+    def _create_rwt_widget(self):
+        options = Widget._rwt_options(self)
+        if self._control:
+            options.control = self._control.id
+        if RWT.DROP_COPY in self.style:
+            options.style.append('DROP_COPY')
+        if RWT.DROP_MOVE in self.style:
+            options.style.append('DROP_MOVE')
+        if RWT.DROP_LINK in self.style:
+            options.style.append('DROP_LINK')
+        if RWT.DROP_COPY in self.style:
+            options.style.append('DROP_COPY')
+        if RWT.TRANS_TEXT in self.transfer:
+            options.transfer.append('3556653')
+        if RWT.TRANS_RTF in self.transfer:
+            options.transfer.append('113252')
+        if RWT.TRANS_HTML in self.transfer:
+            options.transfer.append('3213227')
+        if RWT.TRANS_FILE in self.transfer:
+            options.transfer.append('-1199481849')
+            options.fileDropEnabled = True
+
+        options.id = self.id
+        session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+
+
 class Scale(Widget):
     _rwt_class_name_ = 'rwt.widgets.Scale'
     _styles_ = Widget._styles_ + {}
@@ -3836,6 +3885,7 @@ class FileUpload(Widget):
 
     def _upload(self, *_):
         token, url = session.runtime.servicehandlers.fileuploadhandler.accept(self.filenames)
+        out(token, url)
         self._token = token
         session.runtime << RWTCallOperation(self.id, 'submit', { 'url': url })
 

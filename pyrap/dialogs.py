@@ -3,10 +3,10 @@ Created on Nov 21, 2016
 
 @author: nyga
 '''
-from dnutils import ifnone
+from dnutils import ifnone, out
 from pyrap.events import _rwt_event
-from pyrap.widgets import Spinner, Edit,\
-    Separator, Canvas
+from pyrap.widgets import Spinner, Edit, \
+    Separator, Canvas, FileUpload
 from pyrap.constants import DLG, CURSOR
 from pyrap.layout import ColumnLayout, RowLayout, GridLayout, CellLayout
 from pyrap.ptypes import parse_value, Color, Image
@@ -636,3 +636,105 @@ class ContextMenu(Shell):
     @options.setter
     def options(self, options):
         self._setoptions(options)
+
+
+class FileUploadDialog(Shell):
+    '''
+    Represents a file upload dialog with drag and drop function
+    '''
+
+    @constructor('FileUploadDialog')
+    def __init__(self, parent):
+        Shell.__init__(self, parent=parent, title='Upload files', titlebar=True, border=True, minimize=False, resize=True, modal=True)
+        self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
+        self.answer = None
+        self._options = {'Click "Add" or drop files here.': None}
+        self._btn_fileupload = None
+        parent.on_mousedown += lambda x: self.answer_and_close([None, None])
+
+    def answer_and_close(self, a):
+        self.answer = a
+        self.close()
+
+    def create_content(self):
+        # w114
+        Shell.create_content(self)
+
+        self.layout.minheight = self.parent.shell().height * 0.3
+
+        # w114
+        mainarea = Composite(self.content)
+        mainarea.layout = RowLayout(padding=10, halign='fill', valign='fill', flexrows=0)
+
+        # w115
+        upper = Composite(mainarea)
+        upper.layout = RowLayout(padding=10, halign='fill', valign='fill', flexrows=0)
+
+        # w116
+        scrolledarea = ScrolledComposite(upper, padding=px(10), hscroll=False, vscroll=True, halign='fill', valign='fill', minwidth=300, minheight=100)
+        scrolledarea.content.layout = CellLayout(halign='fill', valign='fill')
+
+        # w117
+        optionslist = Composite(scrolledarea.content)
+        optionslist.layout = RowLayout(halign='fill', valign='top')
+
+        # w122
+        comp_pbar = Composite(mainarea)
+        comp_pbar.layout = CellLayout(halign='fill', valign='fill')
+
+        # w123
+        pbar = ProgressBar(comp_pbar, horizontal=True, halign='fill')
+
+        # w125
+        lower = Composite(mainarea)
+        lower.layout = ColumnLayout(padding=10, halign='fill', valign='fill', equalwidths=True)
+
+        self.create_buttons(lower)
+        self.create_options(optionslist)
+
+        self.show(True)
+
+    def create_options(self, parent):
+        for c in parent.children:
+            c.dispose()
+
+        for text, icon in self._options.items():
+            # w118/131/135
+            self.option(parent, icon, text)
+
+    def option(self, parent, icon, text):
+        c = Composite(parent, border=True)
+        c.layout = ColumnLayout(halign='fill', flexcols=1)
+
+        Label(c, img=icon, halign='fill', valign='fill')
+        Label(c, text=text, halign='fill', valign='fill')
+
+        return c
+
+    def create_buttons(self, buttons):
+        self._btn_fileupload = FileUpload(buttons, text='Add', accepted='.csv,.txt', multi=True, halign='fill')
+        self._btn_fileupload.on_finished += self._uploaded
+        Label(buttons, halign='fill', valign='fill')
+        ok = Button(buttons, text='OK', minwidth=100)
+        ok.on_select += lambda *_: self.answer_and_close(self.inputfield.text)
+        cancel = Button(buttons, text='Cancel', halign='fill')
+        cancel.on_select += lambda *_: self.answer_and_close(None)
+
+    def _uploaded(args, **kwargs):
+        out(args, kwargs)
+
+        # files = session.runtime.servicehandlers.fileuploadhandler.files[self._btn_fileupload.token]
+        # files[0]['filename']
+
+    def _setoptions(self, options):
+        if options is None:
+            options = []
+        if isinstance(options, dict):
+            if not all([type(i) is str for i in options]):
+                raise TypeError('All keys in an item dictionary must be strings.')
+            else:
+                options = OrderedDict(((k, options[k]) for k in sorted(options)))
+        elif type(options) in (list, tuple):
+            options = OrderedDict(((str(i), i) for i in options))
+        else: raise TypeError('Invalid type for List items: %s' % type(options))
+        self._options = options
