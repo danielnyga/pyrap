@@ -651,7 +651,7 @@ class FileUploadDialog(Shell):
         self.answer = None
         self._options = []
         self.fupload = None
-        self._files = None
+        self._files = []
         self._icons = {
             'check': Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'tick.png')),
             None: Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'bullet_white.png')),
@@ -714,6 +714,7 @@ class FileUploadDialog(Shell):
 
         def _uploaded(eventdata, **kwargs):
             self._files.extend([f.get('name') for _, f in eventdata.files.items()])
+            # self._options = [('check', f.get('name')) for _, f in eventdata.files.items()]
             self._options = [('check', f) for f in self._files]
             self.create_options(self.combo_optionslist, self._options, updatebar=True)
 
@@ -726,7 +727,7 @@ class FileUploadDialog(Shell):
         for c in parent.children:
             c.dispose()
 
-        self.dolayout(pack=True)
+        # self.dolayout(pack=True)
 
         for i, (icon, text) in enumerate(options):
             # w118/131/135
@@ -754,6 +755,7 @@ class FileUploadDialog(Shell):
 
         def uploaded(*_):
             self._files = [f['filename'] for f in session.runtime.servicehandlers.fileuploadhandler.files[self.fupload.token]]
+            # self._options = [('check', f['filename']) for f in session.runtime.servicehandlers.fileuploadhandler.files[self.fupload.token]]
             self._options = [('check', f) for f in self._files]
             self.create_options(self.combo_optionslist, self._options, updatebar=True)
 
