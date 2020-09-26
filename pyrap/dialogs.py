@@ -4,9 +4,10 @@ Created on Nov 21, 2016
 @author: nyga
 '''
 from dnutils import ifnone, out
-from pyrap.events import _rwt_event
+from pyrap.events import _rwt_event, OnDragEnter, OnDragLeave, OnDropAccept, OnDragOver, OnDragOperationChanged, \
+    _rwt_selection_event, _rwt_drag_event
 from pyrap.widgets import Spinner, Edit, \
-    Separator, Canvas, FileUpload
+    Separator, Canvas, FileUpload, DropTarget, Widget
 from pyrap.constants import DLG, CURSOR
 from pyrap.layout import ColumnLayout, RowLayout, GridLayout, CellLayout
 from pyrap.ptypes import parse_value, Color, Image
@@ -648,9 +649,16 @@ class FileUploadDialog(Shell):
         Shell.__init__(self, parent=parent, title='Upload files', titlebar=True, border=True, minimize=False, resize=True, modal=True)
         self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
         self.answer = None
-        self._options = {'Click "Add" or drop files here.': None}
-        self._btn_fileupload = None
+        self._options = []
+        self.fupload = None
+        self._files = None
+        self._icons = {
+            'check': Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'tick.png')),
+            None: Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'bullet_white.png')),
+            'loading': Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'bullet_red.png'))
+        }
         parent.on_mousedown += lambda x: self.answer_and_close([None, None])
+        self.push = PushService()
 
     def answer_and_close(self, a):
         self.answer = a
@@ -675,66 +683,107 @@ class FileUploadDialog(Shell):
         scrolledarea.content.layout = CellLayout(halign='fill', valign='fill')
 
         # w117
-        optionslist = Composite(scrolledarea.content)
-        optionslist.layout = RowLayout(halign='fill', valign='top')
+        control = Composite(scrolledarea.content)
+        control.layout = CellLayout(halign='fill', valign='fill')
+
+        # create droptarget and redirect filedialog listeners to it
+        self._droptarget = DropTarget(control, dropcopy=True, dropmove=True, filetransfer=True)
+        self.on_dragleave = self._droptarget.on_dragleave
+        self.on_dragenter = self._droptarget.on_dragenter
+        self.on_dragoperationchanged = self._droptarget.on_dragoperationchanged
+        self.on_dragover = self._droptarget.on_dragover
+        self.on_dropaccept = self._droptarget.on_dropaccept
+
+        # w118
+        self.combo_optionslist = Composite(control)
+        self.combo_optionslist.layout = RowLayout(halign='fill', valign='top')
 
         # w122
         comp_pbar = Composite(mainarea)
         comp_pbar.layout = CellLayout(halign='fill', valign='fill')
 
         # w123
-        pbar = ProgressBar(comp_pbar, horizontal=True, halign='fill')
+        self._progbar = ProgressBar(comp_pbar, vmax=100, horizontal=True, halign='fill')
 
         # w125
         lower = Composite(mainarea)
         lower.layout = ColumnLayout(padding=10, halign='fill', valign='fill', equalwidths=True)
 
         self.create_buttons(lower)
-        self.create_options(optionslist)
+        self.create_options(self.combo_optionslist, [(None, 'Click "Add" or drop files here.')], updatebar=False)
+
+        def _uploaded(eventdata, **kwargs):
+            self._files.extend([f.get('name') for _, f in eventdata.files.items()])
+            self._options = [('check', f) for f in self._files]
+            self.create_options(self.combo_optionslist, self._options, updatebar=True)
+
+        self.on_resize += self.dolayout
+        self.on_dropaccept += _uploaded
 
         self.show(True)
 
-    def create_options(self, parent):
+    def create_options(self, parent, options, updatebar=False):
         for c in parent.children:
             c.dispose()
 
-        for text, icon in self._options.items():
-            # w118/131/135
-            self.option(parent, icon, text)
+        self.dolayout(pack=True)
 
-    def option(self, parent, icon, text):
+        for i, (icon, text) in enumerate(options):
+            # w118/131/135
+            self.addoption(parent, icon, text)
+
+            if updatebar:
+                self._progbar.value = (self._progbar.max / len(options) ) * (i + 1)
+
+            self.dolayout(pack=True)
+
+    def addoption(self, parent, icon, text):
+        # self._options.append((icon, text))
+
         c = Composite(parent, border=True)
         c.layout = ColumnLayout(halign='fill', flexcols=1)
 
-        Label(c, img=icon, halign='fill', valign='fill')
-        Label(c, text=text, halign='fill', valign='fill')
+        icon_ = self._icons.get(icon, Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'bullet_white.png')))
 
+        Label(c, img=icon_, halign='fill', valign='fill')
+        Label(c, text=text, halign='fill', valign='fill')
         return c
 
     def create_buttons(self, buttons):
-        self._btn_fileupload = FileUpload(buttons, text='Add', accepted='.csv,.txt', multi=True, halign='fill')
-        self._btn_fileupload.on_finished += self._uploaded
+        self.fupload = FileUpload(buttons, text='Add', accepted='.csv,.txt', multi=True, halign='fill')
+
+        def uploaded(*_):
+            self._files = [f['filename'] for f in session.runtime.servicehandlers.fileuploadhandler.files[self.fupload.token]]
+            self._options = [('check', f) for f in self._files]
+            self.create_options(self.combo_optionslist, self._options, updatebar=True)
+
+        self.fupload.on_finished += uploaded
+
         Label(buttons, halign='fill', valign='fill')
+
         ok = Button(buttons, text='OK', minwidth=100)
-        ok.on_select += lambda *_: self.answer_and_close(self.inputfield.text)
+        ok.on_select += lambda *_: self.answer_and_close(self._files)
+
         cancel = Button(buttons, text='Cancel', halign='fill')
         cancel.on_select += lambda *_: self.answer_and_close(None)
-
-    def _uploaded(args, **kwargs):
-        out(args, kwargs)
-
-        # files = session.runtime.servicehandlers.fileuploadhandler.files[self._btn_fileupload.token]
-        # files[0]['filename']
 
     def _setoptions(self, options):
         if options is None:
             options = []
         if isinstance(options, dict):
             if not all([type(i) is str for i in options]):
-                raise TypeError('All keys in an item dictionary must be strings.')
+                raise TypeError('All items must be strings.')
             else:
-                options = OrderedDict(((k, options[k]) for k in sorted(options)))
+                options = [(k, options[k]) for k in sorted(options)]
         elif type(options) in (list, tuple):
-            options = OrderedDict(((str(i), i) for i in options))
+            options = [(None, i) for i in options]
         else: raise TypeError('Invalid type for List items: %s' % type(options))
         self._options = options
+
+    @property
+    def options(self):
+        return self._options
+
+    @options.setter
+    def options(self, options):
+        self._setoptions(options)

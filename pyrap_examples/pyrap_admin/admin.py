@@ -2,7 +2,7 @@ import threading
 from collections import OrderedDict
 
 from dnutils import threads, out, edict
-from dnutils.threads import current_thread, sleep, ThreadInterrupt, _DummyThread
+from dnutils.threads import current_thread, sleep, ThreadInterrupt, _MyDummyThread
 
 import pyrap
 from pyrap import session
@@ -88,10 +88,10 @@ class PyRAPAdmin:
     def update_process_list(self):
         items = OrderedDict()
         for _, thread in threads.active().items():
-            if type(thread) is threads._DummyThread: continue
+            if type(thread) is threads._MyDummyThread: continue
             items['%s (%s)' % (thread.name, thread.ident)] = thread
         for thread in threading.enumerate():
-            if type(thread) is threading._DummyThread: continue
+            if type(thread) is threading._MyDummyThread: continue
             items['%s (%s)' % (thread.name, thread.ident)] = thread
         if set(items.keys()) != set(self.processlist.items.keys()):
             self.processlist.items = items

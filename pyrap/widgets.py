@@ -22,7 +22,8 @@ from .communication import RWTSetOperation,\
 from .constants import RWT, GCBITS, CURSOR, DLG
 from .events import OnResize, OnMouseDown, OnMouseUp, OnDblClick, OnFocus, \
     _rwt_mouse_event, OnClose, OnMove, OnSelect, _rwt_selection_event, OnDispose, \
-    OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished, OnLongClick, KeyPressed
+    OnNavigate, OnModify, FocusEventData, _rwt_event, OnFinished, OnLongClick, KeyPressed, OnDragEnter, OnDragLeave, \
+    OnDragOperationChanged, OnDropAccept, OnDragOver, _rwt_drag_event
 from .exceptions import WidgetDisposedError
 from .layout import Layout, CellLayout, StackLayout, materialize_adapters, ColumnLayout, RowLayout, GridLayout
 from .ptypes import px, BitField, BoolVar, NumVar, Color, \
@@ -2026,15 +2027,16 @@ class TabItem(Widget):
 class DropTarget(Widget):
 
     _rwt_class_name_ = 'rwt.widgets.DropTarget'
-    _defstyle_ = BitField(Widget._defstyle_)
-    _styles_ = Composite._styles_ + {'dropmove': RWT.DROP_MOVE,
-                                     'dropcopy': RWT.DROP_COPY,
-                                     'droplink': RWT.DROP_LINK}
-    _deftransfer_ = BitField()
-    _transfers_ = {'filetransfer': RWT.TRANS_FILE,
-                   'texttransfer': RWT.TRANS_TEXT,
-                   'rtftransfer': RWT.TRANS_RTF,
-                   'htmltransfer': RWT.TRANS_HTML}
+    _defstyle_ = BitField(RWT.NONE)
+    _styles_ = BiMap({'dropnone': RWT.DROP_NONE,
+                'dropmove': RWT.DROP_MOVE,
+                'dropcopy': RWT.DROP_COPY,
+                'droplink': RWT.DROP_LINK})
+    _transfers_ = BiMap({'filetransfer': RWT.TRANS_FILE,
+                         'texttransfer': RWT.TRANS_TEXT,
+                         'rtftransfer': RWT.TRANS_RTF,
+                         'htmltransfer': RWT.TRANS_HTML})
+    _deftransfers_ = BitField(RWT.NONE)
 
     @constructor('DropTarget')
     def __init__(self, control=None, **options):
@@ -2042,12 +2044,34 @@ class DropTarget(Widget):
         self.theme = TabItemTheme(self, session.runtime.mngr.theme)
         self._control = control
         self.selected = False
-        self.transfer = BitField(type(self)._defstyle_)
+        self.transfer = BitField(type(self)._deftransfers_)
+        for k, v in options.items():
+            if k in type(self)._transfers_: self.transfer.setbit(type(self)._transfers_[k:], v)
+
         if self in control.children:
             control.children.remove(self)
+        self.on_dragenter = OnDragEnter(self)
+        self.on_dragleave = OnDragLeave(self)
+        self.on_dropaccept = OnDropAccept(self)
+        self.on_dragover = OnDragOver(self)
+        self.on_dragoperationchanged = OnDragOperationChanged(self)
+
+    def _handle_notify(self, op):
+        events = {'DragEnter': self.on_dragenter,
+                  'DragLeave': self.on_dragleave,
+                  'DropAccept': self.on_dropaccept,
+                  'DragOver': self.on_dragover,
+                  'DragOperationChanged': self.on_dragoperationchanged,
+                  }
+        if op.event not in events:
+            return Widget._handle_notify(self, op)
+        else:
+            events[op.event].notify(_rwt_drag_event(op))
+        return True
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
+        options.transfer = []
         if self._control:
             options.control = self._control.id
         if RWT.DROP_COPY in self.style:
@@ -2056,8 +2080,8 @@ class DropTarget(Widget):
             options.style.append('DROP_MOVE')
         if RWT.DROP_LINK in self.style:
             options.style.append('DROP_LINK')
-        if RWT.DROP_COPY in self.style:
-            options.style.append('DROP_COPY')
+        if RWT.DROP_NONE in self.style:
+            options.style.append('DROP_NONE')
         if RWT.TRANS_TEXT in self.transfer:
             options.transfer.append('3556653')
         if RWT.TRANS_RTF in self.transfer:
@@ -2068,8 +2092,10 @@ class DropTarget(Widget):
             options.transfer.append('-1199481849')
             options.fileDropEnabled = True
 
-        options.id = self.id
         session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+
+    def compute_size(self):
+        return 0, 0
 
 
 class Scale(Widget):
@@ -3697,7 +3723,7 @@ class ProgressBar(Widget):
     @checkwidget
     def value(self, v):
         self._value = v
-        session.runtime << RWTSetOperation(self.id, {'selection': self._value})
+        session.runtime << RWTSetOperation(self.id, {'selection': self._value, 'toolTip': f'{self._value/self._max*100}%'})
         
     def compute_size(self):
         return self.theme.minwidth, px(15)
@@ -3838,7 +3864,6 @@ class FileUpload(Widget):
     _styles_ = Widget._styles_ + {'multi': RWT.MULTI,}
     _defstyle_ = BitField(Widget._defstyle_)
 
-
     @constructor('FileUpload')
     def __init__(self, parent, text=None, accepted=None, **options):
         Widget.__init__(self, parent, **options)
@@ -3869,6 +3894,7 @@ class FileUpload(Widget):
     def _handle_notify(self, op):
         events = {'Selection': self.on_select, 'Finished': self.on_finished}
         if op.event not in events:
+            out('ALARM!', op)
             return Widget._handle_notify(self, op)
         elif op.event == 'Selection':
             events[op.event].notify(_rwt_selection_event(op))
@@ -3885,7 +3911,6 @@ class FileUpload(Widget):
 
     def _upload(self, *_):
         token, url = session.runtime.servicehandlers.fileuploadhandler.accept(self.filenames)
-        out(token, url)
         self._token = token
         session.runtime << RWTCallOperation(self.id, 'submit', { 'url': url })
 

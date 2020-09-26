@@ -4,6 +4,7 @@ Created on Nov 23, 2015
 @author: nyga
 '''
 import dnutils
+from dnutils import out
 from dnutils.threads import current_thread, SuspendableThread, RLock
 
 from pyrap.base import session
@@ -266,7 +267,72 @@ class OnFinished(RWTEvent):
 
 class OnDispose(Event):
     def _notify(self, listener): listener()
-    
+
+
+class OnDragEnter(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'DragEnter', widget)
+
+    def _create_subscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'DragEnter': True})
+
+    def _create_unsubscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'DragEnter': False})
+
+    def _notify(self, listener, data): listener(data)
+
+
+class OnDragOver(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'DragOver', widget)
+
+    def _create_subscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'DragOver': True})
+
+    def _create_unsubscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'DragOver': False})
+
+    def _notify(self, listener, data): listener(data)
+
+
+class OnDragLeave(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'DragLeave', widget)
+
+    def _create_subscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'DragLeave': True})
+
+    def _create_unsubscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'DragLeave': False})
+
+    def _notify(self, listener, data): listener(data)
+
+
+class OnDragOperationChanged(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'DragOperationChanged', widget)
+
+    def _create_subscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'DragOperationChanged': True})
+
+    def _create_unsubscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'DragOperationChanged': False})
+
+    def _notify(self, listener, data): listener(data)
+
+
+class OnDropAccept(RWTEvent):
+    def __init__(self, widget):
+        RWTEvent.__init__(self, 'DropAccept', widget)
+
+    def _create_subscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'DropAccept': True})
+
+    def _create_unsubscribe_msg(self):
+        return RWTListenOperation(self.widget.id, {'DropAccept': False})
+
+    def _notify(self, listener, data): listener(data)
+
 
 class EventData(object):
     def __init__(self, widget, *args):
@@ -313,6 +379,22 @@ class MouseEventData(EventData):
         return self.x, self.y
 
 
+class DragEventData(EventData):
+
+    def __init__(self, widget, operation, feedback, files, timestamp, x, y):
+        EventData.__init__(self, widget)
+        self.operation = operation
+        self.feedback = feedback
+        self.files = files
+        self.timestamp = timestamp
+        self.x = x
+        self.y = y
+
+    @property
+    def location(self):
+        return self.x, self.y
+
+
 def _rwt_selection_event(op):
     return SelectionEventData(session.runtime.windows[op.target],
                               op.args.get('button'),
@@ -343,6 +425,16 @@ def _rwt_mouse_event(op):
                           op.args.get('ctrlKey'),
                           op.args.get('altKey'),
                           op.args.get('shiftKey'),
+                          op.args.get('time'),
+                          op.args.get('x'),
+                          op.args.get('y'))
+
+
+def _rwt_drag_event(op):
+    return DragEventData(session.runtime.windows[op.target],
+                          op.args.get('operation'),
+                          op.args.get('feedback'),
+                          op.args.get('files'),
                           op.args.get('time'),
                           op.args.get('x'),
                           op.args.get('y'))
