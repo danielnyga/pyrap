@@ -163,7 +163,6 @@ pwt_radialtree.RadialTree.prototype = {
             this._cfg.h = this._cfg.w;
             this._curX += (this._cfg.w - oldwidth) / 2;
             this._curY += (this._cfg.h - oldheight) / 2;
-            console.log(this._tree);
 
             if (typeof this._tree != 'undefined'){
                 this._tree.size([360, Math.min(this._cfg.w, this._cfg.h) / 2 - this._cfg.padding]);
@@ -783,8 +782,11 @@ pwt_radialtree.RadialTree.prototype = {
         nodeEnter
             .append('circle')
             .attr('r', 1e-6)
-            .attr('class', function(d) {
-                return d.type;
+            .style("fill", function(d) {
+                return d.type ? d.type : 'steelblue';
+            })
+            .style("stroke", function(d) {
+                return d.type ? d.type : 'steelblue';
             })
             .on('dblclick', function(d) { that.dblclick(d, that); })
             .style('fill-opacity', function(d) {
@@ -795,9 +797,6 @@ pwt_radialtree.RadialTree.prototype = {
             .append('text')
             .text(function(d) {
                 return ((typeof d.showname === 'undefined' || d.showname) && d.name) ? d.name : '';
-            })
-            .attr('class', function(d) {
-                return d.type;
             })
             .style('opacity', 0.9)
             .style('fill-opacity', 0)
@@ -835,9 +834,6 @@ pwt_radialtree.RadialTree.prototype = {
                 return ((d.x + that._curR) % 360 <= 180 ? 'translate(8)scale(' : 'rotate(180)translate(-8)scale(' ) + that.reduceZ(that) +')';
             })
             .style('fill', this._cfg.fontcolor)
-            .attr('class', function(d) {
-                return d.type;
-            })
             .attr('dy', '.35em')
             .style('fill-opacity', 1);
     
@@ -870,8 +866,8 @@ pwt_radialtree.RadialTree.prototype = {
         // create links
         linkenter
             .insert('path', 'g')
-            .attr('class', function(d) {
-                return 'rtlink' + (d.target.type ? ' ' + d.target.type : '');
+            .style("stroke", function(d) {
+                return d.target.type ? d.target.type : '#ccc';
             })
             .attr("id", function(d) {
                 var str = d.source.name + '-' + d.target.name;
@@ -935,9 +931,7 @@ pwt_radialtree.RadialTree.prototype = {
             } : 0)
             .attr('d', function(d) {
                 return that.diagonal(d);})
-            .attr('class', function(d) {
-                return 'rtlink' + (d.target.type ? ' ' + d.target.type : '');
-            });
+            .attr('class', 'rtlink');
 
         linkupdate
             .select("text")

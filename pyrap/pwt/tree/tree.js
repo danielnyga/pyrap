@@ -232,8 +232,11 @@ pwt_tree.Tree.prototype = {
         nodeenter
             .append("circle")
             .attr("r", 1e-6)
-            .attr('class', function(d) {
-                return d.type;
+            .style("fill", function(d) {
+                return d.type ? d.type : 'steelblue';
+            })
+            .style("stroke", function(d) {
+                return d.type ? d.type : 'steelblue';
             });
 
         nodeenter
@@ -256,8 +259,11 @@ pwt_tree.Tree.prototype = {
         nodeupdate
             .select("circle")
             .attr("r", this._cfg.radius)
-            .attr('class', function(d) {
-                return d.type;
+            .style("fill", function(d) {
+                return d.type ? d.type : 'steelblue';
+            })
+            .style("stroke", function(d) {
+                return d.type ? d.type : 'steelblue';
             })
             .style("fill-opacity", function(d) { return d._children && d._children.length > 0 ? 1 : .1; });
 
@@ -294,7 +300,8 @@ pwt_tree.Tree.prototype = {
         edgeenter
             .append("path")
             .attr("class", "tree_link")
-            .attr("id", function(d) { return d.source.name + '-' + d.target.name; })
+            .attr("id", function(d) {
+                return d.source.id && d.target.id ? d.source.id + '-' + d.target.id : d.source.name + '-' + d.target.name; })
             .attr("d", function(d) {
                 var o = {x: source.x0, y: source.y0};
                 return that.diagonal({source: o, target: o});
@@ -304,7 +311,7 @@ pwt_tree.Tree.prototype = {
             .append("text")
             .style("font-size", "15px")
             .append("textPath")
-            .attr("href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
+            .attr("href", function(d) { return d.source.id && d.target.id ? '#' + d.source.id + '-' + d.target.id : '#' + d.source.name + '-' + d.target.name; })
             .style('text-anchor', "middle")
             .attr("startOffset", "50%")
             .text(function(d) { return ((typeof d.target.showedge === 'undefined' || d.target.showedge) && d.target.edgetext) ? d.target.edgetext : ''; })
@@ -329,7 +336,7 @@ pwt_tree.Tree.prototype = {
 
         edgeenter
             .append("use")
-            .attr("href", function(d) { return '#' + d.source.name + '-' + d.target.name; })
+            .attr("href", function(d) { return d.source.id && d.target.id ? '#' + d.source.id + '-' + d.target.id : '#' + d.source.name + '-' + d.target.name; })
             .style("stroke", "none")
             .style("fill", "none");
 
@@ -341,8 +348,8 @@ pwt_tree.Tree.prototype = {
         edgeupdate
             .selectAll('path')
             .attr("d", that.diagonal)
-            .attr('class', function(d) {
-                return d.target.type;
+            .style("stroke", function(d) {
+                return d.target.type ? d.target.type : 'steelblue';
             });
 
         edgeupdate
