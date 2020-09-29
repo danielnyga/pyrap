@@ -4,6 +4,7 @@ Created on Nov 21, 2016
 @author: nyga
 '''
 from dnutils import ifnone, out
+from pyrap.communication import RWTCallOperation, RWTSetOperation
 from pyrap.events import _rwt_event, OnDragEnter, OnDragLeave, OnDropAccept, OnDragOver, OnDragOperationChanged, \
     _rwt_selection_event, _rwt_drag_event
 from pyrap.widgets import Spinner, Edit, \
@@ -651,7 +652,8 @@ class FileUploadDialog(Shell):
         self.answer = None
         self._options = []
         self.fupload = None
-        self._files = []
+        self._token = None
+        self._inited = False
         self._icons = {
             'check': Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'tick.png')),
             None: Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'bullet_white.png')),
@@ -693,6 +695,7 @@ class FileUploadDialog(Shell):
         self.on_dragoperationchanged = self._droptarget.on_dragoperationchanged
         self.on_dragover = self._droptarget.on_dragover
         self.on_dropaccept = self._droptarget.on_dropaccept
+        self.on_finished = self._droptarget.on_finished
 
         # w118
         self.combo_optionslist = Composite(control)
@@ -711,35 +714,39 @@ class FileUploadDialog(Shell):
 
         self.create_buttons(lower)
         self.create_options(self.combo_optionslist, [(None, 'Click "Add" or drop files here.')], updatebar=False)
-
-        def _uploaded(eventdata, **kwargs):
-            self._files.extend([f.get('name') for _, f in eventdata.files.items()])
-            # self._options = [('check', f.get('name')) for _, f in eventdata.files.items()]
-            self._options = [('check', f) for f in self._files]
-            self.create_options(self.combo_optionslist, self._options, updatebar=True)
+        self._inited = True
 
         self.on_resize += self.dolayout
-        self.on_dropaccept += _uploaded
+
+        def dropped(e, **kwargs):
+            self._fnames = [f.get('name') for _, f in e.files.items()]
+            self._token = self._droptarget.token
+            self._update_opts(self._fnames)
+
+        self.on_dropaccept += dropped
 
         self.show(True)
 
-    def create_options(self, parent, options, updatebar=False):
-        for c in parent.children:
-            c.dispose()
+    def _update_opts(self, fnames):
+        self.create_options(self.combo_optionslist, [('check', f) for f in fnames], updatebar=True)
 
-        # self.dolayout(pack=True)
+    def create_options(self, parent, opts, updatebar=False):
+        if self._inited:
+            for c in parent.children:
+                c.dispose()
+            self.dolayout(pack=True)
+            self._inited = False
 
-        for i, (icon, text) in enumerate(options):
+        for i, (icon, text) in enumerate(opts):
             # w118/131/135
             self.addoption(parent, icon, text)
 
             if updatebar:
-                self._progbar.value = (self._progbar.max / len(options) ) * (i + 1)
+                self._progbar.value = (self._progbar.max / len(opts)) * (i + 1)
 
             self.dolayout(pack=True)
 
     def addoption(self, parent, icon, text):
-        # self._options.append((icon, text))
 
         c = Composite(parent, border=True)
         c.layout = ColumnLayout(halign='fill', flexcols=1)
@@ -754,17 +761,17 @@ class FileUploadDialog(Shell):
         self.fupload = FileUpload(buttons, text='Add', accepted='.csv,.txt', multi=True, halign='fill')
 
         def uploaded(*_):
-            self._files = [f['filename'] for f in session.runtime.servicehandlers.fileuploadhandler.files[self.fupload.token]]
-            # self._options = [('check', f['filename']) for f in session.runtime.servicehandlers.fileuploadhandler.files[self.fupload.token]]
-            self._options = [('check', f) for f in self._files]
-            self.create_options(self.combo_optionslist, self._options, updatebar=True)
+            self._fnames = [f['filename'] for f in session.runtime.servicehandlers.fileuploadhandler.files[self.fupload.token]]
+            self._token = self.fupload.token
+            self._update_opts(self._fnames)
+            self.on_finished.notify(None)
 
         self.fupload.on_finished += uploaded
 
         Label(buttons, halign='fill', valign='fill')
 
         ok = Button(buttons, text='OK', minwidth=100)
-        ok.on_select += lambda *_: self.answer_and_close(self._files)
+        ok.on_select += lambda *_: self.answer_and_close('OK')
 
         cancel = Button(buttons, text='Cancel', halign='fill')
         cancel.on_select += lambda *_: self.answer_and_close(None)
@@ -789,3 +796,7 @@ class FileUploadDialog(Shell):
     @options.setter
     def options(self, options):
         self._setoptions(options)
+
+    @property
+    def token(self):
+        return self._token

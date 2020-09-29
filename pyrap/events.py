@@ -262,7 +262,7 @@ class OnFinished(RWTEvent):
     def _create_unsubscribe_msg(self):
         return [RWTListenOperation(self.widget.id, {'Finished': False})]
 
-    def _notify(self, listener): listener()
+    def _notify(self, listener, data): listener(data)
     
 
 class OnDispose(Event):

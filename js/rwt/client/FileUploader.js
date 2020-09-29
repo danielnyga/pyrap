@@ -40,6 +40,7 @@ rwt.client.FileUploader.prototype = {
   },
 
   submit : function( callProperties ) {
+    dt = rwt.remote.RemoteObjectFactory._getRemoteObject( callProperties.dt )
     var url = callProperties.url;
     var fileIds = callProperties.fileIds;
     var formData = rwt.client.FileUploader.createFormData();
@@ -51,8 +52,13 @@ rwt.client.FileUploader.prototype = {
       formData.append( file.name, file );
     }
     var xhr = rwt.remote.Request.createXHR();
+    xhr.addEventListener("loadend", loadEnd);
     xhr.open( "POST", url );
     xhr.send( formData );
+
+    function loadEnd(e) {
+      dt.notify( "Finished" );
+    }
   }
 
 };

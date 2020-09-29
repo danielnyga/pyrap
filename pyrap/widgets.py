@@ -2029,9 +2029,9 @@ class DropTarget(Widget):
     _rwt_class_name_ = 'rwt.widgets.DropTarget'
     _defstyle_ = BitField(RWT.NONE)
     _styles_ = BiMap({'dropnone': RWT.DROP_NONE,
-                'dropmove': RWT.DROP_MOVE,
-                'dropcopy': RWT.DROP_COPY,
-                'droplink': RWT.DROP_LINK})
+                      'dropmove': RWT.DROP_MOVE,
+                      'dropcopy': RWT.DROP_COPY,
+                      'droplink': RWT.DROP_LINK})
     _transfers_ = BiMap({'filetransfer': RWT.TRANS_FILE,
                          'texttransfer': RWT.TRANS_TEXT,
                          'rtftransfer': RWT.TRANS_RTF,
@@ -2043,6 +2043,7 @@ class DropTarget(Widget):
         Widget.__init__(self, control, **options)
         self.theme = TabItemTheme(self, session.runtime.mngr.theme)
         self._control = control
+        self._uploads = 0
         self.selected = False
         self.transfer = BitField(type(self)._deftransfers_)
         for k, v in options.items():
@@ -2055,6 +2056,7 @@ class DropTarget(Widget):
         self.on_dropaccept = OnDropAccept(self)
         self.on_dragover = OnDragOver(self)
         self.on_dragoperationchanged = OnDragOperationChanged(self)
+        self.on_finished = OnFinished(self)
 
     def _handle_notify(self, op):
         events = {'DragEnter': self.on_dragenter,
@@ -2062,9 +2064,12 @@ class DropTarget(Widget):
                   'DropAccept': self.on_dropaccept,
                   'DragOver': self.on_dragover,
                   'DragOperationChanged': self.on_dragoperationchanged,
+                  'Finished': self.on_finished
                   }
         if op.event not in events:
             return Widget._handle_notify(self, op)
+        elif op.event == 'Finished':
+            events[op.event].notify(_rwt_event(op))
         else:
             events[op.event].notify(_rwt_drag_event(op))
         return True
@@ -2092,17 +2097,26 @@ class DropTarget(Widget):
             options.transfer.append('-1199481849')
             options.fileDropEnabled = True
 
-        session.runtime << RWTCreateOperation(id_=self.id, clazz=self._rwt_class_name_, options=options)
+        session.runtime << RWTCreateOperation(self.id, self._rwt_class_name_, options)
+        self.on_dropaccept += self._upload
+
+    def _upload(self, e, **kwargs):
+        token, url = session.runtime.servicehandlers.fileuploadhandler.accept([f.get('name') for _, f in e.files.items()])
+        self._token = token
+        session.runtime << RWTCallOperation('rwt.client.FileUploader', 'submit', { 'url': url, 'fileIds': list(e.files.keys()), 'uploadId': f'upload_{self._uploads}', 'dt': self.id})
+        self._uploads += 1
 
     def compute_size(self):
         return 0, 0
 
+    @property
+    def token(self):
+        return self._token
 
 class Scale(Widget):
     _rwt_class_name_ = 'rwt.widgets.Scale'
     _styles_ = Widget._styles_ + {}
     _defstyle_ = BitField(Widget._defstyle_)
-
 
     @constructor('Scale')
     def __init__(self, parent, inc=None, pageinc=None, orientation=RWT.HORIZONTAL, **options):
@@ -3894,12 +3908,11 @@ class FileUpload(Widget):
     def _handle_notify(self, op):
         events = {'Selection': self.on_select, 'Finished': self.on_finished}
         if op.event not in events:
-            out('ALARM!', op)
             return Widget._handle_notify(self, op)
         elif op.event == 'Selection':
             events[op.event].notify(_rwt_selection_event(op))
         elif op.event == 'Finished':
-            events[op.event].notify()
+            events[op.event].notify(_rwt_event(op))
         return True
 
     def _handle_set(self, op):
