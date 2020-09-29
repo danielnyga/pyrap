@@ -3,7 +3,7 @@
 // for extra information
 pwt_bubblyclusters = {};
 
-pwt_bubblyclusters.BubblyClusters = function( parent, audio ) {
+pwt_bubblyclusters.BubblyClusters = function( parent, options ) {
 
     this._parentDIV = this.createElement(parent);
     this._tooltip = d3v3.select(this._parentDIV).append("div")
@@ -21,9 +21,14 @@ pwt_bubblyclusters.BubblyClusters = function( parent, audio ) {
                 '#17becf', '#9edae5']);
 
     this._audio = false;
-    if (audio) {
-        this._sound = new Audio(audio);
+    if (options && options.audio) {
+        this._sound = new Audio(options.audio);
         this._audio = true;
+    }
+
+    this._3deffect = false;
+    if (options && options.threed) {
+        this._3deffect = !!options.threed;
     }
 
     this._w = 800;
@@ -31,6 +36,7 @@ pwt_bubblyclusters.BubblyClusters = function( parent, audio ) {
 
     this._svg = d3v3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.bubblyclusters');
+    this._defs = this._svgContainer.select('defs');
 
     this._initialized = false;
     this._needsRender = true;
@@ -61,6 +67,10 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
                 .append( "svg:g" )
                 .attr('class', 'bubblyclusters');
             this._svgContainer = this._svg.select('g.bubblyclusters');
+        }
+
+        if (this._defs.empty()) {
+            this._defs = this._svgContainer.append("defs");
         }
     },
 
@@ -210,6 +220,30 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
 
         var that = this;
 
+        var grads = this._defs.selectAll('radialGradient')
+            .data(this._nodes);
+
+        var gradsenter = grads
+            .enter()
+            .append("radialGradient")
+            .attr("gradientUnits", "objectBoundingBox")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", "100%")
+            .attr("id", function(d, i) { return "grad" + d.tooltip; });
+
+        gradsenter.append("stop")
+            .attr("offset", "0%")
+            .style("stop-color", "white");
+
+        gradsenter.append("stop")
+            .attr("offset", "100%")
+            .style("stop-color",  function(d) { return that._color(d.cluster); });
+
+        grads
+            .exit()
+            .remove();
+
         var node = this._svgContainer.selectAll('g.bubblynode').data(this._nodes);
 
         // circle groups creation
@@ -222,7 +256,9 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
         nodeenter
             .append("circle")
             .attr("class", "bubbly")
-            .style("fill", function(d) { return that._color(d.cluster); })
+            .attr("fill", function(d, i) {
+                return that._3deffect ? "url(#grad" + d.tooltip + ")" : that._color(d.cluster);
+            })
             .on("mouseover", function(d) {
                 d3v3.select(this).style("cursor", "pointer");
                 that._tooltip
@@ -281,7 +317,7 @@ pwt_bubblyclusters.BubblyClusters.prototype = {
         nodeenter
             .append("text")
             .attr("class", "bubblytext")
-                        .on("mouseover", function(d) {
+            .on("mouseover", function(d) {
                 d3v3.select(this).style("cursor", "pointer");
                 that._tooltip
                     .transition(200)
