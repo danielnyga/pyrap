@@ -12,11 +12,11 @@ pwt_tree.Tree = function( parent, options) {
     this._cfg = {
         TranslateX: 200,
         TranslateY: 10,
-        duration: 750,
+        duration: 350,
         i: 0,
         w: 900,
         h: 600,
-        radius: 5
+        radius: 7.5
     };
 
     this._tree = d3v3.layout.tree().size([this._cfg.w, this._cfg.h]);
@@ -26,6 +26,7 @@ pwt_tree.Tree = function( parent, options) {
 
     this._svg = d3v3.select(this._parentDIV).append("svg");
     this._svgContainer = this._svg.select('g.tree');
+    this._defs = this._svgContainer.select('defs');
 
     this._initialized = false;
 
@@ -58,6 +59,10 @@ pwt_tree.Tree.prototype = {
                 .attr("transform", "translate(" + this._cfg.TranslateX + "," + this._cfg.TranslateY + ")");
             this._svgContainer = this._svg.select('g.tree');
         }
+
+        if (this._defs.empty()) {
+            this._defs = this._svgContainer.append("defs");
+        }
     },
 
     createElement: function( parent ) {
@@ -77,9 +82,11 @@ pwt_tree.Tree.prototype = {
         this._parentDIV.style.top = args[1] + "px";
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
-        if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
+
+        if (typeof args[2] !== 'undefined' && typeof args[3] !== 'undefined' ) {
             this._cfg.w = Math.min(args[2],args[3]) - 100;
             this._cfg.h = this._cfg.w;
+
         }
         this.update(this._data);
     },
@@ -160,7 +167,7 @@ pwt_tree.Tree.prototype = {
     diagonal : function(x) {
         return d3v3.svg.diagonal()
             .projection(function(d) {
-                return [d.y, d.x];
+                return [d.y+7.5, d.x];
             })(x);
     },
 
@@ -197,96 +204,6 @@ pwt_tree.Tree.prototype = {
         // Normalize for fixed-depth.
         this._nodes.forEach(function(d) { d.y = d.depth * 180; });
 
-        // Update the nodes…
-        var node = this._svgContainer.selectAll("g.tree_node")
-            .data(this._nodes, function(d) { return d.id || (d.id = ++that._cfg.i); });
-
-        // Enter any new nodes at the parent's previous position.
-        var nodeenter = node
-            .enter()
-            .append("g")
-            .attr("class", "tree_node")
-            .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-            .on("click", function(d, i) {
-                that.click(d, that);
-            })
-            .on("mouseover", function(d) {
-                that._tooltip
-                    .transition(200)
-                    .style('display', 'block');
-            })
-            .on('mousemove', function(d) {
-                var newX = (d3v3.event.pageX + 20);
-                var newY = (d3v3.event.pageY - 20);
-                that._tooltip
-                    .html(d.tooltip)
-                    .style("left", (newX) + "px")
-                    .style("top", (newY) + "px");
-            })
-            .on("mouseout", function(d) {
-                that._tooltip
-                    .transition(200)
-                    .style("display", "none");
-            });
-
-        nodeenter
-            .append("circle")
-            .attr("r", 1e-6)
-            .style("fill", function(d) {
-                return d.type ? d.type : 'steelblue';
-            })
-            .style("stroke", function(d) {
-                return d.type ? d.type : 'steelblue';
-            });
-
-        nodeenter
-            .append("svg:a")
-            .attr("target", "E2B")
-            .attr("href", function(d) { return d.url; })
-            .append("text")
-            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-            .attr("dy", "1.2em")
-            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) { return d.showname ? d.name : ''; })
-            .style("fill-opacity", 1e-6);
-
-        // Transition nodes to their new position.
-        var nodeupdate = node
-            .transition()
-            .duration(this._cfg.duration)
-            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
-
-        nodeupdate
-            .select("circle")
-            .attr("r", this._cfg.radius)
-            .style("fill", function(d) {
-                return d.type ? d.type : 'steelblue';
-            })
-            .style("stroke", function(d) {
-                return d.type ? d.type : 'steelblue';
-            })
-            .style("fill-opacity", function(d) { return d._children && d._children.length > 0 ? 1 : .1; });
-
-        nodeupdate
-            .select("text")
-            .style("fill-opacity", 1);
-
-        // Transition exiting nodes to the parent's new position.
-        var nodeexit = node
-            .exit()
-            .transition()
-            .duration(this._cfg.duration)
-            .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
-            .remove();
-
-        nodeexit
-            .select("circle")
-            .attr("r", 1e-6);
-
-        nodeexit
-            .select("text")
-            .style("fill-opacity", 1e-6);
-
         var edge = this._svgContainer.selectAll("g.tree_edge")
             .data(this._links, function(d) { return d.target.id; });
 
@@ -303,7 +220,7 @@ pwt_tree.Tree.prototype = {
             .attr("id", function(d) {
                 return d.source.id && d.target.id ? d.source.id + '-' + d.target.id : d.source.name + '-' + d.target.name; })
             .attr("d", function(d) {
-                var o = {x: source.x0, y: source.y0};
+                var o = {x: source.x, y: source.y};
                 return that.diagonal({source: o, target: o});
             });
 
@@ -387,6 +304,130 @@ pwt_tree.Tree.prototype = {
         edgeexit
             .select("use")
             .remove();
+
+        var grads = this._defs.selectAll('radialGradient')
+            .data(this._nodes);
+
+        var gradsenter = grads
+            .enter()
+            .append("radialGradient")
+            .attr("gradientUnits", "objectBoundingBox")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", "100%")
+            .attr("id", function(d, i) { return "grad" + (d.id ? d.id : d.name); });
+
+        gradsenter.append("stop")
+            .attr("offset", "0%")
+            .style("stop-color", "white");
+
+        gradsenter.append("stop")
+            .attr("offset", "100%")
+            .style("stop-color",  function(d) { return d.type ? d.type : 'steelblue'; });
+
+        // grads update
+        grads
+            .attr("id", function(d, i) {
+                // update gradient color
+                var grad = grads[0][i];
+                var stop = grad.childNodes[1];
+                stop.style.stopColor = d.type ? d.type : 'steelblue';
+
+                // update gradient id
+                return "grad" + (d.id ? d.id : d.name);
+            });
+
+        grads.exit().remove();
+
+
+        // Update the nodes…
+        var node = this._svgContainer.selectAll("g.tree_node")
+            .data(this._nodes, function(d) { return d.id || (d.id = ++that._cfg.i); });
+
+        // Enter any new nodes at the parent's previous position.
+        var nodeenter = node
+            .enter()
+            .append("g")
+            .attr("class", "tree_node")
+            .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
+            .on("click", function(d, i) {
+                that.click(d, that);
+            })
+            .on("mouseover", function(d) {
+                that._tooltip
+                    .transition(200)
+                    .style('display', 'block');
+            })
+            .on('mousemove', function(d) {
+                var newX = (d3v3.event.pageX + 20);
+                var newY = (d3v3.event.pageY - 20);
+                that._tooltip
+                    .html(d.tooltip)
+                    .style("left", (newX) + "px")
+                    .style("top", (newY) + "px");
+            })
+            .on("mouseout", function(d) {
+                that._tooltip
+                    .transition(200)
+                    .style("display", "none");
+            });
+
+        nodeenter
+            .append("circle")
+            .attr("r", 1e-6)
+            .attr("fill", function(d, i) {
+                return d._children && d._children.length > 0 ? "url(#grad" + (d.id ? d.id : d.name) + ")" : 'white';
+            })
+            .style("stroke", function(d, i) {
+                return "url(#grad" + (d.id ? d.id : d.name) + ")";
+            });
+
+        nodeenter
+            .append("svg:a")
+            .attr("target", "E2B")
+            .attr("href", function(d) { return d.url; })
+            .append("text")
+            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+            .attr("dy", "1.2em")
+            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+            .text(function(d) { return d.showname ? d.name : ''; })
+            .style("fill-opacity", 1e-6);
+
+        // Transition nodes to their new position.
+        var nodeupdate = node
+            .transition()
+            .duration(this._cfg.duration)
+            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+        nodeupdate
+            .select("circle")
+            .attr("r", this._cfg.radius)
+            .attr("fill", function(d, i) {
+                return d._children && d._children.length > 0 ? "url(#grad" + (d.id ? d.id : d.name) + ")" : 'white';
+            })
+            .style("stroke", function(d, i) {
+                return "url(#grad" + (d.id ? d.id : d.name) + ")";
+            });
+
+        nodeupdate
+            .select("text")
+            .style("fill-opacity", 1);
+
+        // Transition exiting nodes to the parent's new position.
+        var nodeexit = node
+            .exit()
+            .transition()
+            .duration(this._cfg.duration)
+            .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+            .remove();
+
+        nodeexit
+            .select("circle")
+            .attr("r", 1e-6);
+
+        nodeexit
+            .select("text")
+            .style("fill-opacity", 1e-6);
 
         // Stash the old positions for transition.
         this._nodes.forEach(function(d) {
