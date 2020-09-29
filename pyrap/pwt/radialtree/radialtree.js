@@ -1,7 +1,7 @@
 // adapted from https://bl.ocks.org/wmleler/a734fb2bb3319a2cb386
 pwt_radialtree = {};
 
-pwt_radialtree.RadialTree = function( parent ) {
+pwt_radialtree.RadialTree = function( parent, options ) {
 
     this._parentDIV = this.createElement(parent);
     this._tooltip = d3v3.select(this._parentDIV).append("div")
@@ -156,7 +156,7 @@ pwt_radialtree.RadialTree.prototype = {
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
 
-        if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
+        if (typeof args[2] !== 'undefined' && typeof args[3] !== 'undefined' ) {
             var oldwidth = this._cfg.w;
             var oldheight = this._cfg.h;
             this._cfg.w = Math.min(args[2],args[3]);
