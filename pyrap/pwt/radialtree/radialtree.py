@@ -44,6 +44,33 @@ from pyrap.widgets import Widget, constructor
 
 
 class RadialTree(D3Widget):
+    '''The data structure expected by this visualization is a nested json object with the attributes
+        * name:         (str) the text shown at the respective node
+        * showname:     (bool) whether the node name is hidden or shown
+        * type:         (hex) color value for the node and edge at this point in the tree
+        * tooltip:      (str) the tooltip shown when hovering over the node
+        * children:     (list <object>) the subtree with the same structure as above
+
+    and looks as follows:
+
+    :Example:
+        {
+          "name": "Char. Vals",
+          "showname": true,
+          "type": null,
+          "tooltip": "Characteristic Values",
+          "children": [
+            {
+              "name": "D01",
+              "showname": true,
+              "type": "#6C00FF",
+              "tooltip": "D01",
+              "children": [...]
+            },
+            {...}
+          ]
+
+    '''
 
     _rwt_class_name = 'pwt.customs.RadialTree'
     _defstyle_ = BitField(Widget._defstyle_)
@@ -54,6 +81,8 @@ class RadialTree(D3Widget):
         self.theme = RadialTreeTheme(self, session.runtime.mngr.theme)
         self._glow = False
         self._fontcolor = None
+        self._bgcolor = None
+        self._mode = None
 
     def _handle_notify(self, op):
         events = {'Selection': self.on_select}
@@ -82,6 +111,28 @@ class RadialTree(D3Widget):
     def fontcolor(self, fc):
         self._fontcolor = fc
         session.runtime << RWTSetOperation(self.id, {'fontcolor': fc})
+
+    @property
+    def bgcolor(self):
+        return self._bgcol
+
+    @bgcolor.setter
+    def bgcolor(self, bgc):
+        self._bgcol = bgc
+        session.runtime << RWTSetOperation(self.id, {'bgcolor': bgc})
+
+    @property
+    def mode(self):
+        return self._mode
+
+    @mode.setter
+    def mode(self, mode):
+        '''Convenience function for visual settings: `mode` can be either `bw` or `color`:
+            * bw:       fontcolor = black, background-color = white, glow = False
+            * color:    fontcolor = white, background-color = black, glow = true
+        '''
+        self._mode = mode
+        session.runtime << RWTSetOperation(self.id, {'mode': mode})
 
 
 class RadialTreeTheme(WidgetTheme):
