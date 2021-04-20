@@ -8,6 +8,7 @@ from pyrap.constants import d3v3, d3v4, d3v5
 from pyrap.events import OnSelect, OnSet, _rwt_event
 from pyrap.ptypes import BitField, SVG
 from pyrap.widgets import Widget
+from dnutils import out
 
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPDF
@@ -61,8 +62,9 @@ class D3Widget(Widget):
         with open(self._d3css, 'r') as f:
             cnt = d3versions.get(version, d3v3).format(**{'d3content': f.read()})
             session.runtime.ensurejsresources(cnt, name=self._d3version, force=True)
-        with open(self._widgetcss) as fi:
-            session.runtime.requirecss(fi)
+        if self._widgetcss:
+            with open(self._widgetcss) as fi:
+                session.runtime.requirecss(fi)
         if css is not None:
             self._css = css
             for css_ in css:

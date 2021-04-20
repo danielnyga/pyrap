@@ -41,7 +41,7 @@ pwt_radialtree.RadialTree = function( parent, options ) {
         KEY_UP: 38,        // up arrow
         KEY_RIGHT: 39,     // right arrow
         KEY_DOWN: 40,      // down arrow
-        KEY_SPACE: 32,     // (expand node)
+        KEY_SPACE: 32,     // (toggle node)
         KEY_RETURN: 13,    // (expand tree)
         KEY_HOME: 36,      // (center root)
         KEY_END: 35        // (center selection)
@@ -476,8 +476,8 @@ pwt_radialtree.RadialTree.prototype = {
     keydown : function(that, key, shift) {
         cancelAnimationFrame(that._aniRequest);
         that._aniRequest = that._aniTime = null;
-
         if (!key) {
+
             key = d3v3.event.which;  // fake key
             shift = d3v3.event.shiftKey;
         }
@@ -561,19 +561,21 @@ pwt_radialtree.RadialTree.prototype = {
                 if (!that._curNode) {
                     that.selectNode(that._data, that);
                 }
-                toggle(that._curNode);
+                that.toggle(that._curNode);
                 that.update(that._curNode, true);
                 return;
             case that._keycodes.KEY_RETURN: // expand/collapse tree
-                if (!that._curNode) {
-                    that.selectNode(that._data, that);
-                }
-                if (shift) {
-                    that.expandTree(that._curNode);
-                } else {
-                    that.expand1Level(that._curNode);
-                }
-                that.update(that._curNode, true);
+                that.toggle(that._root);
+                that.update(that._root, true);
+                // if (!that._curNode) {
+                //     that.selectNode(that._data, that);
+                // }
+                // if (shift) {
+                //     that.expandTree(that._curNode, that);
+                // } else {
+                //     that.expand1Level(that._curNode);
+                // }
+                // that.update(that._curNode, true);
                 return;
             case that._keycodes.KEY_HOME: // reset transform
                 if (shift) {
@@ -583,7 +585,7 @@ pwt_radialtree.RadialTree.prototype = {
                 that._curY = that._cfg.h / 2;
                 that._curR = that.limitR(90 - that._root.x);
                 that._curZ = 1;
-                that.update(root, true);
+                that.update(that._root, true);
                 return;
             case that._keycodes.KEY_END: // zoom to selection
                 if (!that._curNode) { return; }
@@ -602,6 +604,7 @@ pwt_radialtree.RadialTree.prototype = {
     },
 
     keyup : function(key, that) {
+        console.log('keyup', key);
         key = key || d3v3.event.which;
         var pos = that._keysdown.indexOf(key);
         if (pos < 0) { return; }
