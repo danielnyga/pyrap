@@ -28,7 +28,9 @@ pwt_radialtree.RadialTree = function( parent, options ) {
         w: 800,
         h: 800,
         glow: false,
-        fontcolor: null
+        fontcolor: null,
+        bgcolor: null,
+        mode: null,
 	};
 
     this._keycodes = {
@@ -192,7 +194,7 @@ pwt_radialtree.RadialTree.prototype = {
     },
 
     setHeight: function( height ) {
-        this.this._parentDIV.style.height = height + "px";
+        this._parentDIV.style.height = height + "px";
         this._cfg.h = height;
         this.update();
     },
@@ -218,6 +220,20 @@ pwt_radialtree.RadialTree.prototype = {
 
     setFontcolor: function ( fc ) {
         this._cfg.fontcolor = fc;
+        this.update();
+    },
+
+    setMode: function ( mode ) {
+        this._cfg.mode = mode;
+        if (mode === 'bw') {
+            this._cfg.glow = false;
+            this._cfg.fontcolor = 'black';
+            this._cfg.bgcolor = 'white';
+        } else if (mode === 'color') {
+            this._cfg.glow = true;
+            this._cfg.fontcolor = '#ccc';
+            this._cfg.bgcolor = 'black';
+        }
         this.update();
     },
 
@@ -742,6 +758,9 @@ pwt_radialtree.RadialTree.prototype = {
         var nodes = this._tree.nodes(this._data);
         var links = this._tree.links(nodes);
 
+        this._svg
+            .style('background-color', this._cfg.bgcolor);
+
         // Update the view
         this._svgContainer
             .transition()
@@ -786,10 +805,10 @@ pwt_radialtree.RadialTree.prototype = {
             .append('circle')
             .attr('r', 1e-6)
             .style("fill", function(d) {
-                return d.type ? d.type : 'steelblue';
+                return that._cfg.mode === 'bw' ? 'black' : d.type ? d.type : 'steelblue';
             })
             .style("stroke", function(d) {
-                return d.type ? d.type : 'steelblue';
+                return that._cfg.mode === 'bw' ? 'black' : d.type ? d.type : 'steelblue';
             })
             .on('dblclick', function(d) { that.dblclick(d, that); })
             .style('fill-opacity', function(d) {
@@ -820,6 +839,12 @@ pwt_radialtree.RadialTree.prototype = {
         nodeUpdate.select('circle')
             .attr('r', function(d) {
                 return (d.selected ? 5 : 2) * that._cfg.nradius * that.reduceZ(that);
+            })
+            .style("fill", function(d) {
+                return that._cfg.mode === 'bw' ? 'black' : d.type ? d.type : 'steelblue';
+            })
+            .style("stroke", function(d) {
+                return that._cfg.mode === 'bw' ? 'black' : d.type ? d.type : 'steelblue';
             })
             .style("filter", this._cfg.glow ? "url(#glow-circle)" : "none")
             .style('fill-opacity', function(d) {
@@ -870,7 +895,7 @@ pwt_radialtree.RadialTree.prototype = {
         linkenter
             .insert('path', 'g')
             .style("stroke", function(d) {
-                return d.target.type ? d.target.type : '#ccc';
+                return that._cfg.mode === 'bw' ? 'black' : d.target.type ? d.target.type : '#ccc';
             })
             .attr("id", function(d) {
                 var str = d.source.name + '-' + d.target.name;
@@ -932,6 +957,9 @@ pwt_radialtree.RadialTree.prototype = {
             .delay( transition ? function(d, i) {
                 return i * that._cfg.ndelay + Math.abs(d.source.depth - that._curNode.depth) * that._cfg.ddelay;
             } : 0)
+            .style("stroke", function(d) {
+                return that._cfg.mode === 'bw' ? 'black' : d.target.type ? d.target.type : '#ccc';
+            })
             .attr('d', function(d) {
                 return that.diagonal(d);})
             .attr('class', 'rtlink');
@@ -1004,7 +1032,7 @@ rap.registerTypeHandler( 'pwt.customs.RadialTree', {
     },
 
     destructor: 'destroy',
-    properties: [ 'remove', 'width', 'height', 'data', 'bounds', 'glow', 'fontcolor'],
+    properties: [ 'remove', 'width', 'height', 'data', 'bounds', 'glow', 'fontcolor', 'mode'],
     methods : [ 'clear', 'retrievesvg'],
     events: [ 'Selection' ]
 
