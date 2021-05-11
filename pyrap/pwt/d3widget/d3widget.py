@@ -4,7 +4,7 @@ import tempfile
 
 from pyrap import session, locations
 from pyrap.communication import RWTCreateOperation, RWTCallOperation, RWTSetOperation
-from pyrap.constants import d3v3, d3v4, d3v5
+from pyrap.constants import d3vX, d3v3
 from pyrap.events import OnSelect, OnSet, _rwt_event
 from pyrap.ptypes import BitField, SVG
 from pyrap.widgets import Widget
@@ -13,7 +13,10 @@ from dnutils import out
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPDF
 
-d3versions = {3: d3v3, 4: d3v4, 5: d3v5}
+d3versions = {3: d3vX.format(**{"version": 3}),
+              4: d3vX.format(**{"version": 4}),
+              5: d3vX.format(**{"version": 5}),
+              6: d3vX.format(**{"version": 6})}
 
 
 def downloadsvg(cnt, w, h, css, name='tmpviz'):

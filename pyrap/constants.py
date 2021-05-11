@@ -30,6 +30,13 @@ d3wrapper = '''if (typeof d3 === 'undefined') {{
 
 # these variables are used to be able to incorporate different versions of d3js in one document
 # load the respective version of the d3.min.js file and use d3v{3,4,5} instead of d3 in javascript code
+d3vX = '''if (typeof d3v{version} === 'undefined') {{{{
+    {{d3content}}
+    d3v{version} = d3
+    window.d3 = null
+}}}}
+'''
+
 d3v3 = '''if (typeof d3v3 === 'undefined') {{
     {d3content}
     d3v3 = d3
@@ -47,6 +54,13 @@ d3v4 = '''if (typeof d3v4 === 'undefined') {{
 d3v5 = '''if (typeof d3v5 === 'undefined') {{
     {d3content}
     d3v5 = d3
+    window.d3 = null
+}}
+'''
+
+d3v6 = '''if (typeof d3v6 === 'undefined') {{
+    {d3content}
+    d3v6 = d3
     window.d3 = null
 }}
 '''
