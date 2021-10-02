@@ -3,10 +3,12 @@ Created on Nov 21, 2016
 
 @author: nyga
 '''
-from dnutils import ifnone
-from pyrap.events import _rwt_event
-from pyrap.widgets import Spinner, Edit,\
-    Separator, Canvas
+from dnutils import ifnone, out
+from pyrap.communication import RWTCallOperation, RWTSetOperation
+from pyrap.events import _rwt_event, OnDragEnter, OnDragLeave, OnDropAccept, OnDragOver, OnDragOperationChanged, \
+    _rwt_selection_event, _rwt_drag_event
+from pyrap.widgets import Spinner, Edit, \
+    Separator, Canvas, FileUpload, DropTarget, Widget
 from pyrap.constants import DLG, CURSOR
 from pyrap.layout import ColumnLayout, RowLayout, GridLayout, CellLayout
 from pyrap.ptypes import parse_value, Color, Image
@@ -636,3 +638,165 @@ class ContextMenu(Shell):
     @options.setter
     def options(self, options):
         self._setoptions(options)
+
+
+class FileUploadDialog(Shell):
+    '''
+    Represents a file upload dialog with drag and drop function
+    '''
+
+    @constructor('FileUploadDialog')
+    def __init__(self, parent):
+        Shell.__init__(self, parent=parent, title='Upload files', titlebar=True, border=True, minimize=False, resize=True, modal=True)
+        self.icontheme = DisplayTheme(self, pyrap.session.runtime.mngr.theme)
+        self.answer = None
+        self._options = []
+        self.fupload = None
+        self._token = None
+        self._inited = False
+        self._icons = {
+            'check': Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'tick.png')),
+            None: Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'bullet_white.png')),
+            'loading': Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'bullet_red.png'))
+        }
+        parent.on_mousedown += lambda x: self.answer_and_close([None, None])
+        self.push = PushService()
+
+    def answer_and_close(self, a):
+        self.answer = a
+        self.close()
+
+    def create_content(self):
+        # w114
+        Shell.create_content(self)
+
+        self.layout.minheight = self.parent.shell().height * 0.3
+
+        # w114
+        mainarea = Composite(self.content)
+        mainarea.layout = RowLayout(padding=10, halign='fill', valign='fill', flexrows=0)
+
+        # w115
+        upper = Composite(mainarea)
+        upper.layout = RowLayout(padding=10, halign='fill', valign='fill', flexrows=0)
+
+        # w116
+        scrolledarea = ScrolledComposite(upper, padding=px(10), hscroll=False, vscroll=True, halign='fill', valign='fill', minwidth=300, minheight=100)
+        scrolledarea.content.layout = CellLayout(halign='fill', valign='fill')
+
+        # w117
+        control = Composite(scrolledarea.content)
+        control.layout = CellLayout(halign='fill', valign='fill')
+
+        # create droptarget and redirect filedialog listeners to it
+        self._droptarget = DropTarget(control, dropcopy=True, dropmove=True, filetransfer=True)
+        self.on_dragleave = self._droptarget.on_dragleave
+        self.on_dragenter = self._droptarget.on_dragenter
+        self.on_dragoperationchanged = self._droptarget.on_dragoperationchanged
+        self.on_dragover = self._droptarget.on_dragover
+        self.on_dropaccept = self._droptarget.on_dropaccept
+        self.on_finished = self._droptarget.on_finished
+
+        # w118
+        self.combo_optionslist = Composite(control)
+        self.combo_optionslist.layout = RowLayout(halign='fill', valign='top')
+
+        # w122
+        comp_pbar = Composite(mainarea)
+        comp_pbar.layout = CellLayout(halign='fill', valign='fill')
+
+        # w123
+        self._progbar = ProgressBar(comp_pbar, vmax=100, horizontal=True, halign='fill')
+
+        # w125
+        lower = Composite(mainarea)
+        lower.layout = ColumnLayout(padding=10, halign='fill', valign='fill', equalwidths=True)
+
+        self.create_buttons(lower)
+        self.create_options(self.combo_optionslist, [(None, 'Click "Add" or drop files here.')], updatebar=False)
+        self._inited = True
+
+        self.on_resize += self.dolayout
+
+        def dropped(e, **kwargs):
+            self._fnames = [f.get('name') for _, f in e.files.items()]
+            self._token = self._droptarget.token
+            self._update_opts(self._fnames)
+
+        self.on_dropaccept += dropped
+
+        self.show(True)
+
+    def _update_opts(self, fnames):
+        self.create_options(self.combo_optionslist, [('check', f) for f in fnames], updatebar=True)
+
+    def create_options(self, parent, opts, updatebar=False):
+        if self._inited:
+            for c in parent.children:
+                c.dispose()
+            self.dolayout(pack=True)
+            self._inited = False
+
+        for i, (icon, text) in enumerate(opts):
+            # w118/131/135
+            self.addoption(parent, icon, text)
+
+            if updatebar:
+                self._progbar.value = (self._progbar.max / len(opts)) * (i + 1)
+
+            self.dolayout(pack=True)
+
+    def addoption(self, parent, icon, text):
+
+        c = Composite(parent, border=True)
+        c.layout = ColumnLayout(halign='fill', flexcols=1)
+
+        icon_ = self._icons.get(icon, Image(os.path.join(pyrap.locations.rc_loc, 'static', 'image', 'bullet_white.png')))
+
+        Label(c, img=icon_, halign='fill', valign='fill')
+        Label(c, text=text, halign='fill', valign='fill')
+        return c
+
+    def create_buttons(self, buttons):
+        self.fupload = FileUpload(buttons, text='Add', accepted='.csv,.txt', multi=True, halign='fill')
+
+        def uploaded(*_):
+            self._fnames = [f['filename'] for f in session.runtime.servicehandlers.fileuploadhandler.files[self.fupload.token]]
+            self._token = self.fupload.token
+            self._update_opts(self._fnames)
+            self.on_finished.notify(None)
+
+        self.fupload.on_finished += uploaded
+
+        Label(buttons, halign='fill', valign='fill')
+
+        ok = Button(buttons, text='OK', minwidth=100)
+        ok.on_select += lambda *_: self.answer_and_close('OK')
+
+        cancel = Button(buttons, text='Cancel', halign='fill')
+        cancel.on_select += lambda *_: self.answer_and_close(None)
+
+    def _setoptions(self, options):
+        if options is None:
+            options = []
+        if isinstance(options, dict):
+            if not all([type(i) is str for i in options]):
+                raise TypeError('All items must be strings.')
+            else:
+                options = [(k, options[k]) for k in sorted(options)]
+        elif type(options) in (list, tuple):
+            options = [(None, i) for i in options]
+        else: raise TypeError('Invalid type for List items: %s' % type(options))
+        self._options = options
+
+    @property
+    def options(self):
+        return self._options
+
+    @options.setter
+    def options(self, options):
+        self._setoptions(options)
+
+    @property
+    def token(self):
+        return self._token

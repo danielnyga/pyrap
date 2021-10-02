@@ -2,6 +2,8 @@ import io
 from io import BytesIO
 
 import multipart
+
+from dnutils import out
 from dnutils.threads import ThreadInterrupt
 from multipart.multipart import parse_options_header
 
@@ -110,4 +112,5 @@ class FileUploadServiceHandler(ServiceHandler):
             if len(chunk) != to_read: break
         stream.close()
         self._files[token] = [{'filename': f.name, 'filetype': f.type, 'filecontent': f.content} for f in files]
+        web.header('Content-Type', 'text/plain')
         return ''

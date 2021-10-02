@@ -9,14 +9,6 @@ text.tree {
 }
 
 .tree_node circle {
-  fill: steelblue;
-  stroke: steelblue;
-  stroke-width: 1.5px;
-}
-
-.tree_node circle.highlight {
-  fill: green;
-  stroke: green;
   stroke-width: 1.5px;
 }
 
@@ -37,11 +29,5 @@ text.tree {
 
 .tree_edge path {
   fill: none;
-  stroke: steelblue;
   stroke-width: 1.5px;
-}
-
-.tree_edge path.highlight {
-  stroke: green;
-  stroke-width: 2px;
 }

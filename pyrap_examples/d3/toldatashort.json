@@ -1,0 +1,94 @@
+{
+    "branchset": [
+        {
+            "name": "CAMERA1",
+            "branchset": [
+                {
+                    "name": "CAM1-LUCE2",
+                    "length": 0.1
+                },
+                {
+                    "name": "CAM1-LUCE3",
+                    "length": 0.2
+                }
+            ],
+            "length": 0.2
+        },
+        {
+            "name": "CAMERA2",
+            "branchset": [
+                {
+                    "name": "CAM2-LUCE2",
+                    "length": 0.3
+                },
+                {
+                    "name": "CAM2-LUCE3",
+                    "length": 0.4
+                }
+            ],
+            "length": 0.4
+        },
+        {
+            "name": "CAMERA3",
+            "branchset": [
+                {
+                    "name": "CAM3-LUCE1",
+                    "length": 0.5
+                },
+                {
+                    "name": "CAM3-LUCE2",
+                    "length": 0.6
+                },
+                {
+                    "name": "CAM3-LUCE3",
+                    "length": 0.7
+                },
+                {
+                    "name": "CAM3-LUCE4",
+                    "length": 0.8
+                },
+                {
+                    "name": "CAM3-LUCE5",
+                    "length": 0.9
+                },
+                {
+                    "name": "CAM3-LUCE6",
+                    "length": 1
+                }
+            ],
+            "length": 1
+        },
+        {
+            "name": "CAMERA4",
+            "branchset": [
+                {
+                    "name": "CAM4-LUCE1",
+                    "length": 0.1
+                },
+                {
+                    "name": "CAM4-LUCE2",
+                    "length": 0.2
+                },
+                {
+                    "name": "CAM4-LUCE3",
+                    "length": 0.3
+                },
+                {
+                    "name": "CAM4-LUCE4",
+                    "length": 0.4
+                },
+                {
+                    "name": "CAM4-LUCE5",
+                    "length": 0.5
+                },
+                {
+                    "name": "CAM4-LUCE6",
+                    "length": 0.6
+                }
+            ],
+            "length": 0.6
+        }
+    ],
+    "name": "",
+    "length": 0
+}

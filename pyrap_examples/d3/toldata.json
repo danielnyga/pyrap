@@ -1,0 +1,1904 @@
+{
+    "branchset": [
+        {
+            "name": "Bacteria",
+            "branchset": [
+                {
+                    "name": "Bacteria_subclade",
+                    "branchset": [
+                        {
+                            "name": "Bacteria_subclade",
+                            "branchset": [
+                                {
+                                    "name": "Bacteria_subclade",
+                                    "branchset": [
+                                        {
+                                            "name": "Proteobacteria_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Proteobacteria_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Proteobacteria_subclade",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Gammaproteobacteria",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Gammaproteobacteria_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Gammaproteobacteria_subclade",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Gammaproteobacteria_subclade",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Gammaproteobacteria_subclade",
+                                                                                                    "branchset": [
+                                                                                                        {
+                                                                                                            "name": "Gammaproteobacteria_subclade",
+                                                                                                            "branchset": [
+                                                                                                                {
+                                                                                                                    "name": "Enterobacteriaceae",
+                                                                                                                    "branchset": [
+                                                                                                                        {
+                                                                                                                            "name": "Enterobacteriaceae_subclade",
+                                                                                                                            "branchset": [
+                                                                                                                                {
+                                                                                                                                    "name": "Enterobacteriaceae_subclade",
+                                                                                                                                    "branchset": [
+                                                                                                                                        {
+                                                                                                                                            "name": "Enterobacteriaceae_subclade",
+                                                                                                                                            "branchset": [
+                                                                                                                                                {
+                                                                                                                                                    "name": "Escherichia_subclade",
+                                                                                                                                                    "branchset": [
+                                                                                                                                                        {
+                                                                                                                                                            "name": "Escherichia_coli_EDL933",
+                                                                                                                                                            "length": 0
+                                                                                                                                                        },
+                                                                                                                                                        {
+                                                                                                                                                            "name": "Escherichia_coli_O157_H7",
+                                                                                                                                                            "length": 0
+                                                                                                                                                        }
+                                                                                                                                                    ],
+                                                                                                                                                    "length": 0.00044
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "name": "Enterobacteriaceae_subclade",
+                                                                                                                                                    "branchset": [
+                                                                                                                                                        {
+                                                                                                                                                            "name": "Escherichia_subclade",
+                                                                                                                                                            "branchset": [
+                                                                                                                                                                {
+                                                                                                                                                                    "name": "Escherichia_coli_O6",
+                                                                                                                                                                    "length": 0
+                                                                                                                                                                },
+                                                                                                                                                                {
+                                                                                                                                                                    "name": "Escherichia_coli_K12",
+                                                                                                                                                                    "length": 0.00022
+                                                                                                                                                                }
+                                                                                                                                                            ],
+                                                                                                                                                            "length": 0.00022
+                                                                                                                                                        },
+                                                                                                                                                        {
+                                                                                                                                                            "name": "Shigella",
+                                                                                                                                                            "branchset": [
+                                                                                                                                                                {
+                                                                                                                                                                    "name": "Shigella_flexneri_2a_2457T",
+                                                                                                                                                                    "length": 0
+                                                                                                                                                                },
+                                                                                                                                                                {
+                                                                                                                                                                    "name": "Shigella_flexneri_2a_301",
+                                                                                                                                                                    "length": 0
+                                                                                                                                                                }
+                                                                                                                                                            ],
+                                                                                                                                                            "length": 0.00266
+                                                                                                                                                        }
+                                                                                                                                                    ],
+                                                                                                                                                    "length": 0
+                                                                                                                                                }
+                                                                                                                                            ],
+                                                                                                                                            "length": 0.00813
+                                                                                                                                        },
+                                                                                                                                        {
+                                                                                                                                            "name": "Salmonella",
+                                                                                                                                            "branchset": [
+                                                                                                                                                {
+                                                                                                                                                    "name": "Salmonella_subclade",
+                                                                                                                                                    "branchset": [
+                                                                                                                                                        {
+                                                                                                                                                            "name": "Salmonella_enterica",
+                                                                                                                                                            "length": 0
+                                                                                                                                                        },
+                                                                                                                                                        {
+                                                                                                                                                            "name": "Salmonella_typhi",
+                                                                                                                                                            "length": 0
+                                                                                                                                                        }
+                                                                                                                                                    ],
+                                                                                                                                                    "length": 0.00146
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "name": "Salmonella_typhimurium",
+                                                                                                                                                    "length": 0.00075
+                                                                                                                                                }
+                                                                                                                                            ],
+                                                                                                                                            "length": 0.00702
+                                                                                                                                        }
+                                                                                                                                    ],
+                                                                                                                                    "length": 0.03131
+                                                                                                                                },
+                                                                                                                                {
+                                                                                                                                    "name": "Enterobacteriaceae_subclade",
+                                                                                                                                    "branchset": [
+                                                                                                                                        {
+                                                                                                                                            "name": "Yersinia",
+                                                                                                                                            "branchset": [
+                                                                                                                                                {
+                                                                                                                                                    "name": "Yersinia_pestis_Medievalis",
+                                                                                                                                                    "length": 0
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "name": "Yersinia_subclade",
+                                                                                                                                                    "branchset": [
+                                                                                                                                                        {
+                                                                                                                                                            "name": "Yersinia_pestis_KIM",
+                                                                                                                                                            "length": 0
+                                                                                                                                                        },
+                                                                                                                                                        {
+                                                                                                                                                            "name": "Yersinia_pestis_CO92",
+                                                                                                                                                            "length": 0
+                                                                                                                                                        }
+                                                                                                                                                    ],
+                                                                                                                                                    "length": 0
+                                                                                                                                                }
+                                                                                                                                            ],
+                                                                                                                                            "length": 0.03398
+                                                                                                                                        },
+                                                                                                                                        {
+                                                                                                                                            "name": "Photorhabdus_luminescens",
+                                                                                                                                            "length": 0.05076
+                                                                                                                                        }
+                                                                                                                                    ],
+                                                                                                                                    "length": 0.01182
+                                                                                                                                }
+                                                                                                                            ],
+                                                                                                                            "length": 0.02183
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                            "name": "Enterobacteriaceae_subclade",
+                                                                                                                            "branchset": [
+                                                                                                                                {
+                                                                                                                                    "name": "Enterobacteriaceae_subclade",
+                                                                                                                                    "branchset": [
+                                                                                                                                        {
+                                                                                                                                            "name": "Blochmannia_floridanus",
+                                                                                                                                            "length": 0.32481
+                                                                                                                                        },
+                                                                                                                                        {
+                                                                                                                                            "name": "Wigglesworthia_brevipalpis",
+                                                                                                                                            "length": 0.35452
+                                                                                                                                        }
+                                                                                                                                    ],
+                                                                                                                                    "length": 0.08332
+                                                                                                                                },
+                                                                                                                                {
+                                                                                                                                    "name": "Buchnera",
+                                                                                                                                    "branchset": [
+                                                                                                                                        {
+                                                                                                                                            "name": "Buchnera_aphidicola_Bp",
+                                                                                                                                            "length": 0.27492
+                                                                                                                                        },
+                                                                                                                                        {
+                                                                                                                                            "name": "Buchnera_subclade",
+                                                                                                                                            "branchset": [
+                                                                                                                                                {
+                                                                                                                                                    "name": "Buchnera_aphidicola_APS",
+                                                                                                                                                    "length": 0.09535
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "name": "Buchnera_aphidicola_Sg",
+                                                                                                                                                    "length": 0.10235
+                                                                                                                                                }
+                                                                                                                                            ],
+                                                                                                                                            "length": 0.1014
+                                                                                                                                        }
+                                                                                                                                    ],
+                                                                                                                                    "length": 0.06497
+                                                                                                                                }
+                                                                                                                            ],
+                                                                                                                            "length": 0.1503
+                                                                                                                        }
+                                                                                                                    ],
+                                                                                                                    "length": 0.02808
+                                                                                                                },
+                                                                                                                {
+                                                                                                                    "name": "Pasteurellaceae",
+                                                                                                                    "branchset": [
+                                                                                                                        {
+                                                                                                                            "name": "Pasteurellaceae_subclade",
+                                                                                                                            "branchset": [
+                                                                                                                                {
+                                                                                                                                    "name": "Pasteurella_multocida",
+                                                                                                                                    "length": 0.03441
+                                                                                                                                },
+                                                                                                                                {
+                                                                                                                                    "name": "Haemophilus_influenzae",
+                                                                                                                                    "length": 0.03754
+                                                                                                                                }
+                                                                                                                            ],
+                                                                                                                            "length": 0.01571
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                            "name": "Haemophilus_ducreyi",
+                                                                                                                            "length": 0.05333
+                                                                                                                        }
+                                                                                                                    ],
+                                                                                                                    "length": 0.07365
+                                                                                                                }
+                                                                                                            ],
+                                                                                                            "length": 0.03759
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "name": "Vibrionaceae",
+                                                                                                            "branchset": [
+                                                                                                                {
+                                                                                                                    "name": "Vibrio",
+                                                                                                                    "branchset": [
+                                                                                                                        {
+                                                                                                                            "name": "Vibrio_subclade",
+                                                                                                                            "branchset": [
+                                                                                                                                {
+                                                                                                                                    "name": "Vibrio_subclade",
+                                                                                                                                    "branchset": [
+                                                                                                                                        {
+                                                                                                                                            "name": "Vibrio_vulnificus_YJ016",
+                                                                                                                                            "length": 0.00021
+                                                                                                                                        },
+                                                                                                                                        {
+                                                                                                                                            "name": "Vibrio_vulnificus_CMCP6",
+                                                                                                                                            "length": 0.00291
+                                                                                                                                        }
+                                                                                                                                    ],
+                                                                                                                                    "length": 0.01212
+                                                                                                                                },
+                                                                                                                                {
+                                                                                                                                    "name": "Vibrio_parahaemolyticus",
+                                                                                                                                    "length": 0.01985
+                                                                                                                                }
+                                                                                                                            ],
+                                                                                                                            "length": 0.01536
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                            "name": "Vibrio_cholerae",
+                                                                                                                            "length": 0.02995
+                                                                                                                        }
+                                                                                                                    ],
+                                                                                                                    "length": 0.02661
+                                                                                                                },
+                                                                                                                {
+                                                                                                                    "name": "Photobacterium_profundum",
+                                                                                                                    "length": 0.06131
+                                                                                                                }
+                                                                                                            ],
+                                                                                                            "length": 0.05597
+                                                                                                        }
+                                                                                                    ],
+                                                                                                    "length": 0.03492
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Shewanella_oneidensis",
+                                                                                                    "length": 0.10577
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.12234
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Pseudomonas",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Pseudomonas_subclade",
+                                                                                                    "branchset": [
+                                                                                                        {
+                                                                                                            "name": "Pseudomonas_putida",
+                                                                                                            "length": 0.02741
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "name": "Pseudomonas_syringae",
+                                                                                                            "length": 0.03162
+                                                                                                        }
+                                                                                                    ],
+                                                                                                    "length": 0.02904
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Pseudomonas_aeruginosa",
+                                                                                                    "length": 0.03202
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.14456
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.04492
+                                                                                },
+                                                                                {
+                                                                                    "name": "Xanthomonadaceae",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Xylella",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Xylella_fastidiosa_700964",
+                                                                                                    "length": 0.01324
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Xylella_fastidiosa_9a5c",
+                                                                                                    "length": 0.00802
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.10192
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Xanthomonas",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Xanthomonas_axonopodis",
+                                                                                                    "length": 0.01069
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Xanthomonas_campestris",
+                                                                                                    "length": 0.00934
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.05037
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.24151
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.02475
+                                                                        },
+                                                                        {
+                                                                            "name": "Coxiella_burnetii",
+                                                                            "length": 0.33185
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.03328
+                                                                },
+                                                                {
+                                                                    "name": "Betaproteobacteria",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Betaproteobacteria_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Neisseriaceae",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Neisseria",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Neisseria_meningitidis_A",
+                                                                                                    "length": 0.004
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Neisseria_meningitidis_B",
+                                                                                                    "length": 0.00134
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.12615
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Chromobacterium_violaceum",
+                                                                                            "length": 0.09623
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.07131
+                                                                                },
+                                                                                {
+                                                                                    "name": "Burkholderiales",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Bordetella",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Bordetella_pertussis",
+                                                                                                    "length": 0.00127
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Bordetella_subclade",
+                                                                                                    "branchset": [
+                                                                                                        {
+                                                                                                            "name": "Bordetella_parapertussis",
+                                                                                                            "length": 0.00199
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "name": "Bordetella_bronchiseptica",
+                                                                                                            "length": 0.00022
+                                                                                                        }
+                                                                                                    ],
+                                                                                                    "length": 0.00006
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.14218
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Ralstonia_solanacearum",
+                                                                                            "length": 0.11464
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.08478
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.0384
+                                                                        },
+                                                                        {
+                                                                            "name": "Nitrosomonas_europaea",
+                                                                            "length": 0.22059
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.08761
+                                                                }
+                                                            ],
+                                                            "length": 0.16913
+                                                        },
+                                                        {
+                                                            "name": "Alphaproteobacteria",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Alphaproteobacteria_subclade",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Rhizobiales",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Rhizobiales_subclade",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Sinorhizobium",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "",
+                                                                                                    "branchset": [
+                                                                                                        {
+                                                                                                            "name": "Agrobacterium_tumefaciens_Cereon",
+                                                                                                            "length": 0
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "name": "Agrobacterium_tumefaciens_WashU",
+                                                                                                            "length": 0
+                                                                                                        }
+                                                                                                    ],
+                                                                                                    "length": 0.05735
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Rhizobium_meliloti",
+                                                                                                    "length": 0.05114
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.05575
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Rhizobiales_subclade",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Brucella",
+                                                                                                    "branchset": [
+                                                                                                        {
+                                                                                                            "name": "Brucella_suis",
+                                                                                                            "length": 0.00102
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "name": "Brucella_melitensis",
+                                                                                                            "length": 0.00184
+                                                                                                        }
+                                                                                                    ],
+                                                                                                    "length": 0.0866
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Rhizobium_loti",
+                                                                                                    "length": 0.09308
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.02384
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.08637
+                                                                                },
+                                                                                {
+                                                                                    "name": "Bradyrhizobiaceae",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Rhodopseudomonas_palustris",
+                                                                                            "length": 0.04182
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Bradyrhizobium_japonicum",
+                                                                                            "length": 0.06346
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.14122
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.05767
+                                                                        },
+                                                                        {
+                                                                            "name": "Caulobacter_crescentus",
+                                                                            "length": 0.23943
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.11257
+                                                                },
+                                                                {
+                                                                    "name": "Rickettsiaceae",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Wolbachia_sp._wMel",
+                                                                            "length": 0.51596
+                                                                        },
+                                                                        {
+                                                                            "name": "Rickettsia",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Rickettsia_prowazekii",
+                                                                                    "length": 0.04245
+                                                                                },
+                                                                                {
+                                                                                    "name": "Rickettsia_conorii",
+                                                                                    "length": 0.02487
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.38019
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.12058
+                                                                }
+                                                            ],
+                                                            "length": 0.12365
+                                                        }
+                                                    ],
+                                                    "length": 0.06301
+                                                },
+                                                {
+                                                    "name": "Campylobacterales",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Helicobacteraceae",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Helicobacter",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Helicobacter_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Helicobacter_pylori_J99",
+                                                                                    "length": 0.00897
+                                                                                },
+                                                                                {
+                                                                                    "name": "Helicobacter_pylori_26695",
+                                                                                    "length": 0.00637
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.19055
+                                                                        },
+                                                                        {
+                                                                            "name": "Helicobacter_hepaticus",
+                                                                            "length": 0.12643
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.0533
+                                                                },
+                                                                {
+                                                                    "name": "Wolinella_succinogenes",
+                                                                    "length": 0.11644
+                                                                }
+                                                            ],
+                                                            "length": 0.09105
+                                                        },
+                                                        {
+                                                            "name": "Campylobacter_jejuni",
+                                                            "length": 0.20399
+                                                        }
+                                                    ],
+                                                    "length": 0.4139
+                                                }
+                                            ],
+                                            "length": 0.04428
+                                        },
+                                        {
+                                            "name": "Bacteria_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Deltaproteobacteria",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Desulfovibrio_vulgaris",
+                                                            "length": 0.3832
+                                                        },
+                                                        {
+                                                            "name": "Deltaproteobacteria_subclade",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Geobacter_sulfurreducens",
+                                                                    "length": 0.22491
+                                                                },
+                                                                {
+                                                                    "name": "Bdellovibrio_bacteriovorus",
+                                                                    "length": 0.45934
+                                                                }
+                                                            ],
+                                                            "length": 0.0487
+                                                        }
+                                                    ],
+                                                    "length": 0.041
+                                                },
+                                                {
+                                                    "name": "Acidobacteria",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Acidobacterium_capsulatum",
+                                                            "length": 0.24572
+                                                        },
+                                                        {
+                                                            "name": "Solibacter_usitatus",
+                                                            "length": 0.29086
+                                                        }
+                                                    ],
+                                                    "length": 0.20514
+                                                }
+                                            ],
+                                            "length": 0.04214
+                                        }
+                                    ],
+                                    "length": 0.05551
+                                },
+                                {
+                                    "name": "Bacteria_subclade",
+                                    "branchset": [
+                                        {
+                                            "name": "Bacteria_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Fusobacterium_nucleatum",
+                                                    "length": 0.45615
+                                                },
+                                                {
+                                                    "name": "Bacteria_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Aquifex_aeolicus",
+                                                            "length": 0.40986
+                                                        },
+                                                        {
+                                                            "name": "Thermotoga_maritima",
+                                                            "length": 0.34182
+                                                        }
+                                                    ],
+                                                    "length": 0.07696
+                                                }
+                                            ],
+                                            "length": 0.03606
+                                        },
+                                        {
+                                            "name": "Bacteria_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Bacteria_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Deinococci",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Thermus_thermophilus",
+                                                                    "length": 0.26583
+                                                                },
+                                                                {
+                                                                    "name": "Deinococcus_radiodurans",
+                                                                    "length": 0.29763
+                                                                }
+                                                            ],
+                                                            "length": 0.24776
+                                                        },
+                                                        {
+                                                            "name": "Dehalococcoides_ethenogenes",
+                                                            "length": 0.53988
+                                                        }
+                                                    ],
+                                                    "length": 0.0437
+                                                },
+                                                {
+                                                    "name": "Cyanobacteria",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Cyanobacteria_subclade",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Cyanobacteria_subclade",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Cyanobacteria_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Nostoc_sp._PCC_7120",
+                                                                                    "length": 0.12014
+                                                                                },
+                                                                                {
+                                                                                    "name": "Synechocystis_sp._PCC6803",
+                                                                                    "length": 0.15652
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.04331
+                                                                        },
+                                                                        {
+                                                                            "name": "Synechococcus_elongatus",
+                                                                            "length": 0.13147
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.0504
+                                                                },
+                                                                {
+                                                                    "name": "Cyanobacteria_subclade",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Cyanobacteria_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Cyanobacteria_subclade",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Synechococcus_sp._WH8102",
+                                                                                            "length": 0.0678
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Prochlorococcus_marinus_MIT9313",
+                                                                                            "length": 0.05434
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.04879
+                                                                                },
+                                                                                {
+                                                                                    "name": "Prochlorococcus_marinus_SS120",
+                                                                                    "length": 0.10211
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.04238
+                                                                        },
+                                                                        {
+                                                                            "name": "Prochlorococcus_marinus_CCMP1378",
+                                                                            "length": 0.1617
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.20442
+                                                                }
+                                                            ],
+                                                            "length": 0.07646
+                                                        },
+                                                        {
+                                                            "name": "Gloeobacter_violaceus",
+                                                            "length": 0.23764
+                                                        }
+                                                    ],
+                                                    "length": 0.24501
+                                                }
+                                            ],
+                                            "length": 0.04332
+                                        }
+                                    ],
+                                    "length": 0.0272
+                                }
+                            ],
+                            "length": 0.03471
+                        },
+                        {
+                            "name": "Bacteria_subclade",
+                            "branchset": [
+                                {
+                                    "name": "Bacteria_subclade",
+                                    "branchset": [
+                                        {
+                                            "name": "Bacteria_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Planctomycetaceae",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Gemmata_obscuriglobus",
+                                                            "length": 0.36751
+                                                        },
+                                                        {
+                                                            "name": "Rhodopirellula_baltica",
+                                                            "length": 0.38017
+                                                        }
+                                                    ],
+                                                    "length": 0.24062
+                                                },
+                                                {
+                                                    "name": "Spirochaetales",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Leptospira",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Leptospira_interrogans_L1-130",
+                                                                    "length": 0
+                                                                },
+                                                                {
+                                                                    "name": "Leptospira_interrogans_56601",
+                                                                    "length": 0.00027
+                                                                }
+                                                            ],
+                                                            "length": 0.47573
+                                                        },
+                                                        {
+                                                            "name": "Spirochaetaceae",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Treponema",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Treponema_pallidum",
+                                                                            "length": 0.25544
+                                                                        },
+                                                                        {
+                                                                            "name": "Treponema_denticola",
+                                                                            "length": 0.16072
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.19057
+                                                                },
+                                                                {
+                                                                    "name": "Borrelia_burgdorferi",
+                                                                    "length": 0.42323
+                                                                }
+                                                            ],
+                                                            "length": 0.20278
+                                                        }
+                                                    ],
+                                                    "length": 0.07248
+                                                }
+                                            ],
+                                            "length": 0.04615
+                                        },
+                                        {
+                                            "name": "Actinobacteridae",
+                                            "branchset": [
+                                                {
+                                                    "name": "Actinobacteridae_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Tropheryma",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Tropheryma_whipplei_TW08/27",
+                                                                    "length": 0.00009
+                                                                },
+                                                                {
+                                                                    "name": "Tropheryma_whipplei_Twist",
+                                                                    "length": 0.00081
+                                                                }
+                                                            ],
+                                                            "length": 0.44723
+                                                        },
+                                                        {
+                                                            "name": "Bifidobacterium_longum",
+                                                            "length": 0.29283
+                                                        }
+                                                    ],
+                                                    "length": 0.14429
+                                                },
+                                                {
+                                                    "name": "Actinomycetales_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Corynebacterineae",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Corynebacterium",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Corynebacterium_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Corynebacterium_subclade",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Corynebacterium_glutamicum_13032",
+                                                                                            "length": 0.00022
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Corynebacterium_glutamicum",
+                                                                                            "length": 0
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.03415
+                                                                                },
+                                                                                {
+                                                                                    "name": "Corynebacterium_efficiens",
+                                                                                    "length": 0.02559
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.03682
+                                                                        },
+                                                                        {
+                                                                            "name": "Corynebacterium_diphtheriae",
+                                                                            "length": 0.06479
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.13907
+                                                                },
+                                                                {
+                                                                    "name": "Mycobacterium",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Mycobacterium_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Mycobacterium_subclade",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Mycobacterium_bovis",
+                                                                                            "length": 0.00067
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Mycobacterium_subclade",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Mycobacterium_tuberculosis_CDC1551",
+                                                                                                    "length": 0
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Mycobacterium_tuberculosis_H37Rv",
+                                                                                                    "length": 0
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.00022
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.03027
+                                                                                },
+                                                                                {
+                                                                                    "name": "Mycobacterium_leprae",
+                                                                                    "length": 0.05135
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.01514
+                                                                        },
+                                                                        {
+                                                                            "name": "Mycobacterium_paratuberculosis",
+                                                                            "length": 0.02091
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.11523
+                                                                }
+                                                            ],
+                                                            "length": 0.09883
+                                                        },
+                                                        {
+                                                            "name": "Streptomyces",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Streptomyces_avermitilis",
+                                                                    "length": 0.0268
+                                                                },
+                                                                {
+                                                                    "name": "Streptomyces_coelicolor",
+                                                                    "length": 0.02678
+                                                                }
+                                                            ],
+                                                            "length": 0.16707
+                                                        }
+                                                    ],
+                                                    "length": 0.0611
+                                                }
+                                            ],
+                                            "length": 0.268
+                                        }
+                                    ],
+                                    "length": 0.0348
+                                },
+                                {
+                                    "name": "Bacteria_subclade",
+                                    "branchset": [
+                                        {
+                                            "name": "Bacteria_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Fibrobacter_succinogenes",
+                                                    "length": 0.51984
+                                                },
+                                                {
+                                                    "name": "Bacteroidetes/Chlorobi_group",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Chlorobium_tepidum",
+                                                            "length": 0.37204
+                                                        },
+                                                        {
+                                                            "name": "Bacteroidales",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Porphyromonas_gingivalis",
+                                                                    "length": 0.11304
+                                                                },
+                                                                {
+                                                                    "name": "Bacteroides_thetaiotaomicron",
+                                                                    "length": 0.13145
+                                                                }
+                                                            ],
+                                                            "length": 0.34694
+                                                        }
+                                                    ],
+                                                    "length": 0.09237
+                                                }
+                                            ],
+                                            "length": 0.04841
+                                        },
+                                        {
+                                            "name": "Chlamydiaceae",
+                                            "branchset": [
+                                                {
+                                                    "name": "Chlamydophila",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Chlamydophila_subclade",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Chlamydophila_pneumoniae_TW183",
+                                                                    "length": 0
+                                                                },
+                                                                {
+                                                                    "name": "Chlamydophila_subclade",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Chlamydia_pneumoniae_J138",
+                                                                            "length": 0
+                                                                        },
+                                                                        {
+                                                                            "name": "Chlamydophila_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Chlamydia_pneumoniae_CWL029",
+                                                                                    "length": 0
+                                                                                },
+                                                                                {
+                                                                                    "name": "Chlamydia_pneumoniae_AR39",
+                                                                                    "length": 0
+                                                                                }
+                                                                            ],
+                                                                            "length": 0
+                                                                        }
+                                                                    ],
+                                                                    "length": 0
+                                                                }
+                                                            ],
+                                                            "length": 0.10482
+                                                        },
+                                                        {
+                                                            "name": "Chlamydophila_caviae",
+                                                            "length": 0.05903
+                                                        }
+                                                    ],
+                                                    "length": 0.0417
+                                                },
+                                                {
+                                                    "name": "Chlamydia",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Chlamydia_muridarum",
+                                                            "length": 0.01938
+                                                        },
+                                                        {
+                                                            "name": "Chlamydia_trachomatis",
+                                                            "length": 0.02643
+                                                        }
+                                                    ],
+                                                    "length": 0.06809
+                                                }
+                                            ],
+                                            "length": 0.60169
+                                        }
+                                    ],
+                                    "length": 0.04443
+                                }
+                            ],
+                            "length": 0.04284
+                        }
+                    ],
+                    "length": 0.02646
+                },
+                {
+                    "name": "Firmicutes",
+                    "branchset": [
+                        {
+                            "name": "Clostridia",
+                            "branchset": [
+                                {
+                                    "name": "Thermoanaerobacter_tengcongensis",
+                                    "length": 0.17512
+                                },
+                                {
+                                    "name": "Clostridium",
+                                    "branchset": [
+                                        {
+                                            "name": "Clostridium_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Clostridium_tetani",
+                                                    "length": 0.10918
+                                                },
+                                                {
+                                                    "name": "Clostridium_perfringens",
+                                                    "length": 0.11535
+                                                }
+                                            ],
+                                            "length": 0.03238
+                                        },
+                                        {
+                                            "name": "Clostridium_acetobutylicum",
+                                            "length": 0.11396
+                                        }
+                                    ],
+                                    "length": 0.15056
+                                }
+                            ],
+                            "length": 0.11788
+                        },
+                        {
+                            "name": "Firmicutes_subclade",
+                            "branchset": [
+                                {
+                                    "name": "Mollicutes",
+                                    "branchset": [
+                                        {
+                                            "name": "Mycoplasmataceae",
+                                            "branchset": [
+                                                {
+                                                    "name": "Mycoplasmataceae_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Mycoplasma_subclade",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Mycoplasma_mobile",
+                                                                    "length": 0.27702
+                                                                },
+                                                                {
+                                                                    "name": "Mycoplasma_pulmonis",
+                                                                    "length": 0.28761
+                                                                }
+                                                            ],
+                                                            "length": 0.28466
+                                                        },
+                                                        {
+                                                            "name": "Mycoplasmataceae_subclade",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Mycoplasma_subclade",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Mycoplasma_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Mycoplasma_subclade",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Mycoplasma_pneumoniae",
+                                                                                            "length": 0.10966
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Mycoplasma_genitalium",
+                                                                                            "length": 0.11268
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.31768
+                                                                                },
+                                                                                {
+                                                                                    "name": "Mycoplasma_gallisepticum",
+                                                                                    "length": 0.24373
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.1418
+                                                                        },
+                                                                        {
+                                                                            "name": "Mycoplasma_penetrans",
+                                                                            "length": 0.3489
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.06674
+                                                                },
+                                                                {
+                                                                    "name": "Ureaplasma_parvum",
+                                                                    "length": 0.33874
+                                                                }
+                                                            ],
+                                                            "length": 0.19177
+                                                        }
+                                                    ],
+                                                    "length": 0.07341
+                                                },
+                                                {
+                                                    "name": "Mycoplasma_mycoides",
+                                                    "length": 0.3768
+                                                }
+                                            ],
+                                            "length": 0.12541
+                                        },
+                                        {
+                                            "name": "Phytoplasma_Onion_yellows",
+                                            "length": 0.47843
+                                        }
+                                    ],
+                                    "length": 0.09099
+                                },
+                                {
+                                    "name": "Bacilli",
+                                    "branchset": [
+                                        {
+                                            "name": "Bacillales",
+                                            "branchset": [
+                                                {
+                                                    "name": "Bacillales_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Listeria",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Listeria_subclade",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Listeria_monocytogenes_F2365",
+                                                                            "length": 0.00063
+                                                                        },
+                                                                        {
+                                                                            "name": "Listeria_monocytogenes_EGD",
+                                                                            "length": 0.00144
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.00235
+                                                                },
+                                                                {
+                                                                    "name": "Listeria_innocua",
+                                                                    "length": 0.00248
+                                                                }
+                                                            ],
+                                                            "length": 0.13517
+                                                        },
+                                                        {
+                                                            "name": "Bacillaceae",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Bacillaceae_subclade",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Oceanobacillus_iheyensis",
+                                                                            "length": 0.13838
+                                                                        },
+                                                                        {
+                                                                            "name": "Bacillus_halodurans",
+                                                                            "length": 0.0928
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.02676
+                                                                },
+                                                                {
+                                                                    "name": "Bacillus",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Bacillus_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Bacillus_subclade",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Bacillus_cereus_ATCC_14579",
+                                                                                            "length": 0.00342
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Bacillus_cereus_ATCC_10987",
+                                                                                            "length": 0.00123
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.00573
+                                                                                },
+                                                                                {
+                                                                                    "name": "Bacillus_anthracis",
+                                                                                    "length": 0.00331
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.08924
+                                                                        },
+                                                                        {
+                                                                            "name": "Bacillus_subtilis",
+                                                                            "length": 0.07876
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.01984
+                                                                }
+                                                            ],
+                                                            "length": 0.03907
+                                                        }
+                                                    ],
+                                                    "length": 0.02816
+                                                },
+                                                {
+                                                    "name": "Staphylococcus",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Staphylococcus_subclade",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Staphylococcus_aureus_MW2",
+                                                                    "length": 0
+                                                                },
+                                                                {
+                                                                    "name": "Staphylococcus_subclade",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Staphylococcus_aureus_N315",
+                                                                            "length": 0.00022
+                                                                        },
+                                                                        {
+                                                                            "name": "Staphylococcus_aureus_Mu50",
+                                                                            "length": 0.00022
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.00022
+                                                                }
+                                                            ],
+                                                            "length": 0.02479
+                                                        },
+                                                        {
+                                                            "name": "Staphylococcus_epidermidis",
+                                                            "length": 0.03246
+                                                        }
+                                                    ],
+                                                    "length": 0.17366
+                                                }
+                                            ],
+                                            "length": 0.02828
+                                        },
+                                        {
+                                            "name": "Lactobacillales",
+                                            "branchset": [
+                                                {
+                                                    "name": "Lactobacillales_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Streptococcaceae",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Streptococcus",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Streptococcus_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Streptococcus_subclade",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Streptococcus_subclade",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Streptococcus_agalactiae_III",
+                                                                                                    "length": 0.0011
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Streptococcus_agalactiae_V",
+                                                                                                    "length": 0.00155
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.01637
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Streptococcus_subclade",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Streptococcus_pyogenes_M1",
+                                                                                                    "length": 0.00134
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Streptococcus_subclade",
+                                                                                                    "branchset": [
+                                                                                                        {
+                                                                                                            "name": "Streptococcus_pyogenes_MGAS8232",
+                                                                                                            "length": 0.00045
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "name": "Streptococcus_subclade",
+                                                                                                            "branchset": [
+                                                                                                                {
+                                                                                                                    "name": "Streptococcus_pyogenes_MGAS315",
+                                                                                                                    "length": 0
+                                                                                                                },
+                                                                                                                {
+                                                                                                                    "name": "Streptococcus_pyogenes_SSI-1",
+                                                                                                                    "length": 0.00022
+                                                                                                                }
+                                                                                                            ],
+                                                                                                            "length": 0.0011
+                                                                                                        }
+                                                                                                    ],
+                                                                                                    "length": 0.00066
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.0225
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.0136
+                                                                                },
+                                                                                {
+                                                                                    "name": "Streptococcus_mutans",
+                                                                                    "length": 0.04319
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.0192
+                                                                        },
+                                                                        {
+                                                                            "name": "Streptococcus_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Streptococcus_pneumoniae_R6",
+                                                                                    "length": 0.00119
+                                                                                },
+                                                                                {
+                                                                                    "name": "Streptococcus_pneumoniae_TIGR4",
+                                                                                    "length": 0.00124
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.03607
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.04983
+                                                                },
+                                                                {
+                                                                    "name": "Lactococcus_lactis",
+                                                                    "length": 0.11214
+                                                                }
+                                                            ],
+                                                            "length": 0.08901
+                                                        },
+                                                        {
+                                                            "name": "Enterococcus_faecalis",
+                                                            "length": 0.07946
+                                                        }
+                                                    ],
+                                                    "length": 0.03958
+                                                },
+                                                {
+                                                    "name": "Lactobacillus",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Lactobacillus_johnsonii",
+                                                            "length": 0.20999
+                                                        },
+                                                        {
+                                                            "name": "Lactobacillus_plantarum",
+                                                            "length": 0.14371
+                                                        }
+                                                    ],
+                                                    "length": 0.06763
+                                                }
+                                            ],
+                                            "length": 0.08989
+                                        }
+                                    ],
+                                    "length": 0.08905
+                                }
+                            ],
+                            "length": 0.0954
+                        }
+                    ],
+                    "length": 0.04315
+                }
+            ],
+            "length": 1.34959
+        },
+        {
+            "name": "",
+            "branchset": [
+                {
+                    "name": "Eukaryota",
+                    "branchset": [
+                        {
+                            "name": "Eukaryota_subclade",
+                            "branchset": [
+                                {
+                                    "name": "Eukaryota_subclade",
+                                    "branchset": [
+                                        {
+                                            "name": "Eukaryota_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Thalassiosira_pseudonana",
+                                                    "length": 0.33483
+                                                },
+                                                {
+                                                    "name": "Apicomplexa",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Cryptosporidium_hominis",
+                                                            "length": 0.25048
+                                                        },
+                                                        {
+                                                            "name": "Plasmodium_falciparum",
+                                                            "length": 0.28267
+                                                        }
+                                                    ],
+                                                    "length": 0.14359
+                                                }
+                                            ],
+                                            "length": 0.03495
+                                        },
+                                        {
+                                            "name": "Eukaryota_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Eukaryota_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Streptophyta",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Oryza_sativa",
+                                                                    "length": 0.07623
+                                                                },
+                                                                {
+                                                                    "name": "Arabidopsis_thaliana",
+                                                                    "length": 0.09366
+                                                                }
+                                                            ],
+                                                            "length": 0.1577
+                                                        },
+                                                        {
+                                                            "name": "Cyanidioschyzon_merolae",
+                                                            "length": 0.38319
+                                                        }
+                                                    ],
+                                                    "length": 0.08133
+                                                },
+                                                {
+                                                    "name": "Eukaryota_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Dictyostelium_discoideum",
+                                                            "length": 0.34685
+                                                        },
+                                                        {
+                                                            "name": "Eukaryota_subclade",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Ascomycota",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Saccharomycetaceae",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Eremothecium_gossypii",
+                                                                                    "length": 0.07298
+                                                                                },
+                                                                                {
+                                                                                    "name": "Saccharomyces_cerevisiae",
+                                                                                    "length": 0.07619
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.2117
+                                                                        },
+                                                                        {
+                                                                            "name": "Schizosaccharomyces_pombe",
+                                                                            "length": 0.24665
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.1537
+                                                                },
+                                                                {
+                                                                    "name": "Metazoa",
+                                                                    "branchset": [
+                                                                        {
+                                                                            "name": "Metazoa_subclade",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Diptera",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Anopheles_gambiae",
+                                                                                            "length": 0.10724
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Drosophila_melanogaster",
+                                                                                            "length": 0.10233
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.0987
+                                                                                },
+                                                                                {
+                                                                                    "name": "Gnathostomata",
+                                                                                    "branchset": [
+                                                                                        {
+                                                                                            "name": "Actinopterygii",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Takifugu_rubripes",
+                                                                                                    "length": 0.03142
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Danio_rerio",
+                                                                                                    "length": 0.0523
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.04335
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "Gnathostomata_subclade",
+                                                                                            "branchset": [
+                                                                                                {
+                                                                                                    "name": "Euarchontoglires",
+                                                                                                    "branchset": [
+                                                                                                        {
+                                                                                                            "name": "Murinae",
+                                                                                                            "branchset": [
+                                                                                                                {
+                                                                                                                    "name": "Rattus_norvegicus",
+                                                                                                                    "length": 0.03107
+                                                                                                                },
+                                                                                                                {
+                                                                                                                    "name": "Mus_musculus",
+                                                                                                                    "length": 0.01651
+                                                                                                                }
+                                                                                                            ],
+                                                                                                            "length": 0.00398
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "name": "Hominidae",
+                                                                                                            "branchset": [
+                                                                                                                {
+                                                                                                                    "name": "Homo_sapiens",
+                                                                                                                    "length": 0.00957
+                                                                                                                },
+                                                                                                                {
+                                                                                                                    "name": "Pan_troglodytes",
+                                                                                                                    "length": 0.03864
+                                                                                                                }
+                                                                                                            ],
+                                                                                                            "length": 0.01549
+                                                                                                        }
+                                                                                                    ],
+                                                                                                    "length": 0.01629
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "Gallus_gallus",
+                                                                                                    "length": 0.04596
+                                                                                                }
+                                                                                            ],
+                                                                                            "length": 0.01859
+                                                                                        }
+                                                                                    ],
+                                                                                    "length": 0.09688
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.03693
+                                                                        },
+                                                                        {
+                                                                            "name": "Caenorhabditis",
+                                                                            "branchset": [
+                                                                                {
+                                                                                    "name": "Caenorhabditis_elegans",
+                                                                                    "length": 0.01843
+                                                                                },
+                                                                                {
+                                                                                    "name": "Caenorhabditis_briggsae",
+                                                                                    "length": 0.01896
+                                                                                }
+                                                                            ],
+                                                                            "length": 0.24324
+                                                                        }
+                                                                    ],
+                                                                    "length": 0.09911
+                                                                }
+                                                            ],
+                                                            "length": 0.04004
+                                                        }
+                                                    ],
+                                                    "length": 0.02708
+                                                }
+                                            ],
+                                            "length": 0.02636
+                                        }
+                                    ],
+                                    "length": 0.06455
+                                },
+                                {
+                                    "name": "Leishmania_major",
+                                    "length": 0.45664
+                                }
+                            ],
+                            "length": 0.10129
+                        },
+                        {
+                            "name": "Giardia_lamblia",
+                            "length": 0.55482
+                        }
+                    ],
+                    "length": 0.57543
+                },
+                {
+                    "name": "Archaea",
+                    "branchset": [
+                        {
+                            "name": "Archaea_subclade",
+                            "branchset": [
+                                {
+                                    "name": "Nanoarchaeum_equitans",
+                                    "length": 0.81078
+                                },
+                                {
+                                    "name": "Thermoprotei",
+                                    "branchset": [
+                                        {
+                                            "name": "Thermoprotei_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Sulfolobus",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Sulfolobus_tokodaii",
+                                                            "length": 0.17389
+                                                        },
+                                                        {
+                                                            "name": "Sulfolobus_solfataricus",
+                                                            "length": 0.18962
+                                                        }
+                                                    ],
+                                                    "length": 0.3372
+                                                },
+                                                {
+                                                    "name": "Aeropyrum_pernix",
+                                                    "length": 0.4338
+                                                }
+                                            ],
+                                            "length": 0.09462
+                                        },
+                                        {
+                                            "name": "Pyrobaculum_aerophilum",
+                                            "length": 0.55514
+                                        }
+                                    ],
+                                    "length": 0.12018
+                                }
+                            ],
+                            "length": 0.15444
+                        },
+                        {
+                            "name": "Euryarchaeota",
+                            "branchset": [
+                                {
+                                    "name": "Thermoplasma",
+                                    "branchset": [
+                                        {
+                                            "name": "Thermoplasma_volcanium",
+                                            "length": 0.10412
+                                        },
+                                        {
+                                            "name": "Thermoplasma_acidophilum",
+                                            "length": 0.09785
+                                        }
+                                    ],
+                                    "length": 0.66151
+                                },
+                                {
+                                    "name": "Euryarchaeota_subclade",
+                                    "branchset": [
+                                        {
+                                            "name": "Euryarchaeota_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Euryarchaeota_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Euryarchaeota_subclade",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Methanobacterium_thermautotrophicum",
+                                                                    "length": 0.36583
+                                                                },
+                                                                {
+                                                                    "name": "Methanopyrus_kandleri",
+                                                                    "length": 0.35331
+                                                                }
+                                                            ],
+                                                            "length": 0.07446
+                                                        },
+                                                        {
+                                                            "name": "Methanococcales",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Methanococcus_maripaludis",
+                                                                    "length": 0.28592
+                                                                },
+                                                                {
+                                                                    "name": "Methanococcus_jannaschii",
+                                                                    "length": 0.13226
+                                                                }
+                                                            ],
+                                                            "length": 0.23828
+                                                        }
+                                                    ],
+                                                    "length": 0.06284
+                                                },
+                                                {
+                                                    "name": "Pyrococcus",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Pyrococcus_subclade",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Pyrococcus_horikoshii",
+                                                                    "length": 0.02786
+                                                                },
+                                                                {
+                                                                    "name": "Pyrococcus_abyssi",
+                                                                    "length": 0.02179
+                                                                }
+                                                            ],
+                                                            "length": 0.02239
+                                                        },
+                                                        {
+                                                            "name": "Pyrococcus_furiosus",
+                                                            "length": 0.02366
+                                                        }
+                                                    ],
+                                                    "length": 0.3622
+                                                }
+                                            ],
+                                            "length": 0.04469
+                                        },
+                                        {
+                                            "name": "Euryarchaeota_subclade",
+                                            "branchset": [
+                                                {
+                                                    "name": "Archaeoglobus_fulgidus",
+                                                    "length": 0.3466
+                                                },
+                                                {
+                                                    "name": "Euryarchaeota_subclade",
+                                                    "branchset": [
+                                                        {
+                                                            "name": "Halobacterium_sp._NRC-1",
+                                                            "length": 0.61597
+                                                        },
+                                                        {
+                                                            "name": "Methanosarcina",
+                                                            "branchset": [
+                                                                {
+                                                                    "name": "Methanosarcina_acetivorans",
+                                                                    "length": 0.02602
+                                                                },
+                                                                {
+                                                                    "name": "Methanosarcina_mazei",
+                                                                    "length": 0.03087
+                                                                }
+                                                            ],
+                                                            "length": 0.30588
+                                                        }
+                                                    ],
+                                                    "length": 0.12801
+                                                }
+                                            ],
+                                            "length": 0.10395
+                                        }
+                                    ],
+                                    "length": 0.06815
+                                }
+                            ],
+                            "length": 0.11833
+                        }
+                    ],
+                    "length": 0.43325
+                }
+            ],
+            "length": 0.88776
+        }
+    ],
+    "name": "",
+    "length": 0
+}

@@ -19,9 +19,7 @@ text.radialtreetext {
   cursor: pointer;
 }
 .rtnode circle {
-  fill: steelblue;
   fill-opacity: 0.1;
-  stroke: steelblue;
   stroke-width: 1.5;
 }
 
@@ -40,12 +38,10 @@ text.radialtreetext {
 }
 .rtlink {
   fill: none;
-  stroke: #ccc;
   stroke-width: 1.5px;
 }
 
-path.rtlink{
+.rtlink path {
   fill: none;
-  stroke: #ccc;
   stroke-width: 1.5px;
 }

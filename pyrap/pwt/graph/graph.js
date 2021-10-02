@@ -436,8 +436,7 @@ pwt_graph.Graph.prototype = {
             .enter().append('text')
             .attr('class', 'graphlinklabel')
             .text(function(d){ return d.value.join(' / '); })
-            .style("opacity", function(d) { return d.show || typeof d.show == 'undefined' ? 1 : 0; })
-;
+            .style("opacity", function(d) { return d.show || typeof d.show == 'undefined' ? 1 : 0; });
 
         // remove old link labels
         graphlinklabels.exit().remove();

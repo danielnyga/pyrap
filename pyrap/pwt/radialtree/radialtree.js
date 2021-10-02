@@ -1,7 +1,7 @@
 // adapted from https://bl.ocks.org/wmleler/a734fb2bb3319a2cb386
 pwt_radialtree = {};
 
-pwt_radialtree.RadialTree = function( parent ) {
+pwt_radialtree.RadialTree = function( parent, options ) {
 
     this._parentDIV = this.createElement(parent);
     this._tooltip = d3v3.select(this._parentDIV).append("div")
@@ -28,7 +28,9 @@ pwt_radialtree.RadialTree = function( parent ) {
         w: 800,
         h: 800,
         glow: false,
-        fontcolor: null
+        fontcolor: null,
+        bgcolor: null,
+        mode: null,
 	};
 
     this._keycodes = {
@@ -41,7 +43,7 @@ pwt_radialtree.RadialTree = function( parent ) {
         KEY_UP: 38,        // up arrow
         KEY_RIGHT: 39,     // right arrow
         KEY_DOWN: 40,      // down arrow
-        KEY_SPACE: 32,     // (expand node)
+        KEY_SPACE: 32,     // (toggle node)
         KEY_RETURN: 13,    // (expand tree)
         KEY_HOME: 36,      // (center root)
         KEY_END: 35        // (center selection)
@@ -156,14 +158,13 @@ pwt_radialtree.RadialTree.prototype = {
         this._parentDIV.style.width = args[2] + "px";
         this._parentDIV.style.height = args[3] + "px";
 
-        if (typeof args[2] != 'undefined' && typeof args[3] != 'undefined' ) {
+        if (typeof args[2] !== 'undefined' && typeof args[3] !== 'undefined' ) {
             var oldwidth = this._cfg.w;
             var oldheight = this._cfg.h;
             this._cfg.w = Math.min(args[2],args[3]);
             this._cfg.h = this._cfg.w;
             this._curX += (this._cfg.w - oldwidth) / 2;
             this._curY += (this._cfg.h - oldheight) / 2;
-            console.log(this._tree);
 
             if (typeof this._tree != 'undefined'){
                 this._tree.size([360, Math.min(this._cfg.w, this._cfg.h) / 2 - this._cfg.padding]);
@@ -193,7 +194,7 @@ pwt_radialtree.RadialTree.prototype = {
     },
 
     setHeight: function( height ) {
-        this.this._parentDIV.style.height = height + "px";
+        this._parentDIV.style.height = height + "px";
         this._cfg.h = height;
         this.update();
     },
@@ -219,6 +220,20 @@ pwt_radialtree.RadialTree.prototype = {
 
     setFontcolor: function ( fc ) {
         this._cfg.fontcolor = fc;
+        this.update();
+    },
+
+    setMode: function ( mode ) {
+        this._cfg.mode = mode;
+        if (mode === 'bw') {
+            this._cfg.glow = false;
+            this._cfg.fontcolor = 'black';
+            this._cfg.bgcolor = 'white';
+        } else if (mode === 'color') {
+            this._cfg.glow = true;
+            this._cfg.fontcolor = '#ccc';
+            this._cfg.bgcolor = 'black';
+        }
         this.update();
     },
 
@@ -477,8 +492,8 @@ pwt_radialtree.RadialTree.prototype = {
     keydown : function(that, key, shift) {
         cancelAnimationFrame(that._aniRequest);
         that._aniRequest = that._aniTime = null;
-
         if (!key) {
+
             key = d3v3.event.which;  // fake key
             shift = d3v3.event.shiftKey;
         }
@@ -562,19 +577,21 @@ pwt_radialtree.RadialTree.prototype = {
                 if (!that._curNode) {
                     that.selectNode(that._data, that);
                 }
-                toggle(that._curNode);
+                that.toggle(that._curNode);
                 that.update(that._curNode, true);
                 return;
             case that._keycodes.KEY_RETURN: // expand/collapse tree
-                if (!that._curNode) {
-                    that.selectNode(that._data, that);
-                }
-                if (shift) {
-                    that.expandTree(that._curNode);
-                } else {
-                    that.expand1Level(that._curNode);
-                }
-                that.update(that._curNode, true);
+                that.toggle(that._root);
+                that.update(that._root, true);
+                // if (!that._curNode) {
+                //     that.selectNode(that._data, that);
+                // }
+                // if (shift) {
+                //     that.expandTree(that._curNode, that);
+                // } else {
+                //     that.expand1Level(that._curNode);
+                // }
+                // that.update(that._curNode, true);
                 return;
             case that._keycodes.KEY_HOME: // reset transform
                 if (shift) {
@@ -584,7 +601,7 @@ pwt_radialtree.RadialTree.prototype = {
                 that._curY = that._cfg.h / 2;
                 that._curR = that.limitR(90 - that._root.x);
                 that._curZ = 1;
-                that.update(root, true);
+                that.update(that._root, true);
                 return;
             case that._keycodes.KEY_END: // zoom to selection
                 if (!that._curNode) { return; }
@@ -603,6 +620,7 @@ pwt_radialtree.RadialTree.prototype = {
     },
 
     keyup : function(key, that) {
+        console.log('keyup', key);
         key = key || d3v3.event.which;
         var pos = that._keysdown.indexOf(key);
         if (pos < 0) { return; }
@@ -740,6 +758,9 @@ pwt_radialtree.RadialTree.prototype = {
         var nodes = this._tree.nodes(this._data);
         var links = this._tree.links(nodes);
 
+        this._svg
+            .style('background-color', this._cfg.bgcolor);
+
         // Update the view
         this._svgContainer
             .transition()
@@ -783,8 +804,11 @@ pwt_radialtree.RadialTree.prototype = {
         nodeEnter
             .append('circle')
             .attr('r', 1e-6)
-            .attr('class', function(d) {
-                return d.type;
+            .style("fill", function(d) {
+                return that._cfg.mode === 'bw' ? 'black' : d.type ? d.type : 'steelblue';
+            })
+            .style("stroke", function(d) {
+                return that._cfg.mode === 'bw' ? 'black' : d.type ? d.type : 'steelblue';
             })
             .on('dblclick', function(d) { that.dblclick(d, that); })
             .style('fill-opacity', function(d) {
@@ -795,9 +819,6 @@ pwt_radialtree.RadialTree.prototype = {
             .append('text')
             .text(function(d) {
                 return ((typeof d.showname === 'undefined' || d.showname) && d.name) ? d.name : '';
-            })
-            .attr('class', function(d) {
-                return d.type;
             })
             .style('opacity', 0.9)
             .style('fill-opacity', 0)
@@ -819,6 +840,12 @@ pwt_radialtree.RadialTree.prototype = {
             .attr('r', function(d) {
                 return (d.selected ? 5 : 2) * that._cfg.nradius * that.reduceZ(that);
             })
+            .style("fill", function(d) {
+                return that._cfg.mode === 'bw' ? 'black' : d.type ? d.type : 'steelblue';
+            })
+            .style("stroke", function(d) {
+                return that._cfg.mode === 'bw' ? 'black' : d.type ? d.type : 'steelblue';
+            })
             .style("filter", this._cfg.glow ? "url(#glow-circle)" : "none")
             .style('fill-opacity', function(d) {
                 return d._children ? 1 : null;
@@ -835,9 +862,6 @@ pwt_radialtree.RadialTree.prototype = {
                 return ((d.x + that._curR) % 360 <= 180 ? 'translate(8)scale(' : 'rotate(180)translate(-8)scale(' ) + that.reduceZ(that) +')';
             })
             .style('fill', this._cfg.fontcolor)
-            .attr('class', function(d) {
-                return d.type;
-            })
             .attr('dy', '.35em')
             .style('fill-opacity', 1);
     
@@ -870,8 +894,8 @@ pwt_radialtree.RadialTree.prototype = {
         // create links
         linkenter
             .insert('path', 'g')
-            .attr('class', function(d) {
-                return 'rtlink' + (d.target.type ? ' ' + d.target.type : '');
+            .style("stroke", function(d) {
+                return that._cfg.mode === 'bw' ? 'black' : d.target.type ? d.target.type : '#ccc';
             })
             .attr("id", function(d) {
                 var str = d.source.name + '-' + d.target.name;
@@ -933,11 +957,12 @@ pwt_radialtree.RadialTree.prototype = {
             .delay( transition ? function(d, i) {
                 return i * that._cfg.ndelay + Math.abs(d.source.depth - that._curNode.depth) * that._cfg.ddelay;
             } : 0)
+            .style("stroke", function(d) {
+                return that._cfg.mode === 'bw' ? 'black' : d.target.type ? d.target.type : '#ccc';
+            })
             .attr('d', function(d) {
                 return that.diagonal(d);})
-            .attr('class', function(d) {
-                return 'rtlink' + (d.target.type ? ' ' + d.target.type : '');
-            });
+            .attr('class', 'rtlink');
 
         linkupdate
             .select("text")
@@ -1007,7 +1032,7 @@ rap.registerTypeHandler( 'pwt.customs.RadialTree', {
     },
 
     destructor: 'destroy',
-    properties: [ 'remove', 'width', 'height', 'data', 'bounds', 'glow', 'fontcolor'],
+    properties: [ 'remove', 'width', 'height', 'data', 'bounds', 'glow', 'fontcolor', 'mode'],
     methods : [ 'clear', 'retrievesvg'],
     events: [ 'Selection' ]
 

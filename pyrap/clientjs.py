@@ -290,6 +290,7 @@ rwt/remote/handler/CopyToClipboardHandler.js
 {code_base}/pyrap/pwt/plot/plot.js
 {code_base}/pyrap/pwt/heatmap/heatmap.js
 {code_base}/pyrap/pwt/radialtree/radialtree.js
+{code_base}/pyrap/pwt/tol/tol.js
 appearances.js'''.format(code_base=code_base)
 
 

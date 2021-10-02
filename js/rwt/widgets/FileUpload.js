@@ -38,8 +38,8 @@ rwt.qx.Class.define( "rwt.widgets.FileUpload", {
 
     submit : function( url ) {
       that = this;
-      this._iframe.getIframeNode().addEventListener('load', function() { 
-      	  rwt.remote.EventUtil.notifyFinished( that );	
+      this._iframe.getIframeNode().addEventListener('load', function() {
+      	  rwt.remote.EventUtil.notifyFinished( that );
       });
       if( typeof url !== "string" ) {
         throw new Error( "No url given!" );

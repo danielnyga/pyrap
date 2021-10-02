@@ -5,13 +5,24 @@ text.bubblytext {
 }
 
 .bubblytooltip {
+  font-weight: bold;
+  background-color: #fff;
+  border-radius: 5px;
   display: none;
   position: fixed;
   overflow: hidden;
-  color: #1F77B4;
+  color: white;
   font: 13px monospace, arial, sans-serif;
-  font-weight: bold;
-  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
-  background-color: #fff;
-  border-radius: 5px;
+  background-color:rgba(0,0,0, 0.7);
+  padding: 10px;
+}
+
+.bubbly {
+  display: block;
+  background: black;
+  border-radius: 50%;
+  height: 300px;
+  width: 300px;
+  margin: 0;
+  background: radial-gradient(circle at 100px 100px, #5cabff, #000);
 }
