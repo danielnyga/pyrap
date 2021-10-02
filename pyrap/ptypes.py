@@ -590,7 +590,7 @@ class Pixels(Dim):
         return self.value
 
     def __int__(self):
-        return self.value
+        return int(self.value)
 
     def num(self):
         return self._num

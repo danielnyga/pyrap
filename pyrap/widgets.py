@@ -244,7 +244,7 @@ class Widget(object):
         if self.decorator is not None and not self.decorator.disposed:
             b_ = self.decorator.compute_relpos(self.bounds)
             self.decorator.bounds = b_
-        session.runtime << RWTSetOperation(self.id, {'bounds': [int(b) for b in self.bounds]})
+        session.runtime << RWTSetOperation(self.id, {'bounds': [int(b.value) for b in self.bounds]})
     
     @property
     def cursor(self):
@@ -1956,7 +1956,7 @@ class TabItem(Widget):
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = list(map(px, bounds))
-        session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
+        session.runtime << RWTSetOperation(self.id, {'bounds': [int(b.value) for b in self.bounds]})
         # session.runtime << RWTSetOperation(self.id, {'clientArea': [0, 0, self.bounds[2].value, self.bounds[3].value]})
 
     @property
@@ -2394,7 +2394,7 @@ class Group(Composite):
     def bounds(self, bounds):
         if not len(bounds) == 4: raise Exception('Illegal bounds: %s' % str(bounds))
         self._bounds = list(map(px, bounds))
-        session.runtime << RWTSetOperation(self.id, {'bounds': [b.value for b in self.bounds]})
+        session.runtime << RWTSetOperation(self.id, {'bounds': [int(b.value) for b in self.bounds]})
 
     def compute_size(self):
         width, height = Composite.compute_size(self)
