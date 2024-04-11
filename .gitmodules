@@ -1,6 +1,3 @@
-[submodule "3rdparty/hammerjs"]
-	path = 3rdparty/hammerjs
-	url = https://github.com/hammerjs/hammer.js.git
 [submodule "tools/android"]
 	path = tools/android
 	url = git@spritinio.de:pyrap2apk-dev

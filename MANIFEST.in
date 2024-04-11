@@ -1,3 +1,5 @@
 include requirements.txt
 recursive-exclude 3rdparty/hammerjs *.*
 recursive-exclude 3rdparty/hammertouchemulator *.* LICENSE Makefile
+recursive-include src/pyrap/pwt/ *.*
+recursive-include src/pyrap_examples *.*
