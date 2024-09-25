@@ -1,7 +1,7 @@
 import distutils
 import glob
 import os
-from distutils.core import setup
+from setuptools import setup
 
 try:
     from pip import main as pipmain

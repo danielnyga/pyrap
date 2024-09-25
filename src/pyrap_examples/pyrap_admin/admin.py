@@ -2,7 +2,7 @@ import threading
 from collections import OrderedDict
 
 from dnutils import threads, out, edict
-from dnutils.threads import current_thread, sleep, ThreadInterrupt, _MyDummyThread
+from dnutils.threads import current_thread, sleep, ThreadInterrupt
 
 import pyrap
 from pyrap import session
