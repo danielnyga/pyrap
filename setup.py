@@ -131,6 +131,8 @@ setup(
                             'data/html/*',
                             'data/js/*',
                             'data/js/rwt/**/*',
+                            'data/js/rwt/remote/**/*',
+                            'data/js/rwt/widgets/**/*',
                             'data/resource/**/**/*',
                             '.version']
                   },
