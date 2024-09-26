@@ -134,6 +134,7 @@ setup(
                             'data/js/rwt/remote/**/*',
                             'data/js/rwt/widgets/**/*',
                             'data/resource/static/**/*',
+                            'data/resource/theme/*',
                             'data/resource/theme/**/*',
                             'data/resource/theme/img/*',
                             'data/resource/theme/img/**/*',
