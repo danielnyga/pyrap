@@ -133,7 +133,10 @@ setup(
                             'data/js/rwt/**/*',
                             'data/js/rwt/remote/**/*',
                             'data/js/rwt/widgets/**/*',
-                            'data/resource/**/**/*',
+                            'data/resource/static/**/*',
+                            'data/resource/theme/**/*',
+                            'data/resource/theme/img/*',
+                            'data/resource/theme/img/**/*',
                             '.version']
                   },
     # data_files=extra_files,
