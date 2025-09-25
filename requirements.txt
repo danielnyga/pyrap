@@ -31,3 +31,4 @@ jinja2
 setuptools
 Cython
 matplotlib
+werkzeug

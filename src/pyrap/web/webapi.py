@@ -33,13 +33,25 @@ import sys, cgi, pprint, urllib
 from .utils import storage, storify, threadeddict, dictadd, intget, safestr
 
 from .py3helpers import PY2, urljoin, string_types
+PY2 = sys.version_info[0] == 2
 
-try:
+if PY2:
+    import Cookie
+    from urllib import unquote, quote
+    unicode_type = unicode
+    from Cookie import Morsel
+else:
+    import http.cookies as Cookie
     from urllib.parse import unquote, quote
     from http.cookies import Morsel
-except ImportError:
-    from urllib import unquote, quote
-    from Cookie import Morsel
+    unicode_type = str
+
+# try:
+#     from urllib.parse import unquote, quote
+#     from http.cookies import Morsel
+# except ImportError:
+#     from urllib import unquote, quote
+#     from Cookie import Morsel
 
 from io import StringIO, BytesIO
 
@@ -409,14 +421,12 @@ def decode_cookie(value):
     u'foo \xe9 bar'
     """
     try:
-        # First try plain ASCII encoding
-        return unicode(value, 'us-ascii')
-    except UnicodeError:
-        # Then try UTF-8, and if that fails, ISO8859
+        return unicode_type(value, 'us-ascii')
+    except Exception:
         try:
-            return unicode(value, 'utf-8')
-        except UnicodeError:
-            return unicode(value, 'iso8859', 'ignore')
+            return unicode_type(value, 'utf-8')
+        except Exception:
+            return unicode_type(value, 'iso8859', 'ignore')
 
 def parse_cookies(http_cookie):
     r"""Parse a HTTP_COOKIE header and return dict of cookie names and decoded values.
@@ -456,7 +466,10 @@ def parse_cookies(http_cookie):
                     cookie.load(attr_value)
                 except Cookie.CookieError:
                     pass
-        cookies = dict([(k, unquote(v.value)) for k, v in cookie.iteritems()])
+        if PY2:
+            cookies = dict([(k, unquote(v.value)) for k, v in cookie.iteritems()])
+        else:
+            cookies = dict([(k, unquote(v.value)) for k, v in cookie.items()])
     else:
         # HTTP_COOKIE doesn't have quotes, use fast cookie parsing
         cookies = {}

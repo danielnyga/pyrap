@@ -1,11 +1,10 @@
+from __future__ import unicode_literals
 import io
 from io import BytesIO
 
-import multipart
-
 from dnutils import out
 from dnutils.threads import ThreadInterrupt
-from multipart.multipart import parse_options_header
+from werkzeug.http import parse_options_header
 
 from pyrap import web
 
