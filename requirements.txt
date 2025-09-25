@@ -2,10 +2,9 @@ Pillow
 cssutils
 colored
 pyparsing
-python-multipart
 dnutils
 svglib
-multipart
+python-multipart
 lxml
 reportlab
 tabulate
