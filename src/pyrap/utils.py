@@ -5,16 +5,25 @@ Created on Nov 10, 2015
 '''
 import datetime
 import email
-import os
 import sys
 
-import collections
-from dnutils import edict
+from pyrap.web.py3helpers import PY3gt9, PY2
 
+if PY2:
+    from UserDict import DictMixin
+
+    # Make a new-style class
+    class MutableMapping(object, DictMixin):
+        pass
+else:
+    if PY3gt9:
+        from collections.abc import MutableMapping, Mapping
+    else:
+        from collections import MutableMapping, Mapping
 #
 # case-insensitive dict taken from requests
 #
-class CaseInsensitiveDict(collections.MutableMapping):
+class CaseInsensitiveDict(MutableMapping):
     """
     A case-insensitive ``dict``-like object.
     Implements all methods and operations of
@@ -68,7 +77,7 @@ class CaseInsensitiveDict(collections.MutableMapping):
         )
 
     def __eq__(self, other):
-        if isinstance(other, collections.Mapping):
+        if isinstance(other, Mapping):
             other = CaseInsensitiveDict(other)
         else:
             return NotImplemented

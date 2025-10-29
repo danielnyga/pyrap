@@ -2,7 +2,9 @@
 """
 import sys
 
-PY2 = sys.version_info[0] == 2
+PY2 = sys.version_info.major == 2
+PY3 = sys.version_info.major == 3
+PY3gt9 = PY3 and sys.version_info.minor > 9
 
 # urljoin
 if PY2:

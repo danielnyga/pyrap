@@ -35,8 +35,12 @@ from .themes import LabelTheme, ButtonTheme, CheckboxTheme, OptionTheme, \
     TableColumnTheme, CanvasTheme, ScaleTheme, ProgressBarTheme, SpinnerTheme, \
     SeparatorTheme, DecoratorTheme, LinkTheme, SashTheme, ToggleTheme, SashTheme, ToolTipTheme
 from .utils import RStorage, BiMap, BitMask
+
+try:
+    from collections import Callable
+except ImportError:
+    from collections.abc import Callable
 from collections import OrderedDict
-import collections
 
 
 def checkwidget(f, *args):
@@ -378,6 +382,7 @@ class Widget(object):
     @checkwidget
     def css(self, css):
         self._css = css
+        print("Setting CSS of ", self.id,'to variant_%s' % css)
         session.runtime << RWTSetOperation(self.id, {'customVariant': 'variant_%s' % css})
         
     @property
@@ -1400,12 +1405,12 @@ class Option(Widget):
         Widget.__init__(self, parent, **options)
         self.theme = OptionTheme(self, session.runtime.mngr.theme)    
         self.on_checked = OnSelect(self)
-        self._text = str(text()) if isinstance(text, collections.Callable) else str(text)
+        self._text = str(text()) if isinstance(text, Callable) else str(text)
         self._checked = BoolVar(options.get('checked', False))
 
     def _create_rwt_widget(self):
         options = Widget._rwt_options(self)
-        options.text = str(self._text()) if isinstance(self._text, collections.Callable) else str(self._text)
+        options.text = str(self._text()) if isinstance(self._text, Callable) else str(self._text)
         options.style.append('RADIO')
         options.tabIndex = 1
         options.selection = self.checked()
@@ -4340,23 +4345,25 @@ class SashMenuComposite(Composite):
 
         self._container = Composite(self)
         self._container.layout = ColumnLayout(halign='left', valign='fill', flexcols=0)
+        self._container.bg = None
         self.bg = 'transp'
 
         menu = ScrolledComposite(self._container, valign='fill', halign='fill')
         menu.content.layout = RowLayout(halign='fill', valign='fill', flexrows=2)
-        menu.content.bg = Color('#F5F5F5')
+        menu.content.bg = None # Color('#F5F5F5')
 
         Label(menu.content, text='<b>Menu</b>', markup=True, halign='center', valign='fill')
         Separator(menu.content, horizontal=True, halign='fill')
 
         self._menu = ScrolledComposite(menu.content, halign='fill', valign='fill', vscroll=True)
         self._menu.content.layout = RowLayout(halign='fill', valign='fill', flexrows=-1)
-        self._menu.content.bg = 'transp'
+        self._menu.content.bg = None #'transp'
 
         self._sash = Sash(self._container, orientation='v', click=True, valign='fill', halign='right', minwidth=10)
         self._sash.bg = Color(self.color, alpha=0.5)
 
         self._content = Composite(self, layout=CellLayout(halign='fill', valign='fill', ))
+        self._content.bg = None
 
         self._sash.on_mousedown += self.togglemenu
 

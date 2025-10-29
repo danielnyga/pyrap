@@ -36,18 +36,16 @@ __all__ = [
     "test"
 ]
 
-import tokenize
-import os
-import sys
-import glob
-import re
-import warnings
 import ast
+import glob
+import os
+import re
+import tokenize
 
+from .net import websafe
+from .py3helpers import PY2, PY3gt9
 from .utils import storage, safeunicode, safestr, re_compile
 from .webapi import config
-from .net import websafe
-from .py3helpers import PY2, iteritems
 
 if PY2:
     from UserDict import DictMixin
@@ -56,7 +54,10 @@ if PY2:
     class MutableMapping(object, DictMixin):
         pass
 else:
-    from collections import MutableMapping
+    if PY3gt9:
+        from collections.abc import MutableMapping
+    else:
+        from collections import MutableMapping
 
 def splitline(text):
     r"""
