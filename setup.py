@@ -1,4 +1,4 @@
-import distutils
+from setuptools.command.install import install
 import glob
 import os
 from setuptools import setup
@@ -84,10 +84,10 @@ def f():
 data_files = f()
 
 
-class myinstall(distutils.command.install.install):
+class myinstall(install):
 
     def __init__(self, *args, **kwargs):
-        distutils.command.install.install.__init__(self, *args, **kwargs)
+        install.__init__(self, *args, **kwargs)
         self.distribution.get_command_obj('install_data').install_dir = datapath()
 
 setup(
